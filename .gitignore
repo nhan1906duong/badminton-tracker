@@ -9,3 +9,4 @@ build/
 .vercel
 .turbo
 coverage/
+.claude/settings.local.json
