@@ -61,8 +61,15 @@ See [Phase 2](phase-02-supabase-schema.md) for full schema with RLS.
 
 ---
 
+## Decisions (v1)
+
+1. **Data scope**: All authenticated users share ALL match data (simple, small-group friendly).
+2. **Players**: Anyone signed in can add named players. Players are records — registration NOT required.
+3. **Scheduling**: Completed matches only. No future-match scheduling in v1.
+4. **Execution**: Phase by phase, with user approval gate between phases.
+
+---
+
 ## Unresolved Questions
 
-1. Should all users see ALL matches, or per-group isolation?
-2. Do players need to be "registered users" or can anyone create named players?
-3. Should we support match scheduling (future matches) or only completed matches?
+_None at v1 start. Open items will be tracked per-phase._
