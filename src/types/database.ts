@@ -1,5 +1,5 @@
-// Generated Supabase types — update via: npx supabase gen types typescript --project-id <id> --schema public > src/types/database.ts
-// Placeholder: types will be generated after Supabase schema is set up
+// Generated Supabase types placeholder
+// Run: npx supabase gen types typescript --project-id <ref> --schema public > src/types/database.ts
 
 export type Json =
   | string
@@ -9,29 +9,48 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-// Define base types here until generated types are available
 export interface Player {
   id: string
   name: string
   email?: string | null
   avatar_url?: string | null
+  is_active: boolean
   created_at: string
   created_by: string
 }
 
 export interface Match {
   id: string
-  match_type: string
+  match_type: MatchType
   played_at: string
   notes?: string | null
   created_by: string
   created_at: string
 }
 
+export type MatchType =
+  | 'MEN_SINGLES'
+  | 'WOMEN_SINGLES'
+  | 'MEN_DOUBLES'
+  | 'WOMEN_DOUBLES'
+  | 'MIXED_DOUBLES'
+
+export const MATCH_TYPE_LABELS: Record<MatchType, string> = {
+  MEN_SINGLES: "Men's Singles",
+  WOMEN_SINGLES: "Women's Singles",
+  MEN_DOUBLES: "Men's Doubles",
+  WOMEN_DOUBLES: "Women's Doubles",
+  MIXED_DOUBLES: 'Mixed Doubles',
+}
+
+export function getRequiredPlayerCount(type: MatchType): number {
+  return type === 'MEN_SINGLES' || type === 'WOMEN_SINGLES' ? 2 : 4
+}
+
 export interface MatchTeam {
   id: string
   match_id: string
-  team_label: string
+  team_label: 'TEAM_A' | 'TEAM_B'
   is_winner: boolean
 }
 
@@ -45,6 +64,18 @@ export interface MatchParticipant {
 export interface MatchScore {
   id: string
   match_id: string
+  set_number: number
+  team_a_score: number
+  team_b_score: number
+}
+
+export interface MatchWithDetails extends Match {
+  teams: MatchTeam[]
+  participants: (MatchParticipant & { player: Player })[]
+  scores: MatchScore[]
+}
+
+export interface SetScore {
   set_number: number
   team_a_score: number
   team_b_score: number
