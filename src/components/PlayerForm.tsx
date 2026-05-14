@@ -1,0 +1,81 @@
+import { useState } from 'react'
+import { useCreatePlayer } from '../hooks/usePlayers'
+import { X, UserPlus } from 'lucide-react'
+
+interface PlayerFormProps {
+  onClose: () => void
+}
+
+export default function PlayerForm({ onClose }: PlayerFormProps) {
+  const createPlayer = useCreatePlayer()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    if (!name.trim()) {
+      setError('Name is required')
+      return
+    }
+    if (name.trim().length > 100) {
+      setError('Name must be 100 characters or less')
+      return
+    }
+    try {
+      await createPlayer.mutateAsync({ name: name.trim(), email: email.trim() || undefined })
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create player')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-gray-900">Add Player</h3>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. John Doe"
+              autoFocus
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="john@example.com"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={createPlayer.isPending}
+            className="w-full py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            {createPlayer.isPending ? 'Creating...' : 'Add Player'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
