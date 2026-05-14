@@ -25,10 +25,10 @@ A PWA for tracking badminton matches with multi-user support. Add to iOS home sc
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| [Phase 1](phase-01-project-setup.md) | Pending | Vite + React + Tailwind + PWA + Supabase setup |
-| [Phase 2](phase-02-supabase-schema.md) | Pending | Database schema, RLS policies, seed data |
-| [Phase 3](phase-03-auth-users.md) | Pending | User auth (magic link / OTP), player profiles |
-| [Phase 4](phase-04-match-recording.md) | Pending | Player selection, match creation, score entry |
+| [Phase 1](phase-01-project-setup.md) | **Complete** | Vite + React + Tailwind + PWA + Supabase setup |
+| [Phase 2](phase-02-supabase-schema.md) | **Complete** | Database schema, RLS policies, migration file |
+| [Phase 3](phase-03-auth-users.md) | **Complete** | User auth (magic link / OTP), player profiles |
+| [Phase 4](phase-04-match-recording.md) | **Complete** | Player selection, match creation, score entry |
 | [Phase 5](phase-05-match-history.md) | Pending | Match list, edit/delete, match detail view |
 | [Phase 6](phase-06-ranking-leaderboard.md) | Pending | Win rate stats, ranking page, leaderboard |
 | [Phase 7](phase-07-reports-charts.md) | Pending | Charts, trends, partner stats, head-to-head |
