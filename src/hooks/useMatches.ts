@@ -46,6 +46,10 @@ export function useCreateMatch() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: CreateMatchInput) => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       // 1. Insert match
       const { data: match, error: matchError } = await supabase
         .from('matches')
@@ -53,6 +57,7 @@ export function useCreateMatch() {
           match_type: input.match_type,
           played_at: input.played_at,
           notes: input.notes || null,
+          created_by: user.id,
         })
         .select()
         .single()
@@ -104,6 +109,34 @@ export function useCreateMatch() {
       return match as Match
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [MATCHES_KEY] }),
+  })
+}
+
+export function useMatch(id: string) {
+  return useQuery({
+    queryKey: [MATCHES_KEY, id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('matches')
+        .select(`
+          *,
+          teams:match_teams(*),
+          participants:match_participants(*, player:players(*)),
+          scores:match_scores(*)
+        `)
+        .eq('id', id)
+        .single()
+      if (error) throw error
+
+      const m = data as unknown as Record<string, unknown>
+      return {
+        ...(m as unknown as Match),
+        teams: (m.teams ?? []) as MatchTeam[],
+        participants: (m.participants ?? []) as (MatchParticipant & { player: Player })[],
+        scores: ((m.scores ?? []) as MatchScore[]).sort((a, b) => a.set_number - b.set_number),
+      } as MatchWithDetails
+    },
+    enabled: !!id,
   })
 }
 

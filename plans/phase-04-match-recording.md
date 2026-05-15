@@ -2,28 +2,42 @@
 
 ## Overview
 - **Priority**: P0
-- **Status**: Pending
-- **Description**: The core feature — select 4 players for men's doubles, assign teams, record winners and optional scores.
+- **Status**: Complete
+- **Description**: The core feature — select match type, pick players with auto team assignment, record winners and optional scores.
 
 ## Requirements
 
+### Match Type Selection
+- Default: Men's Doubles
+- Switchable via grid selector at top: Men's Singles, Women's Singles, Men's Doubles, Women's Doubles, Mixed Doubles
+- Dynamically adjusts required player count (singles=2, doubles=4)
+
 ### Player Selection
-- Step 1: Select match type (default: Men's Doubles)
-- Step 2: Select 4 players from available active players
-- Auto-assign to Team A (2 players) and Team B (2 players)
-- Allow manual re-shuffle of team assignments
-- Validation: exactly 4 unique players for doubles
+- **Quick pick**: Show ~6 most recently added players as large tappable cards (3-column grid)
+- **All players**: Remaining players in 2-column grid
+- **Auto team assignment** as players are selected:
+  - Doubles: P1→Team A, P2→Team A, P3→Team B, P4→Team B
+  - Singles: P1→Team A, P2→Team B
+- Team badges shown on selected players (blue=Team A, red=Team B)
+- **Add new player inline**: Type name + Add button, no email required
+- Newly added player auto-selected and auto-assigned to next available team slot
+- Shuffle button to randomize teams
+- Team summary shown inline below player grid
 
 ### Score Entry (Optional)
 - Best-of-3 sets (default)
 - Enter score per set (e.g., 21-15, 18-21, 21-19)
-- Auto-detect winner from scores OR manual winner toggle
-- If no scores entered, require manual winner selection
+- "Add Set" / "Remove Set" buttons
+- Auto-mark winner if 2 sets won
+- Manual winner toggle always available
 
-### Match Creation Flow
+### Match Creation Flow (3 steps)
 ```
-Select Match Type → Select Players → Assign Teams → Enter Scores (optional)
-     → Mark Winner → Save Match
+Step 1: Match Type (grid selector)
+Step 2: Select Players (quick pick + all players + inline add)
+        → Teams auto-assigned, shuffle available
+Step 3: Scores & Winner (optional scores + winner toggle)
+        → Save Match
 ```
 
 ## Data Insertion Order (transaction)
@@ -32,48 +46,37 @@ Select Match Type → Select Players → Assign Teams → Enter Scores (optional
 3. Insert 4 `match_participants` records
 4. If scores: insert `match_scores` records (1-3 sets)
 
-## Implementation Steps
+## Implementation
 
-1. **Match type selector** (`src/components/MatchTypeSelector.tsx`):
-   - Dropdown: Men's Singles, Women's Singles, Men's Doubles (default), Women's Doubles, Mixed Doubles
-   - Dynamically adjust player count: singles=2, doubles=4
+### Files
+- `src/pages/NewMatchPage.tsx` — 3-step wizard with auto team assignment
+- `src/components/MatchTypeSelector.tsx` — 5-type grid selector
+- `src/components/PlayerSelector.tsx` — Quick pick (6 cards) + all players + inline add + team badges + team summary
+- `src/components/ScoreEntry.tsx` — Set scores + winner toggle
+- `src/hooks/useMatches.ts` — Create match mutation
+- `src/hooks/usePlayers.ts` — Create player mutation (name only)
+- `src/lib/match-helpers.ts` — Validation, winner calculation, shuffle
 
-2. **Player selector** (`src/components/PlayerSelector.tsx`):
-   - Multi-select from active players list
-   - Show selected count vs required count
-   - Disable "Continue" until correct count selected
-
-3. **Team assignment** (`src/components/TeamAssignment.tsx`):
-   - Display selected players as draggable cards
-   - Team A area (left) and Team B area (right)
-   - "Shuffle" button for random assignment
-   - Visual: Team A vs Team B layout
-
-4. **Score entry** (`src/components/ScoreEntry.tsx`):
-   - Set 1, Set 2, Set 3 inputs
-   - Each set: Team A score vs Team B score
-   - "Add Set" / "Remove Set" buttons
-   - Auto-mark winner if 2 sets won
-
-5. **Match form page** (`src/pages/NewMatchPage.tsx`):
-   - Multi-step or single-page form combining all above
-   - Submit button triggers database inserts
-
-## Files to Create
-- `src/pages/NewMatchPage.tsx`
-- `src/components/MatchTypeSelector.tsx`
-- `src/components/PlayerSelector.tsx`
-- `src/components/TeamAssignment.tsx`
-- `src/components/ScoreEntry.tsx`
-- `src/hooks/useMatches.ts`
-- `src/lib/match-helpers.ts` (validation, winner calculation)
+### Key UX Decisions
+- **No separate team assignment step** — teams auto-assign as players are picked
+- **Quick pick cards** are larger (3-col grid) for easy thumb tapping on mobile
+- **Selected players show team badge** so users always know who's on which team
+- **Inline player creation** avoids navigation away from match creation flow
+- **Shuffle button** in team summary for when users want random teams
 
 ## Success Criteria
-- [ ] Can create a men's doubles match with 4 players
-- [ ] Teams assigned correctly
-- [ ] Scores optional but validated when entered
-- [ ] Winner recorded correctly
-- [ ] Match appears in database with all related records
+- [x] Default match type is Men's Doubles
+- [x] Can switch match type via grid selector
+- [x] Quick pick shows ~6 players as large cards
+- [x] All other players shown in 2-column grid
+- [x] Teams auto-assign: P1,P2→Team A; P3,P4→Team B (doubles)
+- [x] Teams auto-assign: P1→Team A; P2→Team B (singles)
+- [x] Can add new player with name only, inline
+- [x] New player auto-selected and auto-assigned
+- [x] Can shuffle teams
+- [x] Scores optional but validated when entered
+- [x] Winner recorded correctly
+- [x] Match appears in database with all related records
 
 ## Next Steps
 - Proceed to [Phase 5 — Match History](phase-05-match-history.md)

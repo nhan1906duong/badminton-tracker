@@ -54,78 +54,92 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">Scores (optional)</label>
-        <button
-          onClick={addSet}
-          disabled={scores.length >= 5}
-          className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 disabled:opacity-40"
-        >
-          <Plus className="w-3 h-3" />
-          Add Set
-        </button>
+    <div className="space-y-4">
+      {/* Scores section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-gray-700">Set Scores</span>
+          <button
+            onClick={addSet}
+            disabled={scores.length >= 5}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-green-700 bg-green-50 rounded-xl active:bg-green-100 disabled:opacity-40 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Set
+          </button>
+        </div>
+
+        {scores.length === 0 ? (
+          <button
+            onClick={addSet}
+            className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-sm text-gray-400 font-medium active:bg-gray-50 transition-colors"
+          >
+            Tap to add set scores
+          </button>
+        ) : (
+          <div className="space-y-2">
+            {scores.map((set, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3">
+                <span className="text-xs font-bold text-gray-400 w-10 shrink-0">Set {set.set_number}</span>
+
+                <div className="flex items-center gap-2 flex-1 justify-center">
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={set.team_a_score}
+                    onChange={e => updateSet(i, 'team_a_score', e.target.value)}
+                    className="w-16 h-11 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                  />
+                  <span className="text-sm text-gray-300 font-bold">-</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={set.team_b_score}
+                    onChange={e => updateSet(i, 'team_b_score', e.target.value)}
+                    className="w-16 h-11 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
+                  />
+                </div>
+
+                <button
+                  onClick={() => removeSet(i)}
+                  className="p-2.5 text-gray-300 active:text-red-500 active:bg-red-50 rounded-xl transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {scores.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">No scores added. Winner must be selected manually.</p>
-      ) : (
-        <div className="space-y-2">
-          {scores.map((set, i) => (
-            <div key={i} className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
-              <span className="text-xs font-bold text-gray-400 w-10 text-center">Set {set.set_number}</span>
-              <div className="flex items-center gap-1 flex-1">
-                <input
-                  type="number"
-                  min={0}
-                  value={set.team_a_score}
-                  onChange={e => updateSet(i, 'team_a_score', e.target.value)}
-                  className="w-14 text-center py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-xs text-gray-400 font-bold">-</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={set.team_b_score}
-                  onChange={e => updateSet(i, 'team_b_score', e.target.value)}
-                  className="w-14 text-center py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-              </div>
-              <button
-                onClick={() => removeSet(i)}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Winner selection */}
-      <div className="pt-2">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Winner</label>
-        <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-3 pt-2">
+        <span className="text-sm font-semibold text-gray-700">Winner</span>
+        <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => onWinnerChange('TEAM_A')}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
+            className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-[15px] font-semibold border-2 transition-all active:scale-[0.97] ${
               winner === 'TEAM_A'
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
+                ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
+                : 'bg-white text-gray-700 border-gray-200 active:bg-gray-50'
             }`}
+            style={{ minHeight: 56 }}
           >
-            <Trophy className="w-4 h-4" />
+            <Trophy className="w-5 h-5" />
             Team A
           </button>
           <button
             onClick={() => onWinnerChange('TEAM_B')}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
+            className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-[15px] font-semibold border-2 transition-all active:scale-[0.97] ${
               winner === 'TEAM_B'
-                ? 'bg-red-600 text-white border-red-600'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-red-300'
+                ? 'bg-red-500 text-white border-red-500 shadow-sm'
+                : 'bg-white text-gray-700 border-gray-200 active:bg-gray-50'
             }`}
+            style={{ minHeight: 56 }}
           >
-            <Trophy className="w-4 h-4" />
+            <Trophy className="w-5 h-5" />
             Team B
           </button>
         </div>
