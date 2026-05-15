@@ -19,26 +19,33 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 251 | components/PlayerSelector.tsx | Quick pick (6 cards) + all players + inline add |
-| 213 | pages/NewMatchPage.tsx | 3-step match creation wizard |
-| 135 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
-| 128 | App.tsx | Router, layout, bottom nav, auth guards |
+| 272 | pages/NewMatchPage.tsx | 2-step match creation flow |
+| 174 | App.tsx | Router, frosted glass header, bottom nav |
+| 152 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useDeleteMatch() |
+| 152 | pages/MatchesPage.tsx | Match history list |
+| 151 | pages/MatchDetailPage.tsx | Match detail view |
+| 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
+| 145 | components/PlayerSelector.tsx | Unified 2-column grid with Team A/B |
 | 124 | components/TeamAssignment.tsx | Team A/B display with shuffle |
-| 119 | hooks/useMatches.ts | CRUD for matches via Supabase |
-| 116 | pages/HomePage.tsx | Stats cards + recent matches |
 | 112 | pages/LoginPage.tsx | OTP email login flow |
 | 103 | pages/PlayersPage.tsx | Player list + filter + add modal |
-| 94 | contexts/AuthContext.tsx | Supabase auth state management |
+| 93 | contexts/AuthContext.tsx | Supabase auth state management |
+| 93 | components/MatchCard.tsx | Match list card component |
 | 84 | hooks/usePlayers.ts | Player CRUD hooks |
 | 82 | types/database.ts | TypeScript types for all entities |
+| 81 | components/PlayerForm.tsx | Add player modal |
+| 74 | pages/HomePage.tsx | Stats cards + recent matches |
 | 53 | lib/match-helpers.ts | Helper functions for match logic |
+| 37 | components/MatchTypeSelector.tsx | Match type dropdown selector |
+| 13 | lib/supabase.ts | Supabase client initialization |
 
 ## Components
 
 ```
 components/
-├── MatchTypeSelector.tsx    # 5-type grid selector
-├── PlayerSelector.tsx       # Player selection with quick pick
+├── MatchTypeSelector.tsx    # Match type dropdown selector
+├── MatchCard.tsx           # Match list card
+├── PlayerSelector.tsx       # Unified 2-column grid with Team A/B
 ├── PlayerForm.tsx           # Add player modal
 ├── ScoreEntry.tsx           # Set score inputs
 ├── TeamAssignment.tsx       # Team display with shuffle
@@ -48,10 +55,12 @@ components/
 
 ```
 pages/
-├── LoginPage.tsx      # /login - OTP auth
-├── HomePage.tsx       # / - Dashboard
-├── PlayersPage.tsx    # /players - Player list
-├── NewMatchPage.tsx   # /matches/new - Create match
+├── LoginPage.tsx          # /login - OTP auth
+├── HomePage.tsx           # / - Dashboard
+├── PlayersPage.tsx        # /players - Player list
+├── MatchesPage.tsx        # /matches - Match history
+├── MatchDetailPage.tsx    # /matches/:id - Match detail
+├── NewMatchPage.tsx       # /matches/new - Create match
 ```
 
 ## Data Flow
@@ -76,7 +85,7 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 
 ## Match Creation Flow
 
-1. Select type → 2. Pick players → 3. Auto-assign teams → 4. Enter scores → 5. Save
+1. Select type via dropdown → 2. Pick players from unified grid (auto-assign) → 3. Enter scores → 4. Select winner → 5. Save
 
 ## Auth Flow
 

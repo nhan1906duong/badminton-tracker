@@ -20,13 +20,14 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 |---------|--------|-------------|
 | OTP Authentication | Implemented | Email magic link via Supabase |
 | Player CRUD | Implemented | Create, list, toggle active status |
-| Match Creation | Implemented | 3-step wizard: type → players → scores |
-| Quick Player Pick | Implemented | 6-card grid for recent players |
-| Auto Team Assignment | Implemented | P1,P2→Team A; P3,P4→Team B |
+| Match Creation | Implemented | 2-step flow: type+players → scores+save |
+| Unified Player Grid | Implemented | 2-column grid showing Team A/B assignment |
+| Auto Team Assignment | Implemented | Players auto-assign to Team A (blue) then Team B (red) |
 | Inline Player Add | Implemented | Add player without leaving match flow |
 | Score Entry | Implemented | Per-set inputs with auto winner detection |
+| Match History | Implemented | List + detail view with all match data |
 | Home Dashboard | Implemented | Stats cards + recent matches list |
-| Bottom Navigation | Implemented | Home, Match, Players tabs |
+| Bottom Navigation | Implemented | Home, Matches, Players tabs |
 | PWA Support | Implemented | Service worker + manifest for install |
 
 ## Database Schema
@@ -40,11 +41,10 @@ matches ────────────┼── match_teams ──┬─ m
 
 ## Match Flow
 
-1. Select match type (singles/doubles)
-2. Pick players (quick pick or all players)
-3. Review auto-assigned teams (Team A/B)
-4. Enter set scores
-5. Auto-detect winner → Save to Supabase
+1. Select match type (singles/doubles) via dropdown
+2. Pick players from unified 2-column grid (auto Team A/B assignment)
+3. Enter set scores (optional)
+4. Select winner → Save to Supabase
 
 ## Tech Stack
 

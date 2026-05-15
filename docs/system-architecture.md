@@ -43,7 +43,9 @@
 | /login | LoginPage | No |
 | / | HomePage | Yes |
 | /players | PlayersPage | Yes |
+| /matches | MatchesPage | Yes |
 | /matches/new | NewMatchPage | Yes |
+| /matches/:id | MatchDetailPage | Yes |
 | * | → / | Redirect |
 
 ## Data Flow
@@ -58,15 +60,15 @@
 ## Match Creation Sequence
 
 ```
-1. Select Type (MEN_SINGLES, DOUBLES, etc.)
+1. Select Type via dropdown (MEN_SINGLES, WOMEN_SINGLES, MEN_DOUBLES, WOMEN_DOUBLES, MIXED_DOUBLES)
          ↓
-2. Pick Players (2 for singles, 4 for doubles)
+2. Pick Players from 2-column grid (2 for singles, 4 for doubles)
          ↓
-3. Auto-Assign Teams (first half → Team A, second half → Team B)
+3. Auto-Assign Teams (selected order: first players → Team A/blue, remaining → Team B/red)
          ↓
-4. Enter Set Scores (1-3 sets depending on type)
+4. Enter Set Scores (optional, tap to add)
          ↓
-5. Detect Winner (team with majority set wins)
+5. Select Winner (manual selection)
          ↓
 6. Save to Supabase (matches + teams + participants + scores)
 ```
