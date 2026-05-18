@@ -69,6 +69,9 @@
 ### Phase 8: Avatar Upload ✅
 - [x] Avatar component with fallback chain (src → multiavatar default → initial)
 - [x] AvatarPicker bottom sheet (camera / gallery / remove)
+- [x] 2x5 grid of 10 default multiavatar options
+- [x] useSetDefaultAvatar hook for storing external multiavatar URLs
+- [x] cleanupOldAvatar helper that removes old uploaded photos from Supabase Storage
 - [x] Client-side image compression (200x200 JPEG)
 - [x] Supabase Storage upload/delete hooks
 - [x] User avatar on Settings page

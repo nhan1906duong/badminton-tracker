@@ -29,8 +29,9 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Home Dashboard | Implemented | Stats cards + recent matches + PodiumChart top donate |
 | Bottom Navigation | Implemented | Home, Matches, Players tabs |
 | Avatar Upload | Implemented | Camera/gallery picker, compress, Supabase Storage |
-| Default Avatars | Implemented | Deterministic multiavatar from name hash |
-| PWA Support | Implemented | Service worker + manifest for install |
+| Default Avatars | Implemented | Deterministic multiavatar from name hash + 10 selectable defaults |
+| Avatar Selection Grid | Implemented | 5x2 grid of multiavatar defaults in AvatarPicker bottom sheet |
+| Storage Cleanup | Implemented | Automatic deletion of old uploaded photos from Supabase Storage |
 
 ## Database Schema
 

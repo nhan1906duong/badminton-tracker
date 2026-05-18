@@ -36,9 +36,9 @@ src/
 | 112 | pages/LoginPage.tsx | OTP email login flow |
 | 93 | contexts/AuthContext.tsx | Supabase auth state management |
 | 93 | components/MatchCard.tsx | Match list card component |
-| 90 | hooks/useAvatarUpload.ts | Avatar upload/delete mutations for Supabase Storage |
+| 134 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 87 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
-| 86 | components/AvatarPicker.tsx | Bottom sheet: camera / gallery / remove photo |
+| 86 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
 | 85 | stores/new-match-store.ts | Zustand store for match creation flow |
 | 84 | hooks/usePlayers.ts | Player CRUD hooks |
 | 82 | types/database.ts | TypeScript types for all entities |
@@ -60,7 +60,7 @@ src/
 ```
 components/
 ├── Avatar.tsx               # Circle avatar: src → multiavatar default → initial fallback
-├── AvatarPicker.tsx         # Bottom action sheet: camera / gallery / remove
+├── AvatarPicker.tsx         # Bottom sheet: 2x5 default grid + camera / gallery / remove
 ├── MatchTypeSelector.tsx    # Match type dropdown selector
 ├── MatchCard.tsx           # Match list card
 ├── PlayerSelector.tsx       # Unified 2-column grid with Team A/B + avatars
@@ -114,7 +114,7 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 ```
 hooks/
 ├── useAuth.ts            # Supabase auth state
-├── useAvatarUpload.ts    # Upload/delete avatar to Supabase Storage
+├── useAvatarUpload.ts    # Upload/delete/set-default avatar to Supabase Storage
 ├── useMatches.ts         # Match CRUD operations
 ├── usePlayers.ts         # Player CRUD operations
 ├── usePlayerStats.ts     # Player win/loss statistics
@@ -135,8 +135,9 @@ lib/
 ## Avatar Upload Flow
 
 ```
-1. Tap avatar → AvatarPicker opens (camera / gallery / remove)
-2. Select image → compressImage(file, 200) → center-crop to 200x200 JPEG
+1. Tap avatar → AvatarPicker opens (2x5 default avatar grid / camera / gallery / remove)
+2. Select default avatar → useSetDefaultAvatar() → cleanupOldAvatar() → update DB
+   OR Select image → compressImage(file, 200) → center-crop to 200x200 JPEG
 3. Upload to Supabase Storage: avatars/{entity}/{id}.jpg
 4. Update DB: profiles.avatar_url (users) or players.avatar_url (players)
 5. Invalidate queries → UI refreshes with new avatar
