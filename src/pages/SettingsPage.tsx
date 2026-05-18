@@ -121,7 +121,7 @@ export default function SettingsPage() {
                   ? 'Clearing...'
                   : confirming
                     ? 'Tap again to confirm clear all'
-                    : 'Clear All Matches & Sessions'}
+                    : 'Clear All Data & Avatars'}
               </span>
             </button>
           </section>

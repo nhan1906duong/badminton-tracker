@@ -93,16 +93,40 @@ export function useClearAllData() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Delete child tables first, then parents (cascade handles most,
+      // 1. Delete all uploaded avatars from storage
+      const { data: userFiles } = await supabase.storage.from('avatars').list('users')
+      const { data: playerFiles } = await supabase.storage.from('avatars').list('players')
+
+      const toDelete: string[] = []
+      if (userFiles) {
+        toDelete.push(...userFiles.map(f => `users/${f.name}`))
+      }
+      if (playerFiles) {
+        toDelete.push(...playerFiles.map(f => `players/${f.name}`))
+      }
+      if (toDelete.length > 0) {
+        await supabase.storage.from('avatars').remove(toDelete)
+      }
+
+      // 2. Delete child tables first, then parents (cascade handles most,
       // but explicit ordering avoids relying solely on DB config)
       await supabase.from('match_scores').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('match_participants').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('match_teams').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+      // 3. Clear player avatars in DB, then delete players
+      await supabase.from('players').update({ avatar_url: null }).neq('id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('players').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+
+      // 4. Clear user profile avatars (keep profiles row, just remove avatar_url)
+      await supabase.from('profiles').update({ avatar_url: null }).neq('id', '00000000-0000-0000-0000-000000000000')
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+      qc.invalidateQueries({ queryKey: ['players'] })
+      qc.invalidateQueries({ queryKey: ['profiles'] })
     },
   })
 }
