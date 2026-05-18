@@ -29,7 +29,7 @@ src/
 | 124 | components/TeamAssignment.tsx | Team A/B display with shuffle |
 | 119 | pages/SessionMatchPlayersPage.tsx | Step 1: match type + player selection (session-scoped) |
 | 112 | pages/LoginPage.tsx | OTP email login flow |
-| 103 | pages/PlayersPage.tsx | Player list + filter + add modal |
+| 199 | pages/PlayersPage.tsx | Player list + swipe-to-delete + add modal |
 | 93 | contexts/AuthContext.tsx | Supabase auth state management |
 | 93 | components/MatchCard.tsx | Match list card component |
 | 87 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
@@ -43,6 +43,7 @@ src/
 | 53 | lib/match-helpers.ts | Helper functions for match logic |
 | 46 | stores/session-store.ts | Zustand + localStorage for session active players |
 | 37 | components/MatchTypeSelector.tsx | Match type dropdown selector |
+| 32 | components/FloatingActionButton.tsx | Reusable FAB constrained to mobile container |
 | 13 | lib/supabase.ts | Supabase client initialization |
 
 ## Components
@@ -55,6 +56,7 @@ components/
 ├── PlayerForm.tsx           # Add player modal
 ├── ScoreEntry.tsx           # Set score inputs
 ├── TeamAssignment.tsx       # Team display with shuffle
+├── FloatingActionButton.tsx # Reusable FAB anchored to mobile container
 ```
 
 ## Pages
