@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { compressImage } from '../lib/image'
+import { DEFAULT_AVATAR_PREFIX } from '../lib/avatar'
 
 type EntityType = 'users' | 'players'
+
+async function cleanupOldAvatar(
+  entity: EntityType,
+  id: string,
+  oldUrl?: string | null,
+) {
+  if (!oldUrl || oldUrl.startsWith(DEFAULT_AVATAR_PREFIX)) return
+  const path = `${entity}/${id}.jpg`
+  const { error } = await supabase.storage.from('avatars').remove([path])
+  if (error) console.warn('Avatar cleanup failed:', error.message)
+}
 
 interface UploadParams {
   file: File
@@ -56,18 +68,48 @@ export function useAvatarUpload() {
   })
 }
 
+interface SetDefaultParams {
+  url: string
+  entity: EntityType
+  id: string
+  oldAvatarUrl?: string | null
+}
+
+export function useSetDefaultAvatar() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ url, entity, id, oldAvatarUrl }: SetDefaultParams) => {
+      await cleanupOldAvatar(entity, id, oldAvatarUrl)
+
+      if (entity === 'users') {
+        const { error: dbError } = await supabase
+          .from('profiles')
+          .upsert({ id, avatar_url: url, updated_at: new Date().toISOString() })
+        if (dbError) throw dbError
+      } else {
+        const { error: dbError } = await supabase
+          .from('players')
+          .update({ avatar_url: url })
+          .eq('id', id)
+        if (dbError) throw dbError
+      }
+
+      return url
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['players'] })
+      qc.invalidateQueries({ queryKey: ['profiles'] })
+    },
+  })
+}
+
 export function useAvatarDelete() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ entity, id }: { entity: EntityType; id: string }) => {
-      const path = `${entity}/${id}.jpg`
-
-      const { error: storageError } = await supabase.storage
-        .from('avatars')
-        .remove([path])
-
-      if (storageError) throw storageError
+    mutationFn: async ({ entity, id, oldAvatarUrl }: { entity: EntityType; id: string; oldAvatarUrl?: string | null }) => {
+      await cleanupOldAvatar(entity, id, oldAvatarUrl)
 
       if (entity === 'users') {
         const { error: dbError } = await supabase

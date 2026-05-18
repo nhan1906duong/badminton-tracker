@@ -5,7 +5,7 @@ import { useClearAllData } from '../hooks/useSessions'
 import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
-import { useAvatarUpload, useAvatarDelete } from '../hooks/useAvatarUpload'
+import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useProfile } from '../hooks/useProfile'
 
 const IS_DEV = import.meta.env.DEV
@@ -20,6 +20,7 @@ export default function SettingsPage() {
   const { data: profile } = useProfile(user?.id)
   const upload = useAvatarUpload()
   const remove = useAvatarDelete()
+  const setDefault = useSetDefaultAvatar()
 
   const userAvatarUrl = profile?.avatar_url
 
@@ -66,9 +67,10 @@ export default function SettingsPage() {
         {/* Avatar Picker */}
         {showPicker && user && (
           <AvatarPicker
-            hasAvatar={!!userAvatarUrl}
+            currentAvatarUrl={userAvatarUrl}
             onSelect={(file) => upload.mutate({ file, entity: 'users', id: user.id })}
-            onRemove={() => remove.mutate({ entity: 'users', id: user.id })}
+            onSelectDefault={(url) => setDefault.mutate({ url, entity: 'users', id: user.id, oldAvatarUrl: userAvatarUrl })}
+            onRemove={() => remove.mutate({ entity: 'users', id: user.id, oldAvatarUrl: userAvatarUrl })}
             onClose={() => setShowPicker(false)}
           />
         )}

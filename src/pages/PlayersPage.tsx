@@ -6,7 +6,7 @@ import PlayerForm from '../components/PlayerForm'
 import FloatingActionButton from '../components/FloatingActionButton'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
-import { useAvatarUpload, useAvatarDelete } from '../hooks/useAvatarUpload'
+import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import type { Player } from '../types/database'
 
 const SWIPE_THRESHOLD = 60
@@ -117,6 +117,7 @@ export default function PlayersPage() {
 
   const upload = useAvatarUpload()
   const remove = useAvatarDelete()
+  const setDefault = useSetDefaultAvatar()
 
   const statsMap = new Map(stats.map((s) => [s.playerId, s]))
 
@@ -178,12 +179,15 @@ export default function PlayersPage() {
       {/* Avatar Picker */}
       {editAvatarPlayer && (
         <AvatarPicker
-          hasAvatar={!!editAvatarPlayer.avatar_url}
+          currentAvatarUrl={editAvatarPlayer.avatar_url}
           onSelect={(file) =>
             upload.mutate({ file, entity: 'players', id: editAvatarPlayer.id })
           }
+          onSelectDefault={(url) =>
+            setDefault.mutate({ url, entity: 'players', id: editAvatarPlayer.id, oldAvatarUrl: editAvatarPlayer.avatar_url })
+          }
           onRemove={() =>
-            remove.mutate({ entity: 'players', id: editAvatarPlayer.id })
+            remove.mutate({ entity: 'players', id: editAvatarPlayer.id, oldAvatarUrl: editAvatarPlayer.avatar_url })
           }
           onClose={() => setEditAvatarPlayer(null)}
         />

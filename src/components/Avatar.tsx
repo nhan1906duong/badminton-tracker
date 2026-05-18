@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getDefaultAvatarUrl } from '../lib/avatar'
+import { getDefaultAvatarUrl, isMultiavatarUrl, getMultiavatarSvgUrl } from '../lib/avatar'
 
 interface AvatarProps {
   src?: string | null
@@ -14,6 +14,14 @@ function getInitial(name: string): string {
   return name.trim().charAt(0).toUpperCase()
 }
 
+function resolveAvatarUrl(url: string): string {
+  if (isMultiavatarUrl(url)) {
+    const id = url.split('/').pop()
+    if (id) return getMultiavatarSvgUrl(id)
+  }
+  return url
+}
+
 export default function Avatar({
   src,
   name,
@@ -23,8 +31,8 @@ export default function Avatar({
   textColor = '#6b7280',
 }: AvatarProps) {
   const [error, setError] = useState(false)
-  const showImage = src && !error
-  const defaultUrl = getDefaultAvatarUrl(name)
+  const imageUrl = src ? resolveAvatarUrl(src) : resolveAvatarUrl(getDefaultAvatarUrl(name))
+  const hasError = error || !imageUrl
 
   return (
     <div
@@ -32,26 +40,18 @@ export default function Avatar({
       style={{
         width: size,
         height: size,
-        backgroundColor: showImage ? undefined : bgColor,
+        backgroundColor: hasError ? bgColor : undefined,
         color: textColor,
         fontSize: size * 0.4,
         fontWeight: 700,
         lineHeight: 1,
       }}
     >
-      {showImage ? (
-        <img
-          src={src}
-          alt={name}
-          className="w-full h-full object-cover"
-          onError={() => setError(true)}
-          draggable={false}
-        />
-      ) : error ? (
+      {hasError ? (
         getInitial(name)
       ) : (
         <img
-          src={defaultUrl}
+          src={imageUrl}
           alt={name}
           className="w-full h-full object-cover"
           onError={() => setError(true)}
