@@ -5,7 +5,8 @@ import { useAuth } from './hooks/useAuth'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import PlayersPage from './pages/PlayersPage'
-import NewMatchPage from './pages/NewMatchPage'
+import SelectPlayersPage from './pages/SelectPlayersPage'
+import FinalResultPage from './pages/FinalResultPage'
 import MatchesPage from './pages/MatchesPage'
 import MatchDetailPage from './pages/MatchDetailPage'
 import { Home, Users, Trophy, ArrowLeft } from 'lucide-react'
@@ -36,11 +37,13 @@ const PAGE_TITLES: Record<string, string> = {
   '/': 'Home',
   '/players': 'Players',
   '/matches': 'Matches',
-  '/matches/new': 'New Match',
+  '/matches/new': 'Select Players',
+  '/matches/new/result': 'Final Result',
 }
 
 function getPageTitle(path: string): string {
-  if (path.startsWith('/matches/') && path !== '/matches/new') {
+  // Match-detail route: /matches/:id (excluding the new-match flow paths above).
+  if (path.startsWith('/matches/') && !PAGE_TITLES[path]) {
     return 'Match Detail'
   }
   return PAGE_TITLES[path] || ''
@@ -140,7 +143,15 @@ function AppRoutes() {
         path="/matches/new"
         element={
           <RequireAuth>
-            <NewMatchPage />
+            <SelectPlayersPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/matches/new/result"
+        element={
+          <RequireAuth>
+            <FinalResultPage />
           </RequireAuth>
         }
       />

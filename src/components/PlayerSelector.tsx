@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Player, MatchType } from '../types/database'
-import { getRequiredPlayerCount, getTeamSize } from '../lib/match-helpers'
+import { getRequiredPlayerCount } from '../lib/match-helpers'
 import { Check, Plus, User } from 'lucide-react'
 
 interface PlayerSelectorProps {
