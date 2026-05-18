@@ -19,8 +19,18 @@ export interface Player {
   created_by: string
 }
 
+export interface Session {
+  id: string
+  label?: string | null
+  started_at: string
+  ended_at?: string | null
+  created_by: string
+  created_at: string
+}
+
 export interface Match {
   id: string
+  session_id: string
   match_type: MatchType
   played_at: string
   notes?: string | null

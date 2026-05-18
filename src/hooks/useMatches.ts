@@ -5,6 +5,7 @@ import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, 
 const MATCHES_KEY = 'matches'
 
 export interface CreateMatchInput {
+  session_id: string
   match_type: MatchType
   played_at: string
   notes?: string
@@ -14,11 +15,11 @@ export interface CreateMatchInput {
   scores: SetScore[]
 }
 
-export function useMatches() {
+export function useMatches(sessionId?: string) {
   return useQuery({
-    queryKey: [MATCHES_KEY],
+    queryKey: [MATCHES_KEY, sessionId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('matches')
         .select(`
           *,
@@ -27,9 +28,18 @@ export function useMatches() {
           scores:match_scores(*)
         `)
         .order('played_at', { ascending: false })
+
+      if (sessionId) {
+        query = query.eq('session_id', sessionId)
+      }
+
+      const { data, error } = await query
       if (error) throw error
 
-      return (data ?? []).map((match) => {
+      return (data ?? []).filter((match: unknown) => {
+        const m = match as Record<string, unknown>
+        return m.session_id != null
+      }).map((match) => {
         const m = match as unknown as Record<string, unknown>
         return {
           ...(m as unknown as Match),
@@ -46,14 +56,13 @@ export function useCreateMatch() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: CreateMatchInput) => {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // 1. Insert match
       const { data: match, error: matchError } = await supabase
         .from('matches')
         .insert({
+          session_id: input.session_id,
           match_type: input.match_type,
           played_at: input.played_at,
           notes: input.notes || null,
@@ -65,7 +74,6 @@ export function useCreateMatch() {
 
       const matchId = (match as Match).id
 
-      // 2. Insert teams
       const { data: teams, error: teamsError } = await supabase
         .from('match_teams')
         .insert([
@@ -82,11 +90,8 @@ export function useCreateMatch() {
 
       const teamAId = teamMap.get('TEAM_A')
       const teamBId = teamMap.get('TEAM_B')
-      if (!teamAId || !teamBId) {
-        throw new Error('Failed to create teams')
-      }
+      if (!teamAId || !teamBId) throw new Error('Failed to create teams')
 
-      // 3. Insert participants
       const participants = [
         ...input.team_a_player_ids.map(pid => ({ match_id: matchId, team_id: teamAId, player_id: pid })),
         ...input.team_b_player_ids.map(pid => ({ match_id: matchId, team_id: teamBId, player_id: pid })),
@@ -94,7 +99,6 @@ export function useCreateMatch() {
       const { error: partError } = await supabase.from('match_participants').insert(participants)
       if (partError) throw partError
 
-      // 4. Insert scores
       if (input.scores.length > 0) {
         const scores = input.scores.map(s => ({
           match_id: matchId,
@@ -137,6 +141,71 @@ export function useMatch(id: string) {
       } as MatchWithDetails
     },
     enabled: !!id,
+  })
+}
+
+export function useUpdateMatch() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      id: string
+      match_type: MatchType
+      played_at: string
+      winner_team: 'TEAM_A' | 'TEAM_B'
+      scores: SetScore[]
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      // Update match basic fields
+      const { error: matchError } = await supabase
+        .from('matches')
+        .update({
+          match_type: input.match_type,
+          played_at: input.played_at,
+        })
+        .eq('id', input.id)
+      if (matchError) throw matchError
+
+      // Update teams winner flag
+      const { error: teamAError } = await supabase
+        .from('match_teams')
+        .update({ is_winner: input.winner_team === 'TEAM_A' })
+        .eq('match_id', input.id)
+        .eq('team_label', 'TEAM_A')
+      if (teamAError) throw teamAError
+
+      const { error: teamBError } = await supabase
+        .from('match_teams')
+        .update({ is_winner: input.winner_team === 'TEAM_B' })
+        .eq('match_id', input.id)
+        .eq('team_label', 'TEAM_B')
+      if (teamBError) throw teamBError
+
+      // Replace scores: delete old, insert new
+      const { error: delScoreError } = await supabase
+        .from('match_scores')
+        .delete()
+        .eq('match_id', input.id)
+      if (delScoreError) throw delScoreError
+
+      if (input.scores.length > 0) {
+        const scores = input.scores.map(s => ({
+          match_id: input.id,
+          set_number: s.set_number,
+          team_a_score: s.team_a_score,
+          team_b_score: s.team_b_score,
+        }))
+        const { error: scoreError } = await supabase.from('match_scores').insert(scores)
+        if (scoreError) throw scoreError
+      }
+
+      return input.id
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
+    },
   })
 }
 

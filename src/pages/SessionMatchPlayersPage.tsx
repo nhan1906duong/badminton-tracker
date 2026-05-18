@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useActivePlayers, useCreatePlayer } from '../hooks/usePlayers'
+import { useNavigate, useParams } from 'react-router-dom'
+import { usePlayers, useCreatePlayer } from '../hooks/usePlayers'
 import MatchTypeSelector from '../components/MatchTypeSelector'
 import PlayerSelector from '../components/PlayerSelector'
 import { getRequiredPlayerCount } from '../lib/match-helpers'
 import { useNewMatchStore } from '../stores/new-match-store'
+import { useSessionStore } from '../stores/session-store'
 import { ArrowRight } from 'lucide-react'
 
-export default function SelectPlayersPage() {
+export default function SessionMatchPlayersPage() {
+  const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data: players, isLoading: playersLoading } = useActivePlayers()
+  const { data: allPlayers, isLoading: playersLoading } = usePlayers()
   const createPlayer = useCreatePlayer()
 
   const matchType = useNewMatchStore((s) => s.matchType)
@@ -20,10 +22,19 @@ export default function SelectPlayersPage() {
   const toggleSelected = useNewMatchStore((s) => s.toggleSelected)
   const addSelected = useNewMatchStore((s) => s.addSelected)
 
+  const activePlayerIds = useSessionStore((s) =>
+    sessionId ? s.activePlayers[sessionId] || [] : []
+  )
+
   const [error, setError] = useState('')
 
   const requiredCount = getRequiredPlayerCount(matchType)
   const playersSelected = selectedIds.length === requiredCount
+
+  // Filter to session-active players if any are selected; otherwise show all
+  const players = activePlayerIds.length > 0
+    ? (allPlayers?.filter((p) => activePlayerIds.includes(p.id)) ?? [])
+    : (allPlayers ?? [])
 
   async function handleAddPlayer(name: string) {
     try {
@@ -40,13 +51,12 @@ export default function SelectPlayersPage() {
       return
     }
     setError('')
-    navigate('/matches/new/result')
+    navigate(`/sessions/${sessionId}/matches/new/result`)
   }
 
   return (
     <div className="min-h-svh bg-gray-50">
       <div className="px-4 py-5 space-y-6 pb-32">
-        {/* Match Type */}
         <section className="space-y-3">
           <MatchTypeSelector
             value={matchType}
@@ -57,15 +67,20 @@ export default function SelectPlayersPage() {
           />
         </section>
 
-        {/* Players */}
         <section className="space-y-3">
           <span className="text-sm font-bold text-gray-900">Select Players</span>
 
           {playersLoading ? (
             <div className="text-center py-12 text-gray-400 text-sm">Loading players...</div>
+          ) : players.length === 0 && activePlayerIds.length > 0 ? (
+            <div className="text-center py-8 text-gray-400 text-sm">
+              No active players selected for this session.
+              <br />
+              Go back and pick players first.
+            </div>
           ) : (
             <PlayerSelector
-              players={players ?? []}
+              players={players}
               selectedIds={selectedIds}
               matchType={matchType}
               onToggle={(id) => toggleSelected(id, requiredCount)}
@@ -84,7 +99,6 @@ export default function SelectPlayersPage() {
         )}
       </div>
 
-      {/* Bottom Next button */}
       <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 max-w-lg mx-auto z-30 px-4 py-3">
         <button
           onClick={handleNext}
