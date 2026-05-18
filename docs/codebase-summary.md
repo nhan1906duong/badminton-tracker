@@ -19,8 +19,10 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 272 | pages/NewMatchPage.tsx | 2-step match creation flow |
-| 174 | App.tsx | Router, frosted glass header, bottom nav |
+| 134 | pages/FinalResultPage.tsx | Step 2: team matchup + scores + winner + save |
+| 105 | pages/SelectPlayersPage.tsx | Step 1: match type + player selection |
+| 85 | stores/new-match-store.ts | Zustand store shared across new-match flow |
+| 185 | App.tsx | Router, frosted glass header, bottom nav |
 | 152 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useDeleteMatch() |
 | 152 | pages/MatchesPage.tsx | Match history list |
 | 151 | pages/MatchDetailPage.tsx | Match detail view |
@@ -60,7 +62,8 @@ pages/
 ├── PlayersPage.tsx        # /players - Player list
 ├── MatchesPage.tsx        # /matches - Match history
 ├── MatchDetailPage.tsx    # /matches/:id - Match detail
-├── NewMatchPage.tsx       # /matches/new - Create match
+├── SelectPlayersPage.tsx  # /matches/new - Step 1: type + players
+├── FinalResultPage.tsx    # /matches/new/result - Step 2: scores + winner
 ```
 
 ## Data Flow

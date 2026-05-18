@@ -44,7 +44,8 @@
 | / | HomePage | Yes |
 | /players | PlayersPage | Yes |
 | /matches | MatchesPage | Yes |
-| /matches/new | NewMatchPage | Yes |
+| /matches/new | SelectPlayersPage | Yes |
+| /matches/new/result | FinalResultPage | Yes |
 | /matches/:id | MatchDetailPage | Yes |
 | * | → / | Redirect |
 
