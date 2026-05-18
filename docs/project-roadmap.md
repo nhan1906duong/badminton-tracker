@@ -67,7 +67,7 @@
 - [x] MatchCard component
 
 ### Phase 8: Avatar Upload ✅
-- [x] Avatar component with fallback chain (src → multiavatar default → initial)
+- [x] Avatar component with fallback chain (src → initial letter)
 - [x] AvatarPicker bottom sheet (camera / gallery / remove)
 - [x] 2x5 grid of 10 default multiavatar options
 - [x] useSetDefaultAvatar hook for storing external multiavatar URLs

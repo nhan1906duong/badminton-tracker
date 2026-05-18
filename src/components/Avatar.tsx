@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getDefaultAvatarUrl, isMultiavatarUrl, getMultiavatarSvgUrl } from '../lib/avatar'
+import { isMultiavatarUrl, getMultiavatarSvgUrl } from '../lib/avatar'
 
 interface AvatarProps {
   src?: string | null
@@ -31,7 +31,7 @@ export default function Avatar({
   textColor = '#6b7280',
 }: AvatarProps) {
   const [error, setError] = useState(false)
-  const imageUrl = src ? resolveAvatarUrl(src) : resolveAvatarUrl(getDefaultAvatarUrl(name))
+  const imageUrl = src ? resolveAvatarUrl(src) : null
   const hasError = error || !imageUrl
 
   return (

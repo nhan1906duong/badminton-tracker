@@ -59,7 +59,7 @@ src/
 
 ```
 components/
-├── Avatar.tsx               # Circle avatar: src → multiavatar default → initial fallback
+├── Avatar.tsx               # Circle avatar: src → initial letter fallback
 ├── AvatarPicker.tsx         # Bottom sheet: 2x5 default grid + camera / gallery / remove
 ├── MatchTypeSelector.tsx    # Match type dropdown selector
 ├── MatchCard.tsx           # Match list card
@@ -128,7 +128,7 @@ hooks/
 lib/
 ├── supabase.ts      # Supabase client initialization
 ├── image.ts         # Canvas-based image compression (center-crop → square → JPEG)
-├── avatar.ts        # Deterministic default avatar URL from name hash
+├── avatar.ts        # Multiavatar utilities (SVG generation, URL helpers)
 ├── match-helpers.ts # Match logic helpers
 ```
 
@@ -146,9 +146,9 @@ lib/
 ## Avatar Fallback Chain
 
 ```
-User has custom avatar_url?
-  → Yes: display uploaded image
-  → No:  display multiavatar default (deterministic from name hash)
+User has avatar_url?
+  → Yes (custom upload or selected default): display that image
+  → No (null, new player, or deleted): display first letter of name
   → Error loading image: display first letter of name
 ```
 

@@ -1,24 +1,10 @@
 /**
- * Deterministic default avatar from multiavatar.com.
- * Hashes a name to pick 1 of 10 default avatars consistently.
+ * Multiavatar utilities for the 10 selectable default avatars.
  */
 
 import multiavatar from '@multiavatar/multiavatar'
 
 export const DEFAULT_AVATAR_PREFIX = 'https://multiavatar.com/'
-
-function hashName(name: string): number {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return Math.abs(hash)
-}
-
-export function getDefaultAvatarUrl(name: string): string {
-  const id = (hashName(name) % 10) + 1
-  return `${DEFAULT_AVATAR_PREFIX}${id}`
-}
 
 /**
  * Generate an SVG data URL from a multiavatar ID (1-10).
