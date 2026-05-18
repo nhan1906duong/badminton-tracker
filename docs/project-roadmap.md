@@ -7,7 +7,7 @@
 | 1 | Project Setup | ✅ Done | Vite, React, Tailwind, Supabase |
 | 2 | Authentication | ✅ Done | OTP email login |
 | 3 | Player Management | ✅ Done | CRUD + active toggle |
-| 4 | Match Recording | ✅ Done | 2-step flow, scores, teams |
+| 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit |
 | 5 | Home Dashboard | ✅ Done | Stats + recent matches |
 | 6 | Player Rankings | ⏳ Pending | Win rate, leaderboard |
 | 7 | Match History | ✅ Done | List + detail view |
@@ -35,13 +35,20 @@
 - [x] Toggle active status
 - [x] Player selector component
 
-### Phase 4: Match Recording ✅
+### Phase 4: Session-Based Match Recording ✅
+- [x] Sessions table + migration
+- [x] Create session (auto-closes previous)
+- [x] Session detail page (active players + match list)
+- [x] Active-player filter (local-only, per session)
+- [x] Match creation scoped to session
 - [x] Match type selector (dropdown)
-- [x] Player selection (unified 2-column grid)
+- [x] Player selection (filtered by active list)
 - [x] Auto team assignment (Team A/B by selection order)
 - [x] Score entry per set
 - [x] Manual winner selection
-- [x] Save match to database
+- [x] Save match to database (with session_id)
+- [x] Edit match (scores, winner, match type)
+- [x] Delete match from session
 
 ### Phase 5: Home Dashboard ✅
 - [x] Stats cards (total matches, players)

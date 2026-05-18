@@ -19,25 +19,29 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 134 | pages/FinalResultPage.tsx | Step 2: team matchup + scores + winner + save |
-| 105 | pages/SelectPlayersPage.tsx | Step 1: match type + player selection |
-| 85 | stores/new-match-store.ts | Zustand store shared across new-match flow |
-| 185 | App.tsx | Router, frosted glass header, bottom nav |
-| 152 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useDeleteMatch() |
-| 152 | pages/MatchesPage.tsx | Match history list |
-| 151 | pages/MatchDetailPage.tsx | Match detail view |
+| 234 | App.tsx | Router, frosted glass header, bottom nav |
+| 218 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useUpdateMatch() + useDeleteMatch() |
+| 191 | pages/SessionDetailPage.tsx | Session detail: active players + match list + end session |
+| 152 | pages/EditMatchPage.tsx | Edit match: result + scores |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
 | 145 | components/PlayerSelector.tsx | Unified 2-column grid with Team A/B |
+| 136 | pages/SessionMatchResultPage.tsx | Step 2: scores + winner (session-scoped) |
 | 124 | components/TeamAssignment.tsx | Team A/B display with shuffle |
+| 119 | pages/SessionMatchPlayersPage.tsx | Step 1: match type + player selection (session-scoped) |
 | 112 | pages/LoginPage.tsx | OTP email login flow |
 | 103 | pages/PlayersPage.tsx | Player list + filter + add modal |
 | 93 | contexts/AuthContext.tsx | Supabase auth state management |
 | 93 | components/MatchCard.tsx | Match list card component |
+| 87 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
+| 85 | stores/new-match-store.ts | Zustand store for match creation flow |
 | 84 | hooks/usePlayers.ts | Player CRUD hooks |
 | 82 | types/database.ts | TypeScript types for all entities |
 | 81 | components/PlayerForm.tsx | Add player modal |
 | 74 | pages/HomePage.tsx | Stats cards + recent matches |
+| 67 | pages/CreateSessionPage.tsx | Create new session |
+| 56 | pages/SessionsListPage.tsx | List all sessions |
 | 53 | lib/match-helpers.ts | Helper functions for match logic |
+| 46 | stores/session-store.ts | Zustand + localStorage for session active players |
 | 37 | components/MatchTypeSelector.tsx | Match type dropdown selector |
 | 13 | lib/supabase.ts | Supabase client initialization |
 
@@ -57,13 +61,15 @@ components/
 
 ```
 pages/
-├── LoginPage.tsx          # /login - OTP auth
-├── HomePage.tsx           # / - Dashboard
-├── PlayersPage.tsx        # /players - Player list
-├── MatchesPage.tsx        # /matches - Match history
-├── MatchDetailPage.tsx    # /matches/:id - Match detail
-├── SelectPlayersPage.tsx  # /matches/new - Step 1: type + players
-├── FinalResultPage.tsx    # /matches/new/result - Step 2: scores + winner
+├── LoginPage.tsx                # /login - OTP auth
+├── HomePage.tsx                 # / - Dashboard
+├── PlayersPage.tsx              # /players - Player list
+├── SessionsListPage.tsx         # /sessions - Session history
+├── CreateSessionPage.tsx        # /sessions/new - Create session
+├── SessionDetailPage.tsx        # /sessions/:id - Session detail
+├── SessionMatchPlayersPage.tsx  # /sessions/:id/matches/new - Step 1
+├── SessionMatchResultPage.tsx   # /sessions/:id/matches/new/result - Step 2
+├── EditMatchPage.tsx            # /sessions/:id/matches/:matchId/edit
 ```
 
 ## Data Flow

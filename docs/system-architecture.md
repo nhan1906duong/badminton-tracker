@@ -43,10 +43,13 @@
 | /login | LoginPage | No |
 | / | HomePage | Yes |
 | /players | PlayersPage | Yes |
-| /matches | MatchesPage | Yes |
-| /matches/new | SelectPlayersPage | Yes |
-| /matches/new/result | FinalResultPage | Yes |
-| /matches/:id | MatchDetailPage | Yes |
+| /sessions | SessionsListPage | Yes |
+| /sessions/active | ActiveSessionRedirect | Yes |
+| /sessions/new | CreateSessionPage | Yes |
+| /sessions/:id | SessionDetailPage | Yes |
+| /sessions/:id/matches/new | SessionMatchPlayersPage | Yes |
+| /sessions/:id/matches/new/result | SessionMatchResultPage | Yes |
+| /sessions/:id/matches/:matchId/edit | EditMatchPage | Yes |
 | * | → / | Redirect |
 
 ## Data Flow
@@ -58,20 +61,22 @@
 4. React components re-render on query changes
 ```
 
-## Match Creation Sequence
+## Session-Based Match Flow
 
 ```
-1. Select Type via dropdown (MEN_SINGLES, WOMEN_SINGLES, MEN_DOUBLES, WOMEN_DOUBLES, MIXED_DOUBLES)
+1. Create Session (auto-closes previous open session)
          ↓
-2. Pick Players from 2-column grid (2 for singles, 4 for doubles)
+2. Toggle Active Players (local filter, persisted per device)
          ↓
-3. Auto-Assign Teams (selected order: first players → Team A/blue, remaining → Team B/red)
+3. Add Match → Select Type + Players (filtered by active list)
          ↓
 4. Enter Set Scores (optional, tap to add)
          ↓
-5. Select Winner (manual selection)
+5. Select Winner → Save to Supabase (scoped to session)
          ↓
-6. Save to Supabase (matches + teams + participants + scores)
+6. Edit Match later (scores, winner, match type)
+         ↓
+7. End Session when done
 ```
 
 ## Authentication Flow
