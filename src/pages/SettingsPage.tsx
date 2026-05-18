@@ -1,8 +1,24 @@
+import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { LogOut, User } from 'lucide-react'
+import { useClearAllData } from '../hooks/useSessions'
+import { LogOut, User, Trash2, AlertTriangle } from 'lucide-react'
+
+const IS_DEV = import.meta.env.DEV
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
+  const clearAll = useClearAllData()
+  const [confirming, setConfirming] = useState(false)
+
+  const handleClear = () => {
+    if (!confirming) {
+      setConfirming(true)
+      return
+    }
+    clearAll.mutate(undefined, {
+      onSuccess: () => setConfirming(false),
+    })
+  }
 
   return (
     <div className="min-h-svh bg-gray-50">
@@ -30,6 +46,39 @@ export default function SettingsPage() {
             <span className="text-[15px] font-semibold">Log Out</span>
           </button>
         </section>
+
+        {/* Dev-only: Clear all data */}
+        {IS_DEV && (
+          <section className="space-y-2">
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-100 px-2 py-0.5 rounded">
+                Dev Only
+              </span>
+            </div>
+            <button
+              onClick={handleClear}
+              disabled={clearAll.isPending}
+              className={`w-full flex items-center gap-3 px-4 py-4 bg-white rounded-2xl border transition-colors ${
+                confirming
+                  ? 'border-red-300 text-red-700 active:bg-red-50'
+                  : 'border-gray-100 text-gray-700 active:bg-gray-50'
+              }`}
+            >
+              {confirming ? (
+                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0" />
+              ) : (
+                <Trash2 className="w-5 h-5 shrink-0" />
+              )}
+              <span className="text-[15px] font-semibold">
+                {clearAll.isPending
+                  ? 'Clearing...'
+                  : confirming
+                    ? 'Tap again to confirm clear all'
+                    : 'Clear All Matches & Sessions'}
+              </span>
+            </button>
+          </section>
+        )}
       </div>
     </div>
   )

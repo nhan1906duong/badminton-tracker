@@ -85,3 +85,24 @@ export function useEndSession() {
     },
   })
 }
+
+export function useClearAllData() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      // Delete child tables first, then parents (cascade handles most,
+      // but explicit ordering avoids relying solely on DB config)
+      await supabase.from('match_scores').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('match_participants').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('match_teams').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+    },
+  })
+}
