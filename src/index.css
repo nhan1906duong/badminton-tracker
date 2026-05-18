@@ -11,4 +11,23 @@
 body {
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+  touch-action: manipulation;
+}
+
+/* Prevent text selection on interactive elements for native app feel */
+button, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Disable double-tap zoom on buttons */
+button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }

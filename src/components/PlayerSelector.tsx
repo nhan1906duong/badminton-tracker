@@ -33,7 +33,7 @@ export default function PlayerSelector({
   return (
     <div className="space-y-4">
       {/* Player grid */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5 [@media(max-width:380px)]:gap-2">
         {activePlayers.map(player => {
           const isSelected = selectedIds.includes(player.id)
           const team = teamAIds.includes(player.id) ? 'A' : teamBIds.includes(player.id) ? 'B' : null
@@ -44,7 +44,7 @@ export default function PlayerSelector({
               key={player.id}
               onClick={() => !isDisabled && onToggle(player.id)}
               disabled={isDisabled}
-              className={`relative flex items-center gap-3 px-3.5 py-3.5 rounded-2xl border text-left transition-all active:scale-[0.97] ${
+              className={`relative flex items-center gap-2 px-3.5 py-3.5 [@media(max-width:380px)]:px-2.5 [@media(max-width:380px)]:py-2.5 rounded-2xl border text-left transition-all active:scale-[0.97] ${
                 isSelected
                   ? team === 'A'
                     ? 'bg-blue-50 border-blue-400 shadow-sm'
@@ -56,7 +56,7 @@ export default function PlayerSelector({
               style={{ minHeight: 56 }}
             >
               {/* Avatar / Check */}
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              <div className={`w-10 h-10 [@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8 rounded-full flex items-center justify-center shrink-0 ${
                 isSelected
                   ? team === 'A'
                     ? 'bg-blue-500 text-white'
@@ -64,9 +64,9 @@ export default function PlayerSelector({
                   : 'bg-gray-100 text-gray-400'
               }`}>
                 {isSelected ? (
-                  <Check className="w-5 h-5" />
+                  <Check className="w-5 h-5 [@media(max-width:380px)]:w-4 [@media(max-width:380px)]:h-4" />
                 ) : (
-                  <User className="w-5 h-5" />
+                  <User className="w-5 h-5 [@media(max-width:380px)]:w-4 [@media(max-width:380px)]:h-4" />
                 )}
               </div>
 

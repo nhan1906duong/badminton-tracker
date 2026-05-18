@@ -89,7 +89,7 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
                     min={0}
                     value={set.team_a_score}
                     onChange={e => updateSet(i, 'team_a_score', e.target.value)}
-                    className="w-16 h-11 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                    className="w-16 h-11 [@media(max-width:380px)]:w-14 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
                   />
                   <span className="text-sm text-gray-300 font-bold">-</span>
                   <input
@@ -98,7 +98,7 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
                     min={0}
                     value={set.team_b_score}
                     onChange={e => updateSet(i, 'team_b_score', e.target.value)}
-                    className="w-16 h-11 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
+                    className="w-16 h-11 [@media(max-width:380px)]:w-14 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
                   />
                 </div>
 

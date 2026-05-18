@@ -10,6 +10,10 @@ interface MatchCardProps {
 export default function MatchCard({ match }: MatchCardProps) {
   const navigate = useNavigate()
 
+  function handleClick() {
+    navigate(`/sessions/${match.session_id}/matches/${match.id}/edit`)
+  }
+
   const teamA = match.participants.filter(
     p => match.teams.find(t => t.id === p.team_id)?.team_label === 'TEAM_A'
   )
@@ -33,7 +37,7 @@ export default function MatchCard({ match }: MatchCardProps) {
 
   return (
     <button
-      onClick={() => navigate(`/matches/${match.id}`)}
+      onClick={handleClick}
       className="w-full text-left bg-white border border-gray-100 rounded-2xl p-4 active:scale-[0.98] transition-transform"
     >
       {/* Header: type + date */}
@@ -48,9 +52,9 @@ export default function MatchCard({ match }: MatchCardProps) {
       </div>
 
       {/* Teams */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 [@media(max-width:380px)]:gap-1.5">
         {/* Team A */}
-        <div className={`flex-1 text-right ${winnerLabel === 'TEAM_A' ? 'text-blue-700' : 'text-gray-600'}`}>
+        <div className={`flex-1 text-right min-w-0 ${winnerLabel === 'TEAM_A' ? 'text-blue-700' : 'text-gray-600'}`}>
           <p className={`text-sm truncate ${winnerLabel === 'TEAM_A' ? 'font-bold' : 'font-medium'}`}>
             {teamAName}
           </p>
@@ -63,7 +67,7 @@ export default function MatchCard({ match }: MatchCardProps) {
         </div>
 
         {/* Score */}
-        <div className="text-center px-2 shrink-0">
+        <div className="text-center px-1.5 shrink-0">
           {scoreSummary ? (
             <p className="text-sm font-bold text-gray-800 tabular-nums">
               {scoreSummary}
@@ -74,7 +78,7 @@ export default function MatchCard({ match }: MatchCardProps) {
         </div>
 
         {/* Team B */}
-        <div className={`flex-1 text-left ${winnerLabel === 'TEAM_B' ? 'text-red-700' : 'text-gray-600'}`}>
+        <div className={`flex-1 text-left min-w-0 ${winnerLabel === 'TEAM_B' ? 'text-red-700' : 'text-gray-600'}`}>
           <p className={`text-sm truncate ${winnerLabel === 'TEAM_B' ? 'font-bold' : 'font-medium'}`}>
             {teamBName}
           </p>
