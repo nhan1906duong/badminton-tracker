@@ -5,12 +5,17 @@ import { useAuth } from './hooks/useAuth'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import PlayersPage from './pages/PlayersPage'
-import SelectPlayersPage from './pages/SelectPlayersPage'
-import FinalResultPage from './pages/FinalResultPage'
-import MatchesPage from './pages/MatchesPage'
-import MatchDetailPage from './pages/MatchDetailPage'
-import { Home, Users, Trophy, ArrowLeft } from 'lucide-react'
+import SessionsListPage from './pages/SessionsListPage'
+import CreateSessionPage from './pages/CreateSessionPage'
+import SessionDetailPage from './pages/SessionDetailPage'
+import SessionMatchPlayersPage from './pages/SessionMatchPlayersPage'
+import SessionMatchResultPage from './pages/SessionMatchResultPage'
+import EditMatchPage from './pages/EditMatchPage'
+import SettingsPage from './pages/SettingsPage'
+import { useOpenSession } from './hooks/useSessions'
+import { Home, Users, Trophy, Settings, ArrowLeft } from 'lucide-react'
 import './index.css'
+import { useEffect } from 'react'
 
 const queryClient = new QueryClient()
 
@@ -36,17 +41,18 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Home',
   '/players': 'Players',
-  '/matches': 'Matches',
-  '/matches/new': 'Select Players',
-  '/matches/new/result': 'Final Result',
+  '/sessions': 'Sessions',
+  '/sessions/new': 'New Session',
+  '/settings': 'Settings',
 }
 
 function getPageTitle(path: string): string {
-  // Match-detail route: /matches/:id (excluding the new-match flow paths above).
-  if (path.startsWith('/matches/') && !PAGE_TITLES[path]) {
-    return 'Match Detail'
-  }
-  return PAGE_TITLES[path] || ''
+  if (PAGE_TITLES[path]) return PAGE_TITLES[path]
+  if (path.startsWith('/sessions/') && path.endsWith('/matches/new')) return 'Select Players'
+  if (path.startsWith('/sessions/') && path.endsWith('/matches/new/result')) return 'Final Result'
+  if (path.includes('/matches/') && path.endsWith('/edit')) return 'Edit Match'
+  if (path.startsWith('/sessions/')) return 'Session Detail'
+  return ''
 }
 
 function AppBar() {
@@ -74,6 +80,27 @@ function AppBar() {
   )
 }
 
+function ActiveSessionRedirect() {
+  const navigate = useNavigate()
+  const { data: session, isLoading } = useOpenSession()
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (session) {
+        navigate(`/sessions/${session.id}`, { replace: true })
+      } else {
+        navigate('/sessions/new', { replace: true })
+      }
+    }
+  }, [session, isLoading, navigate])
+
+  return (
+    <div className="min-h-svh flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
+
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const isLogin = location.pathname === '/login'
@@ -86,8 +113,9 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 max-w-lg mx-auto z-40">
           <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
             <NavButton to="/" icon={<Home className="w-5 h-5" />} label="Home" />
-            <NavButton to="/matches/new" icon={<Trophy className="w-5 h-5" />} label="Match" />
+            <NavButton to="/sessions" icon={<Trophy className="w-5 h-5" />} label="Sessions" />
             <NavButton to="/players" icon={<Users className="w-5 h-5" />} label="Players" />
+            <NavButton to="/settings" icon={<Settings className="w-5 h-5" />} label="Settings" />
           </div>
         </nav>
       )}
@@ -132,34 +160,66 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/matches"
+        path="/sessions"
         element={
           <RequireAuth>
-            <MatchesPage />
+            <SessionsListPage />
           </RequireAuth>
         }
       />
       <Route
-        path="/matches/new"
+        path="/sessions/active"
         element={
           <RequireAuth>
-            <SelectPlayersPage />
+            <ActiveSessionRedirect />
           </RequireAuth>
         }
       />
       <Route
-        path="/matches/new/result"
+        path="/sessions/new"
         element={
           <RequireAuth>
-            <FinalResultPage />
+            <CreateSessionPage />
           </RequireAuth>
         }
       />
       <Route
-        path="/matches/:id"
+        path="/sessions/:id"
         element={
           <RequireAuth>
-            <MatchDetailPage />
+            <SessionDetailPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/:id/matches/new"
+        element={
+          <RequireAuth>
+            <SessionMatchPlayersPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/:id/matches/new/result"
+        element={
+          <RequireAuth>
+            <SessionMatchResultPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/:id/matches/:matchId/edit"
+        element={
+          <RequireAuth>
+            <EditMatchPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <RequireAuth>
+            <SettingsPage />
           </RequireAuth>
         }
       />

@@ -1,74 +1,152 @@
 import { useNavigate } from 'react-router-dom'
-import { useMatches } from '../hooks/useMatches'
-import MatchCard from '../components/MatchCard'
-import { Plus, Users, Trophy, ChevronRight } from 'lucide-react'
+import { usePlayerStats } from '../hooks/usePlayerStats'
+import { useOpenSession } from '../hooks/useSessions'
+import { usePlayers } from '../hooks/usePlayers'
+import { Trophy, Crown, Medal, ChevronRight, Flame, TrendingUp } from 'lucide-react'
+
+const RANK_ICONS: Record<number, React.ReactNode> = {
+  1: <Crown className="w-5 h-5 text-yellow-500" />,
+  2: <Medal className="w-5 h-5 text-gray-400" />,
+  3: <Medal className="w-5 h-5 text-amber-700" />,
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  if (rank <= 3) {
+    return (
+      <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
+        {RANK_ICONS[rank]}
+      </div>
+    )
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
+      <span className="text-sm font-bold text-gray-400">{rank}</span>
+    </div>
+  )
+}
+
+function formatCurrency(vnd: number): string {
+  return new Intl.NumberFormat('vi-VN').format(vnd) + ' VND'
+}
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { data: matches, isLoading } = useMatches()
+  const { sortedByMatches, totalLost, isLoading } = usePlayerStats()
+  const { data: activeSession } = useOpenSession()
+  const { data: players } = usePlayers()
 
-  const totalMatches = matches?.length ?? 0
-  const recentMatches = matches?.slice(0, 5) ?? []
+  const top5 = sortedByMatches.slice(0, 5)
+  const totalPenalty = totalLost * 5000
+
+  const activePlayerCount = players?.filter((p) => p.is_active).length ?? 0
 
   return (
-    <div className="p-4 pb-24">
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-green-600 text-white rounded-2xl p-4">
-          <Trophy className="w-5 h-5 mb-2 opacity-80" />
-          <p className="text-2xl font-bold">{totalMatches}</p>
-          <p className="text-xs opacity-80">Total Matches</p>
-        </div>
-        <div className="bg-blue-600 text-white rounded-2xl p-4">
-          <Users className="w-5 h-5 mb-2 opacity-80" />
-          <p className="text-2xl font-bold">{matches?.[0]?.participants.length ?? 0}</p>
-          <p className="text-xs opacity-80">Last Match Players</p>
-        </div>
-      </div>
+    <div className="min-h-svh bg-gray-50">
+      <div className="px-4 py-5 space-y-5 pb-32">
+        {/* Total Lost Card */}
+        <section className="bg-white rounded-2xl border border-gray-100 p-4 space-y-1">
+          <div className="flex items-center gap-2 text-gray-400 mb-1">
+            <TrendingUp className="w-4 h-4" />
+            <span className="text-xs font-semibold uppercase tracking-wide">Total Lost</span>
+          </div>
+          <p className="text-2xl font-bold text-red-600">
+            {formatCurrency(totalPenalty)}
+          </p>
+          <p className="text-xs text-gray-400">
+            {totalLost} losses × 5,000 VND
+          </p>
+        </section>
 
-      {/* Quick action */}
-      <button
-        onClick={() => navigate('/matches/new')}
-        className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 text-white rounded-xl text-sm font-semibold mb-6 hover:bg-gray-800"
-      >
-        <Plus className="w-4 h-4" />
-        Record New Match
-      </button>
-
-      {/* Recent matches */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold text-gray-900">Recent Matches</h3>
-        {totalMatches > 0 && (
+        {/* Active Session */}
+        {activeSession ? (
           <button
-            onClick={() => navigate('/matches')}
-            className="flex items-center gap-0.5 text-xs text-green-600 font-medium hover:underline"
+            onClick={() => navigate(`/sessions/${activeSession.id}`)}
+            className="w-full text-left bg-green-600 rounded-2xl p-4 text-white active:scale-[0.98] transition-transform shadow-lg shadow-green-600/20"
           >
-            See all
-            <ChevronRight className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5" />
+                <span className="text-sm font-bold">Active Session</span>
+              </div>
+              <ChevronRight className="w-5 h-5" />
+            </div>
+            <p className="text-[15px] font-semibold mt-2 truncate">
+              {activeSession.label ||
+                new Date(activeSession.started_at).toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+            </p>
+            <p className="text-xs text-green-200 mt-0.5">
+              {activePlayerCount} active players
+            </p>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/sessions/new')}
+            className="w-full text-left bg-white rounded-2xl p-4 border border-gray-100 active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
+                  <Flame className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-[15px] font-bold text-gray-900">No Active Session</p>
+                  <p className="text-xs text-gray-400">Tap to start one</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-300" />
+            </div>
           </button>
         )}
-      </div>
 
-      {isLoading ? (
-        <div className="text-center py-8 text-gray-400">Loading matches...</div>
-      ) : totalMatches === 0 ? (
-        <div className="text-center py-8 bg-gray-50 rounded-2xl">
-          <Trophy className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm text-gray-400">No matches yet.</p>
-          <button
-            onClick={() => navigate('/matches/new')}
-            className="text-green-600 text-sm mt-1 hover:underline font-medium"
-          >
-            Record your first match
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {recentMatches.map(match => (
-            <MatchCard key={match.id} match={match} />
-          ))}
-        </div>
-      )}
+        {/* Leaderboard */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-yellow-500" />
+            <span className="text-sm font-bold text-gray-900">Top Players</span>
+          </div>
+
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-400 text-sm">Loading stats...</div>
+          ) : top5.length === 0 ? (
+            <div className="text-center py-8 bg-white rounded-2xl border border-gray-100">
+              <p className="text-sm text-gray-400">No matches yet.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              {top5.map((player, index) => (
+                <div
+                  key={player.playerId}
+                  onClick={() => navigate('/players')}
+                  className={`flex items-center gap-3 px-4 py-3.5 active:bg-gray-50 ${
+                    index < top5.length - 1 ? 'border-b border-gray-50' : ''
+                  }`}
+                >
+                  <RankBadge rank={index + 1} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15px] font-semibold text-gray-900 truncate">
+                      {player.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {player.matchesPlayed} matches
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold text-gray-900">
+                      {player.wins}
+                      <span className="text-gray-300 font-medium"> / {player.matchesPlayed}</span>
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-medium">Wins</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

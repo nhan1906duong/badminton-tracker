@@ -1,103 +1,199 @@
-import { useState } from 'react'
-import { usePlayers, useTogglePlayerActive } from '../hooks/usePlayers'
-import { Plus, User, UserCheck, UserX } from 'lucide-react'
+import { useState, useRef, useCallback } from 'react'
+import { usePlayers, useDeletePlayer } from '../hooks/usePlayers'
+import { usePlayerStats } from '../hooks/usePlayerStats'
+import { Plus, Trash2, User } from 'lucide-react'
 import PlayerForm from '../components/PlayerForm'
+import type { Player } from '../types/database'
 
-export default function PlayersPage() {
-  const { data: players, isLoading } = usePlayers()
-  const toggleActive = useTogglePlayerActive()
-  const [showForm, setShowForm] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
+const SWIPE_THRESHOLD = 60
+const DELETE_WIDTH = 80
 
-  const filtered = players?.filter(p => {
-    if (filter === 'active') return p.is_active
-    if (filter === 'inactive') return !p.is_active
-    return true
-  })
+interface SwipeItemProps {
+  player: Player
+  stats: { matchesPlayed: number; wins: number }
+  isOpen: boolean
+  onOpen: () => void
+  onClose: () => void
+  onDelete: () => void
+}
+
+function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete }: SwipeItemProps) {
+  const startX = useRef(0)
+  const currentX = useRef(0)
+  const [translateX, setTranslateX] = useState(0)
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      startX.current = e.touches[0].clientX
+      currentX.current = isOpen ? -DELETE_WIDTH : 0
+    },
+    [isOpen]
+  )
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      const delta = e.touches[0].clientX - startX.current
+      let newX = currentX.current + delta
+      if (newX > 0) newX = 0
+      if (newX < -DELETE_WIDTH) newX = -DELETE_WIDTH
+      setTranslateX(newX)
+    },
+    []
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    if (translateX < -SWIPE_THRESHOLD) {
+      setTranslateX(-DELETE_WIDTH)
+      onOpen()
+    } else {
+      setTranslateX(0)
+      onClose()
+    }
+  }, [translateX, onOpen, onClose])
 
   return (
-    <div className="p-4 pb-24">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-900">Players</h2>
+    <div className="relative overflow-hidden rounded-2xl">
+      {/* Delete background layer */}
+      <div className="absolute inset-0 bg-red-500 rounded-2xl flex items-center justify-end pr-5">
         <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+          onClick={onDelete}
+          className="flex flex-col items-center gap-0.5 text-white"
         >
-          <Plus className="w-4 h-4" />
-          Add
+          <Trash2 className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">Delete</span>
         </button>
       </div>
 
-      <div className="flex gap-2 mb-4">
-        {(['all', 'active', 'inactive'] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
-              filter === f
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {f}
-          </button>
-        ))}
+      {/* Foreground content */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={() => {
+          if (isOpen) {
+            setTranslateX(0)
+            onClose()
+          }
+        }}
+        style={{
+          transform: `translateX(${translateX}px)`,
+          transition: translateX === 0 || translateX === -DELETE_WIDTH ? 'transform 0.2s ease-out' : 'none',
+        }}
+        className="relative bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 select-none"
+      >
+        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
+          <span className="text-sm font-semibold text-green-700">
+            {player.name.charAt(0).toUpperCase()}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
+          <p className="text-xs text-gray-400">
+            {stats.matchesPlayed} matches · {stats.wins} wins
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function PlayersPage() {
+  const { data: players, isLoading } = usePlayers()
+  const { stats, isLoading: statsLoading } = usePlayerStats()
+  const deletePlayer = useDeletePlayer()
+  const [showForm, setShowForm] = useState(false)
+  const [swipedId, setSwipedId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  const statsMap = new Map(stats.map((s) => [s.playerId, s]))
+
+  const sortedPlayers = [...(players ?? [])].sort((a, b) => {
+    const aStats = statsMap.get(a.id)
+    const bStats = statsMap.get(b.id)
+    return (bStats?.matchesPlayed ?? 0) - (aStats?.matchesPlayed ?? 0)
+  })
+
+  async function handleDelete(id: string) {
+    setSwipedId(null)
+    try {
+      await deletePlayer.mutateAsync(id)
+      setConfirmDeleteId(null)
+    } catch {
+      // handled by mutation
+    }
+  }
+
+  return (
+    <div className="min-h-svh bg-gray-50">
+      <div className="px-4 py-5 space-y-3 pb-32">
+        {isLoading || statsLoading ? (
+          <div className="text-center py-12 text-gray-400 text-sm">Loading players...</div>
+        ) : sortedPlayers.length === 0 ? (
+          <div className="text-center py-12">
+            <User className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm text-gray-400">No players yet.</p>
+          </div>
+        ) : (
+          sortedPlayers.map((player) => {
+            const s = statsMap.get(player.id)
+            return (
+              <SwipePlayerItem
+                key={player.id}
+                player={player}
+                stats={{ matchesPlayed: s?.matchesPlayed ?? 0, wins: s?.wins ?? 0 }}
+                isOpen={swipedId === player.id}
+                onOpen={() => setSwipedId(player.id)}
+                onClose={() => setSwipedId(null)}
+                onDelete={() => setConfirmDeleteId(player.id)}
+              />
+            )
+          })
+        )}
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8 text-gray-400">Loading players...</div>
-      ) : filtered?.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
-          <User className="w-10 h-10 mx-auto mb-2 opacity-40" />
-          <p>No players yet.</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-green-600 text-sm mt-1 hover:underline"
+      {/* FAB Add Player */}
+      <button
+        onClick={() => setShowForm(true)}
+        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 w-14 h-14 bg-green-600 text-white rounded-full shadow-lg shadow-green-600/25 flex items-center justify-center active:scale-90 transition-transform z-30"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
+
+      {/* Add player modal */}
+      {showForm && <PlayerForm onClose={() => setShowForm(false)} />}
+
+      {/* Delete confirmation */}
+      {confirmDeleteId && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-6"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-5 w-full max-w-xs space-y-4"
+            onClick={(e) => e.stopPropagation()}
           >
-            Add your first player
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered?.map(player => (
-            <div
-              key={player.id}
-              className="w-full flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100"
-            >
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-                <span className="text-sm font-semibold text-green-700">
-                  {player.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
-                {player.email && (
-                  <p className="text-xs text-gray-400 truncate">{player.email}</p>
-                )}
-              </div>
+            <p className="text-[15px] font-bold text-gray-900">Delete Player?</p>
+            <p className="text-sm text-gray-500">
+              This will remove the player permanently.
+            </p>
+            <div className="flex gap-3">
               <button
-                onClick={() => {
-                  toggleActive.mutate({ id: player.id, is_active: !player.is_active })
-                }}
-                className={`p-1.5 rounded-lg ${
-                  player.is_active
-                    ? 'text-green-600 hover:bg-green-50'
-                    : 'text-gray-400 hover:bg-gray-50'
-                }`}
-                title={player.is_active ? 'Active' : 'Inactive'}
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700 active:bg-gray-200"
               >
-                {player.is_active ? (
-                  <UserCheck className="w-4 h-4" />
-                ) : (
-                  <UserX className="w-4 h-4" />
-                )}
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmDeleteId)}
+                disabled={deletePlayer.isPending}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white active:bg-red-700 disabled:opacity-50"
+              >
+                {deletePlayer.isPending ? '...' : 'Delete'}
               </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
-
-      {showForm && <PlayerForm onClose={() => setShowForm(false)} />}
     </div>
   )
 }

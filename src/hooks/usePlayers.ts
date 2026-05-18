@@ -82,3 +82,14 @@ export function useTogglePlayerActive() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [PLAYERS_KEY] }),
   })
 }
+
+export function useDeletePlayer() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('players').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [PLAYERS_KEY] }),
+  })
+}
