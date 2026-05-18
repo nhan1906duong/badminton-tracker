@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData } from '../hooks/useSessions'
-import { LogOut, User, Trash2, AlertTriangle, Palette, ChevronRight } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight } from 'lucide-react'
+import Avatar from '../components/Avatar'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -27,9 +28,12 @@ export default function SettingsPage() {
       <div className="px-4 py-5 space-y-6 pb-32">
         {/* User profile */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-            <User className="w-6 h-6 text-green-600" />
-          </div>
+          <Avatar
+            name={user?.email || 'User'}
+            size={48}
+            bgColor="#dcfce7"
+            textColor="#16a34a"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-bold text-gray-900 truncate">
               {user?.email || 'User'}

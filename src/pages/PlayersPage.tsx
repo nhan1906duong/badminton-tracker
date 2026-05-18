@@ -4,6 +4,7 @@ import { usePlayerStats } from '../hooks/usePlayerStats'
 import { Plus, Trash2, User } from 'lucide-react'
 import PlayerForm from '../components/PlayerForm'
 import FloatingActionButton from '../components/FloatingActionButton'
+import Avatar from '../components/Avatar'
 import type { Player } from '../types/database'
 
 const SWIPE_THRESHOLD = 60
@@ -82,11 +83,13 @@ function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete }: S
         }}
         className="relative bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 select-none"
       >
-        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-          <span className="text-sm font-semibold text-green-700">
-            {player.name.charAt(0).toUpperCase()}
-          </span>
-        </div>
+        <Avatar
+          src={player.avatar_url}
+          name={player.name}
+          size={40}
+          bgColor="#dcfce7"
+          textColor="#15803d"
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
           <p className="text-xs text-gray-400">

@@ -1,3 +1,5 @@
+import Avatar from './Avatar'
+
 /**
  * PodiumChart — modern sports podium for top-5 rankings.
  *
@@ -231,28 +233,14 @@ function PodiumBlock({
             className="flex flex-col items-center justify-center h-full text-center"
             style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
           >
-            {/* Avatar circle */}
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.9)',
-                color: theme.body,
-                fontSize: '10px',
-                fontWeight: '700',
-              }}
-            >
-              {player.avatarUrl ? (
-                <img
-                  src={player.avatarUrl}
-                  alt=""
-                  className="w-full h-full rounded-full object-cover"
-                  style={{ display: 'block' }}
-                  draggable={false}
-                />
-              ) : (
-                getInitials(player.name)
-              )}
-            </div>
+            {/* Avatar */}
+            <Avatar
+              src={player.avatarUrl}
+              name={player.name}
+              size={24}
+              bgColor="rgba(255,255,255,0.9)"
+              textColor={theme.body}
+            />
 
             {/* Name */}
             <span

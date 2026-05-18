@@ -20,6 +20,12 @@ export default function HomePage() {
     () => [...stats].sort((a, b) => b.losses - a.losses).slice(0, 5),
     [stats],
   )
+
+  const avatarMap = useMemo(() => {
+    const map = new Map<string, string | null>()
+    players?.forEach((p) => map.set(p.id, p.avatar_url))
+    return map
+  }, [players])
   const totalPenalty = totalLost * 5000
 
   const activePlayerCount = players?.filter((p) => p.is_active).length ?? 0
@@ -112,6 +118,7 @@ export default function HomePage() {
                   matchesPlayed: p.matchesPlayed,
                   value: p.losses * 5,
                   valueLabel: 'k',
+                  avatarUrl: avatarMap.get(p.playerId) ?? undefined,
                 }))}
               />
             </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Player, MatchType } from '../types/database'
 import { getRequiredPlayerCount } from '../lib/match-helpers'
 import { Check, Plus, User } from 'lucide-react'
+import Avatar from './Avatar'
 
 interface PlayerSelectorProps {
   players: Player[]
@@ -55,18 +56,20 @@ export default function PlayerSelector({
               }`}
               style={{ minHeight: 56 }}
             >
-              {/* Avatar / Check */}
-              <div className={`w-10 h-10 [@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8 rounded-full flex items-center justify-center shrink-0 ${
-                isSelected
-                  ? team === 'A'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-400'
-              }`}>
-                {isSelected ? (
-                  <Check className="w-5 h-5 [@media(max-width:380px)]:w-4 [@media(max-width:380px)]:h-4" />
-                ) : (
-                  <User className="w-5 h-5 [@media(max-width:380px)]:w-4 [@media(max-width:380px)]:h-4" />
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <Avatar
+                  src={player.avatar_url}
+                  name={player.name}
+                  size={40}
+                  className="[@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8"
+                  bgColor={isSelected ? (team === 'A' ? '#3b82f6' : '#ef4444') : '#f3f4f6'}
+                  textColor={isSelected ? '#ffffff' : '#9ca3af'}
+                />
+                {isSelected && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <Check className="w-3 h-3 text-green-500" />
+                  </div>
                 )}
               </div>
 
