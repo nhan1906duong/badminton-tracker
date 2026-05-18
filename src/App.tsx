@@ -12,10 +12,14 @@ import SessionMatchPlayersPage from './pages/SessionMatchPlayersPage'
 import SessionMatchResultPage from './pages/SessionMatchResultPage'
 import EditMatchPage from './pages/EditMatchPage'
 import SettingsPage from './pages/SettingsPage'
+import DesignSystemPage from './pages/DesignSystemPage'
+
 import { useOpenSession } from './hooks/useSessions'
 import { Home, Users, Trophy, Settings, ArrowLeft } from 'lucide-react'
 import './index.css'
 import { useEffect } from 'react'
+
+const IS_DEV = import.meta.env.DEV
 
 const queryClient = new QueryClient()
 
@@ -44,6 +48,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/sessions': 'Sessions',
   '/sessions/new': 'New Session',
   '/settings': 'Settings',
+  '/settings/design-system': 'Design System',
 }
 
 function getPageTitle(path: string): string {
@@ -223,6 +228,16 @@ function AppRoutes() {
           </RequireAuth>
         }
       />
+      {IS_DEV && (
+        <Route
+          path="/settings/design-system"
+          element={
+            <RequireAuth>
+              <DesignSystemPage />
+            </RequireAuth>
+          }
+        />
+      )}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

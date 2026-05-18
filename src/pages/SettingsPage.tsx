@@ -1,12 +1,14 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData } from '../hooks/useSessions'
-import { LogOut, User, Trash2, AlertTriangle } from 'lucide-react'
+import { LogOut, User, Trash2, AlertTriangle, Palette, ChevronRight } from 'lucide-react'
 
 const IS_DEV = import.meta.env.DEV
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
+  const navigate = useNavigate()
   const clearAll = useClearAllData()
   const [confirming, setConfirming] = useState(false)
 
@@ -55,6 +57,14 @@ export default function SettingsPage() {
                 Dev Only
               </span>
             </div>
+            <button
+              onClick={() => navigate('/settings/design-system')}
+              className="w-full flex items-center gap-3 px-4 py-4 bg-white rounded-2xl border border-gray-100 text-gray-700 active:bg-gray-50 transition-colors"
+            >
+              <Palette className="w-5 h-5 shrink-0" />
+              <span className="flex-1 text-left text-[15px] font-semibold">Design System</span>
+              <ChevronRight className="w-5 h-5 text-gray-300 shrink-0" />
+            </button>
             <button
               onClick={handleClear}
               disabled={clearAll.isPending}

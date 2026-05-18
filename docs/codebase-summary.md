@@ -19,7 +19,8 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 234 | App.tsx | Router, frosted glass header, bottom nav |
+| 518 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue (see `design-guidelines.md`) |
+| 260 | App.tsx | Router, frosted glass header, bottom nav |
 | 218 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useUpdateMatch() + useDeleteMatch() |
 | 191 | pages/SessionDetailPage.tsx | Session detail: active players + match list + end session |
 | 152 | pages/EditMatchPage.tsx | Edit match: result + scores |
@@ -72,6 +73,8 @@ pages/
 ├── SessionMatchPlayersPage.tsx  # /sessions/:id/matches/new - Step 1
 ├── SessionMatchResultPage.tsx   # /sessions/:id/matches/new/result - Step 2
 ├── EditMatchPage.tsx            # /sessions/:id/matches/:matchId/edit
+├── SettingsPage.tsx             # /settings - Profile, logout, dev tools
+├── DesignSystemPage.tsx         # /settings/design-system - Dev-only design catalogue
 ```
 
 ## Data Flow
