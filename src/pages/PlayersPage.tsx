@@ -3,6 +3,7 @@ import { usePlayers, useDeletePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { Plus, Trash2, User } from 'lucide-react'
 import PlayerForm from '../components/PlayerForm'
+import FloatingActionButton from '../components/FloatingActionButton'
 import type { Player } from '../types/database'
 
 const SWIPE_THRESHOLD = 60
@@ -152,12 +153,11 @@ export default function PlayersPage() {
       </div>
 
       {/* FAB Add Player */}
-      <button
+      <FloatingActionButton
         onClick={() => setShowForm(true)}
-        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 w-14 h-14 bg-green-600 text-white rounded-full shadow-lg shadow-green-600/25 flex items-center justify-center active:scale-90 transition-transform z-30"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+        icon={<Plus className="w-6 h-6" />}
+        ariaLabel="Add player"
+      />
 
       {/* Add player modal */}
       {showForm && <PlayerForm onClose={() => setShowForm(false)} />}
