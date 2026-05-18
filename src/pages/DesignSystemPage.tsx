@@ -10,6 +10,7 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
+import PodiumChart from '../components/PodiumChart'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -38,6 +39,7 @@ export default function DesignSystemPage() {
         <FabSection />
         <ModalSection />
         <EmptyAndLoadingSection />
+        <PodiumChartSection />
       </div>
     </div>
   )
@@ -513,6 +515,33 @@ function EmptyAndLoadingSection() {
           <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
         </div>
       </Card>
+    </Section>
+  )
+}
+
+/* ---------- Podium Chart ---------- */
+
+function PodiumChartSection() {
+  const demoPlayers = [
+    { rank: 1, name: 'Alex', wins: 12, matchesPlayed: 15 },
+    { rank: 2, name: 'Bella', wins: 10, matchesPlayed: 14 },
+    { rank: 3, name: 'Chris', wins: 9, matchesPlayed: 16 },
+    { rank: 4, name: 'Dana', wins: 7, matchesPlayed: 15 },
+    { rank: 5, name: 'Evan', wins: 5, matchesPlayed: 14 },
+  ]
+
+  return (
+    <Section title="Podium Chart">
+      <div className="bg-white border border-gray-100 rounded-2xl p-4">
+        <PodiumChart players={demoPlayers} />
+      </div>
+      <div className="bg-white border border-gray-100 rounded-2xl p-4">
+        <p className="text-xs text-gray-400 mb-3 text-center">Partial data (ranks 1-3 only)</p>
+        <PodiumChart
+          players={demoPlayers.slice(0, 3)}
+          onPlayerClick={(p) => alert(`Clicked: ${p.name}`)}
+        />
+      </div>
     </Section>
   )
 }

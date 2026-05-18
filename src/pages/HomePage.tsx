@@ -1,29 +1,10 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { useOpenSession } from '../hooks/useSessions'
 import { usePlayers } from '../hooks/usePlayers'
-import { Trophy, Crown, Medal, ChevronRight, Flame, TrendingUp } from 'lucide-react'
-
-const RANK_ICONS: Record<number, React.ReactNode> = {
-  1: <Crown className="w-5 h-5 text-yellow-500" />,
-  2: <Medal className="w-5 h-5 text-gray-400" />,
-  3: <Medal className="w-5 h-5 text-amber-700" />,
-}
-
-function RankBadge({ rank }: { rank: number }) {
-  if (rank <= 3) {
-    return (
-      <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
-        {RANK_ICONS[rank]}
-      </div>
-    )
-  }
-  return (
-    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
-      <span className="text-sm font-bold text-gray-400">{rank}</span>
-    </div>
-  )
-}
+import { Trophy, ChevronRight, Flame, TrendingUp } from 'lucide-react'
+import PodiumChart from '../components/PodiumChart'
 
 function formatCurrency(vnd: number): string {
   return new Intl.NumberFormat('vi-VN').format(vnd) + ' VND'
@@ -31,11 +12,14 @@ function formatCurrency(vnd: number): string {
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { sortedByMatches, totalLost, isLoading } = usePlayerStats()
+  const { stats, totalLost, isLoading } = usePlayerStats()
   const { data: activeSession } = useOpenSession()
   const { data: players } = usePlayers()
 
-  const top5 = sortedByMatches.slice(0, 5)
+  const top5 = useMemo(
+    () => [...stats].sort((a, b) => b.losses - a.losses).slice(0, 5),
+    [stats],
+  )
   const totalPenalty = totalLost * 5000
 
   const activePlayerCount = players?.filter((p) => p.is_active).length ?? 0
@@ -102,11 +86,11 @@ export default function HomePage() {
           </button>
         )}
 
-        {/* Leaderboard */}
+        {/* Donation Leaderboard */}
         <section className="space-y-3">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm font-bold text-gray-900">Top Players</span>
+            <span className="text-sm font-bold text-gray-900">Top Donate Players</span>
           </div>
 
           {isLoading ? (
@@ -116,33 +100,20 @@ export default function HomePage() {
               <p className="text-sm text-gray-400">No matches yet.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              {top5.map((player, index) => (
-                <div
-                  key={player.playerId}
-                  onClick={() => navigate('/players')}
-                  className={`flex items-center gap-3 px-4 py-3.5 active:bg-gray-50 ${
-                    index < top5.length - 1 ? 'border-b border-gray-50' : ''
-                  }`}
-                >
-                  <RankBadge rank={index + 1} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-gray-900 truncate">
-                      {player.name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {player.matchesPlayed} matches
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-gray-900">
-                      {player.wins}
-                      <span className="text-gray-300 font-medium"> / {player.matchesPlayed}</span>
-                    </p>
-                    <p className="text-[10px] text-gray-400 font-medium">Wins</p>
-                  </div>
-                </div>
-              ))}
+            <div
+              className="bg-white rounded-2xl border border-gray-100 p-4 active:bg-gray-50 transition-colors"
+              onClick={() => navigate('/players')}
+            >
+              <PodiumChart
+                players={top5.map((p, i) => ({
+                  rank: i + 1,
+                  name: p.name,
+                  wins: p.wins,
+                  matchesPlayed: p.matchesPlayed,
+                  value: p.losses * 5,
+                  valueLabel: 'k',
+                }))}
+              />
             </div>
           )}
         </section>
