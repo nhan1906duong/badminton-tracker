@@ -9,6 +9,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface Profile {
+  id: string
+  avatar_url?: string | null
+  updated_at?: string
+}
+
 export interface Player {
   id: string
   name: string

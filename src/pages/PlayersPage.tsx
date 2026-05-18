@@ -5,6 +5,8 @@ import { Plus, Trash2, User } from 'lucide-react'
 import PlayerForm from '../components/PlayerForm'
 import FloatingActionButton from '../components/FloatingActionButton'
 import Avatar from '../components/Avatar'
+import AvatarPicker from '../components/AvatarPicker'
+import { useAvatarUpload, useAvatarDelete } from '../hooks/useAvatarUpload'
 import type { Player } from '../types/database'
 
 const SWIPE_THRESHOLD = 60
@@ -17,9 +19,10 @@ interface SwipeItemProps {
   onOpen: () => void
   onClose: () => void
   onDelete: () => void
+  onEditAvatar: () => void
 }
 
-function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete }: SwipeItemProps) {
+function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onEditAvatar }: SwipeItemProps) {
   const startX = useRef(0)
   const currentX = useRef(0)
   const [translateX, setTranslateX] = useState(0)
@@ -83,13 +86,15 @@ function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete }: S
         }}
         className="relative bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 select-none"
       >
-        <Avatar
-          src={player.avatar_url}
-          name={player.name}
-          size={40}
-          bgColor="#dcfce7"
-          textColor="#15803d"
-        />
+        <button onClick={onEditAvatar} className="shrink-0">
+          <Avatar
+            src={player.avatar_url}
+            name={player.name}
+            size={40}
+            bgColor="#dcfce7"
+            textColor="#15803d"
+          />
+        </button>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
           <p className="text-xs text-gray-400">
@@ -108,6 +113,10 @@ export default function PlayersPage() {
   const [showForm, setShowForm] = useState(false)
   const [swipedId, setSwipedId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [editAvatarPlayer, setEditAvatarPlayer] = useState<Player | null>(null)
+
+  const upload = useAvatarUpload()
+  const remove = useAvatarDelete()
 
   const statsMap = new Map(stats.map((s) => [s.playerId, s]))
 
@@ -149,6 +158,7 @@ export default function PlayersPage() {
                 onOpen={() => setSwipedId(player.id)}
                 onClose={() => setSwipedId(null)}
                 onDelete={() => setConfirmDeleteId(player.id)}
+                onEditAvatar={() => setEditAvatarPlayer(player)}
               />
             )
           })
@@ -164,6 +174,20 @@ export default function PlayersPage() {
 
       {/* Add player modal */}
       {showForm && <PlayerForm onClose={() => setShowForm(false)} />}
+
+      {/* Avatar Picker */}
+      {editAvatarPlayer && (
+        <AvatarPicker
+          hasAvatar={!!editAvatarPlayer.avatar_url}
+          onSelect={(file) =>
+            upload.mutate({ file, entity: 'players', id: editAvatarPlayer.id })
+          }
+          onRemove={() =>
+            remove.mutate({ entity: 'players', id: editAvatarPlayer.id })
+          }
+          onClose={() => setEditAvatarPlayer(null)}
+        />
+      )}
 
       {/* Delete confirmation */}
       {confirmDeleteId && (

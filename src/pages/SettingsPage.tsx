@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera } from 'lucide-react'
 import Avatar from '../components/Avatar'
+import AvatarPicker from '../components/AvatarPicker'
+import { useAvatarUpload, useAvatarDelete } from '../hooks/useAvatarUpload'
+import { useProfile } from '../hooks/useProfile'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -12,6 +15,13 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const clearAll = useClearAllData()
   const [confirming, setConfirming] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
+
+  const { data: profile } = useProfile(user?.id)
+  const upload = useAvatarUpload()
+  const remove = useAvatarDelete()
+
+  const userAvatarUrl = profile?.avatar_url
 
   const handleClear = () => {
     if (!confirming) {
@@ -28,12 +38,23 @@ export default function SettingsPage() {
       <div className="px-4 py-5 space-y-6 pb-32">
         {/* User profile */}
         <section className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-          <Avatar
-            name={user?.email || 'User'}
-            size={48}
-            bgColor="#dcfce7"
-            textColor="#16a34a"
-          />
+          <button
+            onClick={() => setShowPicker(true)}
+            className="relative shrink-0"
+            disabled={upload.isPending}
+          >
+            <Avatar
+              src={userAvatarUrl}
+              name={user?.email || 'User'}
+              size={48}
+              bgColor="#dcfce7"
+              textColor="#16a34a"
+            />
+            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-green-600 rounded-full flex items-center justify-center border-2 border-white"
+            >
+              <Camera className="w-3 h-3 text-white" />
+            </div>
+          </button>
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-bold text-gray-900 truncate">
               {user?.email || 'User'}
@@ -41,6 +62,16 @@ export default function SettingsPage() {
             <p className="text-xs text-gray-400">Signed in</p>
           </div>
         </section>
+
+        {/* Avatar Picker */}
+        {showPicker && user && (
+          <AvatarPicker
+            hasAvatar={!!userAvatarUrl}
+            onSelect={(file) => upload.mutate({ file, entity: 'users', id: user.id })}
+            onRemove={() => remove.mutate({ entity: 'users', id: user.id })}
+            onClose={() => setShowPicker(false)}
+          />
+        )}
 
         {/* Actions */}
         <section className="space-y-2">
