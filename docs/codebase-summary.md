@@ -19,42 +19,53 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 518 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue (see `design-guidelines.md`) |
+| 518 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
+| 305 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
 | 260 | App.tsx | Router, frosted glass header, bottom nav |
+| 226 | pages/PlayersPage.tsx | Player list + swipe-to-delete + avatar upload |
 | 218 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useUpdateMatch() + useDeleteMatch() |
 | 191 | pages/SessionDetailPage.tsx | Session detail: active players + match list + end session |
 | 152 | pages/EditMatchPage.tsx | Edit match: result + scores |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
-| 145 | components/PlayerSelector.tsx | Unified 2-column grid with Team A/B |
+| 145 | components/PlayerSelector.tsx | Unified 2-column grid with Team A/B + avatars |
 | 136 | pages/SessionMatchResultPage.tsx | Step 2: scores + winner (session-scoped) |
+| 130 | pages/HomePage.tsx | Stats cards + recent matches + PodiumChart |
+| 130 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
 | 124 | components/TeamAssignment.tsx | Team A/B display with shuffle |
 | 119 | pages/SessionMatchPlayersPage.tsx | Step 1: match type + player selection (session-scoped) |
 | 112 | pages/LoginPage.tsx | OTP email login flow |
-| 199 | pages/PlayersPage.tsx | Player list + swipe-to-delete + add modal |
 | 93 | contexts/AuthContext.tsx | Supabase auth state management |
 | 93 | components/MatchCard.tsx | Match list card component |
+| 90 | hooks/useAvatarUpload.ts | Avatar upload/delete mutations for Supabase Storage |
 | 87 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
+| 86 | components/AvatarPicker.tsx | Bottom sheet: camera / gallery / remove photo |
 | 85 | stores/new-match-store.ts | Zustand store for match creation flow |
 | 84 | hooks/usePlayers.ts | Player CRUD hooks |
 | 82 | types/database.ts | TypeScript types for all entities |
 | 81 | components/PlayerForm.tsx | Add player modal |
-| 74 | pages/HomePage.tsx | Stats cards + recent matches |
 | 67 | pages/CreateSessionPage.tsx | Create new session |
+| 63 | components/Avatar.tsx | Circle avatar with fallback chain |
 | 56 | pages/SessionsListPage.tsx | List all sessions |
 | 53 | lib/match-helpers.ts | Helper functions for match logic |
+| 50 | lib/image.ts | Canvas-based image compression utility |
 | 46 | stores/session-store.ts | Zustand + localStorage for session active players |
 | 37 | components/MatchTypeSelector.tsx | Match type dropdown selector |
 | 32 | components/FloatingActionButton.tsx | Reusable FAB constrained to mobile container |
+| 20 | hooks/useProfile.ts | Fetch user profile from profiles table |
+| 17 | lib/avatar.ts | Deterministic default avatar from name hash |
 | 13 | lib/supabase.ts | Supabase client initialization |
 
 ## Components
 
 ```
 components/
+├── Avatar.tsx               # Circle avatar: src → multiavatar default → initial fallback
+├── AvatarPicker.tsx         # Bottom action sheet: camera / gallery / remove
 ├── MatchTypeSelector.tsx    # Match type dropdown selector
 ├── MatchCard.tsx           # Match list card
-├── PlayerSelector.tsx       # Unified 2-column grid with Team A/B
+├── PlayerSelector.tsx       # Unified 2-column grid with Team A/B + avatars
 ├── PlayerForm.tsx           # Add player modal
+├── PodiumChart.tsx          # SVG podium chart for top-5 rankings
 ├── ScoreEntry.tsx           # Set score inputs
 ├── TeamAssignment.tsx       # Team display with shuffle
 ├── FloatingActionButton.tsx # Reusable FAB anchored to mobile container
@@ -91,11 +102,54 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 
 ## Type Definitions
 
+- **Profile:** id, avatar_url, updated_at (1:1 with auth.users)
 - **Player:** id, name, email, avatar_url, is_active, created_at, created_by
 - **Match:** id, match_type, played_at, notes, created_by, created_at
 - **MatchTeam:** id, match_id, team_label (TEAM_A/TEAM_B), is_winner
 - **MatchParticipant:** id, match_id, team_id, player_id
 - **MatchScore:** id, match_id, set_number, team_a_score, team_b_score
+
+## Hooks
+
+```
+hooks/
+├── useAuth.ts            # Supabase auth state
+├── useAvatarUpload.ts    # Upload/delete avatar to Supabase Storage
+├── useMatches.ts         # Match CRUD operations
+├── usePlayers.ts         # Player CRUD operations
+├── usePlayerStats.ts     # Player win/loss statistics
+├── useProfile.ts         # Fetch user profile (avatar_url)
+├── useSessions.ts        # Session CRUD + useOpenSession()
+```
+
+## Lib
+
+```
+lib/
+├── supabase.ts      # Supabase client initialization
+├── image.ts         # Canvas-based image compression (center-crop → square → JPEG)
+├── avatar.ts        # Deterministic default avatar URL from name hash
+├── match-helpers.ts # Match logic helpers
+```
+
+## Avatar Upload Flow
+
+```
+1. Tap avatar → AvatarPicker opens (camera / gallery / remove)
+2. Select image → compressImage(file, 200) → center-crop to 200x200 JPEG
+3. Upload to Supabase Storage: avatars/{entity}/{id}.jpg
+4. Update DB: profiles.avatar_url (users) or players.avatar_url (players)
+5. Invalidate queries → UI refreshes with new avatar
+```
+
+## Avatar Fallback Chain
+
+```
+User has custom avatar_url?
+  → Yes: display uploaded image
+  → No:  display multiavatar default (deterministic from name hash)
+  → Error loading image: display first letter of name
+```
 
 ## Match Creation Flow
 

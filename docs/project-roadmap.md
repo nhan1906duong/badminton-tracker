@@ -8,11 +8,12 @@
 | 2 | Authentication | ✅ Done | OTP email login |
 | 3 | Player Management | ✅ Done | CRUD + active toggle |
 | 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit |
-| 5 | Home Dashboard | ✅ Done | Stats + recent matches |
-| 6 | Player Rankings | ⏳ Pending | Win rate, leaderboard |
+| 5 | Home Dashboard | ✅ Done | Stats + recent matches + PodiumChart |
+| 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate |
 | 7 | Match History | ✅ Done | List + detail view |
-| 8 | PWA Enhancement | ⏳ Pending | Offline support, push notifications |
-| 9 | Testing | ⏳ Pending | Unit tests, E2E tests |
+| 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
+| 9 | PWA Enhancement | ⏳ Pending | Offline support, push notifications |
+| 10 | Testing | ⏳ Pending | Unit tests, E2E tests |
 
 ## Phase Details
 
@@ -54,18 +55,29 @@
 - [x] Stats cards (total matches, players)
 - [x] Recent matches list
 
-### Phase 6: Player Rankings ⏳
-- [ ] Win/loss statistics
-- [ ] Leaderboard UI
-- [ ] Sort by wins, win rate
-- [ ] Filter by date range
+### Phase 6: Player Rankings ✅
+- [x] Win/loss statistics
+- [x] Leaderboard UI (PodiumChart top 5)
+- [x] Sort by wins, losses (donations)
+- [x] Avatar display on leaderboard
 
 ### Phase 7: Match History ✅
 - [x] Match list page (/matches)
 - [x] Match detail view (/matches/:id)
 - [x] MatchCard component
 
-### Phase 8: PWA Enhancement ⏳
+### Phase 8: Avatar Upload ✅
+- [x] Avatar component with fallback chain (src → multiavatar default → initial)
+- [x] AvatarPicker bottom sheet (camera / gallery / remove)
+- [x] Client-side image compression (200x200 JPEG)
+- [x] Supabase Storage upload/delete hooks
+- [x] User avatar on Settings page
+- [x] Player avatar on Players page
+- [x] Avatar in PlayerSelector grid
+- [x] Avatar in PodiumChart
+- [x] profiles table for user avatars
+
+### Phase 9: PWA Enhancement ⏳
 - [ ] Offline mode
 - [ ] Background sync
 - [ ] Push notifications
@@ -83,4 +95,5 @@
 |-----------|--------|--------|
 | MVP (Phases 1-4) | ✅ Done | Working app |
 | Core Features (Phases 5-7) | ✅ Done | Dashboard + match history |
-| Release (Phase 8-9) | Q3 2026 | Pending |
+| Avatar & Rankings (Phase 8) | ✅ Done | Avatar upload + leaderboard |
+| Release (Phase 9-10) | Q3 2026 | Pending |

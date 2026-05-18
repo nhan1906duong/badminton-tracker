@@ -26,8 +26,10 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Inline Player Add | Implemented | Add player without leaving match flow |
 | Score Entry | Implemented | Per-set inputs with auto winner detection |
 | Match History | Implemented | List + detail view with all match data |
-| Home Dashboard | Implemented | Stats cards + recent matches list |
+| Home Dashboard | Implemented | Stats cards + recent matches + PodiumChart top donate |
 | Bottom Navigation | Implemented | Home, Matches, Players tabs |
+| Avatar Upload | Implemented | Camera/gallery picker, compress, Supabase Storage |
+| Default Avatars | Implemented | Deterministic multiavatar from name hash |
 | PWA Support | Implemented | Service worker + manifest for install |
 
 ## Database Schema
@@ -37,6 +39,8 @@ players ───────────┐
 matches ────────────┼── match_teams ──┬─ match_participants ── players
                     │                 │
                     └─ match_scores ──┘
+
+profiles (1:1 with auth.users) ── avatar_url
 ```
 
 ## Match Flow
@@ -50,10 +54,10 @@ matches ────────────┼── match_teams ──┬─ m
 
 - **Frontend:** React 19 + TypeScript + Vite
 - **Styling:** Tailwind CSS v4
-- **Backend:** Supabase (PostgreSQL, Auth, Realtime)
+- **Backend:** Supabase (PostgreSQL, Auth, Storage, Realtime)
 - **State:** TanStack Query v5
 - **Icons:** Lucide React
-- **Charts:** Recharts (prepared)
+- **Charts:** Custom SVG (PodiumChart)
 - **PWA:** vite-plugin-pwa
 
 ## Environment Variables
