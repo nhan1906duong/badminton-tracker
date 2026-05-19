@@ -41,6 +41,7 @@
 - [x] Create session (auto-closes previous)
 - [x] Session detail page (active players + match list)
 - [x] Active-player filter (local-only, per session)
+- [x] Create-session active player picker w/ top-5 default (chip + virtualized bottom sheet)
 - [x] Match creation scoped to session
 - [x] Match type selector (dropdown)
 - [x] Player selection (filtered by active list)

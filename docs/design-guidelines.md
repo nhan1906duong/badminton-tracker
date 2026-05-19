@@ -83,6 +83,9 @@ Always include `active:` press-state and 44+px touch target.
 - Status pill: `text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full`.
 - Dev tag: `text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-100 px-2 py-0.5 rounded`.
 - Team chip: `px-3 py-2 rounded-lg`, blue/red 50/200 palette + initial avatar.
+- Active player chip: `pl-1 pr-3 py-1 rounded-full bg-green-600 text-white text-sm font-medium` with 24px avatar; tap-to-remove.
+- Add player CTA (dashed): `border border-dashed border-gray-300 rounded-full px-3 py-1.5` with `+` icon.
+- Circle indicator (multi-select): 24px circle; unselected `border-2 border-gray-300`, selected `bg-green-600` + white `Check`.
 
 ## Form Inputs
 

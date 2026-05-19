@@ -1,15 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateSession } from '../hooks/useSessions'
-import { Loader2, Play } from 'lucide-react'
+import { usePlayers } from '../hooks/usePlayers'
+import { useTopJoinedPlayers } from '../hooks/useTopJoinedPlayers'
+import { useSessionStore } from '../stores/session-store'
+import ActivePlayersEditor from '../components/ActivePlayersEditor'
+import { Loader2, Play, Users } from 'lucide-react'
 
 export default function CreateSessionPage() {
   const navigate = useNavigate()
   const createSession = useCreateSession()
+  const { data: allPlayers, isLoading: playersLoading } = usePlayers()
+  const { players: topPlayers, isLoading: topLoading } = useTopJoinedPlayers(5)
+  const setSessionPlayers = useSessionStore((s) => s.setPlayers)
+
   const [label, setLabel] = useState('')
   const [error, setError] = useState('')
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  // Apply top-5 defaults only once after data loads, so user edits aren't overwritten
+  const defaultsAppliedRef = useRef(false)
 
-  const defaultLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  useEffect(() => {
+    if (defaultsAppliedRef.current) return
+    if (topLoading || playersLoading) return
+    setSelectedIds(topPlayers.map((p) => p.id))
+    defaultsAppliedRef.current = true
+  }, [topLoading, playersLoading, topPlayers])
+
+  const defaultLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 
   async function handleStart() {
     setError('')
@@ -17,6 +40,7 @@ export default function CreateSessionPage() {
       const session = await createSession.mutateAsync({
         label: label.trim() || undefined,
       })
+      setSessionPlayers(session.id, selectedIds)
       navigate(`/sessions/${session.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create session')
@@ -26,6 +50,19 @@ export default function CreateSessionPage() {
   return (
     <div className="min-h-svh bg-gray-50">
       <div className="px-4 py-5 space-y-6 pb-32">
+        <section className="space-y-3">
+          <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Active Players
+          </span>
+          <ActivePlayersEditor
+            players={allPlayers ?? []}
+            selectedIds={selectedIds}
+            onChange={setSelectedIds}
+            isLoading={playersLoading || topLoading}
+          />
+        </section>
+
         <section className="space-y-3">
           <span className="text-sm font-bold text-gray-900">Session Name</span>
           <input

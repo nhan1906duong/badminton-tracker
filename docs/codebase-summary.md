@@ -24,16 +24,19 @@ src/
 | 260 | App.tsx | Router, frosted glass header, bottom nav |
 | 226 | pages/PlayersPage.tsx | Player list + swipe-to-delete + avatar upload |
 | 218 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useUpdateMatch() + useDeleteMatch() |
-| 191 | pages/SessionDetailPage.tsx | Session detail: active players + match list + end session |
 | 152 | pages/EditMatchPage.tsx | Edit match: result + scores |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
 | 145 | components/PlayerSelector.tsx | Unified 2-column grid with Team A/B + avatars |
+| 141 | components/ActivePlayersBottomSheet.tsx | Virtualized bottom sheet (`@tanstack/react-virtual`) for adding active players |
+| 137 | pages/SessionDetailPage.tsx | Session detail: ActivePlayersEditor + match list + delete confirm |
 | 136 | pages/SessionMatchResultPage.tsx | Step 2: scores + winner (session-scoped) |
 | 130 | pages/HomePage.tsx | Stats cards + recent matches + PodiumChart |
 | 130 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
 | 124 | components/TeamAssignment.tsx | Team A/B display with shuffle |
 | 119 | pages/SessionMatchPlayersPage.tsx | Step 1: match type + player selection (session-scoped) |
 | 112 | pages/LoginPage.tsx | OTP email login flow |
+| 104 | pages/CreateSessionPage.tsx | Create session + pick active players (top-5 default) |
+| 96 | components/ActivePlayersEditor.tsx | Chip list + Add CTA, wraps `ActivePlayersBottomSheet` |
 | 93 | contexts/AuthContext.tsx | Supabase auth state management |
 | 93 | components/MatchCard.tsx | Match list card component |
 | 134 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
@@ -61,6 +64,8 @@ src/
 components/
 ├── Avatar.tsx               # Circle avatar: src → initial letter fallback
 ├── AvatarPicker.tsx         # Bottom sheet: 2x5 default grid + camera / gallery / remove
+├── ActivePlayersEditor.tsx  # Controlled chip list + Add CTA (wraps bottom sheet)
+├── ActivePlayersBottomSheet.tsx  # Virtualized add-players sheet (multi-select)
 ├── MatchTypeSelector.tsx    # Match type dropdown selector
 ├── MatchCard.tsx           # Match list card
 ├── PlayerSelector.tsx       # Unified 2-column grid with Team A/B + avatars
@@ -120,6 +125,7 @@ hooks/
 ├── usePlayerStats.ts     # Player win/loss statistics
 ├── useProfile.ts         # Fetch user profile (avatar_url)
 ├── useSessions.ts        # Session CRUD + useOpenSession()
+├── useTopJoinedPlayers.ts # Top-N players by matchesPlayed (used for default selection)
 ```
 
 ## Lib
@@ -155,6 +161,15 @@ User has avatar_url?
 ## Match Creation Flow
 
 1. Select type via dropdown → 2. Pick players from unified grid (auto-assign) → 3. Enter scores → 4. Select winner → 5. Save
+
+## Active Players Selection
+
+1. Create Session → top 5 most-joined players auto-selected as chips (via `useTopJoinedPlayers(5)`).
+2. Tap a chip to remove that player.
+3. Tap **Add active player** → bottom sheet (`ActivePlayersBottomSheet`) opens with virtualized list (`@tanstack/react-virtual`) of remaining roster.
+4. Multi-pick via circle indicators → **Add (N)** button commits → chips appended.
+5. On Start, selections are written to `useSessionStore.setPlayers(sessionId, ids)`.
+6. SessionDetailPage uses the same `ActivePlayersEditor` to edit picks afterwards.
 
 ## Auth Flow
 

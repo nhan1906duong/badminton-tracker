@@ -4,18 +4,18 @@ import { useMatches, useDeleteMatch } from '../hooks/useMatches'
 import { useSessionStore } from '../stores/session-store'
 import MatchCard from '../components/MatchCard'
 import FloatingActionButton from '../components/FloatingActionButton'
-import { Check, Plus, Users, Trophy, X } from 'lucide-react'
+import ActivePlayersEditor from '../components/ActivePlayersEditor'
+import { Plus, Users, Trophy, X } from 'lucide-react'
 import { useState } from 'react'
 
 export default function SessionDetailPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data: allPlayers } = usePlayers()
+  const { data: allPlayers, isLoading: playersLoading } = usePlayers()
   const { data: matches, isLoading: matchesLoading } = useMatches(sessionId)
   const deleteMatch = useDeleteMatch()
 
   const activePlayers = useSessionStore((s) => s.activePlayers)
-  const togglePlayer = useSessionStore((s) => s.togglePlayer)
   const setPlayers = useSessionStore((s) => s.setPlayers)
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -32,16 +32,6 @@ export default function SessionDetailPage() {
   const sid = sessionId
 
   const selectedIds = activePlayers[sid] || []
-  const allSelected = selectedIds.length === (allPlayers?.length ?? 0)
-
-  function handleSelectAll() {
-    if (!allPlayers) return
-    if (allSelected) {
-      setPlayers(sid, [])
-    } else {
-      setPlayers(sid, allPlayers.map((p) => p.id))
-    }
-  }
 
   async function handleDeleteMatch(matchId: string) {
     setSwipedMatchId(null)
@@ -58,37 +48,16 @@ export default function SessionDetailPage() {
       <div className="px-4 py-5 space-y-6 pb-32">
         {/* Active Players */}
         <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Active Players
-            </span>
-            <button
-              onClick={handleSelectAll}
-              className="text-xs font-semibold text-green-600 active:text-green-700"
-            >
-              {allSelected ? 'Deselect All' : 'Select All'}
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {allPlayers?.map((player) => {
-              const isActive = selectedIds.includes(player.id)
-              return (
-                <button
-                  key={player.id}
-                  onClick={() => togglePlayer(sid, player.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-                    isActive
-                      ? 'bg-green-600 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200'
-                  }`}
-                >
-                  {isActive && <Check className="w-3.5 h-3.5" />}
-                  {player.name}
-                </button>
-              )
-            })}
-          </div>
+          <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Active Players
+          </span>
+          <ActivePlayersEditor
+            players={allPlayers ?? []}
+            selectedIds={selectedIds}
+            onChange={(ids) => setPlayers(sid, ids)}
+            isLoading={playersLoading}
+          />
         </section>
 
         {/* Matches */}
