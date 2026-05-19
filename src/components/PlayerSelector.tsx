@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import type { Player, MatchType } from '../types/database'
 import { getRequiredPlayerCount } from '../lib/match-helpers'
-import { Check, Plus, User } from 'lucide-react'
+import { Check } from 'lucide-react'
 import Avatar from './Avatar'
 
 interface PlayerSelectorProps {
@@ -9,8 +8,6 @@ interface PlayerSelectorProps {
   selectedIds: string[]
   matchType: MatchType
   onToggle: (id: string) => void
-  onAddPlayer?: (name: string) => void
-  isAdding?: boolean
   teamAIds: string[]
   teamBIds: string[]
 }
@@ -20,14 +17,10 @@ export default function PlayerSelector({
   selectedIds,
   matchType,
   onToggle,
-  onAddPlayer,
-  isAdding,
   teamAIds,
   teamBIds,
 }: PlayerSelectorProps) {
   const required = getRequiredPlayerCount(matchType)
-  const [newName, setNewName] = useState('')
-  const [showInput, setShowInput] = useState(false)
 
   const activePlayers = players.filter(p => p.is_active)
 
@@ -94,55 +87,6 @@ export default function PlayerSelector({
           )
         })}
       </div>
-
-      {/* Add new player */}
-      {showInput ? (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            placeholder="Player name"
-            autoFocus
-            onKeyDown={e => {
-              if (e.key === 'Enter' && newName.trim() && onAddPlayer) {
-                onAddPlayer(newName.trim())
-                setNewName('')
-              }
-              if (e.key === 'Escape') {
-                setNewName('')
-                setShowInput(false)
-              }
-            }}
-            className="flex-1 px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-[15px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            style={{ minHeight: 52 }}
-          />
-          <button
-            onClick={() => {
-              if (newName.trim() && onAddPlayer) {
-                onAddPlayer(newName.trim())
-                setNewName('')
-              }
-            }}
-            disabled={!newName.trim() || isAdding}
-            className="px-5 py-3.5 bg-green-600 text-white rounded-2xl text-[15px] font-semibold active:bg-green-700 disabled:opacity-50"
-            style={{ minHeight: 52 }}
-          >
-            {isAdding ? '...' : 'Add'}
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowInput(true)}
-          className="flex items-center gap-2 text-green-600 text-[15px] font-semibold active:opacity-70"
-          style={{ minHeight: 44 }}
-        >
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-            <Plus className="w-4 h-4" />
-          </div>
-          Add new player
-        </button>
-      )}
     </div>
   )
 }

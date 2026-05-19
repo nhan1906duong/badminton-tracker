@@ -16,6 +16,7 @@ interface NewMatchState {
   setScores: (scores: SetScore[]) => void
   setWinner: (winner: 'TEAM_A' | 'TEAM_B' | null) => void
   reset: () => void
+  clearPlayers: () => void
 }
 
 const initialState = {
@@ -82,4 +83,5 @@ export const useNewMatchStore = create<NewMatchState>((set, get) => ({
   setScores: (scores) => set({ scores }),
   setWinner: (winner) => set({ winner }),
   reset: () => set(initialState),
+  clearPlayers: () => set({ selectedIds: [], teamAIds: [], teamBIds: [] }),
 }))

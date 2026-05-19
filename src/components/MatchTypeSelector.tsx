@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect } from 'react'
 import { MATCH_TYPE_LABELS, type MatchType } from '../types/database'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Check } from 'lucide-react'
 
 interface MatchTypeSelectorProps {
   value: MatchType
@@ -15,23 +16,53 @@ const TYPES: MatchType[] = [
 ]
 
 export default function MatchTypeSelector({ value, onChange }: MatchTypeSelectorProps) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value as MatchType)}
-        className="w-full appearance-none bg-white border border-gray-200 rounded-2xl px-4 py-3.5 pr-10 text-[15px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent active:bg-gray-50"
-        style={{ minHeight: 52 }}
-      >
-        {TYPES.map(type => (
-          <option key={type} value={type}>
-            {MATCH_TYPE_LABELS[type]}
-          </option>
-        ))}
-      </select>
-      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-        <ChevronDown className="w-5 h-5" />
+    <div ref={ref} className="relative inline-block">
+      <div className="flex items-center gap-1">
+        <span className="text-[15px] font-medium text-gray-900">
+          {MATCH_TYPE_LABELS[value]}
+        </span>
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+          aria-label="Change match type"
+        >
+          <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
       </div>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-[180px] py-1">
+          {TYPES.map(type => (
+            <button
+              key={type}
+              onClick={() => {
+                onChange(type)
+                setOpen(false)
+              }}
+              className={`w-full text-left px-3 py-2.5 text-[15px] flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors ${
+                type === value ? 'text-green-700 font-semibold bg-green-50/50' : 'text-gray-700'
+              }`}
+            >
+              {MATCH_TYPE_LABELS[type]}
+              {type === value && <Check className="w-4 h-4 text-green-600 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

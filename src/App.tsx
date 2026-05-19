@@ -62,6 +62,15 @@ function getPageTitle(path: string): string {
   return ''
 }
 
+function getSessionIdFromPath(path: string): string | null {
+  const m = path.match(/^\/sessions\/([^/]+)/)
+  return m ? m[1] : null
+}
+
+function isSelectPlayerPage(path: string): boolean {
+  return /^\/sessions\/[^/]+\/matches\/new$/.test(path)
+}
+
 function AppBar() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -70,12 +79,23 @@ function AppBar() {
 
   if (location.pathname === '/login') return null
 
+  function handleBack() {
+    if (isSelectPlayerPage(location.pathname)) {
+      const sid = getSessionIdFromPath(location.pathname)
+      if (sid) {
+        navigate(`/sessions/${sid}`, { replace: true })
+        return
+      }
+    }
+    navigate(-1)
+  }
+
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100">
       <div className="flex items-center gap-2 px-4 h-12">
         {showBack && (
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="p-2 -ml-2 rounded-full active:bg-gray-100 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
