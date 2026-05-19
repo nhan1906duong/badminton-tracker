@@ -1,11 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches, useDeleteMatch } from '../hooks/useMatches'
+import { useSessionDonationStats } from '../hooks/usePlayerStats'
 import { useSessionStore } from '../stores/session-store'
 import MatchCard from '../components/MatchCard'
 import FloatingActionButton from '../components/FloatingActionButton'
 import ActivePlayersEditor from '../components/ActivePlayersEditor'
-import { Plus, Users, Trophy, X } from 'lucide-react'
+import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
+import { Plus, Users, Trophy, X, TrendingUp, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 
 export default function SessionDetailPage() {
@@ -32,6 +34,7 @@ export default function SessionDetailPage() {
   const sid = sessionId
 
   const selectedIds = activePlayers[sid] || []
+  const { totalLosses, totalDonatedVnd } = useSessionDonationStats(sid)
 
   async function handleDeleteMatch(matchId: string) {
     setSwipedMatchId(null)
@@ -59,6 +62,34 @@ export default function SessionDetailPage() {
             isLoading={playersLoading}
           />
         </section>
+
+        {/* Total Donated — tap to open donor list */}
+        {totalLosses > 0 && (
+          <section>
+            <button
+              onClick={() => navigate(`/sessions/${sid}/donated`)}
+              className="w-full text-left bg-white rounded-2xl border border-gray-100 p-4 active:scale-[0.98] transition-transform"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">
+                      Total Donated
+                    </span>
+                  </div>
+                  <p className="text-2xl font-bold text-yellow-500">
+                    {formatCurrency(totalDonatedVnd)}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {totalLosses} losses × {formatCurrency(LOSS_PENALTY_VND)}
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300 mt-0.5 shrink-0" />
+              </div>
+            </button>
+          </section>
+        )}
 
         {/* Matches */}
         <section className="space-y-3">

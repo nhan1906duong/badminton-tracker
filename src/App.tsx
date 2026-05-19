@@ -13,6 +13,7 @@ import SessionMatchResultPage from './pages/SessionMatchResultPage'
 import EditMatchPage from './pages/EditMatchPage'
 import SettingsPage from './pages/SettingsPage'
 import DesignSystemPage from './pages/DesignSystemPage'
+import SessionDonatedListPage from './pages/SessionDonatedListPage'
 
 import { useOpenSession } from './hooks/useSessions'
 import { Home, Users, Trophy, Settings, ArrowLeft } from 'lucide-react'
@@ -56,6 +57,7 @@ function getPageTitle(path: string): string {
   if (path.startsWith('/sessions/') && path.endsWith('/matches/new')) return 'Select Players'
   if (path.startsWith('/sessions/') && path.endsWith('/matches/new/result')) return 'Final Result'
   if (path.includes('/matches/') && path.endsWith('/edit')) return 'Edit Match'
+  if (path.startsWith('/sessions/') && path.endsWith('/donated')) return 'Donated'
   if (path.startsWith('/sessions/')) return 'Session Detail'
   return ''
 }
@@ -217,6 +219,14 @@ function AppRoutes() {
         element={
           <RequireAuth>
             <EditMatchPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/sessions/:id/donated"
+        element={
+          <RequireAuth>
+            <SessionDonatedListPage />
           </RequireAuth>
         }
       />

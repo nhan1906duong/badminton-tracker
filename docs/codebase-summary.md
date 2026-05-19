@@ -21,20 +21,21 @@ src/
 |-----|------|---------|
 | 518 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
 | 305 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
-| 260 | App.tsx | Router, frosted glass header, bottom nav |
+| 270 | App.tsx | Router, frosted glass header, bottom nav |
 | 226 | pages/PlayersPage.tsx | Player list + swipe-to-delete + avatar upload |
 | 218 | hooks/useMatches.ts | Match CRUD + useMatch(id) + useUpdateMatch() + useDeleteMatch() |
+| 168 | pages/SessionDetailPage.tsx | Session detail: ActivePlayersEditor + donation panel + match list |
 | 152 | pages/EditMatchPage.tsx | Edit match: result + scores |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
 | 145 | components/PlayerSelector.tsx | Unified 2-column grid with Team A/B + avatars |
 | 141 | components/ActivePlayersBottomSheet.tsx | Virtualized bottom sheet (`@tanstack/react-virtual`) for adding active players |
-| 137 | pages/SessionDetailPage.tsx | Session detail: ActivePlayersEditor + match list + delete confirm |
 | 136 | pages/SessionMatchResultPage.tsx | Step 2: scores + winner (session-scoped) |
-| 130 | pages/HomePage.tsx | Stats cards + recent matches + PodiumChart |
+| 127 | pages/HomePage.tsx | Stats cards + recent matches + PodiumChart |
 | 130 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
 | 124 | components/TeamAssignment.tsx | Team A/B display with shuffle |
 | 119 | pages/SessionMatchPlayersPage.tsx | Step 1: match type + player selection (session-scoped) |
 | 112 | pages/LoginPage.tsx | OTP email login flow |
+| 110 | hooks/usePlayerStats.ts | Player stats (optional sessionId) + `useSessionDonationStats` |
 | 104 | pages/CreateSessionPage.tsx | Create session + pick active players (top-5 default) |
 | 96 | components/ActivePlayersEditor.tsx | Chip list + Add CTA, wraps `ActivePlayersBottomSheet` |
 | 93 | contexts/AuthContext.tsx | Supabase auth state management |
@@ -43,6 +44,7 @@ src/
 | 87 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
 | 86 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
 | 85 | stores/new-match-store.ts | Zustand store for match creation flow |
+| 84 | pages/SessionDonatedListPage.tsx | Sorted donor list for a session (`/sessions/:id/donated`) |
 | 84 | hooks/usePlayers.ts | Player CRUD hooks |
 | 82 | types/database.ts | TypeScript types for all entities |
 | 81 | components/PlayerForm.tsx | Add player modal |
@@ -57,6 +59,7 @@ src/
 | 20 | hooks/useProfile.ts | Fetch user profile from profiles table |
 | 17 | lib/avatar.ts | Deterministic default avatar from name hash |
 | 13 | lib/supabase.ts | Supabase client initialization |
+| 9 | lib/currency.ts | `formatCurrency` + `LOSS_PENALTY_VND` constant |
 
 ## Components
 
@@ -89,6 +92,7 @@ pages/
 ├── SessionMatchPlayersPage.tsx  # /sessions/:id/matches/new - Step 1
 ├── SessionMatchResultPage.tsx   # /sessions/:id/matches/new/result - Step 2
 ├── EditMatchPage.tsx            # /sessions/:id/matches/:matchId/edit
+├── SessionDonatedListPage.tsx   # /sessions/:id/donated - Sorted donor list
 ├── SettingsPage.tsx             # /settings - Profile, logout, dev tools
 ├── DesignSystemPage.tsx         # /settings/design-system - Dev-only design catalogue
 ```
@@ -136,6 +140,7 @@ lib/
 ├── image.ts         # Canvas-based image compression (center-crop → square → JPEG)
 ├── avatar.ts        # Multiavatar utilities (SVG generation, URL helpers)
 ├── match-helpers.ts # Match logic helpers
+├── currency.ts      # formatCurrency + LOSS_PENALTY_VND
 ```
 
 ## Avatar Upload Flow
@@ -170,6 +175,17 @@ User has avatar_url?
 4. Multi-pick via circle indicators → **Add (N)** button commits → chips appended.
 5. On Start, selections are written to `useSessionStore.setPlayers(sessionId, ids)`.
 6. SessionDetailPage uses the same `ActivePlayersEditor` to edit picks afterwards.
+
+## Session Donations
+
+Each loss = 5,000 VND penalty (`LOSS_PENALTY_VND` in `lib/currency.ts`).
+`useSessionDonationStats(sessionId)` aggregates losses + returns donor list
+(players with ≥1 loss, sorted desc by losses).
+
+- SessionDetailPage renders a "Total Donated" panel between Active Players and
+  Matches when `totalLosses > 0`; tap navigates to `/sessions/:id/donated`.
+- SessionDonatedListPage shows a sorted list: Avatar + Name on left, `N Losses`
+  (yellow, bold) + `M matches joined` on the right.
 
 ## Auth Flow
 

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useMatches } from './useMatches'
 import { usePlayers } from './usePlayers'
+import { LOSS_PENALTY_VND } from '../lib/currency'
 
 export interface PlayerStats {
   playerId: string
@@ -10,8 +11,8 @@ export interface PlayerStats {
   losses: number
 }
 
-export function usePlayerStats() {
-  const { data: matches, isLoading: matchesLoading } = useMatches()
+export function usePlayerStats(sessionId?: string) {
+  const { data: matches, isLoading: matchesLoading } = useMatches(sessionId)
   const { data: players, isLoading: playersLoading } = usePlayers()
 
   const stats = useMemo(() => {
@@ -72,5 +73,38 @@ export function usePlayerStats() {
     sortedByWins,
     totalLost,
     isLoading: matchesLoading || playersLoading,
+  }
+}
+
+// Session-scoped donation aggregator: wraps usePlayerStats with sessionId
+// and returns the donors list (players with >=1 loss) sorted by losses desc.
+export interface Donor extends PlayerStats {
+  avatarUrl: string | null
+}
+
+export function useSessionDonationStats(sessionId: string) {
+  const { stats, totalLost, isLoading } = usePlayerStats(sessionId)
+  const { data: players } = usePlayers()
+
+  const avatarMap = useMemo(() => {
+    const m = new Map<string, string | null>()
+    players?.forEach((p) => m.set(p.id, p.avatar_url ?? null))
+    return m
+  }, [players])
+
+  const donors = useMemo<Donor[]>(
+    () =>
+      stats
+        .filter((s) => s.losses > 0)
+        .sort((a, b) => b.losses - a.losses)
+        .map((s) => ({ ...s, avatarUrl: avatarMap.get(s.playerId) ?? null })),
+    [stats, avatarMap]
+  )
+
+  return {
+    totalLosses: totalLost,
+    totalDonatedVnd: totalLost * LOSS_PENALTY_VND,
+    donors,
+    isLoading,
   }
 }

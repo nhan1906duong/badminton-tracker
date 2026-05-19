@@ -5,10 +5,7 @@ import { useOpenSession } from '../hooks/useSessions'
 import { usePlayers } from '../hooks/usePlayers'
 import { Trophy, ChevronRight, Flame, TrendingUp } from 'lucide-react'
 import PodiumChart from '../components/PodiumChart'
-
-function formatCurrency(vnd: number): string {
-  return new Intl.NumberFormat('vi-VN').format(vnd) + ' VND'
-}
+import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -26,7 +23,7 @@ export default function HomePage() {
     players?.forEach((p) => map.set(p.id, p.avatar_url))
     return map
   }, [players])
-  const totalPenalty = totalLost * 5000
+  const totalPenalty = totalLost * LOSS_PENALTY_VND
 
   const activePlayerCount = players?.filter((p) => p.is_active).length ?? 0
 
