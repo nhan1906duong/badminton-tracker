@@ -1,19 +1,12 @@
 import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { MatchWithDetails, MatchType } from '../types/database'
+import type { MatchWithDetails } from '../types/database'
 import { Trash2 } from 'lucide-react'
 import Avatar from './Avatar'
+import { MATCH_TYPE_SHORT } from '../lib/match-helpers'
 
 const SWIPE_THRESHOLD = 60
 const DELETE_WIDTH = 80
-
-const MATCH_TYPE_SHORT: Record<MatchType, string> = {
-  MEN_SINGLES: 'MS',
-  WOMEN_SINGLES: 'WS',
-  MEN_DOUBLES: 'MD',
-  WOMEN_DOUBLES: 'WD',
-  MIXED_DOUBLES: 'XD',
-}
 
 interface MatchCardProps {
   match: MatchWithDetails

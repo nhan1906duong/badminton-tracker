@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import type { SetScore } from '../types/database'
-import { Plus, Trash2, Trophy } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 
 interface ScoreEntryProps {
   scores: SetScore[]
@@ -127,7 +127,6 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
             }`}
             style={{ minHeight: 56 }}
           >
-            <Trophy className="w-5 h-5" />
             Team A
           </button>
           <button
@@ -139,7 +138,6 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
             }`}
             style={{ minHeight: 56 }}
           >
-            <Trophy className="w-5 h-5" />
             Team B
           </button>
         </div>

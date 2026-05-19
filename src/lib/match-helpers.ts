@@ -1,5 +1,13 @@
 import type { MatchType, SetScore } from '../types/database'
 
+export const MATCH_TYPE_SHORT: Record<MatchType, string> = {
+  MEN_SINGLES: 'MS',
+  WOMEN_SINGLES: 'WS',
+  MEN_DOUBLES: 'MD',
+  WOMEN_DOUBLES: 'WD',
+  MIXED_DOUBLES: 'XD',
+}
+
 export function getRequiredPlayerCount(type: MatchType): number {
   return type === 'MEN_SINGLES' || type === 'WOMEN_SINGLES' ? 2 : 4
 }

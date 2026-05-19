@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
-import { useCreateMatch } from '../hooks/useMatches'
+import { useCreateMatch, useMatches } from '../hooks/useMatches'
 import ScoreEntry from '../components/ScoreEntry'
-import { getRequiredPlayerCount } from '../lib/match-helpers'
+import Avatar from '../components/Avatar'
+import { getRequiredPlayerCount, MATCH_TYPE_SHORT } from '../lib/match-helpers'
 import { useNewMatchStore } from '../stores/new-match-store'
-import { Loader2, Trophy } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export default function SessionMatchResultPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: players } = usePlayers()
+  const { data: matches } = useMatches(sessionId)
   const createMatch = useCreateMatch()
 
   const matchType = useNewMatchStore((s) => s.matchType)
@@ -38,6 +40,7 @@ export default function SessionMatchResultPage() {
 
   const teamAPlayers = teamAIds.map((id) => players?.find((p) => p.id === id)).filter(Boolean)
   const teamBPlayers = teamBIds.map((id) => players?.find((p) => p.id === id)).filter(Boolean)
+  const matchNumber = (matches?.length ?? 0) + 1
 
   async function handleSave() {
     setError('')
@@ -68,27 +71,63 @@ export default function SessionMatchResultPage() {
       <div className="px-4 py-5 space-y-6 pb-32">
         {/* Team Matchup */}
         <section>
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-4 flex items-center gap-3 [@media(max-width:380px)]:gap-2">
-              {/* Team A */}
-              <div className="flex-1 text-center min-w-0">
-                <div className="w-10 h-10 [@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm [@media(max-width:380px)]:text-xs font-bold text-white">A</span>
-                </div>
-                <p className="text-[15px] font-bold text-gray-900 truncate">
-                  {teamAPlayers.map((p) => p?.name).join(' & ')}
-                </p>
+          <div className="relative bg-white border border-gray-100 rounded-2xl p-4">
+            {/* Match type tag */}
+            <div className="absolute top-1.5 right-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
+                {MATCH_TYPE_SHORT[matchType]}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              {/* Match Number */}
+              <div className="shrink-0 flex flex-col justify-center self-stretch">
+                <span className="text-xs font-bold text-red-500">M{matchNumber}</span>
               </div>
-              {/* VS */}
-              <span className="text-[10px] font-bold text-gray-300 shrink-0">VS</span>
-              {/* Team B */}
-              <div className="flex-1 text-center min-w-0">
-                <div className="w-10 h-10 [@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8 rounded-full bg-red-500 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm [@media(max-width:380px)]:text-xs font-bold text-white">B</span>
+
+              {/* Team A */}
+              <div className="flex-1 min-w-0 self-stretch">
+                <div className="flex flex-col items-end justify-center gap-2 h-full">
+                  {teamAPlayers.map((p) => (
+                    <div key={p?.id} className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700 truncate">
+                        {p?.name}
+                      </span>
+                      <Avatar
+                        src={p?.avatar_url}
+                        name={p?.name ?? ''}
+                        size={22}
+                        bgColor="#f3f4f6"
+                        textColor="#6b7280"
+                      />
+                    </div>
+                  ))}
                 </div>
-                <p className="text-[15px] font-bold text-gray-900 truncate">
-                  {teamBPlayers.map((p) => p?.name).join(' & ')}
-                </p>
+              </div>
+
+              {/* VS */}
+              <div className="text-center shrink-0 px-2">
+                <span className="text-xs text-gray-300 font-bold">vs</span>
+              </div>
+
+              {/* Team B */}
+              <div className="flex-1 min-w-0 self-stretch">
+                <div className="flex flex-col items-start justify-center gap-2 h-full">
+                  {teamBPlayers.map((p) => (
+                    <div key={p?.id} className="flex items-center gap-2">
+                      <Avatar
+                        src={p?.avatar_url}
+                        name={p?.name ?? ''}
+                        size={22}
+                        bgColor="#f3f4f6"
+                        textColor="#6b7280"
+                      />
+                      <span className="text-sm font-medium text-gray-700 truncate">
+                        {p?.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -123,11 +162,7 @@ export default function SessionMatchResultPage() {
           }`}
           style={{ minHeight: 56 }}
         >
-          {createMatch.isPending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <Trophy className="w-5 h-5" />
-          )}
+          {createMatch.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
           {createMatch.isPending ? 'Saving...' : 'Save Match'}
         </button>
       </div>
