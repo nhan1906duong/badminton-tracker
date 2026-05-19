@@ -1,9 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches, useDeleteMatch } from '../hooks/useMatches'
-import { useEndSession } from '../hooks/useSessions'
 import { useSessionStore } from '../stores/session-store'
 import MatchCard from '../components/MatchCard'
+import FloatingActionButton from '../components/FloatingActionButton'
 import { Check, Plus, Users, Trophy, X } from 'lucide-react'
 import { useState } from 'react'
 
@@ -13,12 +13,10 @@ export default function SessionDetailPage() {
   const { data: allPlayers } = usePlayers()
   const { data: matches, isLoading: matchesLoading } = useMatches(sessionId)
   const deleteMatch = useDeleteMatch()
-  const endSession = useEndSession()
 
   const activePlayers = useSessionStore((s) => s.activePlayers)
   const togglePlayer = useSessionStore((s) => s.togglePlayer)
   const setPlayers = useSessionStore((s) => s.setPlayers)
-  const clearSession = useSessionStore((s) => s.clearSession)
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [swipedMatchId, setSwipedMatchId] = useState<string | null>(null)
@@ -42,16 +40,6 @@ export default function SessionDetailPage() {
       setPlayers(sid, [])
     } else {
       setPlayers(sid, allPlayers.map((p) => p.id))
-    }
-  }
-
-  async function handleEndSession() {
-    try {
-      await endSession.mutateAsync(sid)
-      clearSession(sid)
-      navigate('/sessions')
-    } catch {
-      // error handled by mutation
     }
   }
 
@@ -139,25 +127,12 @@ export default function SessionDetailPage() {
         </section>
       </div>
 
-      {/* Bottom action bar */}
-      <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 max-w-lg mx-auto z-30 px-4 py-3 flex items-center gap-3">
-        <button
-          onClick={() => navigate(`/sessions/${sid}/matches/new`)}
-          className="flex-1 py-3.5 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-2 bg-green-600 text-white shadow-lg shadow-green-600/25 active:scale-[0.98] transition-all"
-          style={{ minHeight: 52 }}
-        >
-          <Plus className="w-5 h-5" />
-          Add Match
-        </button>
-        <button
-          onClick={handleEndSession}
-          disabled={endSession.isPending}
-          className="px-5 py-3.5 rounded-2xl text-[15px] font-bold bg-gray-100 text-gray-600 active:bg-gray-200 transition-all disabled:opacity-50"
-          style={{ minHeight: 52 }}
-        >
-          {endSession.isPending ? '...' : 'End'}
-        </button>
-      </div>
+      {/* FAB — Add Match */}
+      <FloatingActionButton
+        onClick={() => navigate(`/sessions/${sid}/matches/new`)}
+        icon={<Plus className="w-6 h-6" />}
+        ariaLabel="Add match"
+      />
 
       {/* Delete confirmation */}
       {deleteId && (
