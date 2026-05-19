@@ -16,7 +16,7 @@ export default function SessionsListPage() {
           sessions.map(session => (
             <button
               key={session.id}
-              onClick={() => navigate(`/sessions/${session.id}`)}
+              onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
               className="w-full text-left bg-white border border-gray-100 rounded-2xl p-4 active:scale-[0.98] transition-transform"
             >
               <div className="flex items-center justify-between">

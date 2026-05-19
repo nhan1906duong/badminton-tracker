@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation, NavLink, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, NavLink, useNavigate, useNavigationType } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
@@ -21,6 +21,8 @@ import './index.css'
 import { useEffect } from 'react'
 
 const IS_DEV = import.meta.env.DEV
+
+const TAB_ROUTES = ['/', '/players', '/sessions', '/settings']
 
 const queryClient = new QueryClient()
 
@@ -74,20 +76,49 @@ function isSelectPlayerPage(path: string): boolean {
 function AppBar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const navType = useNavigationType()
   const title = getPageTitle(location.pathname)
-  const showBack = location.pathname !== '/'
+  const showBack = !TAB_ROUTES.includes(location.pathname)
 
   if (location.pathname === '/login') return null
 
   function handleBack() {
-    if (isSelectPlayerPage(location.pathname)) {
-      const sid = getSessionIdFromPath(location.pathname)
+    const path = location.pathname
+
+    // 1. Final Result -> Select Players
+    if (path.endsWith('/matches/new/result')) {
+      const sid = getSessionIdFromPath(path)
+      if (sid) {
+        navigate(`/sessions/${sid}/matches/new`, { replace: true })
+        return
+      }
+    }
+
+    // 2. Select Players -> Session Detail
+    if (isSelectPlayerPage(path)) {
+      const sid = getSessionIdFromPath(path)
       if (sid) {
         navigate(`/sessions/${sid}`, { replace: true })
         return
       }
     }
-    navigate(-1)
+
+    // 3. Session Detail -> return to where it opened from
+    const sessionDetailMatch = path.match(/^\/sessions\/[^/]+$/)
+    if (sessionDetailMatch) {
+      const from = location.state?.from as string | undefined
+      if (from && TAB_ROUTES.includes(from)) {
+        navigate(from, { replace: true })
+        return
+      }
+    }
+
+    // Default: browser back
+    if (navType === 'POP') {
+      navigate('/')
+    } else {
+      navigate(-1)
+    }
   }
 
   return (

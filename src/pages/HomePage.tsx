@@ -18,7 +18,7 @@ export default function HomePage() {
 
   const avatarMap = useMemo(() => {
     const map = new Map<string, string | null>()
-    players?.forEach((p) => map.set(p.id, p.avatar_url))
+    players?.forEach((p) => map.set(p.id, p.avatar_url ?? null))
     return map
   }, [players])
 
@@ -40,7 +40,7 @@ export default function HomePage() {
         {/* Active Session */}
         {activeSession ? (
           <button
-            onClick={() => navigate(`/sessions/${activeSession.id}`)}
+            onClick={() => navigate(`/sessions/${activeSession.id}`, { state: { from: '/' } })}
             className="w-full text-left bg-green-600 rounded-2xl p-4 text-white active:scale-[0.98] transition-transform shadow-lg shadow-green-600/20"
           >
             <div className="flex items-center justify-between">
