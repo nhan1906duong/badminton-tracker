@@ -89,6 +89,37 @@
 5. Session stored, user redirected to home
 ```
 
+## Navigation & Back Button Behavior
+
+### Tab Routes (no back button)
+
+The back button is hidden on the 4 bottom-tab root pages:
+
+| Route | Tab |
+|-------|-----|
+| `/` | Home |
+| `/players` | Players |
+| `/sessions` | Sessions |
+| `/settings` | Settings |
+
+### Back Routing Rules
+
+| From | Back Action | Notes |
+|------|-------------|-------|
+| `/sessions/:id/matches/new/result` (Final Result) | → `/sessions/:id/matches/new` (Select Players) | Always, via `replace` |
+| `/sessions/:id/matches/new` (Select Players) | → `/sessions/:id` (Session Detail) | Always, via `replace` |
+| `/sessions/:id` (Session Detail) | → source tab page | Reads `location.state.from` set by caller |
+| Any other page | `navigate(-1)` | Standard browser back |
+
+### Session Detail Return Flow
+
+Pages that navigate **to** Session Detail pass `state: { from: '<route>' }` so the back button knows where to return:
+
+- **Home** → Session Detail: `{ state: { from: '/' } }` → back goes to Home
+- **Sessions List** → Session Detail: `{ state: { from: '/sessions' } }` → back goes to Sessions List
+
+If no `from` state is present (e.g. direct URL access), back falls through to `navigate('/')`.
+
 ## PWA Configuration
 
 - Service worker for offline caching
