@@ -312,31 +312,62 @@ function SessionItemSection() {
 function MatchCardSection() {
   return (
     <Section title="Match Card">
-      <div className="w-full text-left bg-white border border-gray-100 rounded-2xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">
-            Men's Doubles
+      <div className="relative w-full text-left bg-white border border-gray-100 rounded-2xl p-4 overflow-hidden">
+        {/* Badge top-right */}
+        <div className="absolute top-1.5 right-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
+            MD
           </span>
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
-            <Calendar className="w-3 h-3" />
-            May 18
-          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex-1 text-right min-w-0 text-blue-700">
-            <p className="text-sm truncate font-bold">Alex &amp; Chris</p>
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-500 font-bold">
-              <Trophy className="w-3 h-3" />
-              Winner
-            </span>
+
+        {/* Teams + Score */}
+        <div className="flex items-center gap-3 pt-1">
+          {/* Match Number */}
+          <div className="shrink-0 flex flex-col justify-center self-stretch">
+            <span className="text-xs font-bold text-red-500">M1</span>
           </div>
-          <div className="text-center px-1.5 shrink-0">
-            <p className="text-sm font-bold text-gray-800 tabular-nums">21-15, 21-18</p>
+
+          {/* Team A */}
+          <div className="flex-1 min-w-0 self-stretch">
+            <div className="flex flex-col items-end justify-center gap-2 h-full">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 truncate">Alex</span>
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">A</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 truncate">Chris</span>
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">C</div>
+              </div>
+            </div>
           </div>
-          <div className="flex-1 text-left min-w-0 text-gray-600">
-            <p className="text-sm truncate font-medium">Bella &amp; Dana</p>
+
+          {/* Score */}
+          <div className="text-center shrink-0 px-2">
+            <div className="space-y-0.5">
+              <p className="text-base font-bold tabular-nums leading-tight whitespace-nowrap">
+                <span className="text-green-600">W</span>
+                <span className="text-gray-700 mx-1">-</span>
+                <span className="text-gray-700">L</span>
+              </p>
+              <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
+                (21)<span className="mx-1">-</span>(15)
+              </p>
+            </div>
           </div>
-          <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+
+          {/* Team B */}
+          <div className="flex-1 min-w-0 self-stretch">
+            <div className="flex flex-col items-start justify-center gap-2 h-full">
+              <div className="flex items-center gap-2">
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">B</div>
+                <span className="text-sm font-medium text-gray-700 truncate">Bella</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">D</div>
+                <span className="text-sm font-medium text-gray-700 truncate">Dana</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Section>

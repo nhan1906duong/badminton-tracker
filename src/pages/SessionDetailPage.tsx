@@ -4,7 +4,7 @@ import { useMatches, useDeleteMatch } from '../hooks/useMatches'
 import { useEndSession } from '../hooks/useSessions'
 import { useSessionStore } from '../stores/session-store'
 import MatchCard from '../components/MatchCard'
-import { Check, Plus, Users, Trophy, Trash2, X } from 'lucide-react'
+import { Check, Plus, Users, Trophy, X } from 'lucide-react'
 import { useState } from 'react'
 
 export default function SessionDetailPage() {
@@ -21,6 +21,7 @@ export default function SessionDetailPage() {
   const clearSession = useSessionStore((s) => s.clearSession)
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [swipedMatchId, setSwipedMatchId] = useState<string | null>(null)
 
   if (!sessionId) {
     return (
@@ -55,6 +56,7 @@ export default function SessionDetailPage() {
   }
 
   async function handleDeleteMatch(matchId: string) {
+    setSwipedMatchId(null)
     try {
       await deleteMatch.mutateAsync(matchId)
       setDeleteId(null)
@@ -117,16 +119,16 @@ export default function SessionDetailPage() {
             <div className="text-center py-8 text-gray-400 text-sm">Loading matches...</div>
           ) : matches && matches.length > 0 ? (
             <div className="space-y-3">
-              {matches.map((match) => (
-                <div key={match.id} className="relative">
-                  <MatchCard match={match} />
-                  <button
-                    onClick={() => setDeleteId(match.id)}
-                    className="absolute top-3 right-3 p-1.5 text-gray-300 active:text-red-500 active:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+              {matches.map((match, idx) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  index={idx}
+                  isSwiped={swipedMatchId === match.id}
+                  onSwipeOpen={() => setSwipedMatchId(match.id)}
+                  onSwipeClose={() => setSwipedMatchId(null)}
+                  onDelete={() => setDeleteId(match.id)}
+                />
               ))}
             </div>
           ) : (
