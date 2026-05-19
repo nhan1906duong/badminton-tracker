@@ -81,6 +81,7 @@ function AppBar() {
   const showBack = !TAB_ROUTES.includes(location.pathname)
 
   if (location.pathname === '/login') return null
+  if (TAB_ROUTES.includes(location.pathname)) return null
 
   function handleBack() {
     const path = location.pathname
