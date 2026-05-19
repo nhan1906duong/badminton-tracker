@@ -4,7 +4,6 @@ import {
   Calendar,
   Check,
   ChevronDown,
-  ChevronRight,
   Plus,
   Trash2,
   Trophy,
@@ -389,6 +388,8 @@ function SessionItemSection() {
 function MatchCardSection() {
   return (
     <Section title="Match Card">
+      {/* Completed match — with W/L + scores */}
+      <p className="text-xs text-gray-400 px-1">Completed (W/L + scores)</p>
       <div className="relative w-full text-left bg-white border border-gray-100 rounded-2xl p-4 overflow-hidden">
         {/* Badge top-right */}
         <div className="absolute top-1.5 right-1.5">
@@ -429,6 +430,12 @@ function MatchCardSection() {
               <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
                 (21)<span className="mx-1">-</span>(15)
               </p>
+              <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
+                (18)<span className="mx-1">-</span>(21)
+              </p>
+              <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
+                (21)<span className="mx-1">-</span>(19)
+              </p>
             </div>
           </div>
 
@@ -438,6 +445,58 @@ function MatchCardSection() {
               <div className="flex items-center gap-2">
                 <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">B</div>
                 <span className="text-sm font-medium text-gray-700 truncate">Bella</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">D</div>
+                <span className="text-sm font-medium text-gray-700 truncate">Dana</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Preview — no scores yet */}
+      <p className="text-xs text-gray-400 px-1">Preview (no scores)</p>
+      <div className="relative w-full text-left bg-white border border-gray-100 rounded-2xl p-4 overflow-hidden">
+        {/* Badge top-right */}
+        <div className="absolute top-1.5 right-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
+            XD
+          </span>
+        </div>
+
+        {/* Teams + VS */}
+        <div className="flex items-center gap-3 pt-1">
+          {/* Match Number */}
+          <div className="shrink-0 flex flex-col justify-center self-stretch">
+            <span className="text-xs font-bold text-red-500">M2</span>
+          </div>
+
+          {/* Team A */}
+          <div className="flex-1 min-w-0 self-stretch">
+            <div className="flex flex-col items-end justify-center gap-2 h-full">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 truncate">Alex</span>
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">A</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 truncate">Bella</span>
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">B</div>
+              </div>
+            </div>
+          </div>
+
+          {/* VS */}
+          <div className="text-center shrink-0 px-2">
+            <span className="text-xs text-gray-300 font-bold">vs</span>
+          </div>
+
+          {/* Team B */}
+          <div className="flex-1 min-w-0 self-stretch">
+            <div className="flex flex-col items-start justify-center gap-2 h-full">
+              <div className="flex items-center gap-2">
+                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">C</div>
+                <span className="text-sm font-medium text-gray-700 truncate">Chris</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">D</div>
