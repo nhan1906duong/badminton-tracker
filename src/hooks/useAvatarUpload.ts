@@ -61,8 +61,9 @@ export function useAvatarUpload() {
 
       return publicUrl
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['players'] })
+      qc.invalidateQueries({ queryKey: ['players', vars.id] })
       qc.invalidateQueries({ queryKey: ['profiles'] })
     },
   })
@@ -97,8 +98,9 @@ export function useSetDefaultAvatar() {
 
       return url
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['players'] })
+      qc.invalidateQueries({ queryKey: ['players', vars.id] })
       qc.invalidateQueries({ queryKey: ['profiles'] })
     },
   })
@@ -124,8 +126,9 @@ export function useAvatarDelete() {
         if (dbError) throw dbError
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['players'] })
+      qc.invalidateQueries({ queryKey: ['players', vars.id] })
       qc.invalidateQueries({ queryKey: ['profiles'] })
     },
   })

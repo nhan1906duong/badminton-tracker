@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { usePlayers, useDeletePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { Plus, Trash2, User } from 'lucide-react'
@@ -20,9 +21,10 @@ interface SwipeItemProps {
   onClose: () => void
   onDelete: () => void
   onEditAvatar: () => void
+  onNavigate: () => void
 }
 
-function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onEditAvatar }: SwipeItemProps) {
+function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onEditAvatar, onNavigate }: SwipeItemProps) {
   const startX = useRef(0)
   const currentX = useRef(0)
   const [translateX, setTranslateX] = useState(0)
@@ -78,6 +80,8 @@ function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onE
           if (isOpen) {
             setTranslateX(0)
             onClose()
+          } else {
+            onNavigate()
           }
         }}
         style={{
@@ -86,7 +90,13 @@ function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onE
         }}
         className="relative bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 select-none"
       >
-        <button onClick={onEditAvatar} className="shrink-0">
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onEditAvatar()
+          }}
+          className="shrink-0"
+        >
           <Avatar
             src={player.avatar_url}
             name={player.name}
@@ -107,6 +117,7 @@ function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onE
 }
 
 export default function PlayersPage() {
+  const navigate = useNavigate()
   const { data: players, isLoading } = usePlayers()
   const { stats, isLoading: statsLoading } = usePlayerStats()
   const deletePlayer = useDeletePlayer()
@@ -160,6 +171,7 @@ export default function PlayersPage() {
                 onClose={() => setSwipedId(null)}
                 onDelete={() => setConfirmDeleteId(player.id)}
                 onEditAvatar={() => setEditAvatarPlayer(player)}
+                onNavigate={() => navigate(`/players/${player.id}`)}
               />
             )
           })

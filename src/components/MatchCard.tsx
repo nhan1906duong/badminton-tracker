@@ -15,6 +15,9 @@ interface MatchCardProps {
   onSwipeOpen: () => void
   onSwipeClose: () => void
   onDelete: () => void
+  dateLabel?: string
+  readonly?: boolean
+  hideAvatars?: boolean
 }
 
 export default function MatchCard({
@@ -24,6 +27,9 @@ export default function MatchCard({
   onSwipeOpen,
   onSwipeClose,
   onDelete,
+  dateLabel,
+  readonly,
+  hideAvatars,
 }: MatchCardProps) {
   const navigate = useNavigate()
   const startX = useRef(0)
@@ -57,13 +63,14 @@ export default function MatchCard({
   }, [translateX, onSwipeOpen, onSwipeClose])
 
   const handleClick = useCallback(() => {
+    if (readonly) return
     if (isSwiped) {
       setTranslateX(0)
       onSwipeClose()
       return
     }
     navigate(`/sessions/${match.session_id}/matches/${match.id}/edit`)
-  }, [isSwiped, match.session_id, match.id, navigate, onSwipeClose])
+  }, [readonly, isSwiped, match.session_id, match.id, navigate, onSwipeClose])
 
   const teamA = match.participants.filter(
     p => match.teams.find(t => t.id === p.team_id)?.team_label === 'TEAM_A'
@@ -82,21 +89,23 @@ export default function MatchCard({
   return (
     <div className="relative overflow-hidden rounded-2xl">
       {/* Delete background layer */}
-      <div className="absolute inset-0 bg-red-500 flex items-center justify-end pr-5">
-        <button
-          onClick={onDelete}
-          className="flex flex-col items-center gap-0.5 text-white"
-        >
-          <Trash2 className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Delete</span>
-        </button>
-      </div>
+      {!readonly && (
+        <div className="absolute inset-0 bg-red-500 flex items-center justify-end pr-5">
+          <button
+            onClick={onDelete}
+            className="flex flex-col items-center gap-0.5 text-white"
+          >
+            <Trash2 className="w-5 h-5" />
+            <span className="text-[10px] font-semibold">Delete</span>
+          </button>
+        </div>
+      )}
 
       {/* Foreground card */}
       <div
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={readonly ? undefined : handleTouchStart}
+        onTouchMove={readonly ? undefined : handleTouchMove}
+        onTouchEnd={readonly ? undefined : handleTouchEnd}
         onClick={handleClick}
         style={{
           transform: `translateX(${translateX}px)`,
@@ -113,72 +122,90 @@ export default function MatchCard({
 
         {/* Teams + Score */}
         <div className="flex items-center gap-3 pt-1">
-          {/* Match Number */}
+          {/* Match Number / Date */}
           <div className="shrink-0 flex flex-col justify-center self-stretch">
-            <span className="text-xs font-bold text-red-500">M{matchNumber}</span>
+            <span className="text-xs font-bold text-red-500">
+              {dateLabel ?? `M${matchNumber}`}
+            </span>
           </div>
 
           {/* Team A */}
           <div className="flex-1 min-w-0 self-stretch">
-            <div className="flex flex-col items-end justify-center gap-2 h-full">
+            <div className={`flex flex-col justify-center gap-2 h-full ${hideAvatars ? 'items-end gap-1' : 'items-end'}`}>
               {teamA.map(p => (
                 <div key={p.player.id} className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-700 truncate">
                     {p.player.name}
                   </span>
-                  <Avatar
-                    src={p.player.avatar_url}
-                    name={p.player.name}
-                    size={22}
-                    bgColor="#f3f4f6"
-                    textColor="#6b7280"
-                  />
+                  {!hideAvatars && (
+                    <Avatar
+                      src={p.player.avatar_url}
+                      name={p.player.name}
+                      size={22}
+                      bgColor="#f3f4f6"
+                      textColor="#6b7280"
+                    />
+                  )}
                 </div>
               ))}
+              {hideAvatars && winnerLabel && (
+                <span className={`text-xs font-bold ${teamAWon ? 'text-green-600' : 'text-gray-400'}`}>
+                  {teamAWon ? 'Win' : 'Loss'}
+                </span>
+              )}
             </div>
           </div>
 
           {/* Score */}
-          <div className="text-center shrink-0 px-2">
-            {winnerLabel || hasScores ? (
-              <div className="space-y-0.5">
-                {/* W / L line */}
-                {winnerLabel && (
-                  <p className="text-base font-bold tabular-nums leading-tight whitespace-nowrap">
-                    <span className={teamAWon ? 'text-green-600' : 'text-gray-700'}>{teamAWon ? 'W' : 'L'}</span>
-                    <span className="text-gray-700 mx-1">-</span>
-                    <span className={teamBWon ? 'text-green-600' : 'text-gray-700'}>{teamBWon ? 'W' : 'L'}</span>
-                  </p>
-                )}
-                {/* Scores line */}
-                {match.scores.map((s, i) => (
-                  <p key={i} className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
-                    ({s.team_a_score})<span className="mx-1">-</span>({s.team_b_score})
-                  </p>
-                ))}
-              </div>
-            ) : (
-              <span className="text-xs text-gray-300 font-bold">vs</span>
-            )}
-          </div>
+          {!hideAvatars && (
+            <div className="text-center shrink-0 px-2">
+              {winnerLabel || hasScores ? (
+                <div className="space-y-0.5">
+                  {/* W / L line */}
+                  {winnerLabel && (
+                    <p className="text-base font-bold tabular-nums leading-tight whitespace-nowrap">
+                      <span className={teamAWon ? 'text-green-600' : 'text-gray-700'}>{teamAWon ? 'W' : 'L'}</span>
+                      <span className="text-gray-700 mx-1">-</span>
+                      <span className={teamBWon ? 'text-green-600' : 'text-gray-700'}>{teamBWon ? 'W' : 'L'}</span>
+                    </p>
+                  )}
+                  {/* Scores line */}
+                  {match.scores.map((s, i) => (
+                    <p key={i} className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
+                      ({s.team_a_score})<span className="mx-1">-</span>({s.team_b_score})
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-xs text-gray-300 font-bold">vs</span>
+              )}
+            </div>
+          )}
 
           {/* Team B */}
           <div className="flex-1 min-w-0 self-stretch">
-            <div className="flex flex-col items-start justify-center gap-2 h-full">
+            <div className={`flex flex-col justify-center gap-2 h-full ${hideAvatars ? 'items-start gap-1' : 'items-start'}`}>
               {teamB.map(p => (
                 <div key={p.player.id} className="flex items-center gap-2">
-                  <Avatar
-                    src={p.player.avatar_url}
-                    name={p.player.name}
-                    size={22}
-                    bgColor="#f3f4f6"
-                    textColor="#6b7280"
-                  />
+                  {!hideAvatars && (
+                    <Avatar
+                      src={p.player.avatar_url}
+                      name={p.player.name}
+                      size={22}
+                      bgColor="#f3f4f6"
+                      textColor="#6b7280"
+                    />
+                  )}
                   <span className="text-sm font-medium text-gray-700 truncate">
                     {p.player.name}
                   </span>
                 </div>
               ))}
+              {hideAvatars && winnerLabel && (
+                <span className={`text-xs font-bold ${teamBWon ? 'text-green-600' : 'text-gray-400'}`}>
+                  {teamBWon ? 'Win' : 'Loss'}
+                </span>
+              )}
             </div>
           </div>
         </div>

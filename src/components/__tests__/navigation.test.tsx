@@ -166,6 +166,7 @@ describe('Tab Bar Visibility', () => {
     '/sessions/abc-123/matches/new',
     '/sessions/abc-123/matches/new/result',
     '/sessions/abc-123/matches/m1/edit',
+    '/players/abc-123',
   ]
 
   function TabBarApp({ path }: { path: string }) {
@@ -217,6 +218,7 @@ describe('AppBar Visibility', () => {
       if (path.includes('/matches/') && path.endsWith('/edit')) return 'Edit Match'
       if (path.startsWith('/sessions/') && path.endsWith('/donated')) return 'Donated'
       if (path.startsWith('/sessions/')) return 'Session Detail'
+      if (path.startsWith('/players/') && path !== '/players') return 'Player Detail'
       return ''
     }
 
@@ -244,6 +246,7 @@ describe('AppBar Visibility', () => {
       { path: '/sessions/abc-123/matches/new', title: 'Select Players' },
       { path: '/sessions/abc-123/matches/new/result', title: 'Final Result' },
       { path: '/sessions/abc-123/matches/m1/edit', title: 'Edit Match' },
+      { path: '/players/abc-123', title: 'Player Detail' },
     ]
 
     for (const { path, title } of cases) {
@@ -390,6 +393,7 @@ describe('Route Matching', () => {
     { path: '/sessions/:id/matches/new', element: <div data-testid="page">Select Players</div> },
     { path: '/sessions/:id/matches/new/result', element: <div data-testid="page">Final Result</div> },
     { path: '/sessions/:id/matches/:matchId/edit', element: <div data-testid="page">Edit Match</div> },
+    { path: '/players/:playerId', element: <div data-testid="page">Player Detail</div> },
     { path: '*', element: <Navigate to="/" replace /> },
   ]
 
@@ -406,6 +410,7 @@ describe('Route Matching', () => {
       { path: '/sessions/abc-123/matches/new', text: 'Select Players' },
       { path: '/sessions/abc-123/matches/new/result', text: 'Final Result' },
       { path: '/sessions/abc-123/matches/m1/edit', text: 'Edit Match' },
+      { path: '/players/abc-123', text: 'Player Detail' },
     ]
 
     for (const { path, text } of cases) {

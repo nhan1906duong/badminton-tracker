@@ -2,6 +2,7 @@ import { type ReactNode } from 'react'
 import { render as rtlRender, type RenderOptions } from '@testing-library/react'
 import { MemoryRouter, Routes, Route, type MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { vi } from 'vitest'
 import { AuthContext, type AuthContextValue } from '../contexts/AuthContext'
 
 const defaultQueryClient = new QueryClient({
@@ -71,6 +72,7 @@ export function renderRoute(
       <Route path="/sessions/:id/matches/new" element={<div data-testid="match-players">Select Players</div>} />
       <Route path="/sessions/:id/matches/new/result" element={<div data-testid="match-result">Final Result</div>} />
       <Route path="/sessions/:id/matches/:matchId/edit" element={<div data-testid="edit-match">Edit Match</div>} />
+      <Route path="/players/:playerId" element={<div data-testid="player-detail">Player Detail</div>} />
     </Routes>,
     {
       routerProps: { initialEntries },

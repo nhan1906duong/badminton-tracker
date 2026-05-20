@@ -18,6 +18,22 @@ export function usePlayers() {
   })
 }
 
+export function usePlayer(id: string) {
+  return useQuery({
+    queryKey: [PLAYERS_KEY, id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('id', id)
+        .single()
+      if (error) throw error
+      return data as Player
+    },
+    enabled: !!id,
+  })
+}
+
 export function useActivePlayers() {
   return useQuery({
     queryKey: [PLAYERS_KEY, 'active'],
@@ -62,7 +78,10 @@ export function useUpdatePlayer() {
       if (error) throw error
       return data as Player
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [PLAYERS_KEY] }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: [PLAYERS_KEY] })
+      qc.invalidateQueries({ queryKey: [PLAYERS_KEY, data.id] })
+    },
   })
 }
 

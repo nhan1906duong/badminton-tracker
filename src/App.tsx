@@ -25,6 +25,7 @@ function getPageTitle(path: string): string {
   if (path.includes('/matches/') && path.endsWith('/edit')) return 'Edit Match'
   if (path.startsWith('/sessions/') && path.endsWith('/donated')) return 'Donated'
   if (path.startsWith('/sessions/')) return 'Session Detail'
+  if (path.startsWith('/players/') && path !== '/players') return 'Player Detail'
   return ''
 }
 

@@ -13,6 +13,7 @@ import EditMatchPage from '../pages/EditMatchPage'
 import SettingsPage from '../pages/SettingsPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
 import SessionDonatedListPage from '../pages/SessionDonatedListPage'
+import PlayerDetailPage from '../pages/PlayerDetailPage'
 import { useOpenSession } from '../hooks/useSessions'
 import { useNavigate } from 'react-router-dom'
 
@@ -98,6 +99,7 @@ const routes = [
   { path: '/sessions/:id/matches/new/result', element: <SessionMatchResultPage />, auth: true },
   { path: '/sessions/:id/matches/:matchId/edit', element: <EditMatchPage />, auth: true },
   { path: '/sessions/:id/donated', element: <SessionDonatedListPage />, auth: true },
+  { path: '/players/:playerId', element: <PlayerDetailPage />, auth: true },
   { path: '/settings', element: <SettingsPage />, auth: true },
   ...(IS_DEV ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }] : []),
   { path: '*', element: <Navigate to="/" replace />, auth: false },

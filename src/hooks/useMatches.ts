@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, SetScore, MatchType, Player } from '../types/database'
 
 const MATCHES_KEY = 'matches'
+const PLAYER_MATCHES_KEY = 'player-matches'
 
 export interface CreateMatchInput {
   session_id: string
@@ -112,7 +113,10 @@ export function useCreateMatch() {
 
       return match as Match
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [MATCHES_KEY] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
+    },
   })
 }
 
@@ -205,6 +209,7 @@ export function useUpdateMatch() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
+      qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
     },
   })
 }
@@ -216,6 +221,9 @@ export function useDeleteMatch() {
       const { error } = await supabase.from('matches').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [MATCHES_KEY] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
+    },
   })
 }
