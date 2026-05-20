@@ -107,17 +107,24 @@ export default function SessionDetailPage() {
             <div className="text-center py-8 text-gray-400 text-sm">Loading matches...</div>
           ) : matches && matches.length > 0 ? (
             <div className="space-y-3">
-              {matches.map((match, idx) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  index={idx}
-                  isSwiped={swipedMatchId === match.id}
-                  onSwipeOpen={() => setSwipedMatchId(match.id)}
-                  onSwipeClose={() => setSwipedMatchId(null)}
-                  onDelete={() => setDeleteId(match.id)}
-                />
-              ))}
+              {(() => {
+                const sortedByCreated = [...matches].sort(
+                  (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                )
+                const numberMap = new Map<string, number>()
+                sortedByCreated.forEach((m, i) => numberMap.set(m.id, i + 1))
+                return matches.map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    matchNumber={numberMap.get(match.id) ?? 0}
+                    isSwiped={swipedMatchId === match.id}
+                    onSwipeOpen={() => setSwipedMatchId(match.id)}
+                    onSwipeClose={() => setSwipedMatchId(null)}
+                    onDelete={() => setDeleteId(match.id)}
+                  />
+                ))
+              })()}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-400 text-sm">

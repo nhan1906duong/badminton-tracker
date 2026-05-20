@@ -10,7 +10,7 @@ const DELETE_WIDTH = 80
 
 interface MatchCardProps {
   match: MatchWithDetails
-  index: number
+  matchNumber: number
   isSwiped: boolean
   onSwipeOpen: () => void
   onSwipeClose: () => void
@@ -19,7 +19,7 @@ interface MatchCardProps {
 
 export default function MatchCard({
   match,
-  index,
+  matchNumber,
   isSwiped,
   onSwipeOpen,
   onSwipeClose,
@@ -115,7 +115,7 @@ export default function MatchCard({
         <div className="flex items-center gap-3 pt-1">
           {/* Match Number */}
           <div className="shrink-0 flex flex-col justify-center self-stretch">
-            <span className="text-xs font-bold text-red-500">M{index + 1}</span>
+            <span className="text-xs font-bold text-red-500">M{matchNumber}</span>
           </div>
 
           {/* Team A */}
