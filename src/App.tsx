@@ -1,49 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation, NavLink, useNavigate, useNavigationType } from 'react-router-dom'
+import { BrowserRouter, useLocation, NavLink, useNavigate, useNavigationType } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext'
-import { useAuth } from './hooks/useAuth'
-import LoginPage from './pages/LoginPage'
-import HomePage from './pages/HomePage'
-import PlayersPage from './pages/PlayersPage'
-import SessionsListPage from './pages/SessionsListPage'
-import CreateSessionPage from './pages/CreateSessionPage'
-import SessionDetailPage from './pages/SessionDetailPage'
-import SessionMatchPlayersPage from './pages/SessionMatchPlayersPage'
-import SessionMatchResultPage from './pages/SessionMatchResultPage'
-import EditMatchPage from './pages/EditMatchPage'
-import SettingsPage from './pages/SettingsPage'
-import DesignSystemPage from './pages/DesignSystemPage'
-import SessionDonatedListPage from './pages/SessionDonatedListPage'
-
-import { useOpenSession } from './hooks/useSessions'
+import AnimatedRoutes from './components/AnimatedRoutes'
 import { Home, Users, Trophy, Settings, ArrowLeft } from 'lucide-react'
 import './index.css'
-import { useEffect } from 'react'
-
-const IS_DEV = import.meta.env.DEV
 
 const TAB_ROUTES = ['/', '/players', '/sessions', '/settings']
 
 const queryClient = new QueryClient()
-
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth()
-  const location = useLocation()
-
-  if (isLoading) {
-    return (
-      <div className="min-h-svh flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-
-  return <>{children}</>
-}
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Home',
@@ -139,27 +103,6 @@ function AppBar() {
   )
 }
 
-function ActiveSessionRedirect() {
-  const navigate = useNavigate()
-  const { data: session, isLoading } = useOpenSession()
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (session) {
-        navigate(`/sessions/${session.id}`, { replace: true })
-      } else {
-        navigate('/sessions/new', { replace: true })
-      }
-    }
-  }, [session, isLoading, navigate])
-
-  return (
-    <div className="min-h-svh flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
-}
-
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const isLogin = location.pathname === '/login'
@@ -198,120 +141,13 @@ function NavButton({ to, icon, label }: { to: string; icon: React.ReactNode; lab
   )
 }
 
-function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/"
-        element={
-          <RequireAuth>
-            <HomePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/players"
-        element={
-          <RequireAuth>
-            <PlayersPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions"
-        element={
-          <RequireAuth>
-            <SessionsListPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/active"
-        element={
-          <RequireAuth>
-            <ActiveSessionRedirect />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/new"
-        element={
-          <RequireAuth>
-            <CreateSessionPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/:id"
-        element={
-          <RequireAuth>
-            <SessionDetailPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/:id/matches/new"
-        element={
-          <RequireAuth>
-            <SessionMatchPlayersPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/:id/matches/new/result"
-        element={
-          <RequireAuth>
-            <SessionMatchResultPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/:id/matches/:matchId/edit"
-        element={
-          <RequireAuth>
-            <EditMatchPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/sessions/:id/donated"
-        element={
-          <RequireAuth>
-            <SessionDonatedListPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <RequireAuth>
-            <SettingsPage />
-          </RequireAuth>
-        }
-      />
-      {IS_DEV && (
-        <Route
-          path="/settings/design-system"
-          element={
-            <RequireAuth>
-              <DesignSystemPage />
-            </RequireAuth>
-          }
-        />
-      )}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  )
-}
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
           <AppLayout>
-            <AppRoutes />
+            <AnimatedRoutes />
           </AppLayout>
         </AuthProvider>
       </BrowserRouter>

@@ -43,3 +43,34 @@ html {
     opacity: 0;
   }
 }
+
+/* iOS-style page transition animations */
+@keyframes page-enter-from-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes page-enter-from-left {
+  0% {
+    transform: translateX(-30%);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.page-enter-right {
+  animation: page-enter-from-right 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.page-enter-left {
+  animation: page-enter-from-left 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
