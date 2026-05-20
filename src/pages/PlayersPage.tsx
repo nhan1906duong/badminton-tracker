@@ -1,120 +1,15 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePlayers, useDeletePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { Plus, Trash2, User } from 'lucide-react'
+import { SwipeableItem } from '../components/SwipeableItem'
 import PlayerForm from '../components/PlayerForm'
 import FloatingActionButton from '../components/FloatingActionButton'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import type { Player } from '../types/database'
-
-const SWIPE_THRESHOLD = 60
-const DELETE_WIDTH = 80
-
-interface SwipeItemProps {
-  player: Player
-  stats: { matchesPlayed: number; wins: number }
-  isOpen: boolean
-  onOpen: () => void
-  onClose: () => void
-  onDelete: () => void
-  onEditAvatar: () => void
-  onNavigate: () => void
-}
-
-function SwipePlayerItem({ player, stats, isOpen, onOpen, onClose, onDelete, onEditAvatar, onNavigate }: SwipeItemProps) {
-  const startX = useRef(0)
-  const currentX = useRef(0)
-  const [translateX, setTranslateX] = useState(0)
-
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      startX.current = e.touches[0].clientX
-      currentX.current = isOpen ? -DELETE_WIDTH : 0
-    },
-    [isOpen]
-  )
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      const delta = e.touches[0].clientX - startX.current
-      let newX = currentX.current + delta
-      if (newX > 0) newX = 0
-      if (newX < -DELETE_WIDTH) newX = -DELETE_WIDTH
-      setTranslateX(newX)
-    },
-    []
-  )
-
-  const handleTouchEnd = useCallback(() => {
-    if (translateX < -SWIPE_THRESHOLD) {
-      setTranslateX(-DELETE_WIDTH)
-      onOpen()
-    } else {
-      setTranslateX(0)
-      onClose()
-    }
-  }, [translateX, onOpen, onClose])
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl">
-      {/* Delete background layer */}
-      <div className="absolute inset-0 bg-red-500 rounded-2xl flex items-center justify-end pr-5">
-        <button
-          onClick={onDelete}
-          className="flex flex-col items-center gap-0.5 text-white"
-        >
-          <Trash2 className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Delete</span>
-        </button>
-      </div>
-
-      {/* Foreground content */}
-      <div
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={() => {
-          if (isOpen) {
-            setTranslateX(0)
-            onClose()
-          } else {
-            onNavigate()
-          }
-        }}
-        style={{
-          transform: `translateX(${translateX}px)`,
-          transition: translateX === 0 || translateX === -DELETE_WIDTH ? 'transform 0.2s ease-out' : 'none',
-        }}
-        className="relative bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 select-none"
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onEditAvatar()
-          }}
-          className="shrink-0"
-        >
-          <Avatar
-            src={player.avatar_url}
-            name={player.name}
-            size={40}
-            bgColor="#dcfce7"
-            textColor="#15803d"
-          />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
-          <p className="text-xs text-gray-400">
-            {stats.matchesPlayed} matches · {stats.wins} wins
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function PlayersPage() {
   const navigate = useNavigate()
@@ -162,17 +57,46 @@ export default function PlayersPage() {
           sortedPlayers.map((player) => {
             const s = statsMap.get(player.id)
             return (
-              <SwipePlayerItem
+              <SwipeableItem
                 key={player.id}
-                player={player}
-                stats={{ matchesPlayed: s?.matchesPlayed ?? 0, wins: s?.wins ?? 0 }}
                 isOpen={swipedId === player.id}
                 onOpen={() => setSwipedId(player.id)}
                 onClose={() => setSwipedId(null)}
-                onDelete={() => setConfirmDeleteId(player.id)}
-                onEditAvatar={() => setEditAvatarPlayer(player)}
-                onNavigate={() => navigate(`/players/${player.id}`)}
-              />
+                onClick={() => navigate(`/players/${player.id}`)}
+                renderAction={() => (
+                  <button
+                    onClick={() => setConfirmDeleteId(player.id)}
+                    className="flex flex-col items-center gap-0.5 text-white"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    <span className="text-[10px] font-semibold">Delete</span>
+                  </button>
+                )}
+              >
+                <div className="relative bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3 select-none">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditAvatarPlayer(player)
+                    }}
+                    className="shrink-0"
+                  >
+                    <Avatar
+                      src={player.avatar_url}
+                      name={player.name}
+                      size={40}
+                      bgColor="#dcfce7"
+                      textColor="#15803d"
+                    />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
+                    <p className="text-xs text-gray-400">
+                      {s?.matchesPlayed ?? 0} matches · {s?.wins ?? 0} wins
+                    </p>
+                  </div>
+                </div>
+              </SwipeableItem>
             )
           })
         )}

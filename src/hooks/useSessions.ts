@@ -86,6 +86,19 @@ export function useEndSession() {
   })
 }
 
+export function useDeleteSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('sessions').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+    },
+  })
+}
+
 export function useClearAllData() {
   const qc = useQueryClient()
   return useMutation({
