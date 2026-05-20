@@ -72,6 +72,11 @@ Always include `active:` press-state and 44+px touch target.
   stats line `text-xs text-gray-400`. Container: `rounded-2xl border bg-white p-3`.
 - **Player (grid card)**: same avatar size; selected → blue/red tint with
   matching border + `shadow-sm`. Disabled → `opacity-50`.
+- **Donor (list)**: avatar `size={40}`, name `text-sm font-medium`. Right side:
+  losses count `text-base font-bold text-yellow-500`, then amount + match count
+  `text-xs text-gray-400` (e.g. "25.000 VND (5 matches)"). Container:
+  `rounded-2xl border border-gray-100 bg-white p-3 flex items-center gap-3`.
+  Use `<DonorListItem>` component.
 - **Session**: card with bold label + calendar date row; green `Active` pill
   when `!ended_at`.
 - **Match card**: type pill (left) + date (right) header, then Team A/score/Team B

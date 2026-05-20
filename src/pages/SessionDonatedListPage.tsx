@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { TrendingUp } from 'lucide-react'
-import Avatar from '../components/Avatar'
+import DonorListItem from '../components/DonorListItem'
 import { useSessionDonationStats } from '../hooks/usePlayerStats'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 
@@ -50,31 +50,14 @@ export default function SessionDonatedListPage() {
         ) : (
           <div className="space-y-3">
             {donors.map((d) => (
-              <div
+              <DonorListItem
                 key={d.playerId}
-                className="bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3"
-              >
-                <Avatar
-                  src={d.avatarUrl}
-                  name={d.name}
-                  size={40}
-                  bgColor="#dcfce7"
-                  textColor="#15803d"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {d.name}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-base font-bold text-yellow-500 leading-tight tabular-nums">
-                    {d.losses} {d.losses === 1 ? 'Loss' : 'Losses'}
-                  </p>
-                  <p className="text-xs text-gray-400 leading-tight">
-                    {d.matchesPlayed} matches joined
-                  </p>
-                </div>
-              </div>
+                playerId={d.playerId}
+                name={d.name}
+                avatarUrl={d.avatarUrl}
+                losses={d.losses}
+                matchesPlayed={d.matchesPlayed}
+              />
             ))}
           </div>
         )}

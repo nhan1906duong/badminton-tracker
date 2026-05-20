@@ -9,6 +9,7 @@ import {
   Trophy,
   User,
 } from 'lucide-react'
+import DonorListItem from '../components/DonorListItem'
 import PodiumChart from '../components/PodiumChart'
 
 const IS_DEV = import.meta.env.DEV
@@ -31,6 +32,7 @@ export default function DesignSystemPage() {
         <PillsAndChipsSection />
         <ActivePlayersSection />
         <PlayerItemsSection />
+        <DonorItemSection />
         <SessionItemSection />
         <MatchCardSection />
         <FormInputsSection />
@@ -347,6 +349,29 @@ function PlayerItemsSection() {
           </div>
         </div>
       </div>
+    </Section>
+  )
+}
+
+/* ---------- Donor item ---------- */
+
+function DonorItemSection() {
+  return (
+    <Section title="Donor Items">
+      <DonorListItem
+        playerId="demo-1"
+        name="Alex Nguyen"
+        avatarUrl={null}
+        losses={3}
+        matchesPlayed={8}
+      />
+      <DonorListItem
+        playerId="demo-2"
+        name="Bella Tran"
+        avatarUrl={null}
+        losses={1}
+        matchesPlayed={5}
+      />
     </Section>
   )
 }
