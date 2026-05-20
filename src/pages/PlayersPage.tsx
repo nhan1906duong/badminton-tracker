@@ -38,8 +38,9 @@ export default function PlayersPage() {
     try {
       await deletePlayer.mutateAsync(id)
       setConfirmDeleteId(null)
-    } catch {
-      // handled by mutation
+    } catch (err) {
+      console.error('Failed to delete player:', err)
+      alert('Failed to delete player. Please try again.')
     }
   }
 

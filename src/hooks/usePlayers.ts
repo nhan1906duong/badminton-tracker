@@ -106,6 +106,14 @@ export function useDeletePlayer() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      // match_participants.player_id has no ON DELETE CASCADE —
+      // delete participation records first to avoid FK violation.
+      const { error: partsError } = await supabase
+        .from('match_participants')
+        .delete()
+        .eq('player_id', id)
+      if (partsError) throw partsError
+
       const { error } = await supabase.from('players').delete().eq('id', id)
       if (error) throw error
     },

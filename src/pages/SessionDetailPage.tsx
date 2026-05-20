@@ -41,8 +41,9 @@ export default function SessionDetailPage() {
     try {
       await deleteMatch.mutateAsync(matchId)
       setDeleteId(null)
-    } catch {
-      // error handled by mutation
+    } catch (err) {
+      console.error('Failed to delete match:', err)
+      alert('Failed to delete match. Please try again.')
     }
   }
 

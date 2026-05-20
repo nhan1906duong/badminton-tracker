@@ -218,6 +218,16 @@ export function useDeleteMatch() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      // Explicitly delete child rows first to avoid RLS + CASCADE ordering issues
+      const { error: scoresError } = await supabase.from('match_scores').delete().eq('match_id', id)
+      if (scoresError) throw scoresError
+
+      const { error: partsError } = await supabase.from('match_participants').delete().eq('match_id', id)
+      if (partsError) throw partsError
+
+      const { error: teamsError } = await supabase.from('match_teams').delete().eq('match_id', id)
+      if (teamsError) throw teamsError
+
       const { error } = await supabase.from('matches').delete().eq('id', id)
       if (error) throw error
     },

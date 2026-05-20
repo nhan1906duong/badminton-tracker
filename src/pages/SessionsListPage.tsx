@@ -17,8 +17,9 @@ export default function SessionsListPage() {
     try {
       await deleteSession.mutateAsync(id)
       setConfirmDeleteId(null)
-    } catch {
-      // handled by mutation
+    } catch (err) {
+      console.error('Failed to delete session:', err)
+      alert('Failed to delete session. Please try again.')
     }
   }
 

@@ -90,6 +90,41 @@ export function useDeleteSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
+      // Find all matches in this session to clean up children explicitly
+      const { data: matchRows, error: listError } = await supabase
+        .from('matches')
+        .select('id')
+        .eq('session_id', id)
+      if (listError) throw listError
+
+      const matchIds = (matchRows ?? []).map((m) => m.id)
+
+      if (matchIds.length > 0) {
+        const { error: scoresError } = await supabase
+          .from('match_scores')
+          .delete()
+          .in('match_id', matchIds)
+        if (scoresError) throw scoresError
+
+        const { error: partsError } = await supabase
+          .from('match_participants')
+          .delete()
+          .in('match_id', matchIds)
+        if (partsError) throw partsError
+
+        const { error: teamsError } = await supabase
+          .from('match_teams')
+          .delete()
+          .in('match_id', matchIds)
+        if (teamsError) throw teamsError
+
+        const { error: matchesError } = await supabase
+          .from('matches')
+          .delete()
+          .in('id', matchIds)
+        if (matchesError) throw matchesError
+      }
+
       const { error } = await supabase.from('sessions').delete().eq('id', id)
       if (error) throw error
     },

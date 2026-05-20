@@ -58,10 +58,8 @@ export function SwipeableItem({
 
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className}`}>
-      {/* Background action layer */}
-      <div className="absolute inset-0 bg-red-500 rounded-2xl flex items-center justify-end pr-5">
-        {renderAction()}
-      </div>
+      {/* Background fill */}
+      <div className="absolute inset-0 bg-red-500 rounded-2xl" />
 
       {/* Foreground content */}
       <div
@@ -86,6 +84,19 @@ export function SwipeableItem({
         className="relative w-full select-none bg-white rounded-2xl"
       >
         {children}
+      </div>
+
+      {/* Action layer — above foreground, clickable only when open */}
+      <div
+        className="absolute inset-y-0 right-0 flex items-center justify-end pr-5 z-10"
+        style={{
+          width: `${DELETE_WIDTH}px`,
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'opacity 0.2s ease-out',
+        }}
+      >
+        {renderAction()}
       </div>
     </div>
   )
