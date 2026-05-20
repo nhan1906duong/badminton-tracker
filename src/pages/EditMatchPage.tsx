@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useMatch, useUpdateMatch } from '../hooks/useMatches'
 import ScoreEntry from '../components/ScoreEntry'
-import MatchTypeSelector from '../components/MatchTypeSelector'
+import MatchCard from '../components/MatchCard'
 import { Loader2, Save } from 'lucide-react'
-import type { SetScore, MatchType } from '../types/database'
+import type { SetScore } from '../types/database'
 
 export default function EditMatchPage() {
   const { id: sessionId, matchId } = useParams<{ id: string; matchId: string }>()
@@ -14,7 +14,6 @@ export default function EditMatchPage() {
 
   // Store only overrides from the original match data
   const [draft, setDraft] = useState<{
-    matchType?: MatchType
     scores?: SetScore[]
     winner?: 'TEAM_A' | 'TEAM_B'
   }>({})
@@ -36,15 +35,7 @@ export default function EditMatchPage() {
     )
   }
 
-  const teamA = match.participants.filter(
-    (p) => match.teams.find((t) => t.id === p.team_id)?.team_label === 'TEAM_A'
-  )
-  const teamB = match.participants.filter(
-    (p) => match.teams.find((t) => t.id === p.team_id)?.team_label === 'TEAM_B'
-  )
-
   // Derive current values from match + draft overrides
-  const matchType = draft.matchType ?? match.match_type
   const scores = draft.scores ?? match.scores.map((s) => ({
     set_number: s.set_number,
     team_a_score: s.team_a_score,
@@ -62,7 +53,7 @@ export default function EditMatchPage() {
     try {
       await updateMatch.mutateAsync({
         id: match.id,
-        match_type: matchType,
+        match_type: match.match_type,
         played_at: match.played_at,
         winner_team: winner,
         scores: scores.filter((s) => s.team_a_score > 0 || s.team_b_score > 0),
@@ -76,37 +67,15 @@ export default function EditMatchPage() {
   return (
     <div className="min-h-svh bg-gray-50">
       <div className="px-4 py-5 space-y-6 pb-32">
-        {/* Team Matchup (read-only) */}
+        {/* Match Card (read-only) */}
         <section>
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="px-4 py-4 flex items-center gap-3 [@media(max-width:380px)]:gap-2">
-              <div className="flex-1 text-center min-w-0">
-                <div className="w-10 h-10 [@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm [@media(max-width:380px)]:text-xs font-bold text-white">A</span>
-                </div>
-                <p className="text-[15px] font-bold text-gray-900 truncate">
-                  {teamA.map((p) => p.player.name).join(' & ')}
-                </p>
-              </div>
-              <span className="text-[10px] font-bold text-gray-300 shrink-0">VS</span>
-              <div className="flex-1 text-center min-w-0">
-                <div className="w-10 h-10 [@media(max-width:380px)]:w-8 [@media(max-width:380px)]:h-8 rounded-full bg-red-500 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm [@media(max-width:380px)]:text-xs font-bold text-white">B</span>
-                </div>
-                <p className="text-[15px] font-bold text-gray-900 truncate">
-                  {teamB.map((p) => p.player.name).join(' & ')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Match Type */}
-        <section className="space-y-3">
-          <span className="text-sm font-bold text-gray-900">Match Type</span>
-          <MatchTypeSelector
-            value={matchType}
-            onChange={(type) => setDraft((d) => ({ ...d, matchType: type }))}
+          <MatchCard
+            match={match}
+            matchNumber={1}
+            isSwiped={false}
+            onSwipeOpen={() => {}}
+            onSwipeClose={() => {}}
+            onDelete={() => {}}
           />
         </section>
 
