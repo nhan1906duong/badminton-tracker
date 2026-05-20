@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import DonorListItem from '../components/DonorListItem'
 import PodiumChart from '../components/PodiumChart'
+import { SwipeableItem } from '../components/SwipeableItem'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -35,6 +36,7 @@ export default function DesignSystemPage() {
         <DonorItemSection />
         <SessionItemSection />
         <MatchCardSection />
+        <SwipeableItemSection />
         <FormInputsSection />
         <ScoreEntrySection />
         <TeamHeadersSection />
@@ -531,6 +533,52 @@ function MatchCardSection() {
           </div>
         </div>
       </div>
+    </Section>
+  )
+}
+
+/* ---------- Swipeable item ---------- */
+
+function SwipeableItemSection() {
+  return (
+    <Section title="Swipeable Item">
+      <p className="text-xs text-gray-400 px-1">At rest (closed)</p>
+      <SwipeableItem
+        isOpen={false}
+        onOpen={() => {}}
+        onClose={() => {}}
+        onClick={() => {}}
+        renderAction={() => (
+          <button className="flex flex-col items-center gap-0.5 text-white">
+            <Trash2 className="w-5 h-5" />
+            <span className="text-[10px] font-semibold">Delete</span>
+          </button>
+        )}
+      >
+        <div className="bg-white border border-gray-100 rounded-2xl p-4">
+          <p className="text-sm font-medium text-gray-900">Swipe left to delete</p>
+          <p className="text-xs text-gray-400">This item demonstrates the swipeable wrapper</p>
+        </div>
+      </SwipeableItem>
+
+      <p className="text-xs text-gray-400 px-1">Swiped open (delete revealed)</p>
+      <SwipeableItem
+        isOpen={true}
+        onOpen={() => {}}
+        onClose={() => {}}
+        onClick={() => {}}
+        renderAction={() => (
+          <button className="flex flex-col items-center gap-0.5 text-white">
+            <Trash2 className="w-5 h-5" />
+            <span className="text-[10px] font-semibold">Delete</span>
+          </button>
+        )}
+      >
+        <div className="bg-white border border-gray-100 rounded-2xl p-4">
+          <p className="text-sm font-medium text-gray-900">Item with delete visible</p>
+          <p className="text-xs text-gray-400">Red background shows when swiped</p>
+        </div>
+      </SwipeableItem>
     </Section>
   )
 }

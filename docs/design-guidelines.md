@@ -82,6 +82,10 @@ Always include `active:` press-state and 44+px touch target.
 - **Match card**: type pill (left) + date (right) header, then Team A/score/Team B
   row. Winner team text turns `text-blue-700` / `text-red-700` with `font-bold`
   and a `Trophy` micro-badge.
+- **Swipeable item**: wrap any card in `<SwipeableItem>` for swipe-left-to-delete.
+  Background is `bg-red-500` with white delete icon+label. Foreground card must
+  have `rounded-2xl` and `bg-white`. No `active:scale-[0.98]` on swipeable items
+  (scale exposes red bg at corners). Swipe threshold: 60px, delete width: 80px.
 
 ## Pills & Chips
 
