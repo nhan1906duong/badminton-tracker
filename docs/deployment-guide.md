@@ -3,43 +3,26 @@
 ## Prerequisites
 
 - Node.js 18+
-- npm or pnpm
-- Supabase account with project
+- npm
+- Supabase account
+- Vercel account (for hosting)
 
-## Environment Setup
+---
 
-1. Create `.env` file in project root:
+## Local Environment
+
+Create `.env` in project root:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-2. For development, create `.env.dev` with same variables
+For development, also create `.env.dev` with the same variables.
 
-## Development
+---
 
-```bash
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-
-# Access at http://localhost:5173
-```
-
-## Build
-
-```bash
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-## Supabase Setup
+## Supabase Setup (New Project)
 
 ### 1. Create Project
 
@@ -47,118 +30,176 @@ Go to [supabase.com](https://supabase.com) and create a new project.
 
 ### 2. Get Credentials
 
-Find in Settings → API:
-- Project URL → `VITE_SUPABASE_URL`
-- anon public key → `VITE_SUPABASE_ANON_KEY`
+Project Settings → API:
+- **Project URL** → `VITE_SUPABASE_URL`
+- **anon public key** → `VITE_SUPABASE_ANON_KEY`
 
-### 3. Run SQL Schema
+### 3. Run Migrations
 
-Execute in Supabase SQL Editor:
+In Supabase Dashboard → SQL Editor, run in order:
+
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_sessions.sql`
+
+### 4. Create Storage Bucket (Avatars)
+
+Avatars are uploaded to Supabase Storage.
+
+1. Supabase Dashboard → Storage → **New bucket**
+2. Name: `avatars`
+3. Toggle **Public bucket** ON
+4. Click Save
+
+### 5. Storage Policies
+
+Run in SQL Editor:
 
 ```sql
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable RLS on storage.objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- Players table
-CREATE TABLE players (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  email TEXT,
-  avatar_url TEXT,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  created_by UUID REFERENCES auth.users(id)
-);
+-- Allow authenticated users to upload avatars
+CREATE POLICY "avatars_upload_auth"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'avatars');
 
--- Matches table
-CREATE TABLE matches (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  match_type TEXT NOT NULL,
-  played_at TIMESTAMPTZ DEFAULT now(),
-  notes TEXT,
-  created_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+-- Allow authenticated users to read any avatar
+CREATE POLICY "avatars_select_auth"
+  ON storage.objects FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'avatars');
 
--- Match teams
-CREATE TABLE match_teams (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  match_id UUID REFERENCES matches(id) ON DELETE CASCADE,
-  team_label TEXT NOT NULL,
-  is_winner BOOLEAN DEFAULT false
-);
+-- Allow authenticated users to update (overwrite) avatars
+CREATE POLICY "avatars_update_auth"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'avatars')
+  WITH CHECK (bucket_id = 'avatars');
 
--- Match participants
-CREATE TABLE match_participants (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  match_id UUID REFERENCES matches(id) ON DELETE CASCADE,
-  team_id UUID REFERENCES match_teams(id) ON DELETE CASCADE,
-  player_id UUID REFERENCES players(id) ON DELETE CASCADE
-);
-
--- Match scores
-CREATE TABLE match_scores (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  match_id UUID REFERENCES matches(id) ON DELETE CASCADE,
-  set_number INTEGER NOT NULL,
-  team_a_score INTEGER NOT NULL,
-  team_b_score INTEGER NOT NULL
-);
-
--- RLS Policies (enable row-level security)
-ALTER TABLE players ENABLE ROW LEVEL SECURITY;
-ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
-ALTER TABLE match_teams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE match_participants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE match_scores ENABLE ROW LEVEL SECURITY;
-
--- Allow authenticated users full access
-CREATE POLICY "Users can CRUD own data" ON players FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can CRUD own data" ON matches FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can CRUD own data" ON match_teams FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can CRUD own data" ON match_participants FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Users can CRUD own data" ON match_scores FOR ALL USING (auth.role() = 'authenticated');
+-- Allow authenticated users to delete avatars
+CREATE POLICY "avatars_delete_auth"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'avatars');
 ```
 
-## Deploy
+### 6. Auth Settings (OTP / Magic Link)
 
-### Vercel
+The app uses Supabase OTP (email magic link).
+
+1. Authentication → Providers → Email
+2. Ensure **Confirm email** is enabled
+3. Set Site URL to your production domain (e.g., `https://badminton-tracker.vercel.app`)
+4. Add your Vercel preview domains to Redirect URLs if needed
+
+---
+
+## Vercel Deploy
+
+### Option A: Vercel CLI
 
 ```bash
-# Install Vercel CLI
+# Install CLI
 npm i -g vercel
 
-# Deploy
+# Login
+vercel login
+
+# Deploy (follow prompts, link to existing project or create new)
 vercel
 
-# Set env vars in Vercel dashboard
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
+# Deploy to production
+vercel --prod
 ```
 
-### Netlify
+### Option B: Git Integration (Recommended)
+
+1. Push code to GitHub
+2. Go to [vercel.com/new](https://vercel.com/new)
+3. Import your repo
+4. Vercel auto-detects Vite — confirm settings:
+   - Framework Preset: **Vite**
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+5. Add Environment Variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+6. Deploy
+
+### Environment Variables in Vercel
+
+Vercel Dashboard → Project → Settings → Environment Variables:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon key |
+
+Make sure to set them for **Production**, **Preview**, and **Development** environments.
+
+### Disable Deployment Protection
+
+By default Vercel may require login. To make the site public:
+
+Vercel Dashboard → Project → Settings → Deployment Protection → **Disable** "Vercel Authentication"
+
+---
+
+## SPA Routing
+
+The project includes `vercel.json` for client-side routing:
+
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+This ensures direct URL access (e.g., `/sessions/123`) works without 404s.
+
+---
+
+## Build Locally
 
 ```bash
-# Install Netlify CLI
-npm i -g netlify-cli
+# Install dependencies
+npm install
 
-# Deploy
-netlify deploy --prod
+# Dev server
+npm run dev
 
-# Set env vars in Netlify dashboard
+# Production build
+npm run build
+
+# Preview production build
+npm run preview
 ```
+
+---
 
 ## PWA Installation
 
-1. Build the app: `npm run build`
-2. Deploy `dist/` folder to any static host
-3. Open in mobile browser → "Add to Home Screen"
+1. Deploy the app
+2. Open in mobile browser
+3. Tap "Add to Home Screen" / "Install"
+
+Requires HTTPS and a valid manifest (handled by `vite-plugin-pwa`).
+
+---
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| Supabase connection failed | Verify env vars are correct |
-| OTP not received | Check spam folder |
-| PWA not installing | Ensure HTTPS and valid manifest |
+| Avatar upload fails | Check Storage bucket `avatars` is public and policies are set |
+| 404 on page refresh | Ensure `vercel.json` has SPA rewrite rules |
+| "Log in to Vercel" screen | Disable Deployment Protection in Vercel settings |
+| Supabase connection failed | Verify env vars are correct in Vercel |
+| OTP not received | Check spam folder; verify Auth Site URL matches your domain |
 | Build failed | Run `npm run lint` to check errors |
+| CORS errors on storage | Ensure bucket is public and policies allow authenticated access |
