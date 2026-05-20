@@ -41,7 +41,7 @@ export default function CreateSessionPage() {
         label: label.trim() || undefined,
       })
       setSessionPlayers(session.id, selectedIds)
-      navigate(`/sessions/${session.id}`)
+      navigate(`/sessions/${session.id}`, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create session')
     }

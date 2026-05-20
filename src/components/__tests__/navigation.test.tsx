@@ -346,6 +346,16 @@ describe('Back Navigation', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
   })
 
+  it('from session detail after creation falls back to browser back', () => {
+    handleBack(
+      '/sessions/abc-123',
+      undefined,
+      'REPLACE',
+      mockNavigate
+    )
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
+  })
+
   it('defaults to browser back for other routes', () => {
     handleBack(
       '/sessions/new',

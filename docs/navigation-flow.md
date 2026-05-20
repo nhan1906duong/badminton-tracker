@@ -61,7 +61,7 @@ Four tabs, visible only on root routes. Hidden on `/login` and all sub-routes.
 │         CREATE SESSION                  │
 │         /sessions/new                   │
 │                                         │
-│  Start Session ──► /sessions/:id        │
+│  Start Session ──► /sessions/:id  (replace)        │
 └─────────────────────────────────────────┘
        │
        ▼
@@ -120,6 +120,7 @@ The `AppBar` handles back navigation for non-tab routes:
 | `/sessions/:id/matches/new/result` | `/sessions/:id/matches/new` |
 | `/sessions/:id/matches/new` | `/sessions/:id` |
 | `/sessions/:id` | `location.state.from` or browser back |
+| `/sessions/new` (after creating) | Replaced by `/sessions/:id` — back skips create page |
 | Other sub-routes | Browser back |
 
 ## Auth Guard
