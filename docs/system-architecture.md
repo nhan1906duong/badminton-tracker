@@ -43,6 +43,7 @@
 | /login | LoginPage | No |
 | / | HomePage | Yes |
 | /players | PlayersPage | Yes |
+| /players/:playerId | PlayerDetailPage | Yes |
 | /sessions | SessionsListPage | Yes |
 | /sessions/active | ActiveSessionRedirect | Yes |
 | /sessions/new | CreateSessionPage | Yes |

@@ -12,8 +12,9 @@
 | 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate |
 | 7 | Match History | ✅ Done | List + detail view |
 | 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
-| 9 | PWA Enhancement | ⏳ Pending | Offline support, push notifications |
-| 10 | Testing | ⏳ Pending | Unit tests, E2E tests |
+| 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history |
+| 10 | PWA Enhancement | ⏳ Pending | Offline support, push notifications |
+| 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
 
 ## Phase Details
 
@@ -81,13 +82,23 @@
 - [x] Avatar in PodiumChart
 - [x] profiles table for user avatars
 
-### Phase 9: PWA Enhancement ⏳
+### Phase 9: Player Detail Page ✅
+- [x] Player detail page at `/players/:playerId`
+- [x] Editable avatar (tap to open AvatarPicker)
+- [x] Editable name (inline edit, blur/Enter to save)
+- [x] Stats row: total matches, wins, losses, donated amount
+- [x] Best partner card (doubles-only, highest win rate)
+- [x] Match history list with infinite scroll (~10 per batch)
+- [x] Navigation tests updated for new route
+- [x] Build passes, 19/19 tests pass
+
+### Phase 10: PWA Enhancement ⏳
 - [ ] Offline mode
 - [ ] Background sync
 - [ ] Push notifications
 - [ ] App icons
 
-### Phase 9: Testing ⏳
+### Phase 11: Testing ⏳
 - [ ] Unit tests (Vitest)
 - [ ] Component tests
 - [ ] E2E tests (Playwright)
@@ -100,4 +111,5 @@
 | MVP (Phases 1-4) | ✅ Done | Working app |
 | Core Features (Phases 5-7) | ✅ Done | Dashboard + match history |
 | Avatar & Rankings (Phase 8) | ✅ Done | Avatar upload + leaderboard |
-| Release (Phase 9-10) | Q3 2026 | Pending |
+| Player Detail Page (Phase 9) | ✅ Done | Avatar/name edit + stats + best partner |
+| Release (Phase 10-11) | Q3 2026 | Pending |

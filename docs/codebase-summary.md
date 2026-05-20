@@ -86,6 +86,7 @@ pages/
 ├── LoginPage.tsx                # /login - OTP auth
 ├── HomePage.tsx                 # / - Dashboard
 ├── PlayersPage.tsx              # /players - Player list
+├── PlayerDetailPage.tsx         # /players/:playerId - Player detail with avatar/name edit, stats, best partner, match history
 ├── SessionsListPage.tsx         # /sessions - Session history
 ├── CreateSessionPage.tsx        # /sessions/new - Create session
 ├── SessionDetailPage.tsx        # /sessions/:id - Session detail
@@ -124,7 +125,9 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 hooks/
 ├── useAuth.ts            # Supabase auth state
 ├── useAvatarUpload.ts    # Upload/delete/set-default avatar to Supabase Storage
+├── useBestPartner.ts     # Compute best doubles partner from match history
 ├── useMatches.ts         # Match CRUD operations
+├── usePlayerMatches.ts   # Paginated match history for a player (infinite scroll)
 ├── usePlayers.ts         # Player CRUD operations
 ├── usePlayerStats.ts     # Player win/loss statistics
 ├── useProfile.ts         # Fetch user profile (avatar_url)

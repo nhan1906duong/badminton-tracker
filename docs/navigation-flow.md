@@ -10,6 +10,7 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 | `/` | `HomePage` | Yes | Yes |
 | `/sessions` | `SessionsListPage` | Yes | Yes |
 | `/players` | `PlayersPage` | Yes | Yes |
+| `/players/:playerId` | `PlayerDetailPage` | Yes | No |
 | `/settings` | `SettingsPage` | Yes | Yes |
 | `/settings/design-system` | `DesignSystemPage` | Yes (dev) | No |
 | `/sessions/new` | `CreateSessionPage` | Yes | No |
@@ -49,9 +50,9 @@ Four tabs, visible only on root routes. Hidden on `/login` and all sub-routes.
 │   ─────►    │    ─────►     │   ───► modal    │  Clear Data (dev)    │
 │   /:id      │    /:id       │   PlayerForm    │  Log Out ──► /login  │
 │ No active   │  + FAB        │   AvatarPicker  │  AvatarPicker modal  │
-│   ───►      │   ───►        │                 │                      │
-│ /sessions/  │ /sessions/new │                 │                      │
-│    new      │               │                 │                      │
+│   ───►      │   ───►        │   ─────►        │                      │
+│ /sessions/  │ /sessions/new │ /players/:id    │                      │
+│    new      │               │ (Player Detail) │                      │
 │             │               │                 │                      │
 └──────┬──────┴───────┬───────┴─────────────────┴──────────────────────┘
        │              │

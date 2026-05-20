@@ -32,6 +32,7 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Default Avatars | Implemented | Deterministic multiavatar from name hash + 10 selectable defaults |
 | Avatar Selection Grid | Implemented | 5x2 grid of multiavatar defaults in AvatarPicker bottom sheet |
 | Storage Cleanup | Implemented | Automatic deletion of old uploaded photos from Supabase Storage |
+| Player Detail Page | Implemented | Route `/players/:playerId` with editable avatar/name, stats, best partner, infinite scroll match history |
 
 ## Database Schema
 
