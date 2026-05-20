@@ -75,7 +75,7 @@ export default function LoginPage() {
               Back
             </button>
             <p className="text-sm text-gray-600">
-              Enter the 6-digit code sent to <strong>{email}</strong>
+              Enter the code sent to <strong>{email}</strong>
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
@@ -84,9 +84,9 @@ export default function LoginPage() {
                 <input
                   type="text"
                   value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
-                  maxLength={6}
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  placeholder="12345678"
+                  maxLength={8}
                   required
                   className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
@@ -94,7 +94,7 @@ export default function LoginPage() {
             </div>
             <button
               type="submit"
-              disabled={isVerifying || otp.length < 6}
+              disabled={isVerifying || otp.length < 8}
               className="w-full py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
