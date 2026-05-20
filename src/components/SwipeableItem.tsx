@@ -24,6 +24,7 @@ export function SwipeableItem({
 }: SwipeableItemProps) {
   const startX = useRef(0)
   const currentX = useRef(0)
+  const isSwiping = useRef(false)
   const [translateX, setTranslateX] = useState(0)
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export function SwipeableItem({
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
+      isSwiping.current = false
       startX.current = e.touches[0].clientX
       currentX.current = isOpen ? -DELETE_WIDTH : 0
     },
@@ -40,6 +42,9 @@ export function SwipeableItem({
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const delta = e.touches[0].clientX - startX.current
+    if (Math.abs(delta) > 5) {
+      isSwiping.current = true
+    }
     let newX = currentX.current + delta
     if (newX > 0) newX = 0
     if (newX < -DELETE_WIDTH) newX = -DELETE_WIDTH
@@ -67,6 +72,10 @@ export function SwipeableItem({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={() => {
+          if (isSwiping.current) {
+            isSwiping.current = false
+            return
+          }
           if (isOpen) {
             setTranslateX(0)
             onClose()
@@ -80,6 +89,7 @@ export function SwipeableItem({
             translateX === 0 || translateX === -DELETE_WIDTH
               ? 'transform 0.2s ease-out'
               : 'none',
+          touchAction: 'pan-y',
         }}
         className="relative w-full select-none bg-white rounded-2xl"
       >
