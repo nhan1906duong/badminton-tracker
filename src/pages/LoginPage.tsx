@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Mail, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const { signIn, verifyOtp, resetOtp, isSendingOtp, isVerifying, otpSent } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
@@ -23,6 +26,8 @@ export default function LoginPage() {
     setError('')
     try {
       await verifyOtp(email, otp)
+      const from = location.state?.from as { pathname?: string } | undefined
+      navigate(from?.pathname || '/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid OTP')
     }
