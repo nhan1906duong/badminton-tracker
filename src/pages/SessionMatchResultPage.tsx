@@ -60,7 +60,7 @@ export default function SessionMatchResultPage() {
         scores: scores.filter((s) => s.team_a_score > 0 || s.team_b_score > 0),
       })
       reset()
-      navigate(`/sessions/${sid}`)
+      navigate(-2)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save match')
     }
