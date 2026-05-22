@@ -369,6 +369,52 @@ body {
   50% { opacity: 0.55; }
 }
 
+/* Empty state — when API returns no recommendations */
+.suggest-empty {
+  background: var(--surface);
+  border: var(--border-width) dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+.suggest-empty-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  opacity: 0.55;
+  margin-bottom: var(--space-1);
+}
+.suggest-empty-title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.suggest-empty-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 280px;
+  line-height: 1.45;
+}
+.suggest-empty-hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+  margin-top: var(--space-1);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.suggest-empty-hint svg { width: 12px; height: 12px; }
+
 /* Custom input row */
 .custom-row {
   position: relative;
@@ -785,7 +831,7 @@ body {
             <path d="M21 12a9 9 0 1 1-3-6.7"></path>
             <path d="M21 4v5h-5"></path>
           </svg>
-          <span id="refreshLabel">Shuffle</span>
+          <span id="refreshLabel">Refresh</span>
         </button>
       </div>
 
@@ -915,6 +961,7 @@ body {
   <button class="theme-toggle" type="button" onclick="toggleTheme()">Theme</button>
 </div>
 
+<script src="sessions-store.js"></script>
 <script>
 /* ================================================================
    Mock API — session-name recommendations
@@ -947,6 +994,8 @@ const NAME_POOLS = [
     { name: "Best of the Bench",        tag: "B-team showcase" },
     { name: "Champions Circle",         tag: "Top 4 rated players" },
   ],
+  // Empty pool — demonstrates the "no recommendations" state
+  [],
 ];
 
 let poolIdx = 0;
@@ -977,6 +1026,26 @@ function renderSkeletons(n = 4) {
 function renderSuggestions(items) {
   const list = el("suggestList");
   list.innerHTML = "";
+
+  if (!items || items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "suggest-empty";
+    empty.setAttribute("role", "status");
+    empty.innerHTML = `
+      <svg class="suggest-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="4.9" y1="4.9" x2="19.1" y2="19.1"></line>
+      </svg>
+      <div class="suggest-empty-title">No tournament at this time</div>
+      <div class="suggest-empty-desc">We couldn’t find any sessions to recommend right now. Enter a custom name below to get started.</div>
+      <div class="suggest-empty-hint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Type one below
+      </div>`;
+    list.appendChild(empty);
+    return;
+  }
+
   items.forEach((item, idx) => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -1005,10 +1074,11 @@ function escapeHtml(s) {
 }
 
 async function fetchSuggestions() {
-  // Simulate API: 3–5 names from current pool
+  // Simulate API: 3–5 names from current pool (or empty if pool is empty)
   const pool = NAME_POOLS[poolIdx % NAME_POOLS.length];
-  const count = 3 + ((poolIdx % 3)); // 3, 4, 5
   await new Promise(r => setTimeout(r, 480));
+  if (pool.length === 0) return [];
+  const count = 3 + ((poolIdx % 3)); // 3, 4, 5
   return pool.slice(0, count);
 }
 
@@ -1028,7 +1098,7 @@ async function loadSuggestions() {
     }
   } finally {
     btn.classList.remove("is-loading");
-    el("refreshLabel").textContent = "Shuffle";
+    el("refreshLabel").textContent = "Refresh";
   }
 }
 
@@ -1217,17 +1287,32 @@ el("scrollEl").addEventListener("scroll", () => {
 
 /* ============ Actions ============ */
 function onCancel() {
-  // In real app: history.back() or close modal
-  alert("Cancelled (demo)");
+  if (document.referrer && document.referrer.indexOf('Tournament') !== -1) {
+    history.back();
+  } else {
+    window.location.href = 'Tournament List.html';
+  }
 }
 function onCreate() {
   if (!selectedName) return;
-  const payload = {
+
+  const isNow = mode === 'now';
+  const startsAt = isNow ? new Date() : (scheduledAt || new Date());
+
+  const dateLabel = friendlyDate(startsAt);
+  const timeLabel = friendlyTime(startsAt);
+  const datetime  = `${dateLabel} · ${timeLabel}`;
+
+  const session = window.SessionsStore.create({
     name: selectedName,
-    startsAt: mode === "now" ? new Date().toISOString() : scheduledAt?.toISOString(),
-    mode,
-  };
-  alert("Creating session:\n" + JSON.stringify(payload, null, 2));
+    status: isNow ? 'live' : 'scheduled',
+    startsAt: startsAt.toISOString(),
+    datetime,
+    dateLabel,
+    timeLabel,
+  });
+
+  window.location.href = 'Session Detail.html?id=' + encodeURIComponent(session.id) + '&new=1';
 }
 
 /* ============ Theme ============ */

@@ -1,0 +1,1029 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf8f5">
+<meta name="theme-color" content="#1e1a17" media="(prefers-color-scheme: dark)">
+<title>Tournaments</title>
+<style>
+
+/* ================================================================
+   TOKENS — Japanese Sport / Vermilion (matches design-system.html)
+   ================================================================ */
+:root {
+  --bg:       oklch(99%  0.003 50);
+  --surface:  oklch(100% 0     0);
+  --fg:       oklch(12%  0.02  50);
+  --muted:    oklch(50%  0.01  50);
+  --border:   oklch(88%  0.008 50);
+  --accent:   oklch(55%  0.20  30);
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text',  'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --success:  oklch(50% 0.14 145);
+  --danger:   oklch(55% 0.20 25);
+
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 24px;  --space-6: 32px;
+  --space-7: 48px;  --space-8: 64px;
+
+  --text-xs: 11px;  --text-sm: 13px;  --text-base: 15px;
+  --text-lg: 18px;  --text-xl: 24px;  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  --radius-sm: 0px;  --radius-md: 4px;  --radius-lg: 8px;
+  --border-width: 1px;
+}
+
+[data-theme="dark"] {
+  --bg:       oklch(12%  0.02  50);
+  --surface:  oklch(15%  0.018 50);
+  --fg:       oklch(95%  0.005 50);
+  --muted:    oklch(55%  0.01  50);
+  --border:   oklch(28%  0.015 50);
+  --accent:   oklch(60%  0.18  30);
+  --success:  oklch(55% 0.12 145);
+  --danger:   oklch(60% 0.18 25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* ================================================================
+   SCREEN SHELL
+   ================================================================ */
+.screen {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* Extra room so the last card clears the FAB */
+  padding-bottom: max(120px, env(safe-area-inset-bottom) + 104px);
+}
+
+/* ================================================================
+   PAGE HEADER — large title, no appbar
+   ================================================================ */
+.page-header {
+  padding: max(var(--space-7), env(safe-area-inset-top) + var(--space-5)) var(--space-5) var(--space-4);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-2);
+}
+
+.page-subtitle {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* ================================================================
+   FAB — Floating Action Button (hanko-style square stamp)
+   Pinned within the .screen so it tracks the phone frame on desktop.
+   ================================================================ */
+.fab {
+  position: absolute;
+  right: max(var(--space-5), env(safe-area-inset-right) + var(--space-3));
+  bottom: max(var(--space-5), env(safe-area-inset-bottom) + var(--space-4));
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 40;
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.10),
+    0 8px 24px oklch(55% 0.20 30 / 0.28),
+    0 2px 6px oklch(55% 0.20 30 / 0.18);
+  transition:
+    transform 0.18s cubic-bezier(0.32, 0, 0.15, 1),
+    box-shadow 0.18s ease,
+    opacity 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fab:hover {
+  transform: translateY(-1px);
+}
+
+.fab:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.12),
+    0 4px 12px oklch(55% 0.20 30 / 0.30);
+}
+
+.fab:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 3px;
+}
+
+.fab-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  pointer-events: none;
+}
+
+/* Animate in on page load — small stamp */
+@keyframes fab-stamp-in {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.85); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.fab {
+  animation: fab-stamp-in 0.36s cubic-bezier(0.32, 0, 0.15, 1) both;
+}
+
+/* Hide FAB while the create sheet is open so it doesn't compete */
+body.sheet-open .fab {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fab { animation: none; transition: none; }
+  .fab:hover, .fab:active { transform: none; }
+}
+
+/* ================================================================
+   FILTER TABS
+   ================================================================ */
+.filter-row {
+  padding: var(--space-2) var(--space-5) 0;
+}
+
+.filter-tabs {
+  display: flex;
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.filter-tab {
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  min-height: 44px;
+  touch-action: manipulation;
+  transition: color 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.filter-tab--active {
+  color: var(--fg);
+}
+
+.filter-tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--fg);
+}
+
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--border);
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  transition: background 0.12s, color 0.12s;
+}
+
+.filter-tab--active .filter-count {
+  background: var(--fg);
+  color: var(--surface);
+}
+
+/* ================================================================
+   TOURNAMENT LIST
+   ================================================================ */
+.tournament-list {
+  padding: var(--space-4) var(--space-5) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tournament-list[data-filter="active"]   .sc--completed { display: none; }
+.tournament-list[data-filter="completed"] .sc--active    { display: none; }
+
+/* ================================================================
+   SESSION CARD — compact list variant from session-card.html
+   ================================================================ */
+.session-card {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  position: relative;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+
+.session-card:active {
+  background: var(--bg);
+}
+
+.session-card.sc--active {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.sc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.sc-title-group { min-width: 0; }
+
+.sc-name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.sc-datetime {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.status-badge--completed {
+  background: var(--bg);
+  color: var(--muted);
+  border: var(--border-width) solid var(--border);
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.sc-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+}
+
+.sc-meta-dot {
+  width: 3px;
+  height: 3px;
+  background: var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sc-meta-dot--live {
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.sc-meta-value {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.sc-mvp {
+  border-top: var(--border-width) solid var(--border);
+  padding-top: var(--space-3);
+}
+
+.sc-mvp-label {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: var(--space-2);
+}
+
+.sc-mvp-player {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sc-avatar {
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  color: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.sc-mvp-info { flex: 1; min-width: 0; }
+
+.sc-mvp-name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--fg);
+}
+
+.sc-mvp-stats {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  margin-top: 1px;
+}
+
+.sc-mvp-rate { text-align: right; }
+
+.sc-mvp-rate-num {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.sc-mvp-rate-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+.sc-mvp-empty {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-style: italic;
+}
+
+/* ================================================================
+   EMPTY STATE
+   ================================================================ */
+.empty-state {
+  text-align: center;
+  padding: var(--space-7) var(--space-5) var(--space-8);
+  display: none;
+}
+
+.empty-state.is-visible { display: block; }
+
+.empty-state-icon {
+  font-size: 36px;
+  margin-bottom: var(--space-4);
+  opacity: 0.25;
+}
+
+.empty-state-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.empty-state-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+/* ================================================================
+   BOTTOM SHEET (Create Tournament)
+   ================================================================ */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.45);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.sheet-backdrop.is-open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(110%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 101;
+  padding: var(--space-3) var(--space-5) max(var(--space-7), env(safe-area-inset-bottom) + var(--space-5));
+  transition: transform 0.3s cubic-bezier(0.32, 0, 0.15, 1);
+  box-shadow: 0 -4px 32px oklch(0% 0 0 / 0.12);
+}
+
+.sheet.is-open {
+  transform: translateX(-50%) translateY(0);
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto var(--space-5);
+}
+
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-5);
+}
+
+.form-group { margin-bottom: var(--space-4); }
+
+.form-label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: var(--space-2);
+}
+
+.form-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--fg);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.12s;
+}
+
+.form-input:focus { border-color: var(--fg); }
+.form-input::placeholder { color: var(--muted); opacity: 0.5; }
+.form-input.is-error { border-color: var(--danger); }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.form-error {
+  font-size: var(--text-xs);
+  color: var(--danger);
+  margin-top: var(--space-1);
+  font-family: var(--font-mono);
+  display: none;
+}
+
+.form-error.is-visible { display: block; }
+
+.btn-start {
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--accent);
+  color: var(--surface);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-height: 52px;
+  touch-action: manipulation;
+  transition: opacity 0.12s;
+  margin-top: var(--space-2);
+  letter-spacing: 0.01em;
+}
+
+.btn-start:active { opacity: 0.7; }
+
+/* ================================================================
+   THEME TOGGLE
+   ================================================================ */
+.theme-toggle {
+  position: fixed;
+  top: max(var(--space-4), env(safe-area-inset-top) + var(--space-2));
+  right: max(var(--space-4), env(safe-area-inset-right) + var(--space-2));
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  z-index: 50;
+  transition: border-color 0.12s;
+}
+.theme-toggle:hover { border-color: var(--fg); }
+
+@media (min-width: 600px) {
+  body { background: var(--border); }
+  .screen {
+    border-left: var(--border-width) solid var(--border);
+    border-right: var(--border-width) solid var(--border);
+  }
+}
+
+@media (max-width: 360px) {
+  .page-title { font-size: clamp(32px, 10vw, 48px); }
+  .form-row { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">Theme</button>
+
+<div class="screen">
+  <div class="screen-scroll" id="mainScroll">
+
+    <div class="page-header">
+      <h1 class="page-title">Tournaments</h1>
+      <p class="page-subtitle" id="pageSubtitle">5 sessions · 1 active</p>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-tabs" role="tablist" aria-label="Filter tournaments">
+        <button class="filter-tab filter-tab--active" role="tab" aria-selected="true"
+                data-filter="all" onclick="setFilter(this)">
+          All <span class="filter-count" id="count-all">5</span>
+        </button>
+        <button class="filter-tab" role="tab" aria-selected="false"
+                data-filter="active" onclick="setFilter(this)">
+          Active <span class="filter-count" id="count-active">1</span>
+        </button>
+        <button class="filter-tab" role="tab" aria-selected="false"
+                data-filter="completed" onclick="setFilter(this)">
+          Completed <span class="filter-count" id="count-completed">4</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="tournament-list" id="tournamentList" data-filter="all">
+
+      <div class="session-card sc--active" data-status="active" data-id="friday-night" onclick="openSession('friday-night')" role="link" tabindex="0">
+        <div class="sc-header">
+          <div class="sc-title-group">
+            <div class="sc-name">Friday Night Session</div>
+            <div class="sc-datetime">Today · 7:30 PM</div>
+          </div>
+          <div class="live-indicator" aria-label="Live"><span class="live-dot"></span>Live</div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-dot sc-meta-dot--live"></span>
+          <span>1h 42m elapsed</span>
+          <span class="sc-meta-dot"></span>
+          <span><span class="sc-meta-value">5</span> matches</span>
+        </div>
+        <div class="sc-mvp">
+          <div class="sc-mvp-label">Leading</div>
+          <div class="sc-mvp-player">
+            <div class="sc-avatar">T</div>
+            <div class="sc-mvp-info">
+              <div class="sc-mvp-name">Tuan</div>
+              <div class="sc-mvp-stats">3W · 1L</div>
+            </div>
+            <div class="sc-mvp-rate">
+              <div class="sc-mvp-rate-num">75%</div>
+              <div class="sc-mvp-rate-label">Win rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="session-card sc--completed" data-status="completed" data-id="wed-may-21" onclick="openSession('wed-may-21')" role="link" tabindex="0">
+        <div class="sc-header">
+          <div class="sc-title-group">
+            <div class="sc-name">Wednesday Session</div>
+            <div class="sc-datetime">May 21, 2025 · 6:00 PM</div>
+          </div>
+          <span class="status-badge status-badge--completed">Completed</span>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-dot"></span>
+          <span>2h 15m</span>
+          <span class="sc-meta-dot"></span>
+          <span><span class="sc-meta-value">8</span> matches</span>
+        </div>
+        <div class="sc-mvp">
+          <div class="sc-mvp-label">Top Player</div>
+          <div class="sc-mvp-player">
+            <div class="sc-avatar">M</div>
+            <div class="sc-mvp-info">
+              <div class="sc-mvp-name">Minh</div>
+              <div class="sc-mvp-stats">5W · 1L · 6 played</div>
+            </div>
+            <div class="sc-mvp-rate">
+              <div class="sc-mvp-rate-num">83%</div>
+              <div class="sc-mvp-rate-label">Win rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="session-card sc--completed" data-status="completed" data-id="sun-may-18" onclick="openSession('sun-may-18')" role="link" tabindex="0">
+        <div class="sc-header">
+          <div class="sc-title-group">
+            <div class="sc-name">Sunday Session</div>
+            <div class="sc-datetime">May 18, 2025 · 5:00 PM</div>
+          </div>
+          <span class="status-badge status-badge--completed">Completed</span>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-dot"></span>
+          <span>3h 05m</span>
+          <span class="sc-meta-dot"></span>
+          <span><span class="sc-meta-value">12</span> matches</span>
+        </div>
+        <div class="sc-mvp">
+          <div class="sc-mvp-label">Top Player</div>
+          <div class="sc-mvp-player">
+            <div class="sc-avatar">H</div>
+            <div class="sc-mvp-info">
+              <div class="sc-mvp-name">Huy</div>
+              <div class="sc-mvp-stats">7W · 3L · 10 played</div>
+            </div>
+            <div class="sc-mvp-rate">
+              <div class="sc-mvp-rate-num">70%</div>
+              <div class="sc-mvp-rate-label">Win rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="session-card sc--completed" data-status="completed" data-id="fri-may-16" onclick="openSession('fri-may-16')" role="link" tabindex="0">
+        <div class="sc-header">
+          <div class="sc-title-group">
+            <div class="sc-name">Friday Session</div>
+            <div class="sc-datetime">May 16, 2025 · 7:00 PM</div>
+          </div>
+          <span class="status-badge status-badge--completed">Completed</span>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-dot"></span>
+          <span>1h 50m</span>
+          <span class="sc-meta-dot"></span>
+          <span><span class="sc-meta-value">6</span> matches</span>
+        </div>
+        <div class="sc-mvp">
+          <div class="sc-mvp-label">Top Player</div>
+          <div class="sc-mvp-player">
+            <div class="sc-avatar">D</div>
+            <div class="sc-mvp-info">
+              <div class="sc-mvp-name">Dat</div>
+              <div class="sc-mvp-stats">4W · 1L · 5 played</div>
+            </div>
+            <div class="sc-mvp-rate">
+              <div class="sc-mvp-rate-num">80%</div>
+              <div class="sc-mvp-rate-label">Win rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="session-card sc--completed" data-status="completed" data-id="sun-may-11" onclick="openSession('sun-may-11')" role="link" tabindex="0">
+        <div class="sc-header">
+          <div class="sc-title-group">
+            <div class="sc-name">Sunday Session</div>
+            <div class="sc-datetime">May 11, 2025 · 4:30 PM</div>
+          </div>
+          <span class="status-badge status-badge--completed">Completed</span>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-meta-dot"></span>
+          <span>2h 30m</span>
+          <span class="sc-meta-dot"></span>
+          <span><span class="sc-meta-value">9</span> matches</span>
+        </div>
+        <div class="sc-mvp">
+          <div class="sc-mvp-label">Top Player</div>
+          <div class="sc-mvp-player">
+            <div class="sc-avatar">M</div>
+            <div class="sc-mvp-info">
+              <div class="sc-mvp-name">Minh</div>
+              <div class="sc-mvp-stats">6W · 2L · 8 played</div>
+            </div>
+            <div class="sc-mvp-rate">
+              <div class="sc-mvp-rate-num">75%</div>
+              <div class="sc-mvp-rate-label">Win rate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="empty-state" id="emptyState" aria-live="polite">
+      <div class="empty-state-icon">&#9878;</div>
+      <div class="empty-state-title">No sessions here</div>
+      <div class="empty-state-desc">Tap the <strong>+</strong> button to start your first tournament session.</div>
+    </div>
+
+  </div>
+
+  <button class="fab" id="fab" onclick="openCreateSession()" aria-label="Create new tournament session">
+    <svg class="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+</div>
+
+<script src="sessions-store.js"></script>
+
+<script>
+/* ============ THEME ============ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  if (isDark) html.removeAttribute('data-theme');
+  else html.setAttribute('data-theme', 'dark');
+  localStorage.setItem('od-theme', isDark ? 'light' : 'dark');
+}
+(function () {
+  const t = localStorage.getItem('od-theme');
+  if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
+/* ============ ESC ============ */
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============ NAVIGATION ============ */
+function openCreateSession() {
+  window.location.href = 'Create Session.html';
+}
+function openSession(id) {
+  window.location.href = 'Session Detail.html?id=' + encodeURIComponent(id);
+}
+
+/* ============ FILTER TABS ============ */
+function setFilter(btn) {
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    t.classList.remove('filter-tab--active');
+    t.setAttribute('aria-selected', 'false');
+  });
+  btn.classList.add('filter-tab--active');
+  btn.setAttribute('aria-selected', 'true');
+  const filter = btn.dataset.filter;
+  document.getElementById('tournamentList').dataset.filter = filter;
+  updateEmptyState(filter);
+}
+
+function updateEmptyState(filter) {
+  const list = document.getElementById('tournamentList');
+  const a = list.querySelectorAll('.sc--active').length;
+  const c = list.querySelectorAll('.sc--completed').length;
+  const visible = filter === 'all' ? a + c : filter === 'active' ? a : c;
+  document.getElementById('emptyState').classList.toggle('is-visible', visible === 0);
+}
+
+/* ============ HYDRATE FROM STORE ============
+   - Remove cards whose seed has been deleted
+   - Apply patched status (e.g. ended after End session) to seed cards
+   - Prepend any user-created sessions at the top
+   ================================================== */
+function renderUserCard(s) {
+  const isLive = s.status === 'live';
+  const isScheduled = s.status === 'scheduled';
+  const statusBadge = isLive
+    ? `<div class="live-indicator" aria-label="Live"><span class="live-dot"></span>Live</div>`
+    : isScheduled
+      ? `<span class="status-badge status-badge--completed" style="background:transparent;color:var(--fg);border-color:var(--fg)">Scheduled</span>`
+      : `<span class="status-badge status-badge--completed">Completed</span>`;
+
+  const metaDot = isLive ? 'sc-meta-dot--live' : '';
+  const metaTime = isLive
+    ? (s.elapsedLabel || '0m elapsed')
+    : isScheduled
+      ? 'Not started'
+      : (s.durationLabel || '—');
+
+  const mvpLabel = isLive ? 'Leading' : isScheduled ? 'Players' : 'Top Player';
+  const mvpBlock = s.mvp
+    ? `<div class="sc-mvp-player">
+         <div class="sc-avatar">${esc(s.mvp.name?.[0] || '?')}</div>
+         <div class="sc-mvp-info">
+           <div class="sc-mvp-name">${esc(s.mvp.name)}</div>
+           <div class="sc-mvp-stats">${s.mvp.wins}W · ${s.mvp.losses}L</div>
+         </div>
+         <div class="sc-mvp-rate">
+           <div class="sc-mvp-rate-num">${s.mvp.rate}%</div>
+           <div class="sc-mvp-rate-label">Win rate</div>
+         </div>
+       </div>`
+    : `<div class="sc-mvp-player"><span class="sc-mvp-empty">${isScheduled ? 'Session hasn’t started yet' : 'No matches started yet'}</span></div>`;
+
+  const cardClass = (isLive || isScheduled) ? 'sc--active' : 'sc--completed';
+  const dataStatus = (isLive || isScheduled) ? 'active' : 'completed';
+
+  return `
+    <div class="session-card ${cardClass}" data-status="${dataStatus}" data-id="${esc(s.id)}" onclick="openSession('${esc(s.id)}')" role="link" tabindex="0">
+      <div class="sc-header">
+        <div class="sc-title-group">
+          <div class="sc-name">${esc(s.name)}</div>
+          <div class="sc-datetime">${esc(s.datetime || '')}</div>
+        </div>
+        ${statusBadge}
+      </div>
+      <div class="sc-meta">
+        <span class="sc-meta-dot ${metaDot}"></span>
+        <span>${esc(metaTime)}</span>
+        <span class="sc-meta-dot"></span>
+        <span><span class="sc-meta-value">${s.matchCount || 0}</span> matches</span>
+      </div>
+      <div class="sc-mvp">
+        <div class="sc-mvp-label">${mvpLabel}</div>
+        ${mvpBlock}
+      </div>
+    </div>`;
+}
+
+function hydrateList() {
+  const store = window.SessionsStore;
+  if (!store) return;
+  const list = document.getElementById('tournamentList');
+
+  // Remove static seed cards that have been deleted, and patch status on the rest.
+  const all = store.listAll();
+  const byId = new Map(all.map(s => [s.id, s]));
+
+  list.querySelectorAll('.session-card[data-id]').forEach(card => {
+    const id = card.dataset.id;
+    const session = byId.get(id);
+    if (!session) {
+      card.remove();
+      return;
+    }
+    // Re-render the card from the store so status patches (e.g. ended) take effect.
+    card.outerHTML = renderUserCard(session);
+  });
+
+  // Prepend any user-created sessions that aren't in the static list.
+  const staticIds = new Set(Object.keys(store.SEEDS));
+  const userSessions = all.filter(s => !staticIds.has(s.id));
+  userSessions.reverse().forEach(s => {
+    list.insertAdjacentHTML('afterbegin', renderUserCard(s));
+  });
+
+  // Update counts + subtitle
+  const a = list.querySelectorAll('.sc--active').length;
+  const c = list.querySelectorAll('.sc--completed').length;
+  document.getElementById('count-all').textContent = a + c;
+  document.getElementById('count-active').textContent = a;
+  document.getElementById('count-completed').textContent = c;
+  const total = a + c;
+  document.getElementById('pageSubtitle').textContent =
+    `${total} session${total !== 1 ? 's' : ''} · ${a} active`;
+
+  // Refresh empty state based on current filter
+  const active = document.querySelector('.filter-tab.filter-tab--active');
+  updateEmptyState(active ? active.dataset.filter : 'all');
+}
+
+hydrateList();
+</script>
+
+</body>
+</html>

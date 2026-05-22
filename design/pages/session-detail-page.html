@@ -1,0 +1,1621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf8f5">
+<meta name="theme-color" content="#1e1a17" media="(prefers-color-scheme: dark)">
+<title>Session Detail</title>
+<style>
+/* ================================================================
+   TOKENS — Japanese Sport / Vermilion (matches Design System.html)
+   ================================================================ */
+:root {
+  --bg:       oklch(99%  0.003 50);
+  --surface:  oklch(100% 0     0);
+  --fg:       oklch(12%  0.02  50);
+  --muted:    oklch(50%  0.01  50);
+  --border:   oklch(88%  0.008 50);
+  --accent:   oklch(55%  0.20  30);
+  --accent-soft: oklch(96% 0.025 30);
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text',  'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --success:  oklch(50% 0.14 145);
+  --danger:   oklch(55% 0.20 25);
+
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 24px;  --space-6: 32px;
+  --space-7: 48px;  --space-8: 64px;
+
+  --text-xs: 11px;  --text-sm: 13px;  --text-base: 15px;
+  --text-lg: 18px;  --text-xl: 24px;  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  --radius-sm: 0px;  --radius-md: 4px;  --radius-lg: 8px;
+  --border-width: 1px;
+}
+
+[data-theme="dark"] {
+  --bg:       oklch(12%  0.02  50);
+  --surface:  oklch(15%  0.018 50);
+  --fg:       oklch(95%  0.005 50);
+  --muted:    oklch(55%  0.01  50);
+  --border:   oklch(28%  0.015 50);
+  --accent:   oklch(60%  0.18  30);
+  --accent-soft: oklch(22% 0.04 30);
+  --success:  oklch(55% 0.12 145);
+  --danger:   oklch(60% 0.18 25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* ================================================================
+   SCREEN SHELL
+   ================================================================ */
+.screen {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 600px) {
+  body { background: var(--border); }
+  .screen {
+    border-left: var(--border-width) solid var(--border);
+    border-right: var(--border-width) solid var(--border);
+  }
+}
+
+/* ================================================================
+   TOP NAV (iOS: back · title · menu)
+   ================================================================ */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in oklch, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  padding: max(var(--space-3), env(safe-area-inset-top) + var(--space-2)) var(--space-3) var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  border-bottom: var(--border-width) solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+}
+.nav.is-stuck { border-bottom-color: var(--border); }
+
+.nav-btn {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-2) var(--space-2);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  letter-spacing: -0.01em;
+}
+.nav-btn:active { opacity: 0.55; }
+.nav-btn.is-right { justify-self: end; padding-right: 4px; }
+.nav-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.nav-title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.nav.is-stuck .nav-title { opacity: 1; transform: translateY(0); }
+
+/* ================================================================
+   SCROLL
+   ================================================================ */
+.screen-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: max(120px, env(safe-area-inset-bottom) + 104px);
+}
+
+/* ================================================================
+   HERO — large title + datetime + status
+   ================================================================ */
+.hero {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+  min-height: 18px;
+}
+.hero-eyebrow--live {
+  color: var(--accent);
+}
+.hero-eyebrow--scheduled {
+  color: var(--fg);
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin-bottom: var(--space-3);
+  text-wrap: balance;
+}
+
+.hero-datetime {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.hero-datetime-dot {
+  width: 3px; height: 3px;
+  background: var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.hero-datetime strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* ================================================================
+   STATS PANEL — tappable, routes to player stats
+   ================================================================ */
+.stats-panel {
+  margin: 0 var(--space-5) var(--space-6);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.stats-panel:active { background: var(--bg); }
+.stats-panel:hover { border-color: color-mix(in oklch, var(--fg) 25%, var(--border)); }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.stats-cell {
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  border-right: var(--border-width) solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.stats-cell:last-child { border-right: none; }
+
+.stats-value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-feature-settings: "tnum" 1;
+  color: var(--fg);
+}
+.stats-value--accent { color: var(--accent); }
+.stats-value--mvp {
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+}
+
+.stats-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: var(--space-1);
+}
+
+.stats-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-width) solid var(--border);
+  background: color-mix(in oklch, var(--bg) 50%, transparent);
+}
+.stats-footer-label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.stats-footer-label svg { width: 14px; height: 14px; }
+.stats-footer-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ================================================================
+   SECTION HEADER
+   ================================================================ */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--space-5);
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.section-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* ================================================================
+   MATCH LIST
+   ================================================================ */
+.match-list {
+  padding: 0 var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ===== Match Card (from match-card.html design) ===== */
+.match-card {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.match-card:active { background: var(--bg); }
+.match-card--live {
+  border-color: var(--accent);
+  border-width: 2px;
+  padding: calc(var(--space-4) - 1px);
+}
+
+.match-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+  min-height: 14px;
+}
+.match-num {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.match-time {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.match-teams {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.team { flex: 1; min-width: 0; }
+.team--left { text-align: left; }
+.team--right { text-align: right; }
+.team-name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.team-name--winner { color: var(--fg); font-weight: 800; }
+.team-name--loser  { color: var(--muted); font-weight: 500; }
+
+.score-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  flex-shrink: 0;
+}
+.score-current {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-feature-settings: "tnum" 1;
+}
+.score-current__win { color: var(--accent); }
+.score-current__lose { color: var(--muted); }
+.score-divider {
+  color: var(--border);
+  font-weight: 400;
+  font-size: var(--text-lg);
+}
+.score-result {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: var(--space-2);
+  line-height: 1;
+}
+.score-result--win  { color: var(--accent); }
+.score-result--loss { color: var(--muted); }
+
+.serving-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-left: var(--space-1);
+  vertical-align: middle;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ================================================================
+   LOADING — skeleton match cards
+   ================================================================ */
+.skeleton-card {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  animation: skel-pulse 1.4s ease-in-out infinite;
+}
+@keyframes skel-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.skel-row:last-child { margin-bottom: 0; }
+.skel-bar {
+  height: 12px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.skel-bar--lg { height: 22px; width: 60px; }
+.skel-bar--sm { height: 8px; opacity: 0.6; }
+
+/* ================================================================
+   EMPTY STATE
+   ================================================================ */
+.empty {
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  border: var(--border-width) dashed var(--border);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  opacity: 0.55;
+  margin-bottom: var(--space-2);
+}
+.empty-icon svg { width: 26px; height: 26px; }
+.empty-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.empty-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 280px;
+  line-height: 1.5;
+}
+.empty-hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.empty-hint svg { width: 12px; height: 12px; }
+
+/* ================================================================
+   ERROR STATE
+   ================================================================ */
+.error-state {
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.error-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--danger);
+  background: color-mix(in oklch, var(--danger) 8%, var(--surface));
+  display: grid;
+  place-items: center;
+  color: var(--danger);
+  margin-bottom: var(--space-2);
+}
+.error-icon svg { width: 26px; height: 26px; }
+.error-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.error-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 280px;
+  line-height: 1.5;
+}
+.error-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.error-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.btn-retry {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--surface);
+  background: var(--fg);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.btn-retry svg { width: 14px; height: 14px; }
+.btn-retry:active { opacity: 0.7; }
+.btn-secondary {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+  min-height: 44px;
+}
+.btn-secondary:active { background: var(--bg); }
+
+/* ================================================================
+   FAB (live only)
+   ================================================================ */
+.fab {
+  position: absolute;
+  right: max(var(--space-5), env(safe-area-inset-right) + var(--space-3));
+  bottom: 92px;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 20;
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.10),
+    0 8px 24px oklch(55% 0.20 30 / 0.28),
+    0 2px 6px oklch(55% 0.20 30 / 0.18);
+  transition: transform 0.18s cubic-bezier(0.32, 0, 0.15, 1), opacity 0.2s;
+}
+.fab:active { transform: scale(0.96); }
+.fab svg { width: 22px; height: 22px; }
+.fab[hidden] { display: none; }
+
+/* ================================================================
+   BOTTOM BAR — primary action (varies by status)
+   ================================================================ */
+.bottom-bar {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-3) var(--space-5) max(var(--space-4), env(safe-area-inset-bottom) + var(--space-3));
+  background: color-mix(in oklch, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-top: var(--border-width) solid var(--border);
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.btn-cta {
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--accent);
+  color: var(--surface);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  letter-spacing: 0.005em;
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.08),
+    0 6px 18px oklch(55% 0.20 30 / 0.22);
+  transition: opacity 0.12s, transform 0.12s;
+}
+.btn-cta:active { transform: scale(0.985); opacity: 0.92; }
+.btn-cta svg { width: 18px; height: 18px; }
+.btn-cta--danger {
+  background: var(--surface);
+  color: var(--danger);
+  border: var(--border-width) solid var(--danger);
+  box-shadow: none;
+}
+.btn-cta--danger:active { background: color-mix(in oklch, var(--danger) 6%, var(--surface)); }
+.btn-cta--ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: var(--border-width) solid var(--border);
+  box-shadow: none;
+}
+.btn-cta-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  opacity: 0.7;
+  margin-left: var(--space-1);
+}
+.bottom-bar[hidden] { display: none; }
+
+/* ================================================================
+   MENU SHEET (overflow ⋯)
+   ================================================================ */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.45);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(2px);
+}
+.sheet-backdrop.is-open { opacity: 1; pointer-events: all; }
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(110%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 101;
+  padding: var(--space-3) var(--space-3) max(var(--space-5), env(safe-area-inset-bottom) + var(--space-4));
+  transition: transform 0.3s cubic-bezier(0.32, 0, 0.15, 1);
+  box-shadow: 0 -4px 32px oklch(0% 0 0 / 0.12);
+}
+.sheet.is-open { transform: translateX(-50%) translateY(0); }
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto var(--space-4);
+}
+.sheet-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  min-height: 52px;
+  border-radius: var(--radius-md);
+}
+.sheet-item:active { background: var(--bg); }
+.sheet-item--danger { color: var(--danger); }
+.sheet-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.sheet-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-2) var(--space-2);
+}
+.sheet-cancel {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  min-height: 48px;
+  margin-top: var(--space-3);
+}
+
+/* Confirm dialog (delete) */
+.sheet-confirm-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-2);
+}
+.sheet-confirm-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}
+.sheet-confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+}
+.sheet-confirm-actions button {
+  flex: 1;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+  border: var(--border-width) solid var(--border);
+}
+.btn-confirm-cancel { background: var(--surface); color: var(--fg); }
+.btn-confirm-delete {
+  background: var(--danger);
+  color: var(--surface);
+  border-color: var(--danger);
+}
+.btn-confirm-delete:active { opacity: 0.85; }
+
+/* ================================================================
+   DEMO STATE SWITCHER (dev convenience)
+   ================================================================ */
+.demo {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(var(--space-3), env(safe-area-inset-bottom) + var(--space-2));
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  pointer-events: none;
+}
+.demo-toggle {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--fg);
+  color: var(--bg);
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.82;
+}
+.demo-toggle:hover { opacity: 1; }
+.demo-toggle svg { width: 10px; height: 10px; }
+
+.demo-panel {
+  pointer-events: auto;
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  max-width: 330px;
+  width: calc(100vw - 32px);
+  box-shadow: 0 12px 40px oklch(0% 0 0 / 0.3);
+}
+.demo-panel[hidden] { display: none; }
+.demo-section {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in oklch, var(--bg) 55%, var(--fg));
+  margin: 4px 6px 2px;
+}
+.demo-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--bg);
+  border: 1px solid color-mix(in oklch, var(--bg) 22%, transparent);
+  border-radius: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.1;
+}
+.demo-chip:hover { background: color-mix(in oklch, var(--bg) 12%, transparent); }
+.demo-chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+/* Tiny screens */
+@media (max-width: 360px) {
+  .hero-title { font-size: 40px; }
+  .stats-value { font-size: 26px; }
+  .stats-value--mvp { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="screen">
+
+  <!-- ============================================================
+       TOP NAV
+       ============================================================ -->
+  <nav class="nav" id="topNav">
+    <button class="nav-btn" type="button" onclick="onBack()" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>Tournaments</span>
+    </button>
+    <div class="nav-title" id="navTitle">Friday Night Smash</div>
+    <button class="nav-btn is-right" type="button" onclick="openMenu()" aria-label="More options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="5" r="1.2"></circle>
+        <circle cx="12" cy="12" r="1.2"></circle>
+        <circle cx="12" cy="19" r="1.2"></circle>
+      </svg>
+    </button>
+  </nav>
+
+  <div class="screen-scroll" id="scrollEl">
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+    <header class="hero">
+      <div class="hero-eyebrow" id="heroEyebrow">
+        <span class="live-dot" id="heroDot"></span>
+        <span id="heroEyebrowText">Live · in progress</span>
+      </div>
+      <h1 class="hero-title" id="heroTitle">Friday Night Smash</h1>
+      <div class="hero-datetime" id="heroDateTime">
+        <span><strong>Today</strong> · 7:30 PM</span>
+        <span class="hero-datetime-dot"></span>
+        <span id="heroDuration">1h 42m elapsed</span>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         STATS PANEL  (tap to view player stats)
+         ========================================================= -->
+    <a class="stats-panel" id="statsPanel" onclick="onViewStats()" role="button" tabindex="0">
+      <div class="stats-row">
+        <div class="stats-cell">
+          <span class="stats-value" id="statMatches">5</span>
+          <span class="stats-label">Matches</span>
+        </div>
+        <div class="stats-cell">
+          <span class="stats-value" id="statPlayers">6</span>
+          <span class="stats-label">Players</span>
+        </div>
+        <div class="stats-cell">
+          <span class="stats-value stats-value--mvp stats-value--accent" id="statMvp">Tuan</span>
+          <span class="stats-label" id="statMvpLabel">Leading · 75%</span>
+        </div>
+      </div>
+      <div class="stats-footer">
+        <span class="stats-footer-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12h4l3-8 4 16 3-8h4"></path>
+          </svg>
+          View player stats
+        </span>
+        <span class="stats-footer-meta" id="statsFooterMeta">Rankings · win rate · streaks</span>
+      </div>
+    </a>
+
+    <!-- =========================================================
+         SECTION HEADER
+         ========================================================= -->
+    <div class="section-head">
+      <h2 class="section-title">Matches</h2>
+      <span class="section-count" id="sectionCount">5 played</span>
+    </div>
+
+    <!-- =========================================================
+         CONTENT REGION — state-driven
+         ========================================================= -->
+    <div id="contentRegion">
+      <!-- populated by render() -->
+    </div>
+
+  </div>
+
+  <!-- ===========================================================
+       FAB — add match (live only)
+       =========================================================== -->
+  <button class="fab" id="fab" type="button" onclick="onAddMatch()" aria-label="New match" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+
+  <!-- ===========================================================
+       BOTTOM CTA — varies by status
+       =========================================================== -->
+  <div class="bottom-bar" id="bottomBar">
+    <!-- populated by render() -->
+  </div>
+
+</div>
+
+<!-- =============================================================
+     SHEET — overflow menu / confirm
+     ============================================================= -->
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-handle"></div>
+  <div id="sheetBody"><!-- swapped per intent --></div>
+</div>
+
+<!-- =============================================================
+     DEMO STATE SWITCHER
+     ============================================================= -->
+<div class="demo">
+  <div class="demo-panel" id="demoPanel" hidden>
+    <div class="demo-section">Status</div>
+    <button class="demo-chip" data-status="scheduled" onclick="setStatus('scheduled')">Scheduled</button>
+    <button class="demo-chip is-active" data-status="live" onclick="setStatus('live')">Live</button>
+    <button class="demo-chip" data-status="ended" onclick="setStatus('ended')">Ended</button>
+
+    <div class="demo-section">Content</div>
+    <button class="demo-chip is-active" data-content="data" onclick="setContent('data')">Data</button>
+    <button class="demo-chip" data-content="empty" onclick="setContent('empty')">Empty</button>
+    <button class="demo-chip" data-content="loading" onclick="setContent('loading')">Loading</button>
+    <button class="demo-chip" data-content="error" onclick="setContent('error')">Error</button>
+  </div>
+  <button class="demo-toggle" type="button" onclick="toggleDemo()" id="demoToggle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    Demo States
+  </button>
+</div>
+
+<script src="sessions-store.js"></script>
+<script>
+/* ================================================================
+   STATE
+   ================================================================ */
+const state = {
+  status: 'live',        // 'scheduled' | 'live' | 'ended'
+  content: 'data',       // 'data' | 'empty' | 'loading' | 'error'
+};
+
+const SESSION = {
+  name: "Friday Night Smash",
+  scheduledLabel: "Today · 7:30 PM",
+  scheduledMeta: "Starts in 18 min",
+  liveLabel: "Today · 7:30 PM",
+  liveMeta: "1h 42m elapsed",
+  endedLabel: "May 21 · 7:30 PM",
+  endedMeta: "2h 15m total",
+};
+
+const MATCHES_LIVE = [
+  { num: "M5", time: "Now",     teamA: "Minh + Tuan",  teamB: "Huy + Dat",    a: 18, b: 14, status: "live",   serving: "A" },
+  { num: "M4", time: "8:24 PM", teamA: "Long + Khoa",  teamB: "Minh + Huy",   a: 21, b: 17, status: "ended",  winner: "A" },
+  { num: "M3", time: "7:58 PM", teamA: "Tuan + Dat",   teamB: "Long + Khoa",  a: 21, b: 19, status: "ended",  winner: "A" },
+  { num: "M2", time: "7:42 PM", teamA: "Minh + Tuan",  teamB: "Huy + Khoa",   a: 16, b: 21, status: "ended",  winner: "B" },
+  { num: "M1", time: "7:30 PM", teamA: "Minh + Huy",   teamB: "Tuan + Dat",   a: 21, b: 18, status: "ended",  winner: "A" },
+];
+
+const MATCHES_ENDED = [
+  { num: "M5", time: "9:42 PM", teamA: "Long + Khoa", teamB: "Minh + Dat",  a: 21, b: 19, status: "ended", winner: "A" },
+  { num: "M4", time: "9:08 PM", teamA: "Minh + Tuan", teamB: "Huy + Dat",   a: 21, b: 16, status: "ended", winner: "A" },
+  { num: "M3", time: "8:32 PM", teamA: "Tuan + Khoa", teamB: "Long + Huy",  a: 18, b: 21, status: "ended", winner: "B" },
+  { num: "M2", time: "8:04 PM", teamA: "Minh + Huy",  teamB: "Tuan + Dat",  a: 21, b: 14, status: "ended", winner: "A" },
+  { num: "M1", time: "7:30 PM", teamA: "Tuan + Long", teamB: "Minh + Khoa", a: 17, b: 21, status: "ended", winner: "B" },
+];
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+/* ================================================================
+   RENDER
+   ================================================================ */
+function render() {
+  renderHero();
+  renderStats();
+  renderContent();
+  renderFab();
+  renderBottomBar();
+  renderDemoChips();
+}
+
+function renderHero() {
+  const eyebrow = $("heroEyebrow");
+  const eyebrowText = $("heroEyebrowText");
+  const dot = $("heroDot");
+  const dt = $("heroDateTime");
+  const dur = $("heroDuration");
+  $("heroTitle").textContent = SESSION.name;
+  $("navTitle").textContent = SESSION.name;
+
+  eyebrow.classList.remove("hero-eyebrow--live", "hero-eyebrow--scheduled");
+  dot.style.display = "none";
+
+  function dtMarkup(label, meta) {
+    const parts = String(label || '').split(' · ');
+    const date = parts[0] || label || '—';
+    const time = parts.slice(1).join(' · ');
+    return `<span><strong>${esc(date)}</strong>${time ? ' · ' + esc(time) : ''}</span>
+            <span class="hero-datetime-dot"></span>
+            <span>${esc(meta)}</span>`;
+  }
+
+  if (state.status === "live") {
+    eyebrow.classList.add("hero-eyebrow--live");
+    dot.style.display = "";
+    eyebrowText.textContent = "Live · in progress";
+    dt.innerHTML = dtMarkup(SESSION.liveLabel, SESSION.liveMeta);
+  } else if (state.status === "scheduled") {
+    eyebrow.classList.add("hero-eyebrow--scheduled");
+    eyebrowText.textContent = "Scheduled";
+    dt.innerHTML = dtMarkup(SESSION.scheduledLabel, SESSION.scheduledMeta);
+  } else {
+    eyebrowText.textContent = "Completed";
+    dt.innerHTML = dtMarkup(SESSION.endedLabel, SESSION.endedMeta);
+  }
+}
+
+function renderStats() {
+  const matches = matchesForStatus();
+  const matchCount = (state.content === "data") ? matches.length : 0;
+  const playerCount = (state.content === "data") ? uniquePlayers(matches).length : 0;
+
+  $("statMatches").textContent = matchCount;
+  $("statPlayers").textContent = playerCount;
+
+  if (state.content !== "data") {
+    $("statMvp").textContent = "—";
+    $("statMvp").classList.remove("stats-value--accent");
+    $("statMvpLabel").textContent = state.status === "scheduled" ? "No matches yet" : "—";
+  } else if (state.status === "scheduled") {
+    $("statMvp").textContent = "—";
+    $("statMvp").classList.remove("stats-value--accent");
+    $("statMvpLabel").textContent = "Not started";
+  } else {
+    $("statMvp").classList.add("stats-value--accent");
+    if (state.status === "live") {
+      $("statMvp").textContent = "Tuan";
+      $("statMvpLabel").textContent = "Leading · 75%";
+    } else {
+      $("statMvp").textContent = "Minh";
+      $("statMvpLabel").textContent = "MVP · 83%";
+    }
+  }
+
+  $("statsFooterMeta").textContent =
+    state.content === "data" ? "Rankings · win rate · streaks" : "Tap to view rankings";
+
+  // Section count
+  const sc = $("sectionCount");
+  if (state.content === "loading") sc.textContent = "Loading…";
+  else if (state.content === "error") sc.textContent = "—";
+  else if (state.content === "empty") sc.textContent = state.status === "scheduled" ? "Not started" : "None yet";
+  else {
+    sc.textContent = state.status === "live"
+      ? `${matchCount - 1} done · 1 live`
+      : `${matchCount} played`;
+  }
+}
+
+function matchesForStatus() {
+  if (state.status === "live")  return MATCHES_LIVE;
+  if (state.status === "ended") return MATCHES_ENDED;
+  return [];
+}
+
+function uniquePlayers(list) {
+  const set = new Set();
+  list.forEach(m => {
+    (m.teamA + " " + m.teamB).split(/[+\s]+/).filter(Boolean).forEach(p => set.add(p));
+  });
+  return [...set];
+}
+
+/* --------- Content region: data / loading / empty / error --- */
+function renderContent() {
+  const el = $("contentRegion");
+  if (state.content === "loading") {
+    el.innerHTML = renderSkeleton();
+    return;
+  }
+  if (state.content === "error") {
+    el.innerHTML = renderError();
+    return;
+  }
+  if (state.content === "empty" || (state.status === "scheduled" && state.content === "data")) {
+    el.innerHTML = renderEmpty();
+    return;
+  }
+  el.innerHTML = renderMatchList(matchesForStatus());
+}
+
+function renderMatchList(list) {
+  return `<div class="match-list">${
+    list.map(renderMatchCard).join("")
+  }</div>`;
+}
+
+function renderMatchCard(m) {
+  const isLive = m.status === "live";
+  const aWin = m.winner === "A";
+  const bWin = m.winner === "B";
+  const aClass = isLive ? "" : (aWin ? "team-name--winner" : "team-name--loser");
+  const bClass = isLive ? "" : (bWin ? "team-name--winner" : "team-name--loser");
+  const aScoreClass = isLive ? "" : (aWin ? "score-current__win" : "score-current__lose");
+  const bScoreClass = isLive ? "" : (bWin ? "score-current__win" : "score-current__lose");
+  const meta = isLive
+    ? `<span class="match-num">${esc(m.num)} · ${esc(m.time)}</span>
+       <span class="live-indicator"><span class="live-dot"></span>Live</span>`
+    : `<span class="match-num">${esc(m.num)}</span>
+       <span class="match-time">${esc(m.time)}</span>`;
+  const result = isLive ? "" :
+    `<div class="score-result ${aWin ? "score-result--win" : "score-result--loss"}">${aWin ? "A wins" : "B wins"}</div>`;
+  const servingA = isLive && m.serving === "A" ? '<span class="serving-dot" aria-label="serving"></span>' : "";
+  const servingB = isLive && m.serving === "B" ? '<span class="serving-dot" aria-label="serving"></span>' : "";
+
+  return `
+    <article class="match-card ${isLive ? "match-card--live" : ""}" onclick="onMatchTap('${esc(m.num)}')">
+      <div class="match-meta">${meta}</div>
+      <div class="match-teams">
+        <div class="team team--left">
+          <div class="team-name ${aClass}">${esc(m.teamA)}${servingA}</div>
+        </div>
+        <div class="score-center">
+          <div class="score-current">
+            <span class="${aScoreClass}">${m.a}</span>
+            <span class="score-divider">:</span>
+            <span class="${bScoreClass}">${m.b}</span>
+          </div>
+          ${result}
+        </div>
+        <div class="team team--right">
+          <div class="team-name ${bClass}">${esc(m.teamB)}${servingB}</div>
+        </div>
+      </div>
+    </article>`;
+}
+
+function renderSkeleton() {
+  const row = `
+    <div class="skeleton-card">
+      <div class="skel-row">
+        <div class="skel-bar skel-bar--sm" style="width:40px"></div>
+        <div style="flex:1"></div>
+        <div class="skel-bar skel-bar--sm" style="width:48px"></div>
+      </div>
+      <div class="skel-row">
+        <div style="flex:1"><div class="skel-bar" style="width:70%"></div></div>
+        <div class="skel-bar skel-bar--lg"></div>
+        <div style="flex:1"><div class="skel-bar" style="width:70%; margin-left:auto"></div></div>
+      </div>
+    </div>`;
+  return `<div class="match-list">${row.repeat(4)}</div>`;
+}
+
+function renderEmpty() {
+  const isScheduled = state.status === "scheduled";
+  return `
+    <div class="empty" role="status">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2a10 10 0 1 0 10 10"></path>
+          <path d="M22 2L12 12"></path>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+        </svg>
+      </div>
+      <div class="empty-title">${isScheduled ? "No matches yet" : "No matches played"}</div>
+      <div class="empty-desc">
+        ${isScheduled
+          ? "Start the session, then add a match to begin tracking scores and player rankings."
+          : "Tap the + button to start the first match of this session."}
+      </div>
+      ${!isScheduled ? `
+        <div class="empty-hint" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Tap + to add a match
+        </div>` : ""}
+    </div>`;
+}
+
+function renderError() {
+  return `
+    <div class="error-state" role="alert">
+      <div class="error-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19h16a1 1 0 0 0 .87-1.5l-8-14a1 1 0 0 0-1.74 0l-8 14A1 1 0 0 0 4 19z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none"></circle>
+        </svg>
+      </div>
+      <div class="error-title">Couldn't load matches</div>
+      <div class="error-desc">We hit a snag fetching this session's matches. Check your connection and try again.</div>
+      <div class="error-code">err · network · 503</div>
+      <div class="error-actions">
+        <button class="btn-secondary" type="button" onclick="onBack()">Go back</button>
+        <button class="btn-retry" type="button" onclick="retryLoad()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-3-6.7"></path>
+            <path d="M21 4v5h-5"></path>
+          </svg>
+          Retry
+        </button>
+      </div>
+    </div>`;
+}
+
+/* --------- FAB visibility --------- */
+function renderFab() {
+  const showFab = state.status === "live" && (state.content === "data" || state.content === "empty");
+  $("fab").hidden = !showFab;
+}
+
+/* --------- Bottom bar --------- */
+function renderBottomBar() {
+  const bar = $("bottomBar");
+  bar.hidden = false;
+
+  if (state.content === "loading" || state.content === "error") {
+    bar.hidden = true;
+    return;
+  }
+
+  if (state.status === "scheduled") {
+    bar.innerHTML = `
+      <button class="btn-cta" type="button" onclick="onStartSession()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"></polygon>
+        </svg>
+        Start session
+        <span class="btn-cta-meta">→</span>
+      </button>`;
+  } else if (state.status === "live") {
+    bar.innerHTML = `
+      <button class="btn-cta btn-cta--danger" type="button" onclick="confirmEnd()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="6" y="6" width="12" height="12" fill="currentColor" stroke="none"></rect>
+        </svg>
+        End session
+      </button>`;
+  } else {
+    bar.hidden = true;
+  }
+}
+
+/* --------- Demo state chips --------- */
+function renderDemoChips() {
+  document.querySelectorAll('[data-status]').forEach(el => {
+    el.classList.toggle('is-active', el.dataset.status === state.status);
+  });
+  document.querySelectorAll('[data-content]').forEach(el => {
+    el.classList.toggle('is-active', el.dataset.content === state.content);
+  });
+}
+
+/* ================================================================
+   ACTIONS
+   ================================================================ */
+function setStatus(s) {
+  state.status = s;
+  // Reasonable defaults for content per status
+  if (s === "scheduled") state.content = "empty";
+  if (s === "live")      state.content = "data";
+  if (s === "ended")     state.content = "data";
+  render();
+}
+function setContent(c) {
+  state.content = c;
+  render();
+}
+
+function onBack() {
+  window.location.href = 'Tournament List.html';
+}
+
+function onAddMatch() {
+  console.log("[action] new match");
+  // Would route to match composer
+  alert("→ New match composer");
+}
+
+function onStartSession() {
+  console.log("[action] start session");
+  if (CURRENT_ID && window.SessionsStore) {
+    window.SessionsStore.update(CURRENT_ID, { status: 'live', elapsedLabel: '0m elapsed' });
+  }
+  state.status = "live";
+  state.content = "empty";
+  render();
+}
+
+function onMatchTap(num) {
+  console.log("[nav] match detail", num);
+}
+
+function onViewStats() {
+  console.log("[nav] player stats panel");
+  alert("→ Player statistics for this session");
+}
+
+function retryLoad() {
+  state.content = "loading";
+  render();
+  setTimeout(() => {
+    state.content = "data";
+    render();
+  }, 900);
+}
+
+/* ================================================================
+   MENU SHEET
+   ================================================================ */
+function openMenu() {
+  $("sheetBody").innerHTML = menuMarkup();
+  openSheet();
+}
+
+function menuMarkup() {
+  const items = [];
+  if (state.status === "live") {
+    items.push(`<button class="sheet-item" type="button" onclick="onAddMatch();closeSheet()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      New match
+    </button>`);
+  }
+  if (state.status === "scheduled") {
+    items.push(`<button class="sheet-item" type="button" onclick="onStartSession();closeSheet()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"></polygon></svg>
+      Start session
+    </button>`);
+  }
+  items.push(`<button class="sheet-item" type="button" onclick="onViewStats();closeSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+    View player stats
+  </button>`);
+  items.push(`<button class="sheet-item" type="button" onclick="onShare();closeSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+    Share session
+  </button>`);
+  items.push(`<button class="sheet-item" type="button" onclick="onRename();closeSheet()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z"></path></svg>
+    Rename
+  </button>`);
+
+  if (state.status === "live") {
+    items.push(`<div class="sheet-divider"></div>`);
+    items.push(`<button class="sheet-item sheet-item--danger" type="button" onclick="confirmEnd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" fill="currentColor" stroke="none"></rect></svg>
+      End session
+    </button>`);
+  }
+  items.push(`<button class="sheet-item sheet-item--danger" type="button" onclick="confirmDelete()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+    Delete session
+  </button>`);
+
+  return items.join("") + `<button class="sheet-cancel" type="button" onclick="closeSheet()">Cancel</button>`;
+}
+
+function confirmDelete() {
+  $("sheetBody").innerHTML = `
+    <div class="sheet-confirm-title">Delete session?</div>
+    <div class="sheet-confirm-desc">
+      ${esc(SESSION.name)} and all its matches will be permanently deleted. This can't be undone.
+    </div>
+    <div class="sheet-confirm-actions">
+      <button class="btn-confirm-cancel" type="button" onclick="openMenu()">Cancel</button>
+      <button class="btn-confirm-delete" type="button" onclick="onDelete()">Delete</button>
+    </div>`;
+  openSheet();
+}
+
+function confirmEnd() {
+  $("sheetBody").innerHTML = `
+    <div class="sheet-confirm-title">End this session?</div>
+    <div class="sheet-confirm-desc">
+      Match scores will be locked and rankings will be finalised. You can still view matches after ending.
+    </div>
+    <div class="sheet-confirm-actions">
+      <button class="btn-confirm-cancel" type="button" onclick="openMenu()">Cancel</button>
+      <button class="btn-confirm-delete" type="button" onclick="onEnd()" style="background:var(--fg);border-color:var(--fg);color:var(--surface)">End session</button>
+    </div>`;
+  openSheet();
+}
+
+function onDelete() {
+  console.log("[action] delete session");
+  if (CURRENT_ID && window.SessionsStore) {
+    window.SessionsStore.delete(CURRENT_ID);
+  }
+  closeSheet();
+  setTimeout(() => { window.location.href = 'Tournament List.html'; }, 180);
+}
+function onEnd() {
+  console.log("[action] end session");
+  if (CURRENT_ID && window.SessionsStore) {
+    window.SessionsStore.update(CURRENT_ID, {
+      status: 'ended',
+      durationLabel: SESSION.endedMeta || '—',
+      elapsedLabel: ''
+    });
+  }
+  closeSheet();
+  state.status = "ended";
+  state.content = "data";
+  render();
+}
+function onShare()  { console.log("[action] share"); }
+function onRename() { console.log("[action] rename"); }
+
+function openSheet() {
+  $("sheetBackdrop").classList.add("is-open");
+  $("sheet").classList.add("is-open");
+}
+function closeSheet() {
+  $("sheetBackdrop").classList.remove("is-open");
+  $("sheet").classList.remove("is-open");
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+/* ================================================================
+   DEMO PANEL
+   ================================================================ */
+function toggleDemo() {
+  const p = $("demoPanel");
+  p.hidden = !p.hidden;
+}
+
+/* ================================================================
+   Sticky-nav border on scroll
+   ================================================================ */
+$("scrollEl").addEventListener("scroll", () => {
+  $("topNav").classList.toggle("is-stuck", $("scrollEl").scrollTop > 32);
+}, { passive: true });
+
+/* ================================================================
+   INIT — hydrate from URL ?id=<sessionId>
+   ================================================================ */
+let CURRENT_ID = null;
+
+(function hydrateFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const isNew = params.get('new') === '1';
+
+  if (!id || !window.SessionsStore) {
+    render();
+    return;
+  }
+
+  const session = window.SessionsStore.get(id);
+  if (!session) {
+    CURRENT_ID = id;
+    SESSION.name = 'Session not found';
+    state.status = 'ended';
+    state.content = 'error';
+    render();
+    return;
+  }
+
+  CURRENT_ID = id;
+
+  SESSION.name = session.name || 'Untitled Session';
+  if (session.status === 'live') {
+    SESSION.liveLabel = session.datetime || 'Today · —';
+    SESSION.liveMeta  = session.elapsedLabel || '0m elapsed';
+  } else if (session.status === 'scheduled') {
+    SESSION.scheduledLabel = session.datetime || 'Today · —';
+    SESSION.scheduledMeta  = 'Starts ' + (session.timeLabel || 'soon');
+  } else {
+    SESSION.endedLabel = session.datetime || '—';
+    SESSION.endedMeta  = (session.durationLabel || '—') + ' total';
+  }
+
+  state.status = session.status;
+
+  // Newly created sessions and user sessions start empty;
+  // seed sessions show curated demo matches.
+  const isUserSession = !window.SessionsStore.SEEDS[id];
+  if (isUserSession || isNew || session.matchCount === 0) {
+    state.content = 'empty';
+  } else {
+    state.content = 'data';
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>
