@@ -1,123 +1,281 @@
 # Design Guidelines
 
-Source of truth for the app's visual language. The dev-only
-`/settings/design-system` route renders every token & component below so changes
-can be previewed in-app.
+Source of truth for the app's visual language — **Japanese Sport / Vermilion** design system. The dev-only `/settings/design-system` route renders every token & component below for in-app preview.
 
-> **App MUST respect this system.** New components reuse the tokens here; don't
-> invent new shades, radii, or text sizes without updating this file and the
-> Design System page in lockstep.
+> **App MUST respect this system.** New components reuse the tokens defined in `design-system/tokens/tokens.css`; don't invent new shades, radii, or text sizes without updating this file and the Design System page in lockstep.
+
+All tokens are CSS custom properties loaded from `design-system/tokens/tokens.css`. Use them in Tailwind via `bg-[var(--token)]`, `text-[var(--token)]`, etc.
+
+---
 
 ## Surface
 
 - Mobile-first, max width `512px` (`max-w-lg`) centered.
-- Background: `bg-gray-50` page; cards on `bg-white`.
-- Border: `border border-gray-100` (cards) / `border-gray-200` (inputs).
-- Radius: `rounded-2xl` (16px) for cards / `rounded-xl` (12px) for inner
-  controls / `rounded-full` for pills, avatars, FAB.
+- Background: `var(--bg)` (near-white / near-black in dark).
+- Cards: `var(--surface)` with `border border-[var(--border)]`.
+- Design philosophy: near-brutalist sharpness. Buttons and inputs have 0px radius; cards get 8px.
+
+---
 
 ## Colors
 
-Tailwind tokens (CSS vars in `src/index.css` for raw values).
+All colors use `oklch()` for perceptually uniform lightness. Light mode is the default; dark mode activates via `[data-theme="dark"]` on `<html>`.
 
-| Role | Class | Hex |
-|------|-------|-----|
-| Primary | `green-600` | `#16a34a` |
-| Primary dark | `green-700` | `#15803d` |
-| Primary tint | `green-50` / `green-100` | — |
-| Team A | `blue-500` | `#3b82f6` |
-| Team B | `red-500` | `#ef4444` |
-| Danger | `red-600` | `#dc2626` |
-| Dev tag | `amber-600` on `amber-100` | — |
-| Surface | `white` | `#ffffff` |
-| Background | `gray-50` | `#f9fafb` |
-| Border | `gray-100` / `gray-200` | — |
-| Text primary | `gray-900` | `#111827` |
-| Text muted | `gray-500` / `gray-400` | — |
+### Core Tokens
+
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--bg` | oklch(99% 0.003 50) | oklch(12% 0.02 50) | Page background |
+| `--surface` | oklch(100% 0 0) | oklch(15% 0.018 50) | Cards, modals, inputs |
+| `--fg` | oklch(12% 0.02 50) | oklch(95% 0.005 50) | Primary text, icon fills |
+| `--muted` | oklch(50% 0.01 50) | oklch(55% 0.01 50) | Secondary text, placeholders |
+| `--border` | oklch(88% 0.008 50) | oklch(28% 0.015 50) | Dividers, card borders |
+| `--accent` | oklch(55% 0.20 30) | oklch(60% 0.18 30) | Vermilion — CTAs, live indicator, winner score |
+
+### Semantic Status
+
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--success` | oklch(50% 0.14 145) | oklch(55% 0.12 145) | Win badges |
+| `--danger` | oklch(55% 0.20 25) | oklch(60% 0.18 25) | Loss, delete actions |
+| `--warn` | oklch(70% 0.14 85) | oklch(70% 0.12 85) | Warnings |
+| `--info` | oklch(55% 0.12 250) | oklch(55% 0.10 250) | Info hints |
+
+```html
+<!-- Usage pattern -->
+<div class="bg-[var(--surface)] border border-[var(--border)] text-[var(--fg)]">
+  <span class="text-[var(--accent)]">Accent text</span>
+</div>
+```
+
+---
 
 ## Typography
 
-System font stack (`system-ui`). Sizes are in px to match iOS rhythm.
+System font stack via CSS custom properties.
 
-| Use | Class |
-|-----|-------|
-| AppBar title | `text-[17px] font-bold` |
-| Item title / button label | `text-[15px] font-bold` / `font-semibold` |
-| Body | `text-sm font-medium` (14px) |
-| Caption | `text-xs` (12px) |
-| Tag | `text-[10px] font-bold uppercase tracking-wide` |
+| Token | Stack |
+|-------|-------|
+| `--font-display` | -apple-system, BlinkMacSystemFont, 'SF Pro Display', Inter, Segoe UI |
+| `--font-body` | -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, Segoe UI |
+| `--font-mono` | ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo |
+
+### Type Scale
+
+| Token | Size | Weight | Line Height | Tracking | Usage |
+|-------|------|--------|-------------|----------|-------|
+| `--text-xs` | 11px | 700 | 1 | 0.06em (uppercase) | Badges, labels, meta |
+| `--text-sm` | 13px | 500 | 1.3 | — | Captions, subtitles |
+| `--text-base` | 15px | 400 | 1.6 | — | Body text, inputs |
+| `--text-lg` | 18px | 700 | 1.2 | -0.01em | Team names, scores |
+| `--text-xl` | 24px | 800 | 1.15 | -0.02em | Session names |
+| `--text-2xl` | 32px | 800 | 1.1 | -0.03em | Section titles |
+| `--text-3xl` | 48px | 800 | 1.05 | -0.03em | Page titles |
+
+---
 
 ## Spacing
 
-- Page padding: `px-4 py-5` (top/bottom adjusted per page).
-- Bottom safe-area room: `pb-32` (clears bottom nav + FAB).
-- Gap between cards/lists: `space-y-3` or `space-y-4`.
+8px base unit.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--space-1` | 4px | Icon gaps, tight padding |
+| `--space-2` | 8px | Small gaps, icon-text spacing |
+| `--space-3` | 12px | Default component gaps |
+| `--space-4` | 16px | Card internal padding |
+| `--space-5` | 24px | Section gaps, page padding |
+| `--space-6` | 32px | Large section spacing |
+| `--space-7` | 48px | Page header spacing |
+| `--space-8` | 64px | Major section breaks |
+
+**Common patterns:**
+- Card padding: `p-[var(--space-4)]` (16px)
+- Page padding: `px-[var(--space-5)]` (24px)
+- Gap between cards: `gap-[var(--space-3)]` (12px)
+- Bottom safe-area room: enough to clear bottom nav + FAB
+
+---
+
+## Radius
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--radius-sm` | 0px | Buttons, inputs, badges — sharp |
+| `--radius-md` | 4px | Avatars, small containers |
+| `--radius-lg` | 8px | Cards, modals, larger panels |
+
+---
 
 ## Buttons
 
-| Variant | Recipe |
+See [design-system/components/button.tsx](../design-system/components/button.tsx) for the reference implementation.
+
+| Variant | Styles |
 |---------|--------|
-| Primary | `bg-green-600 text-white active:bg-green-700`, `rounded-2xl`, `py-3.5`, `minHeight: 52` |
-| Secondary | `bg-gray-100 text-gray-700 active:bg-gray-200` |
-| Danger | `bg-red-600 text-white active:bg-red-700` |
-| Outline | `border border-gray-200 bg-white active:bg-gray-50` |
-| Mini action | `text-xs font-semibold` on `bg-{color}-50 rounded-xl px-3 py-2` |
-| FAB | `w-14 h-14 bg-green-600 rounded-full shadow-lg shadow-green-600/25 active:scale-90` |
+| `primary` | `bg-[var(--fg)] text-[var(--surface)] border-2 border-[var(--fg)]` |
+| `secondary` | `bg-transparent text-[var(--fg)] border-2 border-[var(--fg)]` |
+| `ghost` | `bg-transparent text-[var(--muted)] border border-[var(--border)]` |
+| `accent` | `bg-[var(--accent)] text-[var(--surface)] border-2 border-[var(--accent)]` |
+| `danger` | `bg-[var(--danger)] text-[var(--surface)] border-2 border-[var(--danger)]` |
 
-Always include `active:` press-state and 44+px touch target.
+**Sizes:** `sm` (36px min-height, 13px text) / `default` (52px, 15px) / `lg` (52px, 18px) / `block` (full-width).
 
-## Items
+All buttons:
+- `rounded-[var(--radius-sm)]` — sharp corners (0px)
+- `active:opacity-70` for press feedback
+- `minHeight: 52` (36 for sm) — 44px+ touch targets
+- `touchAction: manipulation`
 
-- **Player (list)**: avatar `w-10 h-10 bg-green-100 rounded-full`, name `text-sm`,
-  stats line `text-xs text-gray-400`. Container: `rounded-2xl border bg-white p-3`.
-- **Player (grid card)**: same avatar size; selected → blue/red tint with
-  matching border + `shadow-sm`. Disabled → `opacity-50`.
-- **Donor (list)**: avatar `size={40}`, name `text-sm font-medium`. Right side:
-  losses count `text-base font-bold text-yellow-500`, then amount + match count
-  `text-xs text-gray-400` (e.g. "25.000 VND (5 matches)"). Container:
-  `rounded-2xl border border-gray-100 bg-white p-3 flex items-center gap-3`.
-  Use `<DonorListItem>` component.
-- **Session**: card with bold label + calendar date row; green `Active` pill
-  when `!ended_at`.
-- **Match card**: type pill (left) + date (right) header, then Team A/score/Team B
-  row. Winner team text turns `text-blue-700` / `text-red-700` with `font-bold`
-  and a `Trophy` micro-badge.
-- **Swipeable item**: wrap any card in `<SwipeableItem>` for swipe-left-to-delete.
-  Background is `bg-red-500` with white delete icon+label. Foreground card must
-  have `rounded-2xl` and `bg-white`. No `active:scale-[0.98]` on swipeable items
-  (scale exposes red bg at corners). Swipe threshold: 60px, delete width: 80px.
-
-## Pills & Chips
-
-- Status pill: `text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full`.
-- Dev tag: `text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-100 px-2 py-0.5 rounded`.
-- Team chip: `px-3 py-2 rounded-lg`, blue/red 50/200 palette + initial avatar.
-- Active player chip: `pl-1 pr-3 py-1 rounded-full bg-green-600 text-white text-sm font-medium` with 24px avatar; tap-to-remove.
-- Add player CTA (dashed): `border border-dashed border-gray-300 rounded-full px-3 py-1.5` with `+` icon.
-- Circle indicator (multi-select): 24px circle; unselected `border-2 border-gray-300`, selected `bg-green-600` + white `Check`.
+---
 
 ## Form Inputs
 
-- Height: `minHeight: 52` (large tap target).
-- Base: `bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-[15px]`.
-- Focus: `focus:ring-2 focus:ring-green-500 focus:border-transparent`.
-- Score inputs: `w-16 h-11 rounded-xl text-lg font-bold` (blue for A, red for B).
+See [design-system/components/input.tsx](../design-system/components/input.tsx).
 
-## States
+- Base: `px-4 py-3.5 text-[15px] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)]`
+- Focus: `focus:border-[var(--fg)] focus:border-2`
+- Error: border changes to `var(--danger)`
+- Label: `text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]`
+- Hint/error text: `text-[11px]` below the input
+- Min-height: 52px
 
-- Loading: `w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin`.
-- Empty: centered icon `w-10 h-10 text-gray-300` + `text-sm text-gray-400` message.
-- Modal backdrop: `bg-black/40`; modal `bg-white rounded-2xl p-5 max-w-xs`.
+---
+
+## Cards
+
+See [design-system/components/card.tsx](../design-system/components/card.tsx).
+
+- Base: `bg-[var(--surface)] border border-[var(--border)] p-4 rounded-[var(--radius-lg)]`
+- Interactive: `cursor-pointer active:bg-[var(--bg)]`
+- Active sessions / live matches: `border-2 border-[var(--accent)]` instead of default border
+
+---
+
+## Badges
+
+See [design-system/components/badge.tsx](../design-system/components/badge.tsx).
+
+Sharp-cornered (radius-sm), bold uppercase, 11px text, `tracking-[0.06em]`.
+
+| Variant | Usage |
+|---------|-------|
+| `win` | `bg-[var(--success)]` — win outcomes |
+| `loss` | `bg-[var(--danger)]` — loss outcomes |
+| `accent` | `bg-[var(--accent)]` — live sessions |
+| `neutral` | `bg-[var(--bg)] border-[var(--border)] text-[var(--muted)]` — completed |
+| `default` | `bg-[var(--bg)] border-[var(--border)] text-[var(--fg)]` — general labels |
+
+---
+
+## Component Specs
+
+### SessionCard
+See [design-system/components/session-card.tsx](../design-system/components/session-card.tsx).
+
+- Active: `border-2 border-[var(--accent)]` + pulsing `w-2 h-2 rounded-full animate-pulse` dot in accent color
+- Session name: 24px extrabold display font (`--font-display`), `--fg`
+- DateTime: 13px mono, `--muted`
+- Meta row: 13px mono (`--muted`) with match count and duration
+- Top Player / MVP section: accent-colored `rounded-[var(--radius-md)]` avatar (initials), win rate in accent
+- Compact variant: tighter padding, smaller text
+
+### MatchCard
+See [design-system/components/match-card.tsx](../design-system/components/match-card.tsx).
+
+- Live: `border-2 border-[var(--accent)]` + animated `LIVE` label in accent
+- Team name: 18px display font — winner `font-weight: 800 color: --fg`, loser `font-weight: 500 color: --muted`
+- Score: 32px extrabold display — winner score `--accent`, loser score `--muted`
+- Score divider: `text-[24px]` in `--border` color
+- Footer: 11px mono `--muted` with duration and match type, separated by top border
+- Compact variant: 15px team names, 24px scores, no footer
+
+### ListItem
+See [design-system/components/list-item.tsx](../design-system/components/list-item.tsx).
+
+- 40×40px `rounded-[var(--radius-md)]` avatar with initials
+- Title: 15px `--fg`, subtitle: 13px `--muted`
+- Optional right-side action slot
+- Interactive: `active:bg-[var(--bg)]`
+
+### RankItem
+See [design-system/components/rank-item.tsx](../design-system/components/rank-item.tsx).
+
+- Rank number: `--accent` for top 2, `--muted` for others
+- Avatar: `rounded-[var(--radius-md)]` with initials
+- Win rate: right-aligned, 15px extrabold `--accent`
+
+### StatRow
+See [design-system/components/stat-row.tsx](../design-system/components/stat-row.tsx).
+
+- Label: left, `--muted`; value: right, large `--accent`
+- Bottom border divider: `var(--border)`
+
+### SectionHeader
+See [design-system/components/section-header.tsx](../design-system/components/section-header.tsx).
+
+- Title: 24px extrabold `--fg`
+- Optional action: right-aligned, `--accent`
+
+### Tabs
+See [design-system/components/tabs.tsx](../design-system/components/tabs.tsx).
+
+- Animated underline indicator in `--fg`
+- Active tab: `--fg`; inactive: `--muted`
+- Transition: `--duration-normal`
+
+---
+
+## Patterns
+
+### EmptyState
+See [design-system/patterns/empty-state.tsx](../design-system/patterns/empty-state.tsx).
+
+- Icon: `--muted`, centered
+- Title: 24px extrabold
+- Description: 13px `--muted`
+- Action: accent Button
+
+### ErrorState
+See [design-system/patterns/error-state.tsx](../design-system/patterns/error-state.tsx).
+
+- `!` mark: 32px `--danger`
+- Default title: "Something went wrong"
+- Retry: primary Button
+
+### LoadingState
+See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading-state.tsx).
+
+- Animated spinner: `border-[var(--accent)] border-t-transparent rounded-full animate-spin`
+- Sizes: sm (24px), md (32px), lg (48px)
+- Optional message below in `--muted`
+
+---
 
 ## Motion
 
-- Press feedback: `active:scale-[0.97]` (cards) / `active:scale-90` (FAB).
-- Toggle/select: `transition-all` / `transition-transform`.
-- No long animations — instant feel preferred.
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--duration-fast` | 0.12s | Button press, opacity |
+| `--duration-normal` | 0.15s | Border color changes |
+| `--duration-slow` | 0.3s | Page transitions |
+| `--easing-default` | ease-in-out | All transitions |
+
+**Keyframes:**
+- `pulse` (live indicator): 1.5s infinite, opacity 1→0.4 + scale 1→0.85
+- Page transitions: 300ms cubic-bezier(0.32, 0.72, 0, 1) — from existing app
+
+**Principles:**
+- Press feedback: `active:opacity-70` (not scale — scale reveals bg at corners)
+- No hover effects on mobile
+- No decorative animations — instant feel preferred
+- Respect `prefers-reduced-motion`
+
+---
 
 ## Touch & Accessibility
 
-- Min target 44px (52px on primary actions).
-- `touch-action: manipulation` globally (`index.css`) — no double-tap zoom.
-- `-webkit-tap-highlight-color: transparent` — replace with `active:` state.
-- Always provide `aria-label` on icon-only buttons (e.g. FAB).
+- Min touch target: 44px (52px on primary actions).
+- `touch-action: manipulation` globally — no double-tap zoom.
+- `-webkit-tap-highlight-color: transparent` — replaced by `active:` states.
+- Always provide `aria-label` on icon-only buttons.
