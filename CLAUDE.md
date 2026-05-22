@@ -36,6 +36,8 @@ Routes in `src/components/AnimatedRoutes.tsx`. Page transitions are animated (fo
 
 **Tab routes** (no AppBar, bottom nav visible): `/`, `/sessions`, `/players`, `/settings`
 
+**Full-screen routes** (no AppBar, no bottom nav — page owns its own nav bar and bottom CTA): `/sessions/new`. Defined in `FULL_SCREEN_ROUTES` in `src/App.tsx`.
+
 **Back navigation** is custom in `src/App.tsx` `handleBack()`:
 - Result page → Select Players page (replace)
 - Select Players → Session Detail (replace)
@@ -57,12 +59,16 @@ Pages navigating **to** Session Detail must pass `state: { from: '<route>' }` so
 
 ### Data Model
 
-Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users).
+Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users), `bwf_tournaments`.
 
 A match has:
 - 2 teams (`match_teams`: TEAM_A / TEAM_B, `is_winner` flag)
 - N participants (`match_participants` linking players to teams)
 - M scores (`match_scores` per set)
+
+A session has `label`, `started_at`, `ended_at`, and `category_slug` (links to a BWF tournament category).
+
+`bwf_tournaments` caches BWF calendar data (name, start_date, end_date, category_slug, category_name, venue). Populated manually via Supabase SQL Editor — never fetched at runtime because bwfbadminton.com is Cloudflare-protected.
 
 Types in `src/types/database.ts`. Supabase client in `src/lib/supabase.ts`.
 
@@ -106,6 +112,8 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useMatches.ts` | Match CRUD + optimistic updates |
 | `src/hooks/usePlayers.ts` | Player CRUD |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query |
+| `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
+| `src/lib/bwf-api.ts` | BWF category constants + priority order |
 | `src/stores/new-match-store.ts` | Match creation flow state |
 | `src/types/database.ts` | TypeScript types for all DB tables |
 | `docs/design-guidelines.md` | Design system reference |

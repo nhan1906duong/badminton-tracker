@@ -260,6 +260,79 @@ See [design-system/components/tabs.tsx](../design-system/components/tabs.tsx).
 
 ---
 
+### SegmentedControl
+
+Two-segment mode switcher with a sliding filled track. Used for binary choices (e.g. "Start now / Schedule").
+
+- Outer container: `grid grid-cols-2 bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[3px]`
+- Sliding track: `absolute bg-[var(--fg)] rounded-[6px]`, width `calc(50% - 3px)`, animated with `translateX(100%)` for right segment
+- Transition: `transform 280ms cubic-bezier(0.32, 0, 0.15, 1)`
+- Active segment text: `text-[var(--surface)]`; inactive: `text-[var(--muted)]`
+- Segment button: `min-h-[40px]`, `font-semibold`, `text-[13px]`
+- Use `role="tablist"` on the container and `role="tab" aria-selected` on buttons
+
+### SuggestCard
+
+Selectable suggestion card — used to present AI/data-driven recommendations (e.g. tournament names).
+
+- Layout: `flex items-center gap-3 min-h-[56px] px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)]`
+- **Default**: `border-[var(--border)]` (1px)
+- **Selected**: `border-[var(--accent)]` (2px) — compensate padding by –1px to avoid layout shift
+- Stamp (index number): `w-8 h-8 rounded-[var(--radius-md)]`; default `bg-[var(--bg)] text-[var(--muted)]`; selected `bg-[var(--accent)] text-[var(--surface)]`
+- Name: 15px display font, `font-bold`, `text-[var(--fg)]`
+- Tag: 11px mono, uppercase, `tracking-[0.06em]`, `text-[var(--muted)]`
+- Checkmark circle: `w-[22px] h-[22px] rounded-full border border-[var(--border)]`; selected `bg-[var(--accent)] border-[var(--accent)]` with a 12px check SVG inside
+- Skeleton loading: `animate-pulse` on the whole row, stamp and checkmark filled with `bg-[var(--border)]`
+- Use `role="radio" aria-checked` on each card; wrap list in `role="radiogroup"`
+
+### SectionLabel
+
+Mono uppercase label above a form section — pairs with an optional right-side action button.
+
+- `font-[family:var(--font-mono)] text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]`
+- Right action: `text-[var(--accent)] font-semibold text-[13px]`, min-height 32px
+
+### OrDivider
+
+Horizontal rule with centred text — separates recommended options from a custom input.
+
+```tsx
+<div className="flex items-center gap-3 my-4 font-[family:var(--font-mono)] uppercase tracking-[0.1em] text-[var(--muted)]"
+     style={{ fontSize: 11 }}>
+  <span className="flex-1 h-px bg-[var(--border)]" />
+  Or
+  <span className="flex-1 h-px bg-[var(--border)]" />
+</div>
+```
+
+### Full-screen Page Layout
+
+Pages that own their full viewport (no global AppBar or bottom nav). Add the route to `FULL_SCREEN_ROUTES` in `src/App.tsx`.
+
+Structure:
+```
+<div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
+  <nav>                   ← sticky top-0, backdrop-blur, 3-col grid (action | title | action)
+  <div className="flex-1 overflow-y-auto overscroll-contain">
+    <header>              ← large title (48px display font) + subtitle
+    <section> × N        ← form sections, px-6
+  </div>
+  <div>                   ← sticky bottom-0 CTA bar, backdrop-blur, border-t
+</div>
+```
+
+- Nav background: `color-mix(in oklch, var(--bg) 88%, transparent)` with `backdrop-filter: saturate(180%) blur(12px)`
+- Nav border: `border-b border-transparent`; add `border-[var(--border)]` when `scrollTop > 4` (`.is-stuck`)
+- Nav Cancel/action button: `text-[var(--accent)] font-medium text-[15px] min-h-[44px]`
+- Nav title: `font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em] text-center`
+- Scroll area bottom padding: `max(120px, calc(env(safe-area-inset-bottom) + 104px))`
+- CTA bar padding: `12px 24px max(16px, calc(env(safe-area-inset-bottom) + 12px))`
+- CTA bar background: `color-mix(in oklch, var(--bg) 92%, transparent)` with same backdrop-filter
+- CTA button (enabled): `bg-[var(--accent)] text-[var(--surface)]`, `rounded-[var(--radius-lg)]`, `min-h-[52px]`, shadow `0 1px 2px oklch(0% 0 0 / 0.08), 0 6px 18px oklch(55% 0.20 30 / 0.22)`
+- CTA button (disabled): `bg-[var(--border)] text-[var(--muted)]`, no shadow, `cursor-not-allowed`
+
+---
+
 ## Patterns
 
 ### EmptyState
