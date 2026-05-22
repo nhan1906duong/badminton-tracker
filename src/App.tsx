@@ -6,6 +6,7 @@ import { Home, Users, Trophy, Settings, ArrowLeft } from 'lucide-react'
 import './index.css'
 
 const TAB_ROUTES = ['/', '/players', '/sessions', '/settings']
+const FULL_SCREEN_ROUTES = ['/sessions/new']
 
 const queryClient = new QueryClient()
 
@@ -47,6 +48,7 @@ function AppBar() {
 
   if (location.pathname === '/login') return null
   if (TAB_ROUTES.includes(location.pathname)) return null
+  if (FULL_SCREEN_ROUTES.includes(location.pathname)) return null
 
   function handleBack() {
     const path = location.pathname
@@ -107,12 +109,13 @@ function AppBar() {
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const isLogin = location.pathname === '/login'
+  const isFullScreen = FULL_SCREEN_ROUTES.includes(location.pathname)
 
   return (
     <div className="min-h-svh bg-gray-50 max-w-lg mx-auto relative">
       {!isLogin && <AppBar />}
       <main>{children}</main>
-      {!isLogin && (
+      {!isLogin && !isFullScreen && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 max-w-lg mx-auto z-40">
           <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
             <NavButton to="/" icon={<Home className="w-5 h-5" />} label="Home" />

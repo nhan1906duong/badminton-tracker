@@ -30,6 +30,7 @@ export interface Session {
   label?: string | null
   started_at: string
   ended_at?: string | null
+  category_slug?: string | null
   created_by: string
   created_at: string
 }

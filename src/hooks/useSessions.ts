@@ -41,7 +41,11 @@ export function useOpenSession() {
 export function useCreateSession() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: { label?: string }) => {
+    mutationFn: async (input: {
+      label?: string
+      started_at?: string
+      category_slug?: string
+    }) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
@@ -57,6 +61,8 @@ export function useCreateSession() {
         .from('sessions')
         .insert({
           label: input.label || null,
+          started_at: input.started_at ?? new Date().toISOString(),
+          category_slug: input.category_slug || null,
           created_by: user.id,
         })
         .select()
