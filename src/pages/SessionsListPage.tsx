@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
-import { SessionCard } from '../../design-system/components'
-import { Plus } from 'lucide-react'
+import { SessionCard, LoadingState, EmptyState, ErrorState } from '../../design-system/components'
+import { Plus, Trophy } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
 import {
   formatSessionDuration,
@@ -25,8 +25,18 @@ interface SessionStat {
 
 export default function SessionsListPage() {
   const navigate = useNavigate()
-  const { data: sessions, isLoading: sessionsLoading } = useSessions()
-  const { data: allMatches, isLoading: matchesLoading } = useMatches()
+  const {
+    data: sessions,
+    isLoading: sessionsLoading,
+    isError: sessionsError,
+    refetch: refetchSessions,
+  } = useSessions()
+  const {
+    data: allMatches,
+    isLoading: matchesLoading,
+    isError: matchesError,
+    refetch: refetchMatches,
+  } = useMatches()
 
   const sessionStats = useMemo(() => {
     if (!allMatches) return new Map<string, SessionStat>()
@@ -94,14 +104,45 @@ export default function SessionsListPage() {
   }, [allMatches])
 
   const isLoading = sessionsLoading || matchesLoading
+  const isError = sessionsError || matchesError
+
+  const activeCount = sessions?.filter((s) => getSessionStatus(s) === 'active').length ?? 0
+  const subtitle = sessions
+    ? `${sessions.length} session${sessions.length !== 1 ? 's' : ''}${activeCount > 0 ? ` · ${activeCount} active` : ''}`
+    : null
 
   return (
-    <div className="min-h-svh" style={{ background: 'var(--bg)' }}>
-      <div className="px-4 py-5 space-y-4 pb-32">
+    <div className="min-h-svh bg-[var(--bg)]">
+      {/* Page Header */}
+      <div
+        className="px-[var(--space-5)] pb-[var(--space-4)]"
+        style={{ paddingTop: 'max(var(--space-7), env(safe-area-inset-top) + var(--space-5))' }}
+      >
+        <h1
+          className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em] mb-[var(--space-2)]"
+          style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+        >
+          Sessions
+        </h1>
+        {subtitle && (
+          <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="px-[var(--space-5)] space-y-[var(--space-3)] pb-32">
         {isLoading ? (
-          <div className="text-center py-12 text-sm" style={{ color: 'var(--muted)' }}>
-            Loading sessions...
-          </div>
+          <LoadingState message="Loading sessions..." />
+        ) : isError ? (
+          <ErrorState
+            message="Couldn't load sessions. Check your connection and try again."
+            onRetry={() => {
+              refetchSessions()
+              refetchMatches()
+            }}
+          />
         ) : sessions && sessions.length > 0 ? (
           sessions.map((session) => {
             const stat = sessionStats.get(session.id)
@@ -125,14 +166,14 @@ export default function SessionsListPage() {
             )
           })
         ) : (
-          <div className="text-center py-12">
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>No sessions yet.</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Tap + to start one.</p>
-          </div>
+          <EmptyState
+            icon={<Trophy className="w-9 h-9 mx-auto" />}
+            title="No sessions yet"
+            description="Tap + to start your first session."
+          />
         )}
       </div>
 
-      {/* FAB */}
       <FloatingActionButton
         onClick={() => navigate('/sessions/new')}
         icon={<Plus className="w-6 h-6" />}
