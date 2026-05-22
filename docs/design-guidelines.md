@@ -129,6 +129,40 @@ All buttons:
 
 ---
 
+## Floating Action Button
+
+See [src/components/FloatingActionButton.tsx](../src/components/FloatingActionButton.tsx) for the implementation.
+
+Hanko-style square stamp anchored bottom-right within the mobile container.
+
+| Property | Value |
+|----------|-------|
+| Size | 56×56px |
+| Shape | `border-radius: var(--radius-lg)` (8px) — **not** circular |
+| Color | `background: var(--accent)` (vermilion) |
+| Shadow | 3-layer oklch: base + colored lift + tinted spread |
+| Press | `scale(0.96) translateY(0)` + compressed shadow |
+| Hover | `translateY(-1px)` |
+| Transition | `transform 0.18s cubic-bezier(0.32, 0, 0.15, 1)` + box-shadow + opacity |
+| Focus | `outline: 2px solid var(--fg); outline-offset: 3px` |
+
+**Extended variant:** pill shape (`border-radius: 999px`), auto-width with label, 18px icon. Use only when the icon alone is ambiguous.
+
+**Rules:**
+- One FAB per screen — reserved for the primary creation action.
+- Fixed bottom-right, pinned inside `max-w-lg` container so it never drifts on wide screens.
+- Respects `env(safe-area-inset-bottom)` for notched devices.
+- Fade + scale to 0.9 when a bottom sheet or modal opens.
+
+```
+Shadow tokens:
+0 1px 2px oklch(0% 0 0 / 0.10)         — base drop
+0 8px 24px oklch(55% 0.20 30 / 0.28)   — colored lift
+0 2px 6px oklch(55% 0.20 30 / 0.18)    — tinted spread
+```
+
+---
+
 ## Form Inputs
 
 See [design-system/components/input.tsx](../design-system/components/input.tsx).

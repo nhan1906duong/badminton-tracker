@@ -23,6 +23,7 @@ export default function DesignSystemPage() {
         <SpacingTokensSection />
         <RadiusTokensSection />
         <ButtonSection />
+        <FABSection />
         <InputSection />
         <BadgeSection />
         <CardSection />
@@ -327,6 +328,144 @@ function ButtonSection() {
           <Button size="lg">Large</Button>
         </div>
         <Button size="block" className="mt-2">Block</Button>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Floating Action Button ---------- */
+
+const FAB_SHADOW = [
+  '0 1px 2px oklch(0% 0 0 / 0.10)',
+  '0 8px 24px oklch(55% 0.20 30 / 0.28)',
+  '0 2px 6px oklch(55% 0.20 30 / 0.18)',
+].join(', ')
+
+const FAB_SHADOW_PRESSED = [
+  '0 1px 2px oklch(0% 0 0 / 0.12)',
+  '0 4px 12px oklch(55% 0.20 30 / 0.30)',
+].join(', ')
+
+const FAB_TRANSITION = [
+  'transform 0.18s cubic-bezier(0.32, 0, 0.15, 1)',
+  'box-shadow 0.18s ease',
+  'opacity 0.12s ease',
+].join(', ')
+
+function FabInteractionHandlers() {
+  return {
+    onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.currentTarget.style.transform = 'translateY(-1px)'
+    },
+    onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.currentTarget.style.transform = ''
+    },
+    onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.currentTarget.style.transform = 'translateY(0) scale(0.96)'
+      e.currentTarget.style.boxShadow = FAB_SHADOW_PRESSED
+    },
+    onMouseUp: (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.currentTarget.style.transform = ''
+      e.currentTarget.style.boxShadow = FAB_SHADOW
+    },
+  }
+}
+
+const PlusIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+)
+
+function FABSection() {
+  const handlers = FabInteractionHandlers()
+
+  return (
+    <Section title="Floating Action Button">
+      <DSCard>
+        <p className="text-[13px] mb-5" style={{ color: 'var(--muted)' }}>
+          Hanko-style square stamp (56×56, 8px radius) anchored bottom-right within the screen. One per screen, reserved for the primary creation action. Vermilion accent with tinted shadow.
+        </p>
+
+        {/* Default variant */}
+        <div className="flex items-center gap-5 pb-5" style={{ borderBottom: '1px solid var(--border)' }}>
+          <button
+            type="button"
+            aria-label="Create new"
+            className="shrink-0 flex items-center justify-center"
+            style={{
+              width: 56,
+              height: 56,
+              background: 'var(--accent)',
+              color: 'var(--surface)',
+              border: 'none',
+              borderRadius: 'var(--radius-lg)',
+              cursor: 'pointer',
+              touchAction: 'manipulation',
+              boxShadow: FAB_SHADOW,
+              transition: FAB_TRANSITION,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            {...handlers}
+          >
+            <PlusIcon />
+          </button>
+          <div>
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>Default · 56×56</p>
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--muted)' }}>border-radius: var(--radius-lg) · 8px square stamp</p>
+          </div>
+        </div>
+
+        {/* Extended variant */}
+        <div className="flex items-center gap-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+          <button
+            type="button"
+            aria-label="New session"
+            className="shrink-0 inline-flex items-center"
+            style={{
+              height: 56,
+              padding: '0 var(--space-4) 0 var(--space-3)',
+              gap: 'var(--space-2)',
+              background: 'var(--accent)',
+              color: 'var(--surface)',
+              border: 'none',
+              borderRadius: 999,
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+              letterSpacing: '0.01em',
+              cursor: 'pointer',
+              touchAction: 'manipulation',
+              boxShadow: FAB_SHADOW,
+              transition: FAB_TRANSITION,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            {...handlers}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span>New session</span>
+          </button>
+          <div>
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>Extended · with label</p>
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--muted)' }}>border-radius: 999px · use when icon alone is ambiguous</p>
+          </div>
+        </div>
+
+        {/* Rules */}
+        <div className="mt-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--muted)' }}>Rules of use</p>
+          <ul className="space-y-2 text-[13px] list-disc pl-4" style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+            <li>One FAB per screen — reserved for the primary creation action.</li>
+            <li>Fixed bottom-right, pinned inside max-w-lg container (never drifts on wide screens).</li>
+            <li>Respects <code className="font-mono text-[12px]">env(safe-area-inset-bottom)</code> for notched devices.</li>
+            <li>Use the extended variant only when the icon alone is ambiguous (multiple create surfaces).</li>
+            <li>Fade + scale to 0.9 when a bottom sheet or modal opens so it doesn't compete with the backdrop.</li>
+          </ul>
+        </div>
       </DSCard>
     </Section>
   )
