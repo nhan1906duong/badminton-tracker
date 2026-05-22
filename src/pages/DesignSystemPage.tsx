@@ -649,6 +649,22 @@ function SessionCardSection() {
         matchCount={5}
         topPlayer={{ name: 'Tuan', initials: 'T', record: '3W – 1L · played 4', winRate: 75 }}
       />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Active — no matches yet</p>
+      <SessionCard
+        status="active"
+        name="Friday Night Session"
+        dateTime="Today · 7:30 PM"
+        duration="0m"
+        matchCount={0}
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Scheduled</p>
+      <SessionCard
+        status="scheduled"
+        name="Saturday Session"
+        dateTime="Tomorrow · 7:00 PM"
+        duration="Not started"
+        matchCount={0}
+      />
       <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed</p>
       <SessionCard
         status="completed"

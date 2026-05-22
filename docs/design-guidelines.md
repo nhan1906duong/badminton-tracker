@@ -208,9 +208,13 @@ Sharp-cornered (radius-sm), bold uppercase, 11px text, `tracking-[0.06em]`.
 See [design-system/components/session-card.tsx](../design-system/components/session-card.tsx).
 
 - Active: `border-2 border-[var(--accent)]` + pulsing `w-2 h-2 rounded-full animate-pulse` dot in accent color
+- Scheduled: `Scheduled` badge shown with neutral/transparent styling and the same accent border as open sessions
+- Completed: neutral badge and default card border
 - Session name: 24px extrabold display font (`--font-display`), `--fg`
 - DateTime: 13px mono, `--muted`
 - Meta row: 13px mono (`--muted`) with match count and duration
+- Active sessions with no matches: show placeholder text `No matches started yet` in the bottom panel
+- Scheduled sessions: use section label `Players` and placeholder text `Session hasn’t started yet`
 - Top Player / MVP section: accent-colored `rounded-[var(--radius-md)]` avatar (initials), win rate in accent
 - Compact variant: tighter padding, smaller text
 
