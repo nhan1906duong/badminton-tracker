@@ -1,75 +1,133 @@
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSessions, useDeleteSession } from '../hooks/useSessions'
-import { SwipeableItem } from '../components/SwipeableItem'
-import { Calendar, Plus, Trash2, X } from 'lucide-react'
+import { useSessions } from '../hooks/useSessions'
+import { useMatches } from '../hooks/useMatches'
+import { SessionCard } from '../../design-system/components'
+import { Plus } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
+import {
+  formatSessionDuration,
+  formatSessionDateTime,
+  getSessionName,
+  getSessionStatus,
+} from '../lib/session-format'
+import type { MatchWithDetails } from '../types/database'
+
+interface SessionStat {
+  matchCount: number
+  topPlayer?: {
+    name: string
+    initials: string
+    record: string
+    winRate: number
+  }
+}
 
 export default function SessionsListPage() {
   const navigate = useNavigate()
-  const { data: sessions, isLoading } = useSessions()
-  const deleteSession = useDeleteSession()
-  const [swipedSessionId, setSwipedSessionId] = useState<string | null>(null)
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const { data: sessions, isLoading: sessionsLoading } = useSessions()
+  const { data: allMatches, isLoading: matchesLoading } = useMatches()
 
-  async function handleDelete(id: string) {
-    setSwipedSessionId(null)
-    try {
-      await deleteSession.mutateAsync(id)
-      setConfirmDeleteId(null)
-    } catch (err) {
-      console.error('Failed to delete session:', err)
-      alert('Failed to delete session. Please try again.')
+  const sessionStats = useMemo(() => {
+    if (!allMatches) return new Map<string, SessionStat>()
+
+    const stats = new Map<string, SessionStat>()
+    const matchesBySession = new Map<string, MatchWithDetails[]>()
+
+    for (const match of allMatches) {
+      const list = matchesBySession.get(match.session_id) ?? []
+      list.push(match)
+      matchesBySession.set(match.session_id, list)
     }
-  }
+
+    for (const [sessionId, matches] of matchesBySession) {
+      const playerMap = new Map<string, { name: string; wins: number; played: number }>()
+
+      for (const match of matches) {
+        const winnerTeam = match.teams.find((t) => t.is_winner)
+        if (!winnerTeam) continue
+
+        for (const p of match.participants) {
+          const team = match.teams.find((t) => t.id === p.team_id)
+          if (!team) continue
+
+          const existing = playerMap.get(p.player_id)
+          if (existing) {
+            existing.played++
+            if (team.id === winnerTeam.id) existing.wins++
+          } else {
+            playerMap.set(p.player_id, {
+              name: p.player.name,
+              wins: team.id === winnerTeam.id ? 1 : 0,
+              played: 1,
+            })
+          }
+        }
+      }
+
+      let best: { name: string; wins: number; played: number } | null = null
+      for (const [, p] of playerMap) {
+        if (!best || p.wins > best.wins || (p.wins === best.wins && p.played < best.played)) {
+          best = p
+        }
+      }
+
+      const topPlayer =
+        best && best.played > 0
+          ? {
+              name: best.name,
+              initials: best.name
+                .split(' ')
+                .map((w) => w[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2),
+              record: `${best.wins}W – ${best.played - best.wins}L · played ${best.played}`,
+              winRate: Math.round((best.wins / best.played) * 100),
+            }
+          : undefined
+
+      stats.set(sessionId, { matchCount: matches.length, topPlayer })
+    }
+
+    return stats
+  }, [allMatches])
+
+  const isLoading = sessionsLoading || matchesLoading
 
   return (
-    <div className="min-h-svh bg-gray-50">
+    <div className="min-h-svh" style={{ background: 'var(--bg)' }}>
       <div className="px-4 py-5 space-y-4 pb-32">
         {isLoading ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Loading sessions...</div>
+          <div className="text-center py-12 text-sm" style={{ color: 'var(--muted)' }}>
+            Loading sessions...
+          </div>
         ) : sessions && sessions.length > 0 ? (
-          sessions.map(session => (
-            <SwipeableItem
-              key={session.id}
-              isOpen={swipedSessionId === session.id}
-              onOpen={() => setSwipedSessionId(session.id)}
-              onClose={() => setSwipedSessionId(null)}
-              onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
-              renderAction={() => (
-                <button
-                  onClick={() => setConfirmDeleteId(session.id)}
-                  className="flex flex-col items-center gap-0.5 text-white"
-                >
-                  <Trash2 className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold">Delete</span>
-                </button>
-              )}
-            >
-              <div className="w-full text-left bg-white border border-gray-100 rounded-2xl p-4 select-none">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[15px] font-bold text-gray-900">
-                      {session.label || new Date(session.started_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {new Date(session.started_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                    </div>
-                  </div>
-                  {!session.ended_at && (
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
-                      Active
-                    </span>
-                  )}
-                </div>
-              </div>
-            </SwipeableItem>
-          ))
+          sessions.map((session) => {
+            const stat = sessionStats.get(session.id)
+            return (
+              <button
+                key={session.id}
+                onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
+                className="w-full text-left active:scale-[0.98] transition-transform"
+                style={{ borderRadius: 'var(--radius-lg)' }}
+              >
+                <SessionCard
+                  status={getSessionStatus(session)}
+                  name={getSessionName(session)}
+                  dateTime={formatSessionDateTime(session.started_at)}
+                  duration={formatSessionDuration(session.started_at, session.ended_at)}
+                  matchCount={stat?.matchCount ?? 0}
+                  topPlayer={stat?.topPlayer}
+                  compact
+                />
+              </button>
+            )
+          })
         ) : (
           <div className="text-center py-12">
-            <p className="text-sm text-gray-400">No sessions yet.</p>
-            <p className="text-sm text-gray-400 mt-1">Tap + to start one.</p>
+            <p className="text-sm" style={{ color: 'var(--muted)' }}>No sessions yet.</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Tap + to start one.</p>
           </div>
         )}
       </div>
@@ -80,36 +138,6 @@ export default function SessionsListPage() {
         icon={<Plus className="w-6 h-6" />}
         ariaLabel="Create new session"
       />
-
-      {/* Delete confirmation */}
-      {confirmDeleteId && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-6">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[15px] font-bold text-gray-900">Delete Session?</p>
-              <button onClick={() => setConfirmDeleteId(null)} className="p-1 text-gray-400">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">This will remove the session and all its matches.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(confirmDeleteId)}
-                disabled={deleteSession.isPending}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white"
-              >
-                {deleteSession.isPending ? '...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
