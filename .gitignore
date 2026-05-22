@@ -11,3 +11,4 @@ build/
 coverage/
 .claude/settings.local.json
 supabase/.temp/
+design/

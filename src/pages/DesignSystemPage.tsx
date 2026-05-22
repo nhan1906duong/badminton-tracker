@@ -1,17 +1,7 @@
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import {
-  Calendar,
-  Check,
-  ChevronDown,
-  Plus,
-  Trash2,
-  Trophy,
-  User,
-} from 'lucide-react'
-import DonorListItem from '../components/DonorListItem'
-import PodiumChart from '../components/PodiumChart'
-import { SwipeableItem } from '../components/SwipeableItem'
+import { Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState } from '../../design-system/components'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -25,25 +15,27 @@ export default function DesignSystemPage() {
   if (!IS_DEV) return <Navigate to="/" replace />
 
   return (
-    <div className="min-h-svh bg-gray-50">
+    <div className="min-h-svh" style={{ background: 'var(--bg)' }}>
       <div className="px-4 py-5 space-y-8 pb-32">
-        <ColorsSection />
-        <TypographySection />
-        <ButtonsSection />
-        <PillsAndChipsSection />
-        <ActivePlayersSection />
-        <PlayerItemsSection />
-        <DonorItemSection />
-        <SessionItemSection />
+        <HeaderSection />
+        <ColorTokensSection />
+        <TypographyTokensSection />
+        <SpacingTokensSection />
+        <RadiusTokensSection />
+        <ButtonSection />
+        <InputSection />
+        <BadgeSection />
+        <CardSection />
+        <TabsSection />
         <MatchCardSection />
-        <SwipeableItemSection />
-        <FormInputsSection />
-        <ScoreEntrySection />
-        <TeamHeadersSection />
-        <FabSection />
-        <ModalSection />
-        <EmptyAndLoadingSection />
-        <PodiumChartSection />
+        <SessionCardSection />
+        <ScoreBlockSection />
+        <ListItemSection />
+        <RankItemSection />
+        <StatRowSection />
+        <SectionHeaderSection />
+        <PatternSection />
+        <DarkModeToggle />
       </div>
     </div>
   )
@@ -54,7 +46,10 @@ export default function DesignSystemPage() {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 px-1">
+      <h2
+        className="text-[11px] font-bold uppercase tracking-[0.08em] px-1"
+        style={{ color: 'var(--muted)' }}
+      >
         {title}
       </h2>
       <div className="space-y-3">{children}</div>
@@ -64,724 +59,583 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+    <div
+      className="p-4 space-y-3"
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+      }}
+    >
       {children}
     </div>
   )
 }
 
-/* ---------- Colors ---------- */
+/* ---------- Header ---------- */
 
-function Swatch({ name, className, hex }: { name: string; className: string; hex: string }) {
+function HeaderSection() {
+  return (
+    <div className="pb-5 mb-6" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div
+        className="text-[11px] uppercase tracking-[0.08em] mb-3"
+        style={{ color: 'var(--muted)' }}
+      >
+        Design System
+      </div>
+      <h1
+        className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em]"
+        style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+      >
+        Badminton Tracker
+      </h1>
+      <p className="mt-3 text-[15px] max-w-[520px]" style={{ color: 'var(--muted)' }}>
+        Japanese Sport / Vermilion direction. All tokens below adapt to light and dark themes.
+      </p>
+    </div>
+  )
+}
+
+/* ---------- Color Tokens ---------- */
+
+function ColorSwatch({ label, token }: { label: string; token: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl border border-gray-200 ${className}`} />
+      <div
+        className="w-12 h-12 shrink-0"
+        style={{
+          background: `var(${token})`,
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+        }}
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-        <p className="text-xs text-gray-400">{hex}</p>
+        <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--fg)' }}>
+          {label}
+        </p>
+        <p className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+          {token}
+        </p>
       </div>
     </div>
   )
 }
 
-function ColorsSection() {
+function ColorTokensSection() {
   return (
-    <Section title="Colors">
+    <Section title="Color Tokens">
       <Card>
-        <Swatch name="Primary (green-600)" className="bg-green-600" hex="#16a34a" />
-        <Swatch name="Primary dark (green-700)" className="bg-green-700" hex="#15803d" />
-        <Swatch name="Team A (blue-500)" className="bg-blue-500" hex="#3b82f6" />
-        <Swatch name="Team B (red-500)" className="bg-red-500" hex="#ef4444" />
-        <Swatch name="Surface" className="bg-white" hex="#ffffff" />
-        <Swatch name="Background (gray-50)" className="bg-gray-50" hex="#f9fafb" />
-        <Swatch name="Border (gray-100)" className="bg-gray-100" hex="#f3f4f6" />
-        <Swatch name="Text (gray-900)" className="bg-gray-900" hex="#111827" />
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Six core tokens plus semantic status colors.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <ColorSwatch label="Background" token="--bg" />
+          <ColorSwatch label="Surface" token="--surface" />
+          <ColorSwatch label="Foreground" token="--fg" />
+          <ColorSwatch label="Muted" token="--muted" />
+          <ColorSwatch label="Border" token="--border" />
+          <ColorSwatch label="Accent (Vermilion)" token="--accent" />
+        </div>
+        <div className="grid grid-cols-4 gap-3 mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <ColorSwatch label="Success" token="--success" />
+          <ColorSwatch label="Danger" token="--danger" />
+          <ColorSwatch label="Warning" token="--warn" />
+          <ColorSwatch label="Info" token="--info" />
+        </div>
       </Card>
     </Section>
   )
 }
 
-/* ---------- Typography ---------- */
+/* ---------- Typography Tokens ---------- */
 
-function TypographySection() {
+function TypeSample({
+  name,
+  size,
+  family = 'display',
+  children,
+}: {
+  name: string
+  size: string
+  family?: 'display' | 'body' | 'mono'
+  children: ReactNode
+}) {
+  const fontFamily =
+    family === 'display'
+      ? 'var(--font-display)'
+      : family === 'mono'
+        ? 'var(--font-mono)'
+        : 'var(--font-body)'
+
+  return (
+    <div className="pb-3 mb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div className="text-[11px] uppercase tracking-[0.08em] mb-1" style={{ color: 'var(--muted)' }}>
+        {name}
+      </div>
+      <div style={{ fontFamily, fontSize: size }}>{children}</div>
+    </div>
+  )
+}
+
+function TypographyTokensSection() {
   return (
     <Section title="Typography">
       <Card>
-        <p className="text-[17px] font-bold text-gray-900">17px Bold — AppBar title</p>
-        <p className="text-[15px] font-bold text-gray-900">15px Bold — Item title</p>
-        <p className="text-[15px] font-semibold text-gray-900">15px Semibold — Button label</p>
-        <p className="text-sm font-medium text-gray-700">14px Medium — Body</p>
-        <p className="text-xs text-gray-400">12px Regular — Caption</p>
-        <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-          10px Bold Uppercase — Tag
+        <TypeSample name="Display 3xl · 48px · Serif" size="var(--text-3xl)">
+          <span className="font-extrabold leading-[1.05] tracking-[-0.03em]" style={{ color: 'var(--fg)' }}>
+            Match History
+          </span>
+        </TypeSample>
+        <TypeSample name="Display 2xl · 32px · Serif" size="var(--text-2xl)">
+          <span className="font-extrabold leading-[1.1]" style={{ color: 'var(--fg)' }}>
+            Create Session
+          </span>
+        </TypeSample>
+        <TypeSample name="Display xl · 24px · Serif" size="var(--text-xl)">
+          <span className="font-extrabold leading-[1.15] tracking-[-0.02em]" style={{ color: 'var(--fg)' }}>
+            Player Profile
+          </span>
+        </TypeSample>
+        <TypeSample name="Body lg · 18px · Mono" size="var(--text-lg)" family="body">
+          <span className="font-normal leading-[1.6]" style={{ color: 'var(--fg)' }}>
+            Select four players for a doubles match.
+          </span>
+        </TypeSample>
+        <TypeSample name="Body base · 15px · Mono" size="var(--text-base)" family="body">
+          <span className="font-normal leading-[1.6]" style={{ color: 'var(--fg)' }}>
+            Track scores, wins, and player rankings across all sessions.
+          </span>
+        </TypeSample>
+        <TypeSample name="Body sm · 13px · Mono" size="var(--text-sm)" family="body">
+          <span className="font-medium leading-[1.3]" style={{ color: 'var(--muted)' }}>
+            Last played 3 days ago · 12 matches total
+          </span>
+        </TypeSample>
+        <TypeSample name="Body xs · 11px · Mono uppercase" size="var(--text-xs)" family="mono">
+          <span className="font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--muted)' }}>
+            Win rate · Points · Rank
+          </span>
+        </TypeSample>
+      </Card>
+    </Section>
+  )
+}
+
+/* ---------- Spacing Tokens ---------- */
+
+function SpacingBar({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-[11px] font-mono min-w-[80px]" style={{ color: 'var(--muted)' }}>
+        {label}
+      </span>
+      <div className="h-4" style={{ width: value, background: 'var(--fg)' }} />
+      <span className="text-[11px]" style={{ color: 'var(--muted)' }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function SpacingTokensSection() {
+  return (
+    <Section title="Spacing Scale">
+      <Card>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          8px base unit. Use --space-4 (16px) as default padding, --space-5 (24px) for section gaps.
         </p>
-      </Card>
-    </Section>
-  )
-}
-
-/* ---------- Buttons ---------- */
-
-function ButtonsSection() {
-  return (
-    <Section title="Buttons">
-      <Card>
-        <button
-          type="button"
-          className="w-full py-3.5 rounded-2xl bg-green-600 text-white text-[15px] font-semibold active:bg-green-700"
-          style={{ minHeight: 52 }}
-        >
-          Primary
-        </button>
-        <button
-          type="button"
-          className="w-full py-3.5 rounded-2xl bg-gray-100 text-gray-700 text-[15px] font-semibold active:bg-gray-200"
-          style={{ minHeight: 52 }}
-        >
-          Secondary
-        </button>
-        <button
-          type="button"
-          className="w-full py-3.5 rounded-2xl bg-red-600 text-white text-[15px] font-semibold active:bg-red-700"
-          style={{ minHeight: 52 }}
-        >
-          Danger
-        </button>
-        <button
-          type="button"
-          className="w-full py-3.5 rounded-2xl border border-gray-200 bg-white text-gray-700 text-[15px] font-semibold active:bg-gray-50"
-          style={{ minHeight: 52 }}
-        >
-          Outline
-        </button>
-        <button
-          type="button"
-          disabled
-          className="w-full py-3.5 rounded-2xl bg-green-600 text-white text-[15px] font-semibold opacity-50"
-          style={{ minHeight: 52 }}
-        >
-          Disabled
-        </button>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-green-700 bg-green-50 rounded-xl active:bg-green-100"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Mini action
-          </button>
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-red-700 bg-red-50 rounded-xl active:bg-red-100"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Mini danger
-          </button>
+        <div className="space-y-2">
+          <SpacingBar label="space-1" value="4px" />
+          <SpacingBar label="space-2" value="8px" />
+          <SpacingBar label="space-3" value="12px" />
+          <SpacingBar label="space-4" value="16px" />
+          <SpacingBar label="space-5" value="24px" />
+          <SpacingBar label="space-6" value="32px" />
+          <SpacingBar label="space-7" value="48px" />
+          <SpacingBar label="space-8" value="64px" />
         </div>
       </Card>
     </Section>
   )
 }
 
-/* ---------- Pills, chips, status ---------- */
+/* ---------- Radius Tokens ---------- */
 
-function PillsAndChipsSection() {
+function RadiusBox({ label, value }: { label: string; value: string }) {
   return (
-    <Section title="Pills & Chips">
-      <Card>
-        <div className="flex flex-wrap gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">
-            Men's Doubles
-          </span>
-          <span className="text-[10px] font-bold uppercase tracking-wide text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
-            Active
-          </span>
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-100 px-2 py-0.5 rounded">
-            Dev Only
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-blue-200 text-blue-700">
-              A
-            </div>
-            <span>Alex</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-800 border border-red-200">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-red-200 text-red-700">
-              B
-            </div>
-            <span>Bella</span>
-          </div>
-        </div>
-      </Card>
-    </Section>
-  )
-}
-
-/* ---------- Active players (chip + add CTA + circle indicator + sheet row) ---------- */
-
-function ActivePlayersSection() {
-  return (
-    <Section title="Active Players">
-      <Card>
-        {/* Chip row */}
-        <div className="flex flex-wrap gap-2">
-          <ActiveChip name="Alex" initial="A" />
-          <ActiveChip name="Bella" initial="B" />
-          <ActiveChip name="Chris" initial="C" />
-          <button
-            type="button"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-gray-300 text-gray-600 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            Add active player
-          </button>
-        </div>
-
-        {/* Circle indicators */}
-        <div className="flex items-center gap-4 pt-1">
-          <CircleIndicator selected={false} />
-          <CircleIndicator selected={true} />
-          <span className="text-xs text-gray-400">Unselected / selected (multi-select)</span>
-        </div>
-
-        {/* Bottom sheet row preview */}
-        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
-          <SheetRow name="Diana" initial="D" selected={false} />
-          <div className="border-t border-gray-100" />
-          <SheetRow name="Ethan" initial="E" selected={true} />
-        </div>
-      </Card>
-    </Section>
-  )
-}
-
-function ActiveChip({ name, initial }: { name: string; initial: string }) {
-  return (
-    <button
-      type="button"
-      className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-green-600 text-white text-sm font-medium shadow-sm"
-    >
-      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-white/20">
-        {initial}
+    <div className="flex items-center gap-3">
+      <div
+        className="w-16 h-16 shrink-0 flex items-center justify-center"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: value,
+        }}
+      >
+        <span className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+          {value}
+        </span>
       </div>
-      <span>{name}</span>
-    </button>
-  )
-}
-
-function CircleIndicator({ selected }: { selected: boolean }) {
-  return (
-    <div
-      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-        selected ? 'bg-green-600' : 'border-2 border-gray-300 bg-white'
-      }`}
-    >
-      {selected && <Check className="w-3.5 h-3.5 text-white" />}
+      <div>
+        <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>
+          {label}
+        </p>
+        <p className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+          {value === '0px' ? 'Buttons, inputs, badges' : value === '4px' ? 'Avatars, small containers' : 'Cards, modals, panels'}
+        </p>
+      </div>
     </div>
   )
 }
 
-function SheetRow({ name, initial, selected }: { name: string; initial: string; selected: boolean }) {
+function RadiusTokensSection() {
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-sm font-bold">
-        {initial}
-      </div>
-      <span className="flex-1 text-[15px] font-medium text-gray-900">{name}</span>
-      <CircleIndicator selected={selected} />
-    </div>
-  )
-}
-
-/* ---------- Player items ---------- */
-
-function PlayerItemsSection() {
-  return (
-    <Section title="Player Items">
-      {/* List variant (Players page) */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-3 flex items-center gap-3">
-        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0">
-          <span className="text-sm font-semibold text-green-700">A</span>
+    <Section title="Radius">
+      <Card>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Minimal rounding. Sharp for UI elements, slight rounding for cards.
+        </p>
+        <div className="space-y-3">
+          <RadiusBox label="Small" value="0px" />
+          <RadiusBox label="Medium" value="4px" />
+          <RadiusBox label="Large" value="8px" />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">Alex Nguyen</p>
-          <p className="text-xs text-gray-400">12 matches · 7 wins</p>
-        </div>
-      </div>
-
-      {/* Grid card — selected Team A */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="relative flex items-center gap-2 px-3.5 py-3.5 rounded-2xl border bg-blue-50 border-blue-400 shadow-sm">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-blue-500 text-white">
-            <Check className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold truncate text-blue-900">Alex</p>
-            <p className="text-xs font-medium text-blue-500">Team A</p>
-          </div>
-        </div>
-        {/* Grid card — selected Team B */}
-        <div className="relative flex items-center gap-2 px-3.5 py-3.5 rounded-2xl border bg-red-50 border-red-400 shadow-sm">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-red-500 text-white">
-            <Check className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold truncate text-red-900">Bella</p>
-            <p className="text-xs font-medium text-red-500">Team B</p>
-          </div>
-        </div>
-        {/* Grid card — unselected */}
-        <div className="relative flex items-center gap-2 px-3.5 py-3.5 rounded-2xl border bg-white border-gray-200">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gray-100 text-gray-400">
-            <User className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold truncate text-gray-700">Chris</p>
-          </div>
-        </div>
-        {/* Grid card — disabled */}
-        <div className="relative flex items-center gap-2 px-3.5 py-3.5 rounded-2xl border bg-gray-50 border-gray-100 opacity-50">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gray-100 text-gray-400">
-            <User className="w-5 h-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold truncate text-gray-700">Dana</p>
-          </div>
-        </div>
-      </div>
+      </Card>
     </Section>
   )
 }
 
-/* ---------- Donor item ---------- */
+/* ---------- Button Components ---------- */
 
-function DonorItemSection() {
+function ButtonSection() {
   return (
-    <Section title="Donor Items">
-      <DonorListItem
-        playerId="demo-1"
-        name="Alex Nguyen"
-        avatarUrl={null}
-        losses={3}
-        matchesPlayed={8}
-      />
-      <DonorListItem
-        playerId="demo-2"
-        name="Bella Tran"
-        avatarUrl={null}
-        losses={1}
-        matchesPlayed={5}
-      />
+    <Section title="Button">
+      <DSCard>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>
+          Five variants + four sizes.
+        </p>
+        <div className="flex flex-col gap-2">
+          <Button variant="primary">Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="accent">Accent</Button>
+          <Button variant="danger">Danger</Button>
+        </div>
+        <div className="flex gap-2 mt-3">
+          <Button size="sm">Small</Button>
+          <Button size="default">Default</Button>
+          <Button size="lg">Large</Button>
+        </div>
+        <Button size="block" className="mt-2">Block</Button>
+      </DSCard>
     </Section>
   )
 }
 
-/* ---------- Session item ---------- */
+/* ---------- Input Components ---------- */
 
-function SessionItemSection() {
+function InputSection() {
+  const [text, setText] = useState('')
+  const [number, setNumber] = useState('')
+
   return (
-    <Section title="Session Item">
-      <div className="bg-white border border-gray-100 rounded-2xl p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[15px] font-bold text-gray-900">Sunday Night Smash</p>
-            <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
-              <Calendar className="w-3.5 h-3.5" />
-              May 18, 7:30 PM
-            </div>
-          </div>
-          <span className="text-[10px] font-bold uppercase tracking-wide text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
-            Active
-          </span>
+    <Section title="Input">
+      <DSCard>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>
+          Text and number inputs with labels and hints.
+        </p>
+        <Input
+          label="Player Name"
+          placeholder="e.g. Nguyen Van A"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          hint="Enter the full name of the player."
+        />
+        <div className="mt-4">
+          <Input
+            label="Score"
+            type="number"
+            placeholder="0"
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
+          />
         </div>
-      </div>
-      <div className="bg-white border border-gray-100 rounded-2xl p-4">
-        <div>
-          <p className="text-[15px] font-bold text-gray-900">Saturday, May 17, 2026</p>
-          <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-400">
-            <Calendar className="w-3.5 h-3.5" />
-            May 17, 6:00 PM
-          </div>
+        <div className="mt-4">
+          <Input
+            label="Error Example"
+            placeholder="Invalid input"
+            value=""
+            onChange={() => {}}
+            error="This field is required."
+          />
         </div>
-      </div>
+      </DSCard>
     </Section>
   )
 }
 
-/* ---------- Match card ---------- */
+/* ---------- Badge Components ---------- */
+
+function BadgeSection() {
+  return (
+    <Section title="Badge">
+      <DSCard>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>
+          Status indicators for match outcomes and labels.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="win">Win</Badge>
+          <Badge variant="loss">Loss</Badge>
+          <Badge variant="neutral">Pending</Badge>
+          <Badge variant="accent">Live</Badge>
+          <Badge>Default</Badge>
+        </div>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Card Components ---------- */
+
+function CardSection() {
+  return (
+    <Section title="Card">
+      <DSCard>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>
+          Static and interactive containers.
+        </p>
+        <DSCard>
+          <p className="text-[15px] font-semibold" style={{ color: 'var(--fg)' }}>
+            Static Card
+          </p>
+          <p className="text-[13px] mt-1" style={{ color: 'var(--muted)' }}>
+            Content container with border and background.
+          </p>
+        </DSCard>
+        <div className="mt-3">
+          <DSCard interactive onClick={() => alert('Card clicked!')}>
+            <p className="text-[15px] font-semibold" style={{ color: 'var(--fg)' }}>
+              Interactive Card
+            </p>
+            <p className="text-[13px] mt-1" style={{ color: 'var(--muted)' }}>
+              Tap to see active state. Has cursor-pointer and active:bg.
+            </p>
+          </DSCard>
+        </div>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Tabs Components ---------- */
+
+function TabsSection() {
+  const [activeTab, setActiveTab] = useState('All Matches')
+
+  return (
+    <Section title="Tabs">
+      <DSCard>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>
+          Underline indicator with animated slide.
+        </p>
+        <Tabs
+          tabs={['All Matches', 'Today', 'This Week', 'Archive']}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        <p className="text-[13px] mt-4" style={{ color: 'var(--muted)' }}>
+          Active tab: <span className="font-semibold" style={{ color: 'var(--fg)' }}>{activeTab}</span>
+        </p>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Match Card ---------- */
 
 function MatchCardSection() {
   return (
     <Section title="Match Card">
-      {/* Completed match — with W/L + scores */}
-      <p className="text-xs text-gray-400 px-1">Completed (W/L + scores)</p>
-      <div className="relative w-full text-left bg-white border border-gray-100 rounded-2xl p-4 overflow-hidden">
-        {/* Badge top-right */}
-        <div className="absolute top-1.5 right-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
-            MD
-          </span>
-        </div>
-
-        {/* Teams + Score */}
-        <div className="flex items-center gap-3 pt-1">
-          {/* Match Number */}
-          <div className="shrink-0 flex flex-col justify-center self-stretch">
-            <span className="text-xs font-bold text-red-500">M1</span>
-          </div>
-
-          {/* Team A */}
-          <div className="flex-1 min-w-0 self-stretch">
-            <div className="flex flex-col items-end justify-center gap-2 h-full">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 truncate">Alex</span>
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">A</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 truncate">Chris</span>
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">C</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Score */}
-          <div className="text-center shrink-0 px-2">
-            <div className="space-y-0.5">
-              <p className="text-base font-bold tabular-nums leading-tight whitespace-nowrap">
-                <span className="text-green-600">W</span>
-                <span className="text-gray-700 mx-1">-</span>
-                <span className="text-gray-700">L</span>
-              </p>
-              <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
-                (21)<span className="mx-1">-</span>(15)
-              </p>
-              <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
-                (18)<span className="mx-1">-</span>(21)
-              </p>
-              <p className="text-xs font-medium text-gray-500 tabular-nums leading-tight whitespace-nowrap">
-                (21)<span className="mx-1">-</span>(19)
-              </p>
-            </div>
-          </div>
-
-          {/* Team B */}
-          <div className="flex-1 min-w-0 self-stretch">
-            <div className="flex flex-col items-start justify-center gap-2 h-full">
-              <div className="flex items-center gap-2">
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">B</div>
-                <span className="text-sm font-medium text-gray-700 truncate">Bella</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">D</div>
-                <span className="text-sm font-medium text-gray-700 truncate">Dana</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Preview — no scores yet */}
-      <p className="text-xs text-gray-400 px-1">Preview (no scores)</p>
-      <div className="relative w-full text-left bg-white border border-gray-100 rounded-2xl p-4 overflow-hidden">
-        {/* Badge top-right */}
-        <div className="absolute top-1.5 right-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
-            XD
-          </span>
-        </div>
-
-        {/* Teams + VS */}
-        <div className="flex items-center gap-3 pt-1">
-          {/* Match Number */}
-          <div className="shrink-0 flex flex-col justify-center self-stretch">
-            <span className="text-xs font-bold text-red-500">M2</span>
-          </div>
-
-          {/* Team A */}
-          <div className="flex-1 min-w-0 self-stretch">
-            <div className="flex flex-col items-end justify-center gap-2 h-full">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 truncate">Alex</span>
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">A</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 truncate">Bella</span>
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">B</div>
-              </div>
-            </div>
-          </div>
-
-          {/* VS */}
-          <div className="text-center shrink-0 px-2">
-            <span className="text-xs text-gray-300 font-bold">vs</span>
-          </div>
-
-          {/* Team B */}
-          <div className="flex-1 min-w-0 self-stretch">
-            <div className="flex flex-col items-start justify-center gap-2 h-full">
-              <div className="flex items-center gap-2">
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">C</div>
-                <span className="text-sm font-medium text-gray-700 truncate">Chris</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 shrink-0">D</div>
-                <span className="text-sm font-medium text-gray-700 truncate">Dana</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Live state</p>
+      <MatchCard
+        status="live"
+        teamA={{ name: 'Minh + Tuan', players: ['Team A'] }}
+        teamB={{ name: 'Huy + Dat', players: ['Team B'] }}
+        scoreA={18}
+        scoreB={14}
+        date="Today · 18:30"
+        duration="32 min"
+        type="Men's Doubles"
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Ended — Win</p>
+      <MatchCard
+        status="ended"
+        outcome="win"
+        teamA={{ name: 'Minh + Tuan', players: ['Team A'] }}
+        teamB={{ name: 'Huy + Dat', players: ['Team B'] }}
+        scoreA={21}
+        scoreB={18}
+        date="Today · 18:30"
+        duration="48 min"
+        type="Men's Doubles"
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Compact</p>
+      <MatchCard
+        status="ended"
+        outcome="loss"
+        teamA={{ name: 'Minh + Tuan', players: ['Team A'] }}
+        teamB={{ name: 'Long + Khoa', players: ['Team C'] }}
+        scoreA={16}
+        scoreB={21}
+        date="Yesterday · 17:00"
+        duration="35 min"
+        type="Men's Doubles"
+        compact
+      />
     </Section>
   )
 }
 
-/* ---------- Swipeable item ---------- */
+/* ---------- Session Card ---------- */
 
-function SwipeableItemSection() {
+function SessionCardSection() {
   return (
-    <Section title="Swipeable Item">
-      <p className="text-xs text-gray-400 px-1">At rest (closed)</p>
-      <SwipeableItem
-        isOpen={false}
-        onOpen={() => {}}
-        onClose={() => {}}
-        onClick={() => {}}
-        renderAction={() => (
-          <button className="flex flex-col items-center gap-0.5 text-white">
-            <Trash2 className="w-5 h-5" />
-            <span className="text-[10px] font-semibold">Delete</span>
-          </button>
-        )}
+    <Section title="Session Card">
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Active</p>
+      <SessionCard
+        status="active"
+        name="Friday Night Session"
+        dateTime="Today · 7:30 PM"
+        duration="1h 42m"
+        matchCount={5}
+        topPlayer={{ name: 'Tuan', initials: 'T', record: '3W – 1L · played 4', winRate: 75 }}
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed</p>
+      <SessionCard
+        status="completed"
+        name="Wednesday Session"
+        dateTime="May 21, 2025 · 6:00 PM"
+        duration="2h 15m"
+        matchCount={8}
+        topPlayer={{ name: 'Minh', initials: 'M', record: '5W – 1L · played 6', winRate: 83 }}
+      />
+    </Section>
+  )
+}
+
+/* ---------- Score Block ---------- */
+
+function ScoreBlockSection() {
+  return (
+    <Section title="Score Block">
+      <ScoreBlock teamAName="Team A" teamBName="Team B" scoreA={21} scoreB={18} />
+    </Section>
+  )
+}
+
+/* ---------- List Item ---------- */
+
+function ListItemSection() {
+  return (
+    <Section title="List Item">
+      <DSCard style={{ padding: 0 }}>
+        <ListItem avatar="MT" title="Minh Tran" subtitle="24 matches · 18 wins" action="75%" />
+        <ListItem avatar="TN" title="Tuan Nguyen" subtitle="24 matches · 16 wins" action="67%" />
+        <ListItem avatar="HL" title="Huy Le" subtitle="20 matches · 12 wins" action="60%" />
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Rank Item ---------- */
+
+function RankItemSection() {
+  return (
+    <Section title="Rank Item">
+      <DSCard style={{ padding: 0 }}>
+        <RankItem rank={1} avatar="MT" name="Minh Tran" stats="24 matches · 18 wins" winRate={75} />
+        <RankItem rank={2} avatar="TN" name="Tuan Nguyen" stats="24 matches · 16 wins" winRate={67} />
+        <RankItem rank={3} avatar="HL" name="Huy Le" stats="20 matches · 12 wins" winRate={60} />
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Stat Row ---------- */
+
+function StatRowSection() {
+  return (
+    <Section title="Stat Row">
+      <DSCard>
+        <StatRow label="Matches Today" value={4} />
+        <StatRow label="Win Rate" value="50%" />
+        <StatRow label="Total Sessions" value={12} />
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Section Header ---------- */
+
+function SectionHeaderSection() {
+  return (
+    <Section title="Section Header">
+      <SectionHeader title="Rankings" action={{ label: 'View All', onClick: () => {} }} />
+      <SectionHeader title="Quick Stats" />
+    </Section>
+  )
+}
+
+/* ---------- Patterns ---------- */
+
+function PatternSection() {
+  return (
+    <Section title="Patterns">
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Empty State</p>
+      <EmptyState
+        icon={<span className="text-[32px]">🏸</span>}
+        title="No matches yet"
+        description="Create your first session to start tracking scores and player stats."
+        action={{ label: 'Create Match', onClick: () => {}, variant: 'accent' }}
+      />
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Loading State</p>
+      <DSCard><LoadingState message="Loading sessions..." /></DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Error State</p>
+      <ErrorState
+        message="Failed to load player data. Please check your connection."
+        onRetry={() => {}}
+      />
+    </Section>
+  )
+}
+
+/* ---------- Dark Mode Toggle ---------- */
+
+function DarkModeToggle() {
+  const toggleTheme = () => {
+    const html = document.documentElement
+    const current = html.getAttribute('data-theme')
+    const next = current === 'dark' ? null : 'dark'
+    if (next) html.setAttribute('data-theme', next)
+    else html.removeAttribute('data-theme')
+    localStorage.setItem('bt-theme', next || 'light')
+  }
+
+  return (
+    <Section title="Theme Toggle">
+      <button
+        onClick={toggleTheme}
+        className="w-full py-3.5 font-semibold text-[15px] active:opacity-70 transition-opacity"
+        style={{
+          background: 'var(--fg)',
+          color: 'var(--surface)',
+          border: '2px solid var(--fg)',
+          borderRadius: 'var(--radius-sm)',
+          minHeight: 52,
+        }}
       >
-        <div className="bg-white border border-gray-100 rounded-2xl p-4">
-          <p className="text-sm font-medium text-gray-900">Swipe left to delete</p>
-          <p className="text-xs text-gray-400">This item demonstrates the swipeable wrapper</p>
-        </div>
-      </SwipeableItem>
-
-      <p className="text-xs text-gray-400 px-1">Swiped open (delete revealed)</p>
-      <SwipeableItem
-        isOpen={true}
-        onOpen={() => {}}
-        onClose={() => {}}
-        onClick={() => {}}
-        renderAction={() => (
-          <button className="flex flex-col items-center gap-0.5 text-white">
-            <Trash2 className="w-5 h-5" />
-            <span className="text-[10px] font-semibold">Delete</span>
-          </button>
-        )}
-      >
-        <div className="bg-white border border-gray-100 rounded-2xl p-4">
-          <p className="text-sm font-medium text-gray-900">Item with delete visible</p>
-          <p className="text-xs text-gray-400">Red background shows when swiped</p>
-        </div>
-      </SwipeableItem>
-    </Section>
-  )
-}
-
-/* ---------- Form inputs ---------- */
-
-function FormInputsSection() {
-  return (
-    <Section title="Form Inputs">
-      <Card>
-        <input
-          type="text"
-          placeholder="Text input"
-          className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-[15px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          style={{ minHeight: 52 }}
-        />
-        <div className="relative">
-          <select
-            className="w-full appearance-none bg-white border border-gray-200 rounded-2xl px-4 py-3.5 pr-10 text-[15px] font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
-            style={{ minHeight: 52 }}
-          >
-            <option>Men's Doubles</option>
-            <option>Mixed Doubles</option>
-          </select>
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-            <ChevronDown className="w-5 h-5" />
-          </div>
-        </div>
-      </Card>
-    </Section>
-  )
-}
-
-/* ---------- Score entry ---------- */
-
-function ScoreEntrySection() {
-  return (
-    <Section title="Score Entry">
-      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3">
-        <span className="text-xs font-bold text-gray-400 w-10 shrink-0">Set 1</span>
-        <div className="flex items-center gap-2 flex-1 justify-center">
-          <input
-            type="number"
-            defaultValue={21}
-            className="w-16 h-11 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
-          />
-          <span className="text-sm text-gray-300 font-bold">-</span>
-          <input
-            type="number"
-            defaultValue={15}
-            className="w-16 h-11 text-center bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
-          />
-        </div>
-        <button className="p-2.5 text-gray-300 rounded-xl">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[15px] font-semibold border-2 bg-blue-500 text-white border-blue-500 shadow-sm"
-          style={{ minHeight: 56 }}
-        >
-          <Trophy className="w-5 h-5" />
-          Team A
-        </button>
-        <button
-          className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[15px] font-semibold border-2 bg-white text-gray-700 border-gray-200"
-          style={{ minHeight: 56 }}
-        >
-          <Trophy className="w-5 h-5" />
-          Team B
-        </button>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------- Team headers ---------- */
-
-function TeamHeadersSection() {
-  return (
-    <Section title="Team Containers">
-      <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Team A</span>
-          <span className="text-xs text-blue-400">2/2</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-800 border border-blue-200">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-blue-200 text-blue-700">
-              A
-            </div>
-            <span>Alex</span>
-          </div>
-        </div>
-      </div>
-      <div className="bg-red-50/50 border border-red-100 rounded-xl p-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Team B</span>
-          <span className="text-xs text-red-400">2/2</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-red-50 text-red-800 border border-red-200">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-red-200 text-red-700">
-              B
-            </div>
-            <span>Bella</span>
-          </div>
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------- FAB ---------- */
-
-function FabSection() {
-  return (
-    <Section title="Floating Action Button">
-      <Card>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">Anchored bottom-right of mobile container.</p>
-          <button
-            type="button"
-            aria-label="Demo FAB"
-            className="w-14 h-14 bg-green-600 text-white rounded-full shadow-lg shadow-green-600/25 flex items-center justify-center active:scale-90 transition-transform"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
-      </Card>
-    </Section>
-  )
-}
-
-/* ---------- Modal ---------- */
-
-function ModalSection() {
-  return (
-    <Section title="Confirmation Modal">
-      <div className="bg-black/40 rounded-2xl p-4">
-        <div className="bg-white rounded-2xl p-5 w-full max-w-xs mx-auto space-y-4">
-          <p className="text-[15px] font-bold text-gray-900">Delete Player?</p>
-          <p className="text-sm text-gray-500">
-            This will remove the player permanently.
-          </p>
-          <div className="flex gap-3">
-            <button className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700">
-              Cancel
-            </button>
-            <button className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </Section>
-  )
-}
-
-/* ---------- Empty + Loading ---------- */
-
-function EmptyAndLoadingSection() {
-  return (
-    <Section title="Empty & Loading">
-      <Card>
-        <div className="text-center py-8">
-          <User className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm text-gray-400">No players yet.</p>
-        </div>
-      </Card>
-      <Card>
-        <div className="flex items-center justify-center py-8">
-          <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-        </div>
-      </Card>
-    </Section>
-  )
-}
-
-/* ---------- Podium Chart ---------- */
-
-function PodiumChartSection() {
-  const demoPlayers = [
-    { rank: 1, name: 'Alex', wins: 12, matchesPlayed: 15 },
-    { rank: 2, name: 'Bella', wins: 10, matchesPlayed: 14 },
-    { rank: 3, name: 'Chris', wins: 9, matchesPlayed: 16 },
-    { rank: 4, name: 'Dana', wins: 7, matchesPlayed: 15 },
-    { rank: 5, name: 'Evan', wins: 5, matchesPlayed: 14 },
-  ]
-
-  return (
-    <Section title="Podium Chart">
-      <div className="bg-white border border-gray-100 rounded-2xl p-4">
-        <PodiumChart players={demoPlayers} />
-      </div>
-      <div className="bg-white border border-gray-100 rounded-2xl p-4">
-        <p className="text-xs text-gray-400 mb-3 text-center">Partial data (ranks 1-3 only)</p>
-        <PodiumChart
-          players={demoPlayers.slice(0, 3)}
-          onPlayerClick={(p) => alert(`Clicked: ${p.name}`)}
-        />
-      </div>
+        Toggle Light / Dark
+      </button>
     </Section>
   )
 }
