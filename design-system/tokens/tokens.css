@@ -1,0 +1,76 @@
+/* ================================================================
+   DESIGN TOKENS — Japanese Sport / Vermilion
+   Source: design/match-card.html, design/session-card.html
+   ================================================================ */
+
+:root {
+  /* ---- Core Colors ---- */
+  --bg:      oklch(99%  0.003 50);
+  --surface: oklch(100% 0     0);
+  --fg:      oklch(12%  0.02  50);
+  --muted:   oklch(50%  0.01  50);
+  --border:  oklch(88%  0.008 50);
+  --accent:  oklch(55%  0.20  30);
+
+  /* ---- Semantic Status Colors ---- */
+  --danger:  oklch(55% 0.20 25);
+  --success: oklch(50% 0.14 145);
+  --warn:    oklch(70% 0.14 85);
+  --info:    oklch(55% 0.12 250);
+
+  /* ---- Typography ---- */
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text',  'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  /* ---- Spacing (8px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* ---- Type Scale ---- */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-lg:   18px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  48px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 0px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  /* ---- Borders ---- */
+  --border-width: 1px;
+
+  /* ---- Motion ---- */
+  --duration-fast:   0.12s;
+  --duration-normal: 0.15s;
+  --duration-slow:   0.3s;
+  --easing-default:  ease-in-out;
+}
+
+/* ================================================================
+   DARK MODE
+   Toggle via: document.documentElement.setAttribute('data-theme', 'dark')
+   ================================================================ */
+[data-theme="dark"] {
+  --bg:      oklch(12%  0.02  50);
+  --surface: oklch(15%  0.018 50);
+  --fg:      oklch(95%  0.005 50);
+  --muted:   oklch(55%  0.01  50);
+  --border:  oklch(28%  0.015 50);
+  --accent:  oklch(60%  0.18  30);
+
+  --danger:  oklch(60% 0.18 25);
+  --success: oklch(55% 0.12 145);
+  --warn:    oklch(70% 0.12 85);
+  --info:    oklch(55% 0.10 250);
+}

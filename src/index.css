@@ -1,15 +1,20 @@
 @import "tailwindcss";
+@import "../design-system/tokens/tokens.css";
 
 @theme {
-  --color-primary: #16a34a;
-  --color-primary-dark: #15803d;
-  --color-surface: #ffffff;
-  --color-surface-alt: #f8fafc;
-  --color-border: #e2e8f0;
+  --color-primary: var(--accent);
+  --color-primary-dark: oklch(45% 0.18 30);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--bg);
+  --color-border: var(--border);
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
   touch-action: manipulation;

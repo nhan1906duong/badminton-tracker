@@ -91,7 +91,7 @@ export function SwipeableItem({
               : 'none',
           touchAction: 'pan-y',
         }}
-        className="relative w-full select-none bg-white rounded-2xl"
+        className="relative w-full select-none rounded-2xl"
       >
         {children}
       </div>
