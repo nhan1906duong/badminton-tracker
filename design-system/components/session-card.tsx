@@ -1,4 +1,5 @@
 import { Badge } from './badge'
+import { Avatar } from './avatar'
 
 interface SessionCardProps {
   status: 'active' | 'scheduled' | 'completed'
@@ -8,7 +9,6 @@ interface SessionCardProps {
   matchCount: number
   topPlayer?: {
     name: string
-    initials: string
     record: string
     winRate: number
   }
@@ -107,15 +107,7 @@ export function SessionCard({
         </div>
         {topPlayer ? (
           <div className="flex items-center gap-3">
-            <div
-              className={`shrink-0 flex items-center justify-center font-extrabold bg-[var(--accent)] text-[var(--surface)] ${compact ? 'w-6 h-6 text-[11px]' : 'w-8 h-8 text-[13px]'}`}
-              style={{
-                fontFamily: 'var(--font-display)',
-                borderRadius: 'var(--radius-md)',
-              }}
-            >
-              {topPlayer.initials}
-            </div>
+            <Avatar name={topPlayer.name} size={compact ? 24 : 32} />
             <div className="flex-1 min-w-0">
               <div
                 className={`font-semibold leading-[1.2] ${compact ? 'text-[13px]' : 'text-[15px]'}`}

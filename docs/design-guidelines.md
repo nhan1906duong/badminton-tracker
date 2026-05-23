@@ -31,6 +31,7 @@ All colors use `oklch()` for perceptually uniform lightness. Light mode is the d
 | `--muted` | oklch(50% 0.01 50) | oklch(55% 0.01 50) | Secondary text, placeholders |
 | `--border` | oklch(88% 0.008 50) | oklch(28% 0.015 50) | Dividers, card borders |
 | `--accent` | oklch(55% 0.20 30) | oklch(60% 0.18 30) | Vermilion — CTAs, live indicator, winner score |
+| `--accent-soft` | oklch(96% 0.025 30) | oklch(22% 0.04 30) | Tinted accent background — selected chip fills, queue stamps |
 
 ### Semantic Status
 
@@ -205,6 +206,40 @@ Sharp-cornered (radius-sm), bold uppercase, 11px text, `tracking-[0.06em]`.
 
 ## Component Specs
 
+### Avatar
+See [design-system/components/avatar.tsx](../design-system/components/avatar.tsx).
+
+- **Shape:** `border-radius: var(--radius-md)` rectangle (not circular)
+- **Fallback:** 2-letter initials — first letter of first word + first letter of last word (e.g. `"Danh Nguyen"` → `"DN"`); single-word names use first 2 chars
+- **Default bg:** `var(--accent)` (vermilion red); **default text:** `var(--surface)` (white)
+- **Font:** `var(--font-display)`, weight 800, `font-size: size * 0.33`
+- Custom `bgColor` / `textColor` props override the defaults (used by `PlayerSelector` for team-colored states)
+- Image support: renders `<img>` when `src` is provided; falls back to initials on error
+- Multiavatar URLs (from the default avatar picker) are resolved to SVG via `src/lib/avatar.ts`
+
+```tsx
+// Canonical import
+import { Avatar } from '../../design-system/components'
+// or via re-export shim (src components only)
+import Avatar from '../components/Avatar'
+```
+
+**Usage:**
+```tsx
+<Avatar name="Danh Nguyen" size={36} />
+<Avatar src={player.avatar_url} name={player.name} size={40} />
+<Avatar name="Tuan" size={28} bgColor="var(--fg)" textColor="var(--surface)" />
+```
+
+### Player Names
+
+- Use full player names only on the player's own profile page and in edit/search inputs.
+- Use `formatShortPlayerName()` from `src/lib/player-name.ts` for visible player names everywhere else.
+- Format: first word + initials for every remaining word (`"Danh Nguyen"` → `"Danh N."`, `"Nhan Duong Ngoc"` → `"Nhan D. N."`).
+- Continue passing the full stored name into `<Avatar name={player.name} />` so initials and image alt text remain correct.
+
+---
+
 ### SessionCard
 See [design-system/components/session-card.tsx](../design-system/components/session-card.tsx).
 
@@ -216,7 +251,7 @@ See [design-system/components/session-card.tsx](../design-system/components/sess
 - Meta row: 13px mono (`--muted`) with match count and duration
 - Active sessions with no matches: show placeholder text `No matches started yet` in the bottom panel
 - Scheduled sessions: use section label `Players` and placeholder text `Session hasn’t started yet`
-- Top Player / MVP section: accent-colored `rounded-[var(--radius-md)]` avatar (initials), win rate in accent
+- Top Player / MVP section: uses `<Avatar>` component (accent bg, 2-letter initials), win rate in accent
 - Compact variant: tighter padding, smaller text
 
 ### MatchCard
@@ -232,7 +267,7 @@ See [design-system/components/match-card.tsx](../design-system/components/match-
 ### ListItem
 See [design-system/components/list-item.tsx](../design-system/components/list-item.tsx).
 
-- 40×40px `rounded-[var(--radius-md)]` avatar with initials
+- 40×40px `<Avatar>` (rectangle, 2-letter initials, accent bg)
 - Title: 15px `--fg`, subtitle: 13px `--muted`
 - Optional right-side action slot
 - Interactive: `active:bg-[var(--bg)]`
@@ -241,7 +276,7 @@ See [design-system/components/list-item.tsx](../design-system/components/list-it
 See [design-system/components/rank-item.tsx](../design-system/components/rank-item.tsx).
 
 - Rank number: `--accent` for top 2, `--muted` for others
-- Avatar: `rounded-[var(--radius-md)]` with initials
+- Avatar: `<Avatar>` component (rectangle, 2-letter initials)
 - Win rate: right-aligned, 15px extrabold `--accent`
 
 ### StatRow
@@ -264,6 +299,27 @@ See [design-system/components/tabs.tsx](../design-system/components/tabs.tsx).
 - Transition: `--duration-normal`
 
 ---
+
+### MatchTypeChips
+
+See [design-system/components/match-type-chips.tsx](../design-system/components/match-type-chips.tsx).
+
+Radio-group chip selector for the five badminton match types (MS / WS / MD / WD / XD).
+
+- Outer grid: `repeat(5, 1fr)`, `gap: var(--space-2)`
+- Each chip: `min-height: 64px`, `border-radius: var(--radius-lg)`, `display: flex flex-col center`
+- **Inactive**: `background: var(--surface)`, `border: 1px solid var(--border)`
+- **Active**: `background: var(--accent-soft)`, `border: 2px solid var(--accent)` (padding shrinks by 1px to avoid layout shift)
+- Code text (e.g. `MD`): `var(--font-display)`, 18px, 800 weight — accent when active, fg otherwise
+- Tag text (e.g. `Men D.`): `var(--font-mono)`, 9px, uppercase, 0.08em tracking — accent at 80% opacity when active
+- Uses `role="radiogroup"` on container, `role="radio" aria-checked` on each button
+- Press: `active:opacity-70` from parent context; no scale transform
+
+**Token dependency:** requires `--accent-soft` (`oklch(96% 0.025 30)` light / `oklch(22% 0.04 30)` dark).
+
+```tsx
+<MatchTypeChips value={matchType} onChange={setMatchType} />
+```
 
 ### SegmentedControl
 
@@ -314,13 +370,37 @@ Horizontal rule with centred text — separates recommended options from a custo
 
 Sticky top app bar for page-level navigation and detail views.
 
+**Always use `<AppBar>` from `design-system/components` — never build a custom nav bar.** Import it as:
+
+```tsx
+import { AppBar } from '../../design-system/components'
+```
+
+- AppBar is required on all sub-pages and detail views (e.g. `/players/:id`, `/sessions/:id`, `/sessions/:id/matches/:id`)
+- AppBar is hidden on tab routes (`/`, `/sessions`, `/players`, `/settings`) — the bottom nav replaces it
+- Full-screen flow pages (e.g. `/sessions/new`) own their own nav bar but should still use `<AppBar>` for consistency
+- Pass `safeArea` prop on pages that are the first thing below the status bar
+- Pass `stuck` when the page is scrolled (bind to a scroll listener on the content container)
+
+Props reference (see [design-system/components/app-bar.tsx](../design-system/components/app-bar.tsx)):
+
+| Prop | Type | Notes |
+|------|------|-------|
+| `title` | `string` | Page or entity name |
+| `titleAlign` | `'center' \| 'left'` | Default `'left'` |
+| `titleVisible` | `boolean` | Animate title in/out on scroll |
+| `backLabel` | `string` | Label next to the back chevron |
+| `onBack` | `() => void` | Use `navigate(-1)` or a specific route |
+| `leftAction` / `rightAction` | `AppBarAction` | Custom icon/text buttons |
+| `stuck` | `boolean` | Adds `border-b border-[var(--border)]` when scrolled |
+| `safeArea` | `boolean` | Adds `env(safe-area-inset-top)` top padding |
+
+Underlying styles (for reference only — use the component, not raw CSS):
+
 - Container: `sticky top-0 z-40 bg-[color-mix(in oklch, var(--bg) 88%, transparent)] backdrop-blur-xl border-b border-transparent`
 - Layout: `grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3`
 - Left action: icon button with `text-[var(--accent)]`, `font-[family:var(--font-body)]`, `font-medium`, and `active:opacity-70`
 - Title: centered, `font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em]`
-- Right action: optional icon or text button in the right slot
-- Use icon-only back buttons with `aria-label="Back"`
-- AppBar is visible on sub-pages and details, hidden on tab routes and full-screen routes
 
 ### Full-screen Page Layout
 
@@ -480,6 +560,29 @@ See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading
 - `touch-action: manipulation` globally — no double-tap zoom.
 - `-webkit-tap-highlight-color: transparent` — replaced by `active:` states.
 - Always provide `aria-label` on icon-only buttons.
+
+### MatchDetailPage
+
+Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match states: `SCHEDULED`, `LIVE`, and `COMPLETED`.
+
+**States:**
+
+| State | Description |
+|-------|-------------|
+| `SCHEDULED` | Pre-match huddle: player roster + serve-first picker. CTA disabled until serve side is chosen. |
+| `LIVE` | Live scoreboard with tap-to-score panels, serve indicator, score tools (−1, direct edit), set meter, action row (swap serve / undo), point log. CTA auto-promotes to "Award match to Team X" when winner condition is met. |
+| `COMPLETED` | Read-only scoreboard with winner stamp. "Re-open for editing" action row. CTA: "Back to session". |
+
+**Key primitives (page-local, not in design-system):**
+- **Scoreboard panel** — 2-column grid with 88px score numerals, `score-bump` keyframe on increment, dotted underline on editable scores.
+- **Set meter** — progress bar to `POINTS_TARGET` (21), transitions on width.
+- **Point log** — last 8 entries, newest first; latest row highlighted with 5% accent tint.
+- **Score keypad sheet** — numeric pad (0–9 + backspace + clear) with quick-chip row (+1, −1, +5, target), delta display.
+- **Award-winner sheet** — two team cards side by side.
+
+**Score bump animation** — `@keyframes score-bump` in `tokens.css`; applied inline via `animation: score-bump 0.32s …` on the score numeral element.
+
+**Live score is ephemeral** — individual points are tracked in React state only. The DB score (`match_scores`) is written only when the match is finalized via `useRecordResult`. Stored as a single set: `{ set_number: 1, team_a_score, team_b_score }`.
 
 ---
 

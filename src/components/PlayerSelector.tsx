@@ -1,5 +1,6 @@
 import type { Player, MatchType } from '../types/database'
 import { getRequiredPlayerCount } from '../lib/match-helpers'
+import { formatShortPlayerName } from '../lib/player-name'
 import { Check } from 'lucide-react'
 import Avatar from './Avatar'
 
@@ -73,7 +74,7 @@ export default function PlayerSelector({
                     ? team === 'A' ? 'text-blue-900' : 'text-red-900'
                     : 'text-gray-700'
                 }`}>
-                  {player.name}
+                  {formatShortPlayerName(player.name)}
                 </p>
                 {isSelected && (
                   <p className={`text-xs font-medium ${

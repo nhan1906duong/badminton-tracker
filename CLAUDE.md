@@ -94,6 +94,7 @@ export function Component({ ... }: Props) {
 - Always include `active:` press states, 44px+ touch targets
 - Refer to `docs/design-guidelines.md` for the full design system
 - The dev-only `/settings/design-system` route renders all tokens for preview
+- **Every new or restyled page must use `<AppBar>` from `design-system/components` for its top navigation — never build a custom nav bar.** Only tab routes (`/`, `/sessions`, `/players`, `/settings`) omit AppBar.
 
 ### Environment Variables
 ```env

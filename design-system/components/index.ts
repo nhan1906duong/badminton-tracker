@@ -1,3 +1,6 @@
+export { Avatar } from './avatar'
+export type { AvatarProps } from './avatar'
+
 export { Button } from './button'
 export type { ButtonProps } from './button'
 
@@ -31,6 +34,9 @@ export type { BottomSheetProps, BottomSheetItemProps, BottomSheetCancelProps } f
 
 export { SessionStatsPanel } from './session-stats-panel'
 export type { SessionStatsPanelProps } from './session-stats-panel'
+
+export { MatchTypeChips } from './match-type-chips'
+export type { MatchTypeChipsProps } from './match-type-chips'
 
 export { EmptyState } from '../patterns/empty-state'
 export { LoadingState } from '../patterns/loading-state'

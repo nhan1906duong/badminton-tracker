@@ -1,47 +1,77 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+
+interface AppBarAction {
+  label?: string
+  ariaLabel?: string
+  icon?: ReactNode
+  onClick: () => void
+}
 
 export interface AppBarProps {
   title: string
   titleAlign?: 'center' | 'left'
   titleVisible?: boolean
-  leftAction?: {
-    label?: string
-    icon?: ReactNode
-    onClick: () => void
-  }
-  rightAction?: {
-    label?: string
-    icon?: ReactNode
-    onClick: () => void
-  }
+  backLabel?: string
+  onBack?: () => void
+  stuck?: boolean
+  safeArea?: boolean
+  leftAction?: AppBarAction
+  rightAction?: AppBarAction
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
 }
 
-export function AppBar({ title, titleAlign = 'left', titleVisible = true, leftAction, rightAction, className = '', style }: AppBarProps) {
+export function AppBar({
+  title = '',
+  titleAlign = 'left',
+  titleVisible = true,
+  backLabel,
+  onBack,
+  stuck = false,
+  safeArea = false,
+  leftAction,
+  rightAction,
+  className = '',
+  style,
+}: AppBarProps) {
   const isLeft = titleAlign === 'left'
+  const resolvedLeftAction: AppBarAction | undefined = leftAction ?? (
+    backLabel || onBack
+      ? {
+          label: backLabel ?? 'Back',
+          onClick: onBack ?? (() => window.history.back()),
+        }
+      : undefined
+  )
 
   return (
     <nav
-      className={`sticky top-0 z-40 grid items-center gap-3 px-4 py-3 bg-[color-mix(in_oklch,var(--bg)_88%,transparent)] backdrop-blur-xl border-b border-transparent ${
+      className={`sticky top-0 z-40 grid items-center gap-3 px-4 py-3 bg-[color-mix(in_oklch,var(--bg)_88%,transparent)] backdrop-blur-xl ${stuck ? 'border-b border-[var(--border)]' : 'border-b border-transparent'} ${
         isLeft ? 'grid-cols-[auto_1fr_auto]' : 'grid-cols-[1fr_auto_1fr]'
       } ${className}`}
       style={{
         WebkitBackdropFilter: 'saturate(180%) blur(12px)',
+        ...(safeArea
+          ? {
+              paddingTop: 'max(12px, calc(env(safe-area-inset-top) + 8px))',
+              paddingBottom: 12,
+              background: 'color-mix(in oklch, var(--bg) 88%, transparent)',
+            }
+          : {}),
         ...style,
       }}
     >
       {/* Left action */}
       <div className="flex items-center justify-start min-h-[44px] shrink-0">
-        {leftAction && (
+        {resolvedLeftAction && (
           <button
             type="button"
-            onClick={leftAction.onClick}
-            aria-label={leftAction.label ?? 'Back'}
+            onClick={resolvedLeftAction.onClick}
+            aria-label={resolvedLeftAction.ariaLabel ?? resolvedLeftAction.label ?? 'Back'}
             className="inline-flex items-center gap-2 text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium active:opacity-70 transition-opacity"
           >
-            {leftAction.icon ?? null}
-            {leftAction.label ? <span>{leftAction.label}</span> : null}
+            {resolvedLeftAction.icon ?? null}
+            {resolvedLeftAction.label ? <span>{resolvedLeftAction.label}</span> : null}
           </button>
         )}
       </div>
@@ -63,7 +93,7 @@ export function AppBar({ title, titleAlign = 'left', titleVisible = true, leftAc
           <button
             type="button"
             onClick={rightAction.onClick}
-            aria-label={rightAction.label ?? 'Action'}
+            aria-label={rightAction.ariaLabel ?? rightAction.label ?? 'Action'}
             className="inline-flex items-center justify-end gap-2 text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium active:opacity-70 transition-opacity"
           >
             {rightAction.icon}

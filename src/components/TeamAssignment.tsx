@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { Player, MatchType } from '../types/database'
 import { getTeamSize } from '../lib/match-helpers'
+import { formatShortPlayerName } from '../lib/player-name'
 import { Shuffle } from 'lucide-react'
 
 interface TeamAssignmentProps {
@@ -50,7 +51,7 @@ export default function TeamAssignment({
         }`}>
           {player.name.charAt(0).toUpperCase()}
         </div>
-        <span className="truncate">{player.name}</span>
+        <span className="truncate">{formatShortPlayerName(player.name)}</span>
       </div>
     )
   }
@@ -112,7 +113,7 @@ export default function TeamAssignment({
                 onClick={() => onMoveToTeam(player.id, teamAIds.length < teamSize ? 'A' : 'B')}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:border-green-400 hover:text-green-700 transition-colors"
               >
-                {player.name}
+                {formatShortPlayerName(player.name)}
                 <span className="text-[10px] text-gray-400">→ {teamAIds.length < teamSize ? 'A' : 'B'}</span>
               </button>
             ))}

@@ -3,6 +3,7 @@ import type { MatchWithDetails } from '../types/database'
 import { Trash2 } from 'lucide-react'
 import Avatar from './Avatar'
 import { MATCH_TYPE_SHORT } from '../lib/match-helpers'
+import { formatShortPlayerName } from '../lib/player-name'
 import { SwipeableItem } from './SwipeableItem'
 
 interface MatchCardProps {
@@ -32,7 +33,7 @@ export default function MatchCard({
 
   const handleClick = () => {
     if (readonly) return
-    navigate(`/sessions/${match.session_id}/matches/${match.id}/edit`)
+    navigate(`/sessions/${match.session_id}/matches/${match.id}`)
   }
 
   const teamA = match.participants.filter(
@@ -73,7 +74,7 @@ export default function MatchCard({
             {teamA.map((p) => (
               <div key={p.player.id} className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700 truncate">
-                  {p.player.name}
+                  {formatShortPlayerName(p.player.name)}
                 </span>
                 {!hideAvatars && (
                   <Avatar
@@ -135,7 +136,7 @@ export default function MatchCard({
                   />
                 )}
                 <span className="text-sm font-medium text-gray-700 truncate">
-                  {p.player.name}
+                  {formatShortPlayerName(p.player.name)}
                 </span>
               </div>
             ))}

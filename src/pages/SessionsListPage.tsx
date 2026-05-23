@@ -5,6 +5,7 @@ import { useMatches } from '../hooks/useMatches'
 import { SessionCard, LoadingState, EmptyState, ErrorState } from '../../design-system/components'
 import { Plus, Trophy } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
+import { formatShortPlayerName } from '../lib/player-name'
 import {
   formatSessionDuration,
   formatSessionDateTime,
@@ -17,7 +18,6 @@ interface SessionStat {
   matchCount: number
   topPlayer?: {
     name: string
-    initials: string
     record: string
     winRate: number
   }
@@ -85,13 +85,7 @@ export default function SessionsListPage() {
       const topPlayer =
         best && best.played > 0
           ? {
-              name: best.name,
-              initials: best.name
-                .split(' ')
-                .map((w) => w[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2),
+              name: formatShortPlayerName(best.name),
               record: `${best.wins}W – ${best.played - best.wins}L · played ${best.played}`,
               winRate: Math.round((best.wins / best.played) * 100),
             }
