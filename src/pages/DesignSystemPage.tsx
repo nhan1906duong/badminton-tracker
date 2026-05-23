@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState } from '../../design-system/components'
+import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog } from '../../design-system/components'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -18,6 +18,7 @@ export default function DesignSystemPage() {
     <div className="min-h-svh" style={{ background: 'var(--bg)' }}>
       <div className="px-4 py-5 space-y-8 pb-32">
         <HeaderSection />
+        <AppBarSection />
         <ColorTokensSection />
         <TypographyTokensSection />
         <SpacingTokensSection />
@@ -36,6 +37,7 @@ export default function DesignSystemPage() {
         <StatRowSection />
         <SectionHeaderSection />
         <PatternSection />
+        <DialogSection />
         <DarkModeToggle />
       </div>
     </div>
@@ -119,6 +121,41 @@ function ColorSwatch({ label, token }: { label: string; token: string }) {
         </p>
       </div>
     </div>
+  )
+}
+
+function AppBarSection() {
+  return (
+    <Section title="App Bar">
+      <Card>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Sticky top navigation for sub-pages and detail views.
+        </p>
+        <div className="space-y-4">
+          <AppBar
+            title="Session detail"
+            leftAction={{
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              ),
+              onClick: () => {},
+            }}
+            rightAction={{
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="19" cy="12" r="1" />
+                  <circle cx="5" cy="12" r="1" />
+                </svg>
+              ),
+              onClick: () => {},
+            }}
+          />
+        </div>
+      </Card>
+    </Section>
   )
 }
 
@@ -649,6 +686,22 @@ function SessionCardSection() {
         matchCount={5}
         topPlayer={{ name: 'Tuan', initials: 'T', record: '3W – 1L · played 4', winRate: 75 }}
       />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Active — no matches yet</p>
+      <SessionCard
+        status="active"
+        name="Friday Night Session"
+        dateTime="Today · 7:30 PM"
+        duration="0m"
+        matchCount={0}
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Scheduled</p>
+      <SessionCard
+        status="scheduled"
+        name="Saturday Session"
+        dateTime="Tomorrow · 7:00 PM"
+        duration="Not started"
+        matchCount={0}
+      />
       <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed</p>
       <SessionCard
         status="completed"
@@ -743,6 +796,61 @@ function PatternSection() {
       <ErrorState
         message="Failed to load player data. Please check your connection."
         onRetry={() => {}}
+      />
+    </Section>
+  )
+}
+
+/* ---------- Dialog ---------- */
+
+function DialogSection() {
+  const [openKind, setOpenKind] = useState<'info' | 'warning' | 'danger' | 'two-actions' | null>(null)
+
+  return (
+    <Section title="Dialog">
+      <DSCard>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Bottom-sheet overlay for errors, warnings, and confirmations. Backdrop click dismisses.
+        </p>
+        <div className="flex flex-col gap-2">
+          <Button variant="ghost" onClick={() => setOpenKind('info')}>Info dialog</Button>
+          <Button variant="ghost" onClick={() => setOpenKind('warning')}>Warning dialog</Button>
+          <Button variant="danger" onClick={() => setOpenKind('danger')}>Danger dialog</Button>
+          <Button variant="secondary" onClick={() => setOpenKind('two-actions')}>Two actions</Button>
+        </div>
+      </DSCard>
+
+      <Dialog
+        open={openKind === 'info'}
+        onClose={() => setOpenKind(null)}
+        kind="info"
+        title="Session saved"
+        description="Your session has been saved and is now visible on the sessions list."
+      />
+      <Dialog
+        open={openKind === 'warning'}
+        onClose={() => setOpenKind(null)}
+        kind="warning"
+        title="Tournament already tracked"
+        description="A session for this tournament already exists. Choose a different tournament or use a custom name."
+      />
+      <Dialog
+        open={openKind === 'danger'}
+        onClose={() => setOpenKind(null)}
+        kind="danger"
+        title="Failed to create session"
+        description="Something went wrong on our end. Please try again in a moment."
+      />
+      <Dialog
+        open={openKind === 'two-actions'}
+        onClose={() => setOpenKind(null)}
+        kind="danger"
+        title="Delete session?"
+        description="This will remove the session and all its matches permanently."
+        actions={[
+          { label: 'Cancel', onClick: () => setOpenKind(null), variant: 'ghost' },
+          { label: 'Delete', onClick: () => setOpenKind(null), variant: 'danger' },
+        ]}
       />
     </Section>
   )

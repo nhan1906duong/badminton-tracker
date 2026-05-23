@@ -20,6 +20,11 @@ export { ListItem } from './list-item'
 export { RankItem } from './rank-item'
 export { StatRow } from './stat-row'
 export { SectionHeader } from './section-header'
+export { AppBar } from './app-bar'
+export type { AppBarProps } from './app-bar'
+
+export { Dialog } from './dialog'
+export type { DialogProps, DialogAction } from './dialog'
 
 export { EmptyState } from '../patterns/empty-state'
 export { LoadingState } from '../patterns/loading-state'

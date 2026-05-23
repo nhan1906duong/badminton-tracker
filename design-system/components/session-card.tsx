@@ -1,7 +1,7 @@
 import { Badge } from './badge'
 
 interface SessionCardProps {
-  status: 'active' | 'completed'
+  status: 'active' | 'scheduled' | 'completed'
   name: string
   dateTime: string
   duration: string
@@ -24,13 +24,15 @@ export function SessionCard({
   topPlayer,
   compact,
 }: SessionCardProps) {
+  const isOpen = status !== 'completed'
   const isActive = status === 'active'
+  const isScheduled = status === 'scheduled'
 
   return (
     <div
       className={`bg-[var(--surface)] ${compact ? 'p-4' : 'p-5'}`}
       style={{
-        border: isActive ? '2px solid var(--accent)' : '1px solid var(--border)',
+        border: isOpen ? '2px solid var(--accent)' : '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
       }}
     >
@@ -58,6 +60,10 @@ export function SessionCard({
             />
             <Badge variant="accent">Live</Badge>
           </div>
+        ) : isScheduled ? (
+          <Badge variant="default" className="bg-transparent border-[var(--fg)] text-[var(--fg)]">
+            Scheduled
+          </Badge>
         ) : (
           <Badge variant="neutral">Completed</Badge>
         )}
@@ -68,7 +74,7 @@ export function SessionCard({
         className={`flex items-center gap-3 font-mono ${compact ? 'text-[11px] mb-3' : 'text-[13px] mb-5'}`}
         style={{ color: 'var(--muted)' }}
       >
-        {isActive && (
+        {isActive ? (
           <>
             <span
               className="w-1.5 h-1.5 rounded-full animate-pulse"
@@ -76,9 +82,12 @@ export function SessionCard({
             />
             <span>elapsed</span>
           </>
+        ) : (
+          <>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--border)' }} />
+            <span>{duration}</span>
+          </>
         )}
-        {!isActive && <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--border)' }} />}
-        <span>{duration}</span>
         <span className="w-1 h-1 rounded-full" style={{ background: 'var(--border)' }} />
         <span>
           <span className="font-semibold" style={{ color: 'var(--fg)' }}>{matchCount}</span> matches
@@ -86,17 +95,17 @@ export function SessionCard({
       </div>
 
       {/* Top Player / MVP */}
-      {topPlayer && (
+      <div
+        className={`pt-3 ${compact ? 'pt-2' : 'pt-3'}`}
+        style={{ borderTop: '1px solid var(--border)' }}
+      >
         <div
-          className={`pt-3 ${compact ? 'pt-2' : 'pt-3'}`}
-          style={{ borderTop: '1px solid var(--border)' }}
+          className="text-[11px] font-bold font-mono uppercase tracking-[0.08em] mb-2"
+          style={{ color: 'var(--accent)' }}
         >
-          <div
-            className="text-[11px] font-bold font-mono uppercase tracking-[0.08em] mb-2"
-            style={{ color: 'var(--accent)' }}
-          >
-            {isActive ? 'Leading' : 'Top Player'}
-          </div>
+          {isActive ? 'Leading' : isScheduled ? 'Players' : 'Top Player'}
+        </div>
+        {topPlayer ? (
           <div className="flex items-center gap-3">
             <div
               className={`shrink-0 flex items-center justify-center font-extrabold bg-[var(--accent)] text-[var(--surface)] ${compact ? 'w-6 h-6 text-[11px]' : 'w-8 h-8 text-[13px]'}`}
@@ -136,8 +145,12 @@ export function SessionCard({
               </div>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
+            {isScheduled ? 'Session hasn’t started yet' : 'No matches started yet'}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -20,9 +20,19 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 | `/sessions/:id/matches/new/result` | `SessionMatchResultPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/edit` | `EditMatchPage` | Yes | No |
 
+## Route Types
+
+| Type | Routes | AppBar | Bottom Nav |
+|------|--------|--------|------------|
+| Tab | `/`, `/sessions`, `/players`, `/settings` | No | Yes |
+| Full-screen | `/sessions/new` | No | No |
+| Sub-page | all others | Yes | Yes |
+
+Full-screen routes manage their own nav bar (Cancel / title) and sticky bottom CTA. Add new ones to `FULL_SCREEN_ROUTES` in `src/App.tsx`.
+
 ## Tab Bar
 
-Four tabs, visible only on root routes. Hidden on `/login` and all sub-routes.
+Four tabs, visible on tab routes only. Hidden on `/login`, full-screen routes, and all sub-routes.
 
 ```
 ┌──────┬──────────┬─────────┬──────────┐
@@ -114,15 +124,16 @@ Four tabs, visible only on root routes. Hidden on `/login` and all sub-routes.
 
 ## Back Navigation
 
-The `AppBar` handles back navigation for non-tab routes:
+The `AppBar` handles back navigation for sub-page routes. Full-screen routes handle their own back/cancel button.
 
-| From | Back goes to |
-|------|-------------|
-| `/sessions/:id/matches/new/result` | `/sessions/:id/matches/new` |
-| `/sessions/:id/matches/new` | `/sessions/:id` |
-| `/sessions/:id` | `location.state.from` or browser back |
-| `/sessions/new` (after creating) | Replaced by `/sessions/:id` — back skips create page |
-| Other sub-routes | Browser back |
+| From | Back goes to | Handler |
+|------|-------------|---------|
+| `/sessions/:id/matches/new/result` | `/sessions/:id/matches/new` | AppBar |
+| `/sessions/:id/matches/new` | `/sessions/:id` | AppBar |
+| `/sessions/:id` | `location.state.from` or browser back | AppBar |
+| `/sessions/new` Cancel button | `navigate(-1)` | Page-internal |
+| `/sessions/new` (after creating) | Replaced by `/sessions/:id` — back skips create page | `navigate(replace)` |
+| Other sub-routes | Browser back | AppBar |
 
 ## Auth Guard
 

@@ -65,7 +65,7 @@
 ## Session-Based Match Flow
 
 ```
-1. Create Session (auto-closes previous open session)
+1. Create Session (multiple SCHEDULE/LIVE sessions allowed; duplicate tournament blocked)
          ↓
 2. Toggle Active Players (local filter, persisted per device)
          ↓

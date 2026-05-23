@@ -2,8 +2,17 @@ import type { Session } from '../types/database'
 
 export function formatSessionDuration(startedAt: string, endedAt?: string | null): string {
   const start = new Date(startedAt)
-  const end = endedAt ? new Date(endedAt) : new Date()
+  const now = new Date()
+  if (!endedAt && start.getTime() > now.getTime()) {
+    return 'Not started'
+  }
+
+  const end = endedAt ? new Date(endedAt) : now
   const diffMs = end.getTime() - start.getTime()
+  if (diffMs <= 0) {
+    return 'Not started'
+  }
+
   const hours = Math.floor(diffMs / (1000 * 60 * 60))
   const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
   if (hours > 0) return `${hours}h ${mins}m`
@@ -29,6 +38,8 @@ export function getSessionName(session: Session): string {
   })
 }
 
-export function getSessionStatus(session: Session): 'active' | 'completed' {
-  return session.ended_at ? 'completed' : 'active'
+export function getSessionStatus(session: Session): 'active' | 'completed' | 'scheduled' {
+  if (session.ended_at) return 'completed'
+  if (new Date(session.started_at).getTime() > Date.now()) return 'scheduled'
+  return 'active'
 }
