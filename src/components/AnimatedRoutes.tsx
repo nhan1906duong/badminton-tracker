@@ -14,11 +14,12 @@ import SettingsPage from '../pages/SettingsPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
 import SessionDonatedListPage from '../pages/SessionDonatedListPage'
 import PlayerDetailPage from '../pages/PlayerDetailPage'
+import RankingPage from '../pages/RankingPage'
 import { useOpenSession } from '../hooks/useSessions'
 import { useNavigate } from 'react-router-dom'
 
 const IS_DEV = import.meta.env.DEV
-const TAB_ROUTES = ['/', '/players', '/sessions', '/settings']
+const TAB_ROUTES = ['/', '/sessions', '/ranking', '/settings']
 
 type TransitionDirection = 'forward' | 'backward' | null
 type TransitionStage = 'idle' | 'entering'
@@ -100,6 +101,7 @@ const routes = [
   { path: '/sessions/:id/matches/:matchId/edit', element: <EditMatchPage />, auth: true },
   { path: '/sessions/:id/donated', element: <SessionDonatedListPage />, auth: true },
   { path: '/players/:playerId', element: <PlayerDetailPage />, auth: true },
+  { path: '/ranking', element: <RankingPage />, auth: true },
   { path: '/settings', element: <SettingsPage />, auth: true },
   ...(IS_DEV ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }] : []),
   { path: '*', element: <Navigate to="/" replace />, auth: false },
