@@ -38,7 +38,7 @@ function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'
     return `${formatDurationMs(new Date(session.ended_at).getTime() - startedAt)} total`
   return '—'
 }
-import { useMatches, useDeleteMatch } from '../hooks/useMatches'
+import { useMatches } from '../hooks/useMatches'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { usePlayers } from '../hooks/usePlayers'
 import { useSession, useStartSession, useEndSession, useDeleteSession } from '../hooks/useSessions'
@@ -49,7 +49,7 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, X, ChevronLeft, MoreVertical, Play, Activity, Trash2 } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 export default function SessionDetailPage() {
@@ -58,13 +58,10 @@ export default function SessionDetailPage() {
   const location = useLocation()
   const { data: matches, isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatches(sessionId)
   const { data: session } = useSession(sessionId)
-  const deleteMatch = useDeleteMatch()
   const endSession = useEndSession()
   const startSession = useStartSession()
   const deleteSession = useDeleteSession()
 
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [swipedMatchId, setSwipedMatchId] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [confirmDeleteSessionOpen, setConfirmDeleteSessionOpen] = useState(false)
@@ -101,17 +98,6 @@ export default function SessionDetailPage() {
   const mvpAvatarUrl = mvpPlayer
     ? (players?.find((p) => p.id === mvpPlayer.playerId)?.avatar_url ?? null)
     : null
-
-  async function handleDeleteMatch(matchId: string) {
-    setSwipedMatchId(null)
-    try {
-      await deleteMatch.mutateAsync(matchId)
-      setDeleteId(null)
-    } catch (err) {
-      console.error('Failed to delete match:', err)
-      alert('Failed to delete match. Please try again.')
-    }
-  }
 
   async function handleEndSession() {
     try {
@@ -274,10 +260,6 @@ export default function SessionDetailPage() {
                 isLoading={matchesLoading}
                 isError={matchesError}
                 onRetry={refetchMatches}
-                swipedMatchId={swipedMatchId}
-                onSwipeOpen={setSwipedMatchId}
-                onSwipeClose={() => setSwipedMatchId(null)}
-                onDeleteRequest={setDeleteId}
               />
             </section>
           )}
@@ -369,35 +351,6 @@ export default function SessionDetailPage() {
         ]}
       />
 
-      {/* Delete match confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-6">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-[15px] font-bold text-gray-900">Delete Match?</p>
-              <button onClick={() => setDeleteId(null)} className="p-1 text-gray-400">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">This will remove the match and all its scores.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteMatch(deleteId)}
-                disabled={deleteMatch.isPending}
-                className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white"
-              >
-                {deleteMatch.isPending ? '...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

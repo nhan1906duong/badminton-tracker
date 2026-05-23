@@ -42,6 +42,7 @@ export interface Match {
   session_id: string
   match_type: MatchType
   played_at: string
+  ended_at?: string | null
   notes?: string | null
   status: MatchStatus
   queue_position: number | null

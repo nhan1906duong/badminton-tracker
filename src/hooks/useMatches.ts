@@ -272,7 +272,7 @@ export function useRecordResult() {
     mutationFn: async (input: RecordResultInput) => {
       const { error: matchError } = await supabase
         .from('matches')
-        .update({ status: 'COMPLETED', played_at: new Date().toISOString() })
+        .update({ status: 'COMPLETED', ended_at: new Date().toISOString() })
         .eq('id', input.id)
       if (matchError) throw matchError
 

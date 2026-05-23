@@ -634,41 +634,48 @@ function TabsSection() {
 function MatchCardSection() {
   return (
     <Section title="Match Card">
-      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Live state</p>
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Live</p>
       <MatchCard
-        status="live"
-        teamA={{ name: 'Minh + Tuan', players: ['Team A'] }}
-        teamB={{ name: 'Huy + Dat', players: ['Team B'] }}
+        status="LIVE"
+        teamAPlayers={['Minh', 'Tuan']}
+        teamBPlayers={['Huy', 'Dat']}
         scoreA={18}
         scoreB={14}
-        date="Today · 18:30"
+        matchLabel="M3 · 19:15"
         duration="32 min"
         type="Men's Doubles"
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Ended — Win</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed — Team A wins</p>
       <MatchCard
-        status="ended"
-        outcome="win"
-        teamA={{ name: 'Minh + Tuan', players: ['Team A'] }}
-        teamB={{ name: 'Huy + Dat', players: ['Team B'] }}
+        status="COMPLETED"
+        teamAWon
+        teamAPlayers={['Minh', 'Tuan']}
+        teamBPlayers={['Huy', 'Dat']}
         scoreA={21}
         scoreB={18}
-        date="Today · 18:30"
+        matchLabel="M2 · 18:30"
         duration="48 min"
         type="Men's Doubles"
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Compact</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed — Team B wins</p>
       <MatchCard
-        status="ended"
-        outcome="loss"
-        teamA={{ name: 'Minh + Tuan', players: ['Team A'] }}
-        teamB={{ name: 'Long + Khoa', players: ['Team C'] }}
+        status="COMPLETED"
+        teamAWon={false}
+        teamAPlayers={['Minh', 'Tuan']}
+        teamBPlayers={['Long', 'Khoa']}
         scoreA={16}
         scoreB={21}
-        date="Yesterday · 17:00"
+        matchLabel="M1 · 17:00"
         duration="35 min"
         type="Men's Doubles"
-        compact
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Scheduled</p>
+      <MatchCard
+        status="SCHEDULED"
+        teamAPlayers={['Minh', 'Tuan']}
+        teamBPlayers={['Huy', 'Dat']}
+        matchLabel="M4 · 20:00"
+        type="Men's Doubles"
       />
     </Section>
   )

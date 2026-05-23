@@ -117,7 +117,7 @@ function StatCell({ value, label, accent = false, mvp = false, divider = false, 
           className="flex items-center"
           style={{ gap: 'var(--space-2)', minWidth: 0, maxWidth: '100%' }}
         >
-          <Avatar src={avatarUrl} name={avatarName} size={28} />
+          <Avatar src={avatarUrl} name={avatarName} size={24} />
           <span
             style={{
               fontFamily: 'var(--font-display)',
