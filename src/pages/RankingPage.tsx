@@ -100,31 +100,24 @@ export default function RankingPage() {
   return (
     <div className="min-h-svh pb-24" style={{ background: 'var(--bg)' }}>
 
-      {/* Page head */}
-      <div style={{ padding: 'var(--space-5) var(--space-5) var(--space-4)' }}>
+      {/* Page Header */}
+      <div
+        className="px-[var(--space-5)] pb-[var(--space-4)]"
+        style={{ paddingTop: 'max(var(--space-7), env(safe-area-inset-top) + var(--space-5))' }}
+      >
         <h1
+          className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em] mb-[var(--space-2)]"
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'var(--text-2xl)',
-            fontWeight: 800,
-            lineHeight: 1.02,
-            letterSpacing: '-0.03em',
             color: 'var(--fg)',
-            marginBottom: 'var(--space-1)',
           }}
         >
           Rankings
         </h1>
         {!isLoading && rankings.length > 0 && (
-          <div style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--text-xs)',
-            color: 'var(--muted)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-          }}>
+          <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
             {playerCount} players · {totalMatches} matches
-          </div>
+          </p>
         )}
       </div>
 
@@ -169,12 +162,9 @@ export default function RankingPage() {
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
+                    className="text-[18px] font-extrabold leading-[1.15] tracking-[-0.01em]"
                     style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: 'var(--text-base)',
-                      fontWeight: 700,
-                      lineHeight: 1.2,
-                      letterSpacing: '-0.01em',
                       color: 'var(--fg)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -183,7 +173,7 @@ export default function RankingPage() {
                   >
                     {formatShortPlayerName(s.name)}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
+                  <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
                     <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.matchesPlayed}</span> matches</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
                     <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.wins}</span> W</span>
@@ -195,14 +185,11 @@ export default function RankingPage() {
                 {/* Rating on top, trend indicator below */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 64 }}>
                   <div
+                    className="text-[15px] font-extrabold leading-none"
                     style={{
                       fontFamily: 'var(--font-display)',
-                      fontSize: 'var(--text-lg)',
-                      fontWeight: 800,
-                      color: 'var(--fg)',
+                      color: 'var(--accent)',
                       fontVariantNumeric: 'tabular-nums',
-                      lineHeight: 1,
-                      letterSpacing: '-0.02em',
                     }}
                   >
                     {s.rating}

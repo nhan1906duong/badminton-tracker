@@ -33,6 +33,7 @@ export function usePlayerStats(sessionId?: string) {
     for (const match of matches) {
       const winnerTeam = match.teams.find((t) => t.is_winner)
       const winnerLabel = winnerTeam?.team_label
+      if (!winnerLabel) continue
 
       for (const participant of match.participants) {
         const pid = participant.player_id

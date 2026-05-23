@@ -7,6 +7,7 @@ import PlayersPage from '../pages/PlayersPage'
 import SessionsListPage from '../pages/SessionsListPage'
 import CreateSessionPage from '../pages/CreateSessionPage'
 import SessionDetailPage from '../pages/SessionDetailPage'
+import SessionStatsPage from '../pages/SessionStatsPage'
 import CreateMatchPage from '../pages/CreateMatchPage'
 import EditMatchPage from '../pages/EditMatchPage'
 import MatchDetailPage from '../pages/MatchDetailPage'
@@ -96,6 +97,7 @@ const routes = [
   { path: '/sessions/active', element: <ActiveSessionRedirect />, auth: true },
   { path: '/sessions/new', element: <CreateSessionPage />, auth: true },
   { path: '/sessions/:id', element: <SessionDetailPage />, auth: true },
+  { path: '/sessions/:id/stats', element: <SessionStatsPage />, auth: true },
   { path: '/sessions/:id/matches/new', element: <CreateMatchPage />, auth: true },
   { path: '/sessions/:id/matches/:matchId', element: <MatchDetailPage />, auth: true },
   { path: '/sessions/:id/matches/:matchId/edit', element: <EditMatchPage />, auth: true },

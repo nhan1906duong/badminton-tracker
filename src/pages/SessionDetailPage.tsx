@@ -61,6 +61,9 @@ export default function SessionDetailPage() {
   const endSession = useEndSession()
   const startSession = useStartSession()
   const deleteSession = useDeleteSession()
+  const sid = sessionId ?? ''
+  const { sortedByWins } = usePlayerStats(sid)
+  const { data: players } = usePlayers()
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
@@ -73,11 +76,6 @@ export default function SessionDetailPage() {
       </div>
     )
   }
-
-  const sid = sessionId
-
-  const { sortedByWins } = usePlayerStats(sid)
-  const { data: players } = usePlayers()
 
   const sessionStatus: 'scheduled' | 'live' | 'ended' | null = (() => {
     if (!session) return null
@@ -296,7 +294,7 @@ export default function SessionDetailPage() {
           <BottomSheetItem
             icon={<Activity className="w-5 h-5" />}
             label="View player stats"
-            onClick={closeMenu}
+            onClick={() => { closeMenu(); navigate(`/sessions/${sid}/stats`) }}
           />
         )}
         {/* Share session — planned */}
