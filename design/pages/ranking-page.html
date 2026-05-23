@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf8f5">
+<meta name="theme-color" content="#1e1a17" media="(prefers-color-scheme: dark)">
+<title>Players · Rankings — Badminton Tracker</title>
+<style>
+/* ================================================================
+   TOKENS — Japanese Sport / Vermilion (matches Design System.html)
+   ================================================================ */
+:root {
+  --bg:          oklch(99%  0.003 50);
+  --surface:     oklch(100% 0     0);
+  --fg:          oklch(12%  0.02  50);
+  --muted:       oklch(50%  0.01  50);
+  --border:      oklch(88%  0.008 50);
+  --accent:      oklch(55%  0.20  30);
+  --accent-soft: oklch(96%  0.025 30);
+
+  --gold:   oklch(72% 0.14 82);
+  --silver: oklch(62% 0.005 250);
+  --bronze: oklch(58% 0.10 52);
+
+  --success: oklch(50% 0.14 145);
+  --danger:  oklch(55% 0.20 25);
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text',  'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 24px;  --space-6: 32px;
+  --space-7: 48px;
+
+  --text-xs: 11px;  --text-sm: 13px;  --text-base: 15px;
+  --text-lg: 18px;  --text-xl: 24px;  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  --radius-sm: 0px;  --radius-md: 4px;  --radius-lg: 8px;
+  --border-width: 1px;
+
+  --header-height: 56px;
+  --nav-height: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+[data-theme="dark"] {
+  --bg:          oklch(12% 0.02  50);
+  --surface:     oklch(15% 0.018 50);
+  --fg:          oklch(95% 0.005 50);
+  --muted:       oklch(55% 0.01  50);
+  --border:      oklch(28% 0.015 50);
+  --accent:      oklch(60% 0.18  30);
+  --accent-soft: oklch(22% 0.04 30);
+  --gold:   oklch(78% 0.12 82);
+  --silver: oklch(68% 0.005 250);
+  --bronze: oklch(64% 0.09 52);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; padding: 0; }
+a { color: inherit; text-decoration: none; }
+
+/* ================================================================
+   SCREEN SHELL
+   ================================================================ */
+.screen {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 600px) {
+  body { background: var(--border); }
+  .screen {
+    border-left: var(--border-width) solid var(--border);
+    border-right: var(--border-width) solid var(--border);
+  }
+}
+
+.screen-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-5));
+}
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in oklch, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  padding: max(var(--space-3), env(safe-area-inset-top) + var(--space-2)) var(--space-5) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: var(--border-width) solid transparent;
+  transition: border-color 0.15s;
+}
+.top-bar.is-scrolled { border-bottom-color: var(--border); }
+
+.top-bar-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.top-bar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  min-height: 36px;
+  touch-action: manipulation;
+  transition: border-color 0.12s;
+}
+.top-bar-action:hover { border-color: var(--fg); }
+.top-bar-action svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.6; fill: none; }
+
+/* ================================================================
+   PAGE HEAD — big display title + subtitle
+   ================================================================ */
+.page-head {
+  padding: var(--space-5) var(--space-5) var(--space-3);
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-2);
+}
+.page-sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ================================================================
+   LEADER HERO — "Current Leader" card for #1
+   ================================================================ */
+.leader {
+  margin: var(--space-3) var(--space-5) var(--space-5);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  position: relative;
+  overflow: hidden;
+}
+.leader::before {
+  /* hanko accent — 3px vermilion line at top-left */
+  content: '';
+  position: absolute;
+  top: 0; left: var(--space-4);
+  width: 28px; height: 3px;
+  background: var(--accent);
+}
+.leader-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-3);
+}
+.leader-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.leader-avatar {
+  width: 56px; height: 56px;
+  background: var(--fg);
+  color: var(--surface);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  letter-spacing: -0.02em;
+  position: relative;
+}
+.leader-medal {
+  position: absolute;
+  bottom: -4px; right: -4px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--surface);
+  color: var(--surface);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.leader-body { flex: 1; min-width: 0; }
+.leader-name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.leader-meta {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 2px;
+}
+.leader-points {
+  text-align: right;
+  flex-shrink: 0;
+}
+.leader-points-num {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.leader-points-lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.leader-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--border);
+}
+.leader-stat { text-align: center; }
+.leader-stat + .leader-stat { border-left: var(--border-width) solid var(--border); }
+.leader-stat-num {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.leader-stat-lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+/* ================================================================
+   SORT TABS — Points / Wins / Rate
+   ================================================================ */
+.sort-row {
+  padding: 0 var(--space-5);
+  border-bottom: var(--border-width) solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+}
+.sort-tabs {
+  display: flex;
+}
+.sort-tab {
+  padding: var(--space-3) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--muted);
+  position: relative;
+  min-height: 44px;
+  touch-action: manipulation;
+  transition: color 0.12s;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.sort-tab.is-active { color: var(--fg); }
+.sort-tab.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: var(--space-3);
+  right: var(--space-3);
+  height: 2px;
+  background: var(--accent);
+}
+.sort-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ================================================================
+   RANK LIST
+   ================================================================ */
+.rank-list {
+  padding: 0 var(--space-5);
+}
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width) solid var(--border);
+  touch-action: manipulation;
+  transition: background 0.12s;
+  /* Make the row a horizontal grid so columns align across rows */
+  /* but stay tap-friendly */
+}
+.rank-row:active { background: color-mix(in oklch, var(--bg) 70%, var(--border)); }
+.rank-row:last-child { border-bottom: none; }
+
+/* Rank cell — Ghost Number (variant D from design system).
+   Big, light-weight numeral that lives in the background of the row. */
+.rank-num {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+  width: 44px;
+  text-align: center;
+  flex-shrink: 0;
+  letter-spacing: -0.04em;
+  color: color-mix(in oklch, var(--border) 80%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.rank-num[data-pos="1"] { color: color-mix(in oklch, var(--accent) 35%, transparent); }
+.rank-num[data-pos="2"] { color: color-mix(in oklch, var(--accent) 20%, transparent); }
+.rank-num[data-pos="3"] { color: color-mix(in oklch, var(--accent) 10%, transparent); }
+
+/* Avatar — initial chip */
+.rank-avatar {
+  width: 40px; height: 40px;
+  background: var(--fg);
+  color: var(--surface);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  letter-spacing: -0.01em;
+}
+
+/* Body — name + meta */
+.rank-body { flex: 1; min-width: 0; }
+.rank-name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Trend indicator (▲ / ▼ / — with delta) ---- */
+.rank-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  min-width: 32px;
+  justify-content: flex-end;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.rank-trend svg {
+  width: 10px; height: 10px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+}
+.rank-trend--up   { color: var(--success); }
+.rank-trend--down { color: var(--danger); }
+.rank-trend--flat { color: var(--muted); }
+.rank-trend--new  { color: var(--accent); letter-spacing: 0.05em; }
+.rank-trend--flat .rank-trend-dash {
+  display: block;
+  width: 8px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+/* ---- Stats layout: INLINE META (default, dense) ---- */
+.rank-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.rank-meta-sep { color: var(--border); }
+.rank-meta-num { color: var(--fg); font-weight: 600; }
+
+/* Primary stat — current sort key, right side */
+.rank-primary {
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.rank-primary-num {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.rank-primary-lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+/* ---- Stats layout: COLUMNS (3-cell grid below name, primary on right) ---- */
+.screen.is-columns .rank-meta { display: none; }
+.screen.is-columns .rank-row {
+  display: grid;
+  grid-template-columns: 32px 40px 1fr auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-4) 0;
+}
+.screen.is-columns .rank-body { grid-column: 3; }
+.screen.is-columns .rank-primary { grid-column: 4; }
+.screen.is-columns .rank-stats {
+  grid-column: 3 / 5;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--border);
+}
+.screen.is-columns .rank-stat { text-align: center; }
+.screen.is-columns .rank-stat + .rank-stat { border-left: var(--border-width) solid var(--border); }
+.screen.is-columns .rank-stat-num {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.screen.is-columns .rank-stat-lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+/* Hide the stat-grid block in the default inline layout */
+.screen:not(.is-columns) .rank-stats { display: none; }
+
+/* When leader hero is hidden, give the list a little more breathing room */
+.screen.no-leader .page-head { padding-bottom: var(--space-5); }
+
+/* ================================================================
+   BOTTOM NAV — variant 03 (stamp bar) from Bottom Nav exploration
+   ================================================================ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--surface);
+  border-top: var(--border-width) solid var(--border);
+  display: flex;
+  align-items: stretch;
+  z-index: 40;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--muted);
+  position: relative;
+  padding-top: 6px;
+  touch-action: manipulation;
+}
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 32px;
+  height: 3px;
+  background: var(--accent);
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
+  transition: transform 0.18s cubic-bezier(0.32, 0, 0.15, 1);
+}
+.nav-item.is-active { color: var(--fg); }
+.nav-item.is-active::before { transform: translateX(-50%) scaleX(1); }
+.nav-item.is-active .nav-label { font-weight: 700; }
+.nav-item.is-active .nav-icon { stroke-width: 2; }
+.nav-item:active { opacity: 0.6; }
+
+.nav-icon {
+  width: 22px; height: 22px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+/* ================================================================
+   THEME TOGGLE
+   ================================================================ */
+.theme-toggle {
+  position: fixed;
+  top: max(var(--space-4), env(safe-area-inset-top) + var(--space-2));
+  right: max(var(--space-4), env(safe-area-inset-right) + var(--space-2));
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  min-height: 36px;
+  z-index: 100;
+  border-radius: var(--radius-md);
+  transition: border-color 0.12s;
+}
+.theme-toggle:hover { border-color: var(--fg); }
+.theme-toggle:active { opacity: 0.7; }
+
+/* ================================================================
+   TWEAKS PANEL
+   ================================================================ */
+.tweaks-fab {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-3));
+  right: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  z-index: 50;
+  display: none;
+  font-family: var(--font-body);
+  color: var(--fg);
+}
+body.tweaks-on .tweaks-fab { display: inline-flex; }
+
+.tweaks-panel {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-3));
+  right: var(--space-4);
+  width: min(280px, calc(100vw - 2 * var(--space-4)));
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  z-index: 60;
+  display: none;
+  box-shadow: 0 12px 32px oklch(0% 0 0 / 0.10);
+}
+.tweaks-panel.is-open { display: block; }
+.tweaks-title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tweaks-close {
+  font-size: var(--text-lg);
+  color: var(--muted);
+  line-height: 1;
+}
+.tweak-group { margin-bottom: var(--space-4); }
+.tweak-group:last-child { margin-bottom: 0; }
+.tweak-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-2);
+}
+.tweak-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.tweak-seg button {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  transition: all 0.12s;
+}
+.tweak-seg button + button { border-left: var(--border-width) solid var(--border); }
+.tweak-seg button.is-active {
+  background: var(--fg);
+  color: var(--surface);
+}
+.tweak-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.tweak-toggle-label { font-size: var(--text-sm); }
+.tweak-switch {
+  width: 36px; height: 20px;
+  background: var(--border);
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.tweak-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: var(--surface);
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+.tweak-switch.is-on { background: var(--accent); }
+.tweak-switch.is-on::after { transform: translateX(16px); }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">Theme</button>
+
+<div class="screen" id="screen">
+
+  <!-- Sticky top bar (compact) -->
+  <div class="top-bar" id="topBar">
+    <div class="top-bar-title">Players</div>
+  </div>
+
+  <div class="screen-scroll" id="scroll">
+
+    <!-- Big page head -->
+    <div class="page-head">
+      <h1 class="page-title">Rankings</h1>
+      <div class="page-sub" id="seasonSub">May Season · 8 players · 138 matches</div>
+    </div>
+
+    <!-- Sort tabs -->
+    <div class="sort-row">
+      <div class="sort-tabs" role="tablist" aria-label="Sort rankings">
+        <button class="sort-tab is-active" role="tab" data-sort="points" aria-selected="true">Points</button>
+        <button class="sort-tab" role="tab" data-sort="wins" aria-selected="false">Wins</button>
+        <button class="sort-tab" role="tab" data-sort="rate" aria-selected="false">Win Rate</button>
+      </div>
+      <div class="sort-count" id="sortCount">8 players</div>
+    </div>
+
+    <!-- Rank list -->
+    <div class="rank-list" id="rankList" role="list"></div>
+
+  </div>
+
+  <!-- Bottom nav (Variant 03 — Stamp bar) -->
+  <nav class="bottom-nav" aria-label="Primary">
+    <a class="nav-item" href="#" aria-label="Home">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 11.5 12 4l9 7.5"></path>
+        <path d="M5 10v9.5h4V14h6v5.5h4V10"></path>
+      </svg>
+      <span class="nav-label">Home</span>
+    </a>
+    <a class="nav-item" href="#" aria-label="Sessions">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <ellipse cx="8" cy="8" rx="4" ry="2.5" transform="rotate(-45 8 8)"></ellipse>
+        <ellipse cx="16" cy="8" rx="4" ry="2.5" transform="rotate(45 16 8)"></ellipse>
+        <path d="M9.4 9.4 4 15"></path>
+        <path d="M14.6 9.4 20 15"></path>
+        <path d="M4 15h16"></path>
+        <path d="M4 15v4"></path>
+        <path d="M20 15v4"></path>
+      </svg>
+      <span class="nav-label">Sessions</span>
+    </a>
+    <a class="nav-item is-active" href="#" aria-label="Players" aria-current="page">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="9" cy="8" r="3"></circle>
+        <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path>
+        <circle cx="17" cy="9" r="2.5"></circle>
+        <path d="M15 20c0-3 2-5 5-5"></path>
+      </svg>
+      <span class="nav-label">Players</span>
+    </a>
+    <a class="nav-item" href="#" aria-label="Settings">
+      <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path>
+      </svg>
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+
+  <!-- Tweaks (in-page controls) -->
+  <button class="tweaks-fab" onclick="toggleTweaks()">Tweaks</button>
+  <div class="tweaks-panel" id="tweaksPanel" role="dialog" aria-label="Tweaks">
+    <div class="tweaks-title">
+      Tweaks
+      <button class="tweaks-close" onclick="toggleTweaks()" aria-label="Close">×</button>
+    </div>
+    <div class="tweak-group">
+      <div class="tweak-label">Row layout</div>
+      <div class="tweak-seg" id="layoutSeg">
+        <button data-val="inline"  class="is-active">Inline meta</button>
+        <button data-val="columns">Stat columns</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   DATA
+   ===================================================================== */
+/* `prev` = previous rank position. Computed delta drives the up/down indicator. */
+const PLAYERS = /*EDITMODE-BEGIN*/[
+  { name: 'Minh Tran',   initial: 'M', matches: 24, wins: 18, points: 180, prev: 2 },
+  { name: 'Tuan Nguyen', initial: 'T', matches: 24, wins: 16, points: 160, prev: 1 },
+  { name: 'Huy Le',      initial: 'H', matches: 20, wins: 12, points: 120, prev: 3 },
+  { name: 'Khoa Vu',     initial: 'K', matches: 16, wins:  9, points:  90, prev: 6 },
+  { name: 'Dat Pham',    initial: 'D', matches: 18, wins:  9, points:  90, prev: 4 },
+  { name: 'Hieu Bui',    initial: 'H', matches: 12, wins:  7, points:  70, prev: 0 },
+  { name: 'Long Hoang',  initial: 'L', matches: 14, wins:  6, points:  60, prev: 7 },
+  { name: 'Anh Phan',    initial: 'A', matches: 10, wins:  4, points:  40, prev: 8 }
+]/*EDITMODE-END*/;
+
+const totalMatches = PLAYERS.reduce((s, p) => s + p.matches, 0) / 2 | 0; // pairs play together
+document.getElementById('seasonSub').textContent =
+  `May Season · ${PLAYERS.length} players · ${totalMatches} matches`;
+
+let currentSort = 'points';
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function rate(p) { return p.matches === 0 ? 0 : Math.round((p.wins / p.matches) * 100); }
+
+function trendFor(p, pos) {
+  if (!p.prev || p.prev === 0) return { kind: 'new',  label: 'NEW' };
+  const delta = p.prev - pos;
+  if (delta > 0) return { kind: 'up',   label: String(delta) };
+  if (delta < 0) return { kind: 'down', label: String(-delta) };
+  return { kind: 'flat', label: '' };
+}
+
+function trendSvg(kind) {
+  if (kind === 'up')   return '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 2 L6 10 M2.5 5.5 L6 2 L9.5 5.5"/></svg>';
+  if (kind === 'down') return '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10 L6 2 M2.5 6.5 L6 10 L9.5 6.5"/></svg>';
+  if (kind === 'flat') return '<span class="rank-trend-dash" aria-hidden="true"></span>';
+  return ''; // 'new' — just the label
+}
+
+function sortPlayers(key) {
+  const sorted = [...PLAYERS];
+  if (key === 'points') sorted.sort((a, b) => b.points - a.points || b.wins - a.wins);
+  if (key === 'wins')   sorted.sort((a, b) => b.wins - a.wins || b.points - a.points);
+  if (key === 'rate')   sorted.sort((a, b) => rate(b) - rate(a) || b.points - a.points);
+  return sorted;
+}
+
+function primaryFor(p, key) {
+  if (key === 'points') return { num: p.points.toLocaleString(), lab: 'Points' };
+  if (key === 'wins')   return { num: String(p.wins),            lab: 'Wins' };
+  if (key === 'rate')   return { num: rate(p) + '%',             lab: 'Win rate' };
+}
+
+function renderRow(p, pos, key) {
+  const r = rate(p);
+  const primary = primaryFor(p, key);
+  const t = trendFor(p, pos);
+  const trendAria =
+    t.kind === 'up'   ? `Moved up ${t.label} ${t.label === '1' ? 'place' : 'places'}` :
+    t.kind === 'down' ? `Moved down ${t.label} ${t.label === '1' ? 'place' : 'places'}` :
+    t.kind === 'new'  ? 'New this season' :
+                        'No change';
+  return `
+    <div class="rank-row" role="listitem" tabindex="0">
+      <div class="rank-num" data-pos="${pos}">${pos}</div>
+      <div class="rank-avatar">${p.initial}</div>
+      <div class="rank-body">
+        <div class="rank-name">${p.name}</div>
+        <div class="rank-meta">
+          <span><span class="rank-meta-num">${p.matches}</span> matches</span>
+          <span class="rank-meta-sep">·</span>
+          <span><span class="rank-meta-num">${p.wins}</span> W</span>
+          <span class="rank-meta-sep">·</span>
+          <span><span class="rank-meta-num">${r}%</span> rate</span>
+        </div>
+      </div>
+      <div class="rank-primary">
+        <div class="rank-primary-num">${primary.num}</div>
+        <div class="rank-trend rank-trend--${t.kind}" aria-label="${trendAria}">
+          ${trendSvg(t.kind)}
+          ${t.label ? `<span>${t.label}</span>` : ''}
+        </div>
+      </div>
+      <div class="rank-stats" aria-hidden="true">
+        <div class="rank-stat"><div class="rank-stat-num">${p.matches}</div><div class="rank-stat-lab">Matches</div></div>
+        <div class="rank-stat"><div class="rank-stat-num">${p.wins}</div><div class="rank-stat-lab">Wins</div></div>
+        <div class="rank-stat"><div class="rank-stat-num">${r}%</div><div class="rank-stat-lab">Rate</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderList() {
+  const sorted = sortPlayers(currentSort);
+  document.getElementById('rankList').innerHTML =
+    sorted.map((p, i) => renderRow(p, i + 1, currentSort)).join('');
+  document.getElementById('sortCount').textContent = `${sorted.length} players`;
+}
+
+/* =====================================================================
+   SORT TAB INTERACTION
+   ===================================================================== */
+document.querySelectorAll('.sort-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.sort-tab').forEach(x => {
+      x.classList.remove('is-active');
+      x.setAttribute('aria-selected', 'false');
+    });
+    t.classList.add('is-active');
+    t.setAttribute('aria-selected', 'true');
+    currentSort = t.dataset.sort;
+    renderList();
+  });
+});
+
+/* =====================================================================
+   STICKY HEADER SHADOW
+   ===================================================================== */
+const scroll = document.getElementById('scroll');
+const topBar = document.getElementById('topBar');
+scroll.addEventListener('scroll', () => {
+  topBar.classList.toggle('is-scrolled', scroll.scrollTop > 4);
+});
+
+/* =====================================================================
+   TWEAKS
+   ===================================================================== */
+function toggleTweaks() {
+  document.getElementById('tweaksPanel').classList.toggle('is-open');
+}
+document.getElementById('layoutSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#layoutSeg button').forEach(b => b.classList.remove('is-active'));
+  btn.classList.add('is-active');
+  document.getElementById('screen').classList.toggle('is-columns', btn.dataset.val === 'columns');
+});
+
+/* =====================================================================
+   TWEAKS HOST PROTOCOL
+   ===================================================================== */
+window.addEventListener('message', (e) => {
+  if (e.data?.type === '__activate_edit_mode')   document.body.classList.add('tweaks-on');
+  if (e.data?.type === '__deactivate_edit_mode') {
+    document.body.classList.remove('tweaks-on');
+    document.getElementById('tweaksPanel').classList.remove('is-open');
+  }
+});
+window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+/* =====================================================================
+   THEME
+   ===================================================================== */
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? null : 'dark';
+  if (next) html.setAttribute('data-theme', next);
+  else html.removeAttribute('data-theme');
+  localStorage.setItem('bt-theme', next || 'light');
+}
+(function initTheme() {
+  if (localStorage.getItem('bt-theme') === 'dark')
+    document.documentElement.setAttribute('data-theme', 'dark');
+})();
+
+renderList();
+</script>
+
+</body>
+</html>

@@ -1,98 +1,213 @@
 import { useNavigate } from 'react-router-dom'
 import { Medal } from 'lucide-react'
-import { usePlayerStats } from '../hooks/usePlayerStats'
-import { usePlayers } from '../hooks/usePlayers'
+import { usePlayerRankings } from '../hooks/useRankings'
 import Avatar from '../components/Avatar'
 import { formatShortPlayerName } from '../lib/player-name'
 
+// Ghost rank number — pos 1/2/3 get faded accent, rest get faded border
+function GhostRank({ rank }: { rank: number }) {
+  const color =
+    rank === 1 ? 'color-mix(in oklch, var(--accent) 35%, transparent)'
+    : rank === 2 ? 'color-mix(in oklch, var(--accent) 20%, transparent)'
+    : rank === 3 ? 'color-mix(in oklch, var(--accent) 10%, transparent)'
+    : 'color-mix(in oklch, var(--border) 80%, transparent)'
+  return (
+    <div
+      aria-label={`Rank ${rank}`}
+      style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 24,
+        fontWeight: 900,
+        lineHeight: 1,
+        width: 44,
+        textAlign: 'center',
+        flexShrink: 0,
+        letterSpacing: '-0.04em',
+        color,
+        userSelect: 'none',
+        fontVariantNumeric: 'tabular-nums',
+      }}
+    >
+      {rank}
+    </div>
+  )
+}
+
+// SVG trend arrows matching design/pages/ranking-page.html .rank-trend
+function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
+  const baseStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 3,
+    minWidth: 32,
+    justifyContent: 'flex-end',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums',
+    lineHeight: 1,
+  }
+  const svgStyle: React.CSSProperties = {
+    stroke: 'currentColor',
+    strokeWidth: 2.2,
+    fill: 'none',
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    display: 'block',
+  }
+
+  if (isNew) {
+    return (
+      <div style={{ ...baseStyle, color: 'var(--accent)', letterSpacing: '0.05em' }}>
+        NEW
+      </div>
+    )
+  }
+  if (change > 0) {
+    return (
+      <div style={{ ...baseStyle, color: 'var(--success)' }}>
+        <svg viewBox="0 0 12 12" width={10} height={10} aria-hidden="true" style={svgStyle}>
+          <path d="M6 2 L6 10 M2.5 5.5 L6 2 L9.5 5.5" />
+        </svg>
+        <span>{change}</span>
+      </div>
+    )
+  }
+  if (change < 0) {
+    return (
+      <div style={{ ...baseStyle, color: 'var(--danger)' }}>
+        <svg viewBox="0 0 12 12" width={10} height={10} aria-hidden="true" style={svgStyle}>
+          <path d="M6 10 L6 2 M2.5 6.5 L6 10 L9.5 6.5" />
+        </svg>
+        <span>{Math.abs(change)}</span>
+      </div>
+    )
+  }
+  return (
+    <div style={{ ...baseStyle, color: 'var(--muted)', minWidth: 32, justifyContent: 'flex-end' }}>
+      <span style={{ display: 'block', width: 8, height: 2, background: 'currentColor', borderRadius: 1 }} aria-hidden="true" />
+    </div>
+  )
+}
+
 export default function RankingPage() {
   const navigate = useNavigate()
-  const { stats, isLoading } = usePlayerStats()
-  const { data: players } = usePlayers()
+  const { data: rankings = [], isLoading } = usePlayerRankings()
 
-  const playerMap = new Map(players?.map((p) => [p.id, p]) ?? [])
-
-  const ranked = [...stats]
-    .filter((s) => s.matchesPlayed > 0)
-    .sort((a, b) => {
-      const aRate = a.wins / a.matchesPlayed
-      const bRate = b.wins / b.matchesPlayed
-      return bRate - aRate || b.matchesPlayed - a.matchesPlayed
-    })
+  const playerCount = rankings.length
+  const totalMatches = (rankings.reduce((s, r) => s + r.matchesPlayed, 0) / 2) | 0
 
   return (
-    <div className="min-h-svh bg-[var(--bg)] pb-24">
-      <div className="px-[var(--space-5)] pt-[var(--space-5)] pb-[var(--space-4)]">
+    <div className="min-h-svh pb-24" style={{ background: 'var(--bg)' }}>
+
+      {/* Page head */}
+      <div style={{ padding: 'var(--space-5) var(--space-5) var(--space-4)' }}>
         <h1
-          className="text-[32px] font-extrabold leading-[1.1] tracking-[-0.03em]"
-          style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-2xl)',
+            fontWeight: 800,
+            lineHeight: 1.02,
+            letterSpacing: '-0.03em',
+            color: 'var(--fg)',
+            marginBottom: 'var(--space-1)',
+          }}
         >
-          Ranking
+          Rankings
         </h1>
+        {!isLoading && rankings.length > 0 && (
+          <div style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+          }}>
+            {playerCount} players · {totalMatches} matches
+          </div>
+        )}
       </div>
 
+      {/* Content */}
       {isLoading ? (
-        <div className="text-center py-12 text-[13px]" style={{ color: 'var(--muted)' }}>
+        <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
           Loading...
         </div>
-      ) : ranked.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Medal className="w-10 h-10" style={{ color: 'var(--muted)' }} />
-          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
-            No match data yet.
-          </p>
+      ) : rankings.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12 }}>
+          <Medal style={{ width: 40, height: 40, color: 'var(--muted)' }} />
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>No match data yet.</p>
         </div>
       ) : (
-        <div
-          className="overflow-hidden border border-[var(--border)] rounded-[var(--radius-lg)]"
-          style={{ margin: '0 var(--space-5)' }}
-        >
-          {ranked.map((s, i) => {
-            const player = playerMap.get(s.playerId)
-            const winRate = Math.round((s.wins / s.matchesPlayed) * 100)
-            const isTop = i < 2
+        <div style={{ margin: '0 var(--space-5)' }}>
+          {rankings.map((s, i) => {
+            const winRate = Math.round(s.winRate * 100)
+            const isLast = i === rankings.length - 1
+            const isNew = s.matchesPlayed === 0
             return (
               <button
                 key={s.playerId}
                 onClick={() => navigate(`/players/${s.playerId}`)}
-                className="w-full text-left flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
                 style={{
-                  background: 'var(--surface)',
-                  borderBottom: i < ranked.length - 1 ? '1px solid var(--border)' : 'none',
+                  width: '100%',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                  padding: 'var(--space-3) 0',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: isLast ? 'none' : '1px solid var(--border)',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
+                className="active:opacity-60"
               >
-                <div
-                  className="w-8 text-center text-[24px] font-extrabold shrink-0 leading-none"
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    color: isTop ? 'var(--accent)' : 'var(--muted)',
-                  }}
-                >
-                  {i + 1}
-                </div>
+                <GhostRank rank={s.rank} />
 
-                <Avatar src={player?.avatar_url} name={s.name} size={40} />
+                <Avatar src={s.avatarUrl} name={s.name} size={32} />
 
-                <div className="flex-1 min-w-0">
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div
-                    className="text-[15px] font-semibold truncate"
-                    style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                      letterSpacing: '-0.01em',
+                      color: 'var(--fg)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
                   >
                     {formatShortPlayerName(s.name)}
                   </div>
-                  <div
-                    className="text-[13px]"
-                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                  >
-                    {s.matchesPlayed}M · {s.wins}W {s.losses}L
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
+                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.matchesPlayed}</span> matches</span>
+                    <span style={{ color: 'var(--border)' }}>·</span>
+                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.wins}</span> W</span>
+                    <span style={{ color: 'var(--border)' }}>·</span>
+                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{winRate}%</span> rate</span>
                   </div>
                 </div>
 
-                <div
-                  className="text-[15px] font-extrabold"
-                  style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}
-                >
-                  {winRate}%
+                {/* Rating on top, trend indicator below */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 64 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-lg)',
+                      fontWeight: 800,
+                      color: 'var(--fg)',
+                      fontVariantNumeric: 'tabular-nums',
+                      lineHeight: 1,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {s.rating}
+                  </div>
+                  <RankTrend change={s.rankChange} isNew={isNew} />
                 </div>
               </button>
             )

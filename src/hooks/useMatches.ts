@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, SetScore, MatchType, MatchStatus, Player } from '../types/database'
+import { calculateMatchPoints, teamAvgRating, SCORING_CONFIG } from '../lib/rating'
 
 const MATCHES_KEY = 'matches'
 const PLAYER_MATCHES_KEY = 'player-matches'
@@ -270,12 +271,14 @@ export function useRecordResult() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: RecordResultInput) => {
+      // 1. Mark match COMPLETED
       const { error: matchError } = await supabase
         .from('matches')
         .update({ status: 'COMPLETED', ended_at: new Date().toISOString() })
         .eq('id', input.id)
       if (matchError) throw matchError
 
+      // 2. Update winner flags
       const { error: teamAError } = await supabase
         .from('match_teams')
         .update({ is_winner: input.winner_team === 'TEAM_A' })
@@ -290,6 +293,7 @@ export function useRecordResult() {
         .eq('team_label', 'TEAM_B')
       if (teamBError) throw teamBError
 
+      // 3. Replace scores
       const { error: delError } = await supabase
         .from('match_scores')
         .delete()
@@ -308,11 +312,87 @@ export function useRecordResult() {
         )
         if (scoreError) throw scoreError
       }
+
+      // 4. Fetch match with participants + current player ratings for weekly points
+      const { data: matchData, error: fetchError } = await supabase
+        .from('matches')
+        .select(`
+          id, session_id,
+          teams:match_teams(id, team_label),
+          participants:match_participants(player_id, team_id, player:players(id, rating))
+        `)
+        .eq('id', input.id)
+        .single()
+      if (fetchError) throw fetchError
+
+      type TeamRow = { id: string; team_label: string }
+      type ParticipantRow = { player_id: string; team_id: string; player: { id: string; rating: number } }
+
+      const teams = matchData.teams as unknown as TeamRow[]
+      const participants = matchData.participants as unknown as ParticipantRow[]
+
+      const teamARow = teams.find(t => t.team_label === 'TEAM_A')!
+      const teamBRow = teams.find(t => t.team_label === 'TEAM_B')!
+
+      const teamAParticipants = participants.filter(p => p.team_id === teamARow.id)
+      const teamBParticipants = participants.filter(p => p.team_id === teamBRow.id)
+
+      const teamARating = teamAvgRating(
+        teamAParticipants.map(p => p.player?.rating ?? SCORING_CONFIG.initialRating)
+      )
+      const teamBRating = teamAvgRating(
+        teamBParticipants.map(p => p.player?.rating ?? SCORING_CONFIG.initialRating)
+      )
+
+      // Use the first score set (single-set matches)
+      const score = scoresToInsert[0] ?? input.scores[0]
+      const teamAScore = score?.team_a_score ?? 0
+      const teamBScore = score?.team_b_score ?? 0
+      const isTeamAWinner = input.winner_team === 'TEAM_A'
+
+      // 5. Calculate weekly points for each player and upsert player_match_results
+      const buildRow = (p: ParticipantRow, isWinner: boolean, myScore: number, oppScore: number, myRating: number, oppRating: number) => {
+        const breakdown = calculateMatchPoints({
+          isWinner,
+          teamScore: myScore,
+          opponentScore: oppScore,
+          teamRating: myRating,
+          opponentTeamRating: oppRating,
+        })
+        return {
+          player_id: p.player_id,
+          match_id: input.id,
+          session_id: matchData.session_id as string,
+          is_winner: isWinner,
+          team_score: myScore,
+          opponent_score: oppScore,
+          base_points: breakdown.basePoints,
+          attendance_points: breakdown.attendancePoints,
+          score_bonus: breakdown.scoreBonus,
+          strength_bonus: breakdown.strengthBonus,
+          total_weekly_points: breakdown.total,
+        }
+      }
+
+      const rows = [
+        ...teamAParticipants.map(p =>
+          buildRow(p, isTeamAWinner, teamAScore, teamBScore, teamARating, teamBRating)
+        ),
+        ...teamBParticipants.map(p =>
+          buildRow(p, !isTeamAWinner, teamBScore, teamAScore, teamBRating, teamARating)
+        ),
+      ]
+
+      const { error: upsertError } = await supabase
+        .from('player_match_results')
+        .upsert(rows, { onConflict: 'player_id,match_id' })
+      if (upsertError) throw upsertError
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: ['player-rankings'] })
     },
   })
 }
