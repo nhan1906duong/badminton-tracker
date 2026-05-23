@@ -2,7 +2,6 @@ import { useReducer, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginPage from '../pages/LoginPage'
-import HomePage from '../pages/HomePage'
 import PlayersPage from '../pages/PlayersPage'
 import SessionsListPage from '../pages/SessionsListPage'
 import CreateSessionPage from '../pages/CreateSessionPage'
@@ -91,7 +90,7 @@ function ActiveSessionRedirect() {
 
 const routes = [
   { path: '/login', element: <LoginPage />, auth: false },
-  { path: '/', element: <HomePage />, auth: true },
+  { path: '/', element: <Navigate to="/sessions" replace />, auth: true },
   { path: '/players', element: <PlayersPage />, auth: true },
   { path: '/sessions', element: <SessionsListPage />, auth: true },
   { path: '/sessions/active', element: <ActiveSessionRedirect />, auth: true },
