@@ -4,11 +4,15 @@ interface FloatingActionButtonProps {
   onClick: () => void
   icon: ReactNode
   ariaLabel?: string
+  bottomOffset?: string
 }
 
-export default function FloatingActionButton({ onClick, icon, ariaLabel }: FloatingActionButtonProps) {
+export default function FloatingActionButton({ onClick, icon, ariaLabel, bottomOffset = '4.5rem' }: FloatingActionButtonProps) {
   return (
-    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none">
+    <div
+      className="fixed left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none"
+      style={{ bottom: `calc(${bottomOffset} + env(safe-area-inset-bottom))` }}
+    >
       <div className="flex justify-end">
         <button
           type="button"

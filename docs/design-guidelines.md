@@ -480,3 +480,16 @@ See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading
 - `touch-action: manipulation` globally — no double-tap zoom.
 - `-webkit-tap-highlight-color: transparent` — replaced by `active:` states.
 - Always provide `aria-label` on icon-only buttons.
+
+---
+
+## Planned Features
+
+Features intentionally hidden from the UI pending design/implementation. Keep imports and comments removed from production code — re-add when building.
+
+### Session Detail — Bottom Sheet
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Share session** | Planned | Export session summary (matches + scores) as shareable link or image. Icon: `Share2`. |
+| **Rename session** | Planned | Inline edit for `session.label`. Icon: `Pencil`. Needs inline input or modal flow. |

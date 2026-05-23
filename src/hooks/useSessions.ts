@@ -87,6 +87,38 @@ export function useCreateSession() {
   })
 }
 
+export function useSession(id: string | undefined) {
+  return useQuery({
+    queryKey: [SESSIONS_KEY, id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('id', id!)
+        .single()
+      if (error) throw error
+      return data as Session
+    },
+    enabled: !!id,
+  })
+}
+
+export function useStartSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ started_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+    },
+  })
+}
+
 export function useEndSession() {
   const qc = useQueryClient()
   return useMutation({

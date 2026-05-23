@@ -29,6 +29,9 @@ export type { DialogProps, DialogAction } from './dialog'
 export { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from './bottom-sheet'
 export type { BottomSheetProps, BottomSheetItemProps, BottomSheetCancelProps } from './bottom-sheet'
 
+export { SessionStatsPanel } from './session-stats-panel'
+export type { SessionStatsPanelProps } from './session-stats-panel'
+
 export { EmptyState } from '../patterns/empty-state'
 export { LoadingState } from '../patterns/loading-state'
 export { ErrorState } from '../patterns/error-state'
