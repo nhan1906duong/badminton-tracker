@@ -5,19 +5,18 @@ import AnimatedRoutes from './components/AnimatedRoutes'
 import { Home, Users, Trophy, Settings } from 'lucide-react'
 import './index.css'
 
-const FULL_SCREEN_ROUTES = ['/sessions/new']
+const TAB_ROUTES = ['/', '/sessions', '/players', '/settings']
 
 const queryClient = new QueryClient()
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
-  const isLogin = location.pathname === '/login'
-  const isFullScreen = FULL_SCREEN_ROUTES.includes(location.pathname)
+  const isTabRoute = TAB_ROUTES.includes(location.pathname)
 
   return (
     <div className="min-h-svh bg-gray-50 max-w-lg mx-auto relative">
       <main>{children}</main>
-      {!isLogin && !isFullScreen && (
+      {isTabRoute && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 max-w-lg mx-auto z-40">
           <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
             <NavButton to="/" icon={<Home className="w-5 h-5" />} label="Home" />

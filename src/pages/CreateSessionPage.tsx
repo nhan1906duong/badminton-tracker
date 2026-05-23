@@ -278,7 +278,7 @@ export default function CreateSessionPage() {
 
       {/* ── Nav ── */}
       <AppBar
-        title="New Session"
+        title=""
         leftAction={{
           label: 'Cancel',
           onClick: handleCancel,
