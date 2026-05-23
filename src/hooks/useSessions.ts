@@ -29,10 +29,14 @@ export function useOpenSession() {
   return useQuery({
     queryKey: [SESSIONS_KEY, 'open'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       const { data, error } = await supabase
         .from('sessions')
         .select('*')
         .is('ended_at', null)
+        .eq('created_by', user.id)
         .order('started_at', { ascending: false })
         .limit(1)
         .single()
@@ -215,7 +219,7 @@ export function useEndSession() {
         }
 
         // 5. Write rating history into player_match_results rows
-        await Promise.all(
+        const ratingHistoryResults = await Promise.all(
           ratingUpdates.map(u =>
             supabase
               .from('player_match_results')
@@ -224,13 +228,17 @@ export function useEndSession() {
               .eq('match_id', u.match_id)
           )
         )
+        const ratingHistoryError = ratingHistoryResults.find((r) => r.error)?.error
+        if (ratingHistoryError) throw ratingHistoryError
 
         // 6. Persist updated ratings to players table
-        await Promise.all(
+        const playerRatingResults = await Promise.all(
           Array.from(ratingMap.entries()).map(([playerId, rating]) =>
             supabase.from('players').update({ rating }).eq('id', playerId)
           )
         )
+        const playerRatingError = playerRatingResults.find((r) => r.error)?.error
+        if (playerRatingError) throw playerRatingError
       }
 
       // 7. Mark session as ended
