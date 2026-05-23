@@ -103,7 +103,8 @@ System font stack via CSS custom properties.
 |-------|-------|-------|
 | `--radius-sm` | 0px | Buttons, inputs, badges — sharp |
 | `--radius-md` | 4px | Avatars, small containers |
-| `--radius-lg` | 8px | Cards, modals, larger panels |
+| `--radius-lg` | 8px | Cards, panels |
+| `--radius-xl` | 16px | Dialogs, bottom sheets |
 
 ---
 
@@ -365,6 +366,28 @@ See [design-system/patterns/error-state.tsx](../design-system/patterns/error-sta
 - `!` mark: 32px `--danger`
 - Default title: "Something went wrong"
 - Retry: primary Button
+
+### Dialog
+See [design-system/components/dialog.tsx](../design-system/components/dialog.tsx).
+
+Bottom-sheet overlay for errors, warnings, and confirmations.
+
+| Prop | Type | Default |
+|------|------|---------|
+| `open` | `boolean` | required |
+| `onClose` | `() => void` | required |
+| `title` | `string` | required |
+| `description` | `string` | required |
+| `kind` | `'info' \| 'warning' \| 'danger'` | `'info'` |
+| `icon` | `ReactNode` | kind's default icon |
+| `actions` | `DialogAction[]` | single "Got it" primary button |
+
+- Sheet: `bg-[var(--surface)] rounded-[var(--radius-xl)]` — 16px radius
+- Icon container: `w-10 h-10 rounded-[var(--radius-lg)]` with 10% alpha tint of the kind's color
+- Backdrop: `oklch(0% 0 0 / 0.40)` + `blur(4px)` — tap backdrop to dismiss
+- Clicking backdrop calls `onClose`; clicking inside the sheet stops propagation
+- `actions` defaults to `[{ label: 'Got it', variant: 'primary' }]`; pass two actions for confirm/cancel pairs
+- Two actions render side-by-side; single action renders full-width
 
 ### LoadingState
 See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading-state.tsx).

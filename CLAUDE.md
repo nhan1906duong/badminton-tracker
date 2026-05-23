@@ -66,7 +66,7 @@ A match has:
 - N participants (`match_participants` linking players to teams)
 - M scores (`match_scores` per set)
 
-A session has `label`, `started_at`, `ended_at`, and `category_slug` (links to a BWF tournament category).
+A session has `label`, `started_at`, `ended_at`, and `bwf_tournament_id` (FK to `bwf_tournaments`). Multiple sessions with different tournaments (or no tournament) can be open simultaneously. Creating a session with a `bwf_tournament_id` that already has a session is blocked at both the app layer (`DuplicateTournamentError`) and the DB layer (partial unique index).
 
 `bwf_tournaments` caches BWF calendar data (name, start_date, end_date, category_slug, category_name, venue). Populated manually via Supabase SQL Editor — never fetched at runtime because bwfbadminton.com is Cloudflare-protected.
 

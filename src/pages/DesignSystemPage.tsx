@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState } from '../../design-system/components'
+import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog } from '../../design-system/components'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -37,6 +37,7 @@ export default function DesignSystemPage() {
         <StatRowSection />
         <SectionHeaderSection />
         <PatternSection />
+        <DialogSection />
         <DarkModeToggle />
       </div>
     </div>
@@ -795,6 +796,61 @@ function PatternSection() {
       <ErrorState
         message="Failed to load player data. Please check your connection."
         onRetry={() => {}}
+      />
+    </Section>
+  )
+}
+
+/* ---------- Dialog ---------- */
+
+function DialogSection() {
+  const [openKind, setOpenKind] = useState<'info' | 'warning' | 'danger' | 'two-actions' | null>(null)
+
+  return (
+    <Section title="Dialog">
+      <DSCard>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Bottom-sheet overlay for errors, warnings, and confirmations. Backdrop click dismisses.
+        </p>
+        <div className="flex flex-col gap-2">
+          <Button variant="ghost" onClick={() => setOpenKind('info')}>Info dialog</Button>
+          <Button variant="ghost" onClick={() => setOpenKind('warning')}>Warning dialog</Button>
+          <Button variant="danger" onClick={() => setOpenKind('danger')}>Danger dialog</Button>
+          <Button variant="secondary" onClick={() => setOpenKind('two-actions')}>Two actions</Button>
+        </div>
+      </DSCard>
+
+      <Dialog
+        open={openKind === 'info'}
+        onClose={() => setOpenKind(null)}
+        kind="info"
+        title="Session saved"
+        description="Your session has been saved and is now visible on the sessions list."
+      />
+      <Dialog
+        open={openKind === 'warning'}
+        onClose={() => setOpenKind(null)}
+        kind="warning"
+        title="Tournament already tracked"
+        description="A session for this tournament already exists. Choose a different tournament or use a custom name."
+      />
+      <Dialog
+        open={openKind === 'danger'}
+        onClose={() => setOpenKind(null)}
+        kind="danger"
+        title="Failed to create session"
+        description="Something went wrong on our end. Please try again in a moment."
+      />
+      <Dialog
+        open={openKind === 'two-actions'}
+        onClose={() => setOpenKind(null)}
+        kind="danger"
+        title="Delete session?"
+        description="This will remove the session and all its matches permanently."
+        actions={[
+          { label: 'Cancel', onClick: () => setOpenKind(null), variant: 'ghost' },
+          { label: 'Delete', onClick: () => setOpenKind(null), variant: 'danger' },
+        ]}
       />
     </Section>
   )

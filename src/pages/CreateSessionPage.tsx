@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCreateSession } from '../hooks/useSessions'
+import { useCreateSession, DuplicateTournamentError } from '../hooks/useSessions'
 import { useSessionStore } from '../stores/session-store'
 import { useNearbyBwfTournaments, type BwfTournament } from '../hooks/useBwfTournaments'
-import { AppBar } from '../../design-system/components'
+import { AppBar, Dialog } from '../../design-system/components'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -146,8 +146,9 @@ export default function CreateSessionPage() {
   const [navStuck, setNavStuck] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // ── Error
-  const [error, setError] = useState('')
+  // ── Dialog
+  type DialogKind = 'duplicate' | 'error'
+  const [dialog, setDialog] = useState<{ kind: DialogKind; message: string } | null>(null)
 
   // Live clock tick
   useEffect(() => {
@@ -166,7 +167,7 @@ export default function CreateSessionPage() {
 
   // Derived state
   const resolvedName = customName.trim() || selectedTournament?.name || ''
-  const resolvedCategorySlug = !customName.trim() ? (selectedTournament?.categorySlug ?? null) : null
+  const resolvedTournamentId = !customName.trim() ? (selectedTournament?.id ?? null) : null
   const isReady = resolvedName.length > 0 && (mode === 'now' || scheduledAt !== null)
 
   function handleSelectTournament(t: BwfTournament) {
@@ -239,17 +240,24 @@ export default function CreateSessionPage() {
 
   async function handleCreate() {
     if (!isReady) return
-    setError('')
+    setDialog(null)
     try {
       const session = await createSession.mutateAsync({
         label: resolvedName,
         started_at: mode === 'schedule' && scheduledAt ? scheduledAt.toISOString() : undefined,
-        category_slug: resolvedCategorySlug ?? undefined,
+        bwf_tournament_id: resolvedTournamentId ?? undefined,
       })
       setSessionPlayers(session.id, [])
       navigate(`/sessions/${session.id}`, { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create session')
+      if (err instanceof DuplicateTournamentError) {
+        setDialog({ kind: 'duplicate', message: err.message })
+      } else {
+        setDialog({
+          kind: 'error',
+          message: err instanceof Error ? err.message : 'Failed to create session',
+        })
+      }
     }
   }
 
@@ -576,11 +584,6 @@ export default function CreateSessionPage() {
           </div>
         </section>
 
-        {error && (
-          <div className="mx-6 mb-6 px-4 py-3 bg-[var(--surface)] border border-[var(--danger)] rounded-[var(--radius-lg)]">
-            <p className="text-[var(--danger)] font-medium" style={{ fontSize: 13 }}>{error}</p>
-          </div>
-        )}
       </div>
 
       {/* ── Bottom CTA ── */}
@@ -627,6 +630,18 @@ export default function CreateSessionPage() {
           )}
         </button>
       </div>
+
+      <Dialog
+        open={dialog !== null}
+        onClose={() => setDialog(null)}
+        kind={dialog?.kind === 'duplicate' ? 'warning' : 'danger'}
+        title={dialog?.kind === 'duplicate' ? 'Tournament already tracked' : 'Failed to create session'}
+        description={
+          dialog?.kind === 'duplicate'
+            ? 'A session for this tournament already exists. Choose a different tournament or use a custom name.'
+            : (dialog?.message ?? '')
+        }
+      />
     </div>
   )
 }

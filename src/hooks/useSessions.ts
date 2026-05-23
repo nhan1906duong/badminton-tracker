@@ -38,23 +38,34 @@ export function useOpenSession() {
   })
 }
 
+export class DuplicateTournamentError extends Error {
+  constructor() {
+    super('A session for this tournament already exists.')
+    this.name = 'DuplicateTournamentError'
+  }
+}
+
 export function useCreateSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
       label?: string
       started_at?: string
-      category_slug?: string
+      bwf_tournament_id?: string
     }) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      // Close any prior open session for this user
-      await supabase
-        .from('sessions')
-        .update({ ended_at: new Date().toISOString() })
-        .eq('created_by', user.id)
-        .is('ended_at', null)
+      // Guard: reject if a session with the same tournament already exists
+      if (input.bwf_tournament_id) {
+        const { data: existing } = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('bwf_tournament_id', input.bwf_tournament_id)
+          .limit(1)
+          .maybeSingle()
+        if (existing) throw new DuplicateTournamentError()
+      }
 
       // Create new session
       const { data, error } = await supabase
@@ -62,7 +73,7 @@ export function useCreateSession() {
         .insert({
           label: input.label || null,
           started_at: input.started_at ?? new Date().toISOString(),
-          category_slug: input.category_slug || null,
+          bwf_tournament_id: input.bwf_tournament_id || null,
           created_by: user.id,
         })
         .select()
