@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog } from '../../design-system/components'
+import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components'
+import { Plus, Activity, Share2, Pencil, Trash2 } from 'lucide-react'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -38,6 +39,7 @@ export default function DesignSystemPage() {
         <SectionHeaderSection />
         <PatternSection />
         <DialogSection />
+        <BottomSheetSection />
         <DarkModeToggle />
       </div>
     </div>
@@ -852,6 +854,169 @@ function DialogSection() {
           { label: 'Delete', onClick: () => setOpenKind(null), variant: 'danger' },
         ]}
       />
+    </Section>
+  )
+}
+
+/* ---------- Bottom Sheet ---------- */
+
+function BottomSheetSection() {
+  const [demoOpen, setDemoOpen] = useState(false)
+
+  return (
+    <Section title="Bottom Sheet">
+      <DSCard>
+        <p className="text-[13px] mb-1" style={{ color: 'var(--muted)' }}>
+          Context-menu sheet composed of four primitives: <code className="font-mono text-[12px]">BottomSheet</code>, <code className="font-mono text-[12px]">BottomSheetItem</code>, <code className="font-mono text-[12px]">BottomSheetDivider</code>, <code className="font-mono text-[12px]">BottomSheetCancel</code>.
+        </p>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Panel slides up from the bottom with a backdrop. Tap the backdrop or Cancel to dismiss.
+        </p>
+        <Button variant="ghost" onClick={() => setDemoOpen(true)}>Open demo sheet</Button>
+      </DSCard>
+
+      {/* Anatomy preview — static inline layout mirroring the actual sheet */}
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Handle */}
+        <div className="pt-4 pb-2 flex flex-col items-center gap-2">
+          <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2 }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--muted)' }}>
+            Sheet anatomy (static)
+          </span>
+        </div>
+
+        {/* Regular items */}
+        <BottomSheetItem
+          icon={<Plus className="w-5 h-5" />}
+          label="New match"
+          onClick={() => {}}
+        />
+        <BottomSheetItem
+          icon={<Activity className="w-5 h-5" />}
+          label="View player stats"
+          onClick={() => {}}
+        />
+        <BottomSheetItem
+          icon={<Share2 className="w-5 h-5" />}
+          label="Share session"
+          onClick={() => {}}
+        />
+        <BottomSheetItem
+          icon={<Pencil className="w-5 h-5" />}
+          label="Rename"
+          onClick={() => {}}
+        />
+
+        {/* Divider + danger items */}
+        <BottomSheetDivider />
+        <BottomSheetItem
+          icon={
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x="6" y="6" width="12" height="12" rx="1" />
+            </svg>
+          }
+          label="End session"
+          danger
+          onClick={() => {}}
+        />
+        <BottomSheetItem
+          icon={<Trash2 className="w-5 h-5" />}
+          label="Delete session"
+          danger
+          onClick={() => {}}
+        />
+
+        {/* Cancel */}
+        <div style={{ padding: '0 var(--space-3) var(--space-3)' }}>
+          <BottomSheetCancel onClick={() => {}} />
+        </div>
+      </div>
+
+      {/* Spec table */}
+      <DSCard>
+        <p className="text-[11px] font-bold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--muted)' }}>
+          Spec
+        </p>
+        <div className="space-y-2 text-[13px]" style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Panel bg</span>
+            <span>var(--surface)</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Radius</span>
+            <span>var(--radius-lg) var(--radius-lg) 0 0</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Backdrop</span>
+            <span>oklch(0% 0 0 / 0.45) + blur(2px)</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Open easing</span>
+            <span>0.3s cubic-bezier(0.32, 0, 0.15, 1)</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Item height</span>
+            <span>52px min</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Danger color</span>
+            <span>var(--danger)</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>z-index</span>
+            <span>backdrop 100 · panel 101</span>
+          </div>
+        </div>
+      </DSCard>
+
+      {/* Interactive demo */}
+      <BottomSheet open={demoOpen} onClose={() => setDemoOpen(false)}>
+        <BottomSheetItem
+          icon={<Plus className="w-5 h-5" />}
+          label="New match"
+          onClick={() => setDemoOpen(false)}
+        />
+        <BottomSheetItem
+          icon={<Activity className="w-5 h-5" />}
+          label="View player stats"
+          onClick={() => setDemoOpen(false)}
+        />
+        <BottomSheetItem
+          icon={<Share2 className="w-5 h-5" />}
+          label="Share session"
+          onClick={() => setDemoOpen(false)}
+        />
+        <BottomSheetItem
+          icon={<Pencil className="w-5 h-5" />}
+          label="Rename"
+          onClick={() => setDemoOpen(false)}
+        />
+        <BottomSheetDivider />
+        <BottomSheetItem
+          icon={
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect x="6" y="6" width="12" height="12" rx="1" />
+            </svg>
+          }
+          label="End session"
+          danger
+          onClick={() => setDemoOpen(false)}
+        />
+        <BottomSheetItem
+          icon={<Trash2 className="w-5 h-5" />}
+          label="Delete session"
+          danger
+          onClick={() => setDemoOpen(false)}
+        />
+        <BottomSheetCancel onClick={() => setDemoOpen(false)} />
+      </BottomSheet>
     </Section>
   )
 }

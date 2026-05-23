@@ -389,6 +389,61 @@ Bottom-sheet overlay for errors, warnings, and confirmations.
 - `actions` defaults to `[{ label: 'Got it', variant: 'primary' }]`; pass two actions for confirm/cancel pairs
 - Two actions render side-by-side; single action renders full-width
 
+### BottomSheet
+
+See [design-system/components/bottom-sheet.tsx](../design-system/components/bottom-sheet.tsx).
+
+Context-menu sheet that slides up from the screen bottom. Composed of four primitives exported from the same file.
+
+| Primitive | Role |
+|-----------|------|
+| `BottomSheet` | Backdrop + sliding panel + drag handle wrapper |
+| `BottomSheetItem` | Tappable row with optional leading icon |
+| `BottomSheetDivider` | 1px `var(--border)` separator between item groups |
+| `BottomSheetCancel` | Full-width cancel button pinned at the sheet bottom |
+
+**Panel:**
+- `position: fixed; bottom: 0; max-width: max-w-lg`; centered with `left: 50%`
+- `background: var(--surface)`, `border-radius: var(--radius-lg) var(--radius-lg) 0 0` (8px top corners only)
+- `box-shadow: 0 -4px 32px oklch(0% 0 0 / 0.12)`
+- Open: `transform: translateX(-50%) translateY(0)` — transition `0.3s cubic-bezier(0.32, 0, 0.15, 1)`
+- Closed: `transform: translateX(-50%) translateY(110%)`
+
+**Backdrop:**
+- `background: oklch(0% 0 0 / 0.45)` + `backdrop-filter: blur(2px)`
+- `z-index: 100`; panel at `z-index: 101`
+- Opacity 0 → 1 on open; `transition: opacity 0.25s`
+- Tap backdrop to dismiss
+
+**Drag handle:** `36×4px`, `background: var(--border)`, `border-radius: 2px`, centered with `margin: 0 auto var(--space-4)`
+
+**BottomSheetItem:**
+- `min-height: 52px`, `padding: var(--space-3) var(--space-4)`
+- `font-size: var(--text-base)`, `font-weight: 500`, `border-radius: var(--radius-md)`
+- Default: `color: var(--fg)` — danger variant: `color: var(--danger)`
+- Active press: `background: var(--bg)`
+- Icon slot: `20×20px`, `flex-shrink: 0`
+
+**BottomSheetDivider:** `height: 1px`, `background: var(--border)`, `margin: var(--space-2) var(--space-2)`
+
+**BottomSheetCancel:** `min-height: 48px`, `font-weight: 600`, `background: var(--bg)`, `border: 1px solid var(--border)`, `border-radius: var(--radius-md)`, `margin-top: var(--space-3)`
+
+```tsx
+<BottomSheet open={open} onClose={() => setOpen(false)}>
+  <BottomSheetItem icon={<PlusIcon />} label="New match" onClick={handleNewMatch} />
+  <BottomSheetItem icon={<StatsIcon />} label="View stats" onClick={handleStats} />
+  <BottomSheetDivider />
+  <BottomSheetItem icon={<TrashIcon />} label="Delete session" danger onClick={handleDelete} />
+  <BottomSheetCancel onClick={() => setOpen(false)} />
+</BottomSheet>
+```
+
+**Rules:**
+- Always end with `<BottomSheetCancel>` — users must be able to dismiss without committing.
+- Destructive `danger` items come after a `<BottomSheetDivider>`.
+- Panel `z-index: 101` sits above `z-40` AppBar and `z-30` FAB — no stacking conflicts.
+- The sheet stays in the DOM when closed; CSS transform animates it out rather than unmounting.
+
 ### LoadingState
 See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading-state.tsx).
 
