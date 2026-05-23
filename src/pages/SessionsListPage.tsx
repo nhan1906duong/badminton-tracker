@@ -17,7 +17,6 @@ interface SessionStat {
   matchCount: number
   topPlayer?: {
     name: string
-    initials: string
     record: string
     winRate: number
   }
@@ -86,12 +85,6 @@ export default function SessionsListPage() {
         best && best.played > 0
           ? {
               name: best.name,
-              initials: best.name
-                .split(' ')
-                .map((w) => w[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2),
               record: `${best.wins}W – ${best.played - best.wins}L · played ${best.played}`,
               winRate: Math.round((best.wins / best.played) * 100),
             }

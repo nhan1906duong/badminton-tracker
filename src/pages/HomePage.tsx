@@ -83,16 +83,9 @@ export default function HomePage() {
     if (!best || best.played === 0) return undefined
 
     const winRate = Math.round((best.wins / best.played) * 100)
-    const initials = best.name
-      .split(' ')
-      .map((w) => w[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
 
     return {
       name: best.name,
-      initials,
       record: `${best.wins}W – ${best.played - best.wins}L · played ${best.played}`,
       winRate,
     }

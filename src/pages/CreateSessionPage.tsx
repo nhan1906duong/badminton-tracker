@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCreateSession, DuplicateTournamentError } from '../hooks/useSessions'
-import { useSessionStore } from '../stores/session-store'
 import { useNearbyBwfTournaments, type BwfTournament } from '../hooks/useBwfTournaments'
 import { AppBar, Dialog } from '../../design-system/components'
 
@@ -129,7 +128,6 @@ type StartMode = 'now' | 'schedule'
 export default function CreateSessionPage() {
   const navigate = useNavigate()
   const createSession = useCreateSession()
-  const setSessionPlayers = useSessionStore((s) => s.setPlayers)
   const { tournaments, isLoading: tournamentsLoading, refetch } = useNearbyBwfTournaments(7)
 
   // ── Name state
@@ -247,7 +245,6 @@ export default function CreateSessionPage() {
         started_at: mode === 'schedule' && scheduledAt ? scheduledAt.toISOString() : undefined,
         bwf_tournament_id: resolvedTournamentId ?? undefined,
       })
-      setSessionPlayers(session.id, [])
       navigate(`/sessions/${session.id}`, { replace: true })
     } catch (err) {
       if (err instanceof DuplicateTournamentError) {

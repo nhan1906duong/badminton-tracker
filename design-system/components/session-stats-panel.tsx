@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { Activity } from 'lucide-react'
-import { isMultiavatarUrl, getMultiavatarSvgUrl } from '../../src/lib/avatar'
+import { Avatar } from './avatar'
 
 export interface SessionStatsPanelProps {
   matchCount: number
@@ -39,7 +38,7 @@ export function SessionStatsPanel({
       }}
     >
       {/* Three stat cells */}
-      <div className="grid grid-cols-3">
+      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
         <StatCell value={String(matchCount)} label="Matches" />
         <StatCell value={String(playerCount)} label="Players" divider />
         <StatCell
@@ -118,7 +117,7 @@ function StatCell({ value, label, accent = false, mvp = false, divider = false, 
           className="flex items-center"
           style={{ gap: 'var(--space-2)', minWidth: 0, maxWidth: '100%' }}
         >
-          <SquareAvatar url={avatarUrl} name={avatarName} size={28} />
+          <Avatar src={avatarUrl} name={avatarName} size={28} />
           <span
             style={{
               fontFamily: 'var(--font-display)',
@@ -176,53 +175,3 @@ function StatCell({ value, label, accent = false, mvp = false, divider = false, 
   )
 }
 
-// ── Square avatar (matches session-card style) ─────────────────────────────
-
-function resolveAvatarUrl(url: string): string {
-  if (isMultiavatarUrl(url)) {
-    const id = url.split('/').pop()
-    if (id) return getMultiavatarSvgUrl(id)
-  }
-  return url
-}
-
-function SquareAvatar({ url, name, size }: { url?: string | null; name: string; size: number }) {
-  const [error, setError] = useState(false)
-  const initial = name.trim().charAt(0).toUpperCase()
-  const imageUrl = url ? resolveAvatarUrl(url) : null
-
-  if (!imageUrl || error) {
-    return (
-      <div
-        className="flex items-center justify-center shrink-0 overflow-hidden font-extrabold"
-        style={{
-          width: size,
-          height: size,
-          borderRadius: 'var(--radius-md)',
-          background: 'var(--accent)',
-          color: 'var(--surface)',
-          fontFamily: 'var(--font-display)',
-          fontSize: size * 0.4,
-          lineHeight: 1,
-        }}
-      >
-        {initial}
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className="shrink-0 overflow-hidden"
-      style={{ width: size, height: size, borderRadius: 'var(--radius-md)' }}
-    >
-      <img
-        src={imageUrl}
-        alt={name}
-        className="w-full h-full object-cover"
-        onError={() => setError(true)}
-        draggable={false}
-      />
-    </div>
-  )
-}

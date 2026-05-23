@@ -7,8 +7,7 @@ import PlayersPage from '../pages/PlayersPage'
 import SessionsListPage from '../pages/SessionsListPage'
 import CreateSessionPage from '../pages/CreateSessionPage'
 import SessionDetailPage from '../pages/SessionDetailPage'
-import SessionMatchPlayersPage from '../pages/SessionMatchPlayersPage'
-import SessionMatchResultPage from '../pages/SessionMatchResultPage'
+import CreateMatchPage from '../pages/CreateMatchPage'
 import EditMatchPage from '../pages/EditMatchPage'
 import SettingsPage from '../pages/SettingsPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
@@ -95,8 +94,7 @@ const routes = [
   { path: '/sessions/active', element: <ActiveSessionRedirect />, auth: true },
   { path: '/sessions/new', element: <CreateSessionPage />, auth: true },
   { path: '/sessions/:id', element: <SessionDetailPage />, auth: true },
-  { path: '/sessions/:id/matches/new', element: <SessionMatchPlayersPage />, auth: true },
-  { path: '/sessions/:id/matches/new/result', element: <SessionMatchResultPage />, auth: true },
+  { path: '/sessions/:id/matches/new', element: <CreateMatchPage />, auth: true },
   { path: '/sessions/:id/matches/:matchId/edit', element: <EditMatchPage />, auth: true },
   { path: '/sessions/:id/donated', element: <SessionDonatedListPage />, auth: true },
   { path: '/players/:playerId', element: <PlayerDetailPage />, auth: true },

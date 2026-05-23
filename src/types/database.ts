@@ -35,12 +35,16 @@ export interface Session {
   created_at: string
 }
 
+export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'COMPLETED'
+
 export interface Match {
   id: string
   session_id: string
   match_type: MatchType
   played_at: string
   notes?: string | null
+  status: MatchStatus
+  queue_position: number | null
   created_by: string
   created_at: string
 }

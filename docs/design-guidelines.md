@@ -31,6 +31,7 @@ All colors use `oklch()` for perceptually uniform lightness. Light mode is the d
 | `--muted` | oklch(50% 0.01 50) | oklch(55% 0.01 50) | Secondary text, placeholders |
 | `--border` | oklch(88% 0.008 50) | oklch(28% 0.015 50) | Dividers, card borders |
 | `--accent` | oklch(55% 0.20 30) | oklch(60% 0.18 30) | Vermilion — CTAs, live indicator, winner score |
+| `--accent-soft` | oklch(96% 0.025 30) | oklch(22% 0.04 30) | Tinted accent background — selected chip fills, queue stamps |
 
 ### Semantic Status
 
@@ -205,6 +206,33 @@ Sharp-cornered (radius-sm), bold uppercase, 11px text, `tracking-[0.06em]`.
 
 ## Component Specs
 
+### Avatar
+See [design-system/components/avatar.tsx](../design-system/components/avatar.tsx).
+
+- **Shape:** `border-radius: var(--radius-md)` rectangle (not circular)
+- **Fallback:** 2-letter initials — first letter of first word + first letter of last word (e.g. `"Danh Nguyen"` → `"DN"`); single-word names use first 2 chars
+- **Default bg:** `var(--accent)` (vermilion red); **default text:** `var(--surface)` (white)
+- **Font:** `var(--font-display)`, weight 800, `font-size: size * 0.33`
+- Custom `bgColor` / `textColor` props override the defaults (used by `PlayerSelector` for team-colored states)
+- Image support: renders `<img>` when `src` is provided; falls back to initials on error
+- Multiavatar URLs (from the default avatar picker) are resolved to SVG via `src/lib/avatar.ts`
+
+```tsx
+// Canonical import
+import { Avatar } from '../../design-system/components'
+// or via re-export shim (src components only)
+import Avatar from '../components/Avatar'
+```
+
+**Usage:**
+```tsx
+<Avatar name="Danh Nguyen" size={36} />
+<Avatar src={player.avatar_url} name={player.name} size={40} />
+<Avatar name="Tuan" size={28} bgColor="var(--fg)" textColor="var(--surface)" />
+```
+
+---
+
 ### SessionCard
 See [design-system/components/session-card.tsx](../design-system/components/session-card.tsx).
 
@@ -216,7 +244,7 @@ See [design-system/components/session-card.tsx](../design-system/components/sess
 - Meta row: 13px mono (`--muted`) with match count and duration
 - Active sessions with no matches: show placeholder text `No matches started yet` in the bottom panel
 - Scheduled sessions: use section label `Players` and placeholder text `Session hasn’t started yet`
-- Top Player / MVP section: accent-colored `rounded-[var(--radius-md)]` avatar (initials), win rate in accent
+- Top Player / MVP section: uses `<Avatar>` component (accent bg, 2-letter initials), win rate in accent
 - Compact variant: tighter padding, smaller text
 
 ### MatchCard
@@ -232,7 +260,7 @@ See [design-system/components/match-card.tsx](../design-system/components/match-
 ### ListItem
 See [design-system/components/list-item.tsx](../design-system/components/list-item.tsx).
 
-- 40×40px `rounded-[var(--radius-md)]` avatar with initials
+- 40×40px `<Avatar>` (rectangle, 2-letter initials, accent bg)
 - Title: 15px `--fg`, subtitle: 13px `--muted`
 - Optional right-side action slot
 - Interactive: `active:bg-[var(--bg)]`
@@ -241,7 +269,7 @@ See [design-system/components/list-item.tsx](../design-system/components/list-it
 See [design-system/components/rank-item.tsx](../design-system/components/rank-item.tsx).
 
 - Rank number: `--accent` for top 2, `--muted` for others
-- Avatar: `rounded-[var(--radius-md)]` with initials
+- Avatar: `<Avatar>` component (rectangle, 2-letter initials)
 - Win rate: right-aligned, 15px extrabold `--accent`
 
 ### StatRow
@@ -264,6 +292,27 @@ See [design-system/components/tabs.tsx](../design-system/components/tabs.tsx).
 - Transition: `--duration-normal`
 
 ---
+
+### MatchTypeChips
+
+See [design-system/components/match-type-chips.tsx](../design-system/components/match-type-chips.tsx).
+
+Radio-group chip selector for the five badminton match types (MS / WS / MD / WD / XD).
+
+- Outer grid: `repeat(5, 1fr)`, `gap: var(--space-2)`
+- Each chip: `min-height: 64px`, `border-radius: var(--radius-lg)`, `display: flex flex-col center`
+- **Inactive**: `background: var(--surface)`, `border: 1px solid var(--border)`
+- **Active**: `background: var(--accent-soft)`, `border: 2px solid var(--accent)` (padding shrinks by 1px to avoid layout shift)
+- Code text (e.g. `MD`): `var(--font-display)`, 18px, 800 weight — accent when active, fg otherwise
+- Tag text (e.g. `Men D.`): `var(--font-mono)`, 9px, uppercase, 0.08em tracking — accent at 80% opacity when active
+- Uses `role="radiogroup"` on container, `role="radio" aria-checked` on each button
+- Press: `active:opacity-70` from parent context; no scale transform
+
+**Token dependency:** requires `--accent-soft` (`oklch(96% 0.025 30)` light / `oklch(22% 0.04 30)` dark).
+
+```tsx
+<MatchTypeChips value={matchType} onChange={setMatchType} />
+```
 
 ### SegmentedControl
 

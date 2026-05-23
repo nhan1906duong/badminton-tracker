@@ -93,7 +93,10 @@ export default function SessionDetailPage() {
     : 0
 
   const mvpPlayer = sortedByWins.find((s) => s.matchesPlayed > 0)
-  const mvpName = mvpPlayer ? mvpPlayer.name.split(' ')[0] : undefined
+  const mvpName = mvpPlayer ? (() => {
+    const parts = mvpPlayer.name.trim().split(/\s+/)
+    return parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0]
+  })() : undefined
   const mvpLabel = mvpPlayer
     ? `${sessionStatus === 'ended' ? 'MVP' : 'Leading'} · ${Math.round((mvpPlayer.wins / mvpPlayer.matchesPlayed) * 100)}%`
     : undefined

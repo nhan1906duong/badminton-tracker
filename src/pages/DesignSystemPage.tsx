@@ -686,7 +686,7 @@ function SessionCardSection() {
         dateTime="Today · 7:30 PM"
         duration="1h 42m"
         matchCount={5}
-        topPlayer={{ name: 'Tuan', initials: 'T', record: '3W – 1L · played 4', winRate: 75 }}
+        topPlayer={{ name: 'Tuan', record: '3W – 1L · played 4', winRate: 75 }}
       />
       <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Active — no matches yet</p>
       <SessionCard
@@ -711,7 +711,7 @@ function SessionCardSection() {
         dateTime="May 21, 2025 · 6:00 PM"
         duration="2h 15m"
         matchCount={8}
-        topPlayer={{ name: 'Minh', initials: 'M', record: '5W – 1L · played 6', winRate: 83 }}
+        topPlayer={{ name: 'Minh', record: '5W – 1L · played 6', winRate: 83 }}
       />
     </Section>
   )
