@@ -77,7 +77,7 @@ function SuggestCard({ index, name, tag, isSelected, onSelect }: SuggestCardProp
       <div
         className={`w-8 h-8 rounded-[var(--radius-md)] border flex-shrink-0 grid place-items-center font-[family:var(--font-display)] text-[var(--text-sm)] font-black transition-all ${
           isSelected
-            ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--surface)]'
+            ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
             : 'bg-[var(--bg)] border-[var(--border)] text-[var(--muted)]'
         }`}
         style={{ fontSize: 13 }}

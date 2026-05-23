@@ -107,8 +107,15 @@ export default function SessionsListPage() {
   const isError = sessionsError || matchesError
 
   const activeCount = sessions?.filter((s) => getSessionStatus(s) === 'active').length ?? 0
+  const scheduledCount = sessions?.filter((s) => getSessionStatus(s) === 'scheduled').length ?? 0
   const subtitle = sessions
-    ? `${sessions.length} session${sessions.length !== 1 ? 's' : ''}${activeCount > 0 ? ` · ${activeCount} active` : ''}`
+    ? [
+        `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`,
+        activeCount > 0 ? `${activeCount} active` : null,
+        scheduledCount > 0 ? `${scheduledCount} scheduled` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ')
     : null
 
   return (
