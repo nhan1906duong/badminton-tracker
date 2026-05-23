@@ -9,6 +9,7 @@ import FloatingActionButton from '../components/FloatingActionButton'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
+import { formatShortPlayerName } from '../lib/player-name'
 import type { Player } from '../types/database'
 
 export default function PlayersPage() {
@@ -91,7 +92,7 @@ export default function PlayersPage() {
                     />
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{player.name}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{formatShortPlayerName(player.name)}</p>
                     <p className="text-xs text-gray-400">
                       {s?.matchesPlayed ?? 0} matches · {s?.wins ?? 0} wins
                     </p>

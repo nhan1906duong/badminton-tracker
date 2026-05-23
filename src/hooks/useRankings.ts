@@ -1,0 +1,233 @@
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+
+export interface PlayerRankingStats {
+  playerId: string
+  name: string
+  avatarUrl: string | null
+  rating: number
+  matchesPlayed: number
+  wins: number
+  losses: number
+  winRate: number
+  totalWeeklyPoints: number
+  averageWeeklyPoints: number
+  pointsFor: number
+  pointsAgainst: number
+  pointDifference: number
+  totalRatingDelta: number
+  lastSessionRatingDelta: number  // Elo change from the most recently ended session
+  rankChange: number              // positive = moved up, negative = moved down, 0 = no change
+  rank: number
+}
+
+export interface SessionWeeklyStats {
+  playerId: string
+  name: string
+  avatarUrl: string | null
+  weeklyPoints: number
+  wins: number
+  losses: number
+  matchesPlayed: number
+  pointDifference: number
+  ratingDelta: number
+}
+
+export function usePlayerRankings() {
+  return useQuery({
+    queryKey: ['player-rankings'],
+    queryFn: async () => {
+      // Fetch players, all-time match results, and last ended session in parallel
+      const [
+        { data: players, error: playersError },
+        { data: results, error: resultsError },
+        { data: lastSession },
+      ] = await Promise.all([
+        supabase
+          .from('players')
+          .select('id, name, avatar_url, rating, is_active')
+          .eq('is_active', true),
+        supabase
+          .from('player_match_results')
+          .select('player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta'),
+        supabase
+          .from('sessions')
+          .select('id')
+          .not('ended_at', 'is', null)
+          .order('ended_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ])
+
+      if (playersError) throw playersError
+      if (resultsError) throw resultsError
+
+      type ResultRow = {
+        player_id: string
+        is_winner: boolean
+        team_score: number
+        opponent_score: number
+        total_weekly_points: number
+        rating_delta: number | null
+      }
+
+      // Aggregate all-time stats per player
+      const statsMap = new Map<string, {
+        matchesPlayed: number; wins: number; losses: number
+        totalWeeklyPoints: number; pointsFor: number; pointsAgainst: number; totalRatingDelta: number
+      }>()
+
+      for (const r of (results ?? []) as ResultRow[]) {
+        const s = statsMap.get(r.player_id) ?? {
+          matchesPlayed: 0, wins: 0, losses: 0,
+          totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0, totalRatingDelta: 0,
+        }
+        s.matchesPlayed += 1
+        s.wins += r.is_winner ? 1 : 0
+        s.losses += r.is_winner ? 0 : 1
+        s.totalWeeklyPoints += r.total_weekly_points
+        s.pointsFor += r.team_score
+        s.pointsAgainst += r.opponent_score
+        s.totalRatingDelta += r.rating_delta ?? 0
+        statsMap.set(r.player_id, s)
+      }
+
+      // Fetch per-player Elo delta for the most recently ended session
+      const lastSessionDeltaMap = new Map<string, number>()
+      if (lastSession?.id) {
+        const { data: lsd } = await supabase
+          .from('player_match_results')
+          .select('player_id, rating_delta')
+          .eq('session_id', lastSession.id)
+          .not('rating_delta', 'is', null)
+
+        for (const r of (lsd ?? []) as { player_id: string; rating_delta: number }[]) {
+          lastSessionDeltaMap.set(r.player_id, (lastSessionDeltaMap.get(r.player_id) ?? 0) + r.rating_delta)
+        }
+      }
+
+      // Build rankings
+      const rankings: PlayerRankingStats[] = (players ?? []).map(p => {
+        const s = statsMap.get(p.id) ?? {
+          matchesPlayed: 0, wins: 0, losses: 0,
+          totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0, totalRatingDelta: 0,
+        }
+        return {
+          playerId: p.id,
+          name: p.name,
+          avatarUrl: p.avatar_url ?? null,
+          rating: p.rating ?? 1000,
+          matchesPlayed: s.matchesPlayed,
+          wins: s.wins,
+          losses: s.losses,
+          winRate: s.matchesPlayed > 0 ? s.wins / s.matchesPlayed : 0,
+          totalWeeklyPoints: s.totalWeeklyPoints,
+          averageWeeklyPoints: s.matchesPlayed > 0 ? s.totalWeeklyPoints / s.matchesPlayed : 0,
+          pointsFor: s.pointsFor,
+          pointsAgainst: s.pointsAgainst,
+          pointDifference: s.pointsFor - s.pointsAgainst,
+          totalRatingDelta: s.totalRatingDelta,
+          lastSessionRatingDelta: lastSessionDeltaMap.get(p.id) ?? 0,
+          rankChange: 0,
+          rank: 0,
+        }
+      })
+
+      // Sort by primary ranking order
+      rankings.sort((a, b) => {
+        if (b.rating !== a.rating) return b.rating - a.rating
+        if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate
+        return b.pointDifference - a.pointDifference
+      })
+      rankings.forEach((r, i) => { r.rank = i + 1 })
+
+      // Compute previous rank (before the last session's Elo changes)
+      const prevRatingOf = (r: PlayerRankingStats) => r.rating - (lastSessionDeltaMap.get(r.playerId) ?? 0)
+      const prevSorted = [...rankings].sort((a, b) => prevRatingOf(b) - prevRatingOf(a))
+      const prevRankMap = new Map(prevSorted.map((r, i) => [r.playerId, i + 1]))
+
+      // rankChange: positive = moved up (e.g. was 3, now 1 → +2)
+      rankings.forEach(r => {
+        const prev = prevRankMap.get(r.playerId) ?? r.rank
+        r.rankChange = prev - r.rank
+      })
+
+      return rankings
+    },
+  })
+}
+
+export function useSessionWeeklyRankings(sessionId: string | undefined) {
+  return useQuery({
+    queryKey: ['player-rankings', 'session', sessionId],
+    enabled: !!sessionId,
+    queryFn: async () => {
+      const [{ data: players, error: playersError }, { data: results, error: resultsError }] =
+        await Promise.all([
+          supabase.from('players').select('id, name, avatar_url').eq('is_active', true),
+          supabase
+            .from('player_match_results')
+            .select('player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
+            .eq('session_id', sessionId!),
+        ])
+
+      if (playersError) throw playersError
+      if (resultsError) throw resultsError
+
+      type ResultRow = {
+        player_id: string
+        is_winner: boolean
+        team_score: number
+        opponent_score: number
+        total_weekly_points: number
+        rating_delta: number | null
+      }
+
+      const playerMap = new Map((players ?? []).map(p => [p.id, p]))
+
+      const statsMap = new Map<string, {
+        weeklyPoints: number; wins: number; losses: number
+        matchesPlayed: number; pointsFor: number; pointsAgainst: number; ratingDelta: number
+      }>()
+
+      for (const r of (results ?? []) as ResultRow[]) {
+        const s = statsMap.get(r.player_id) ?? {
+          weeklyPoints: 0, wins: 0, losses: 0,
+          matchesPlayed: 0, pointsFor: 0, pointsAgainst: 0, ratingDelta: 0,
+        }
+        s.matchesPlayed += 1
+        s.wins += r.is_winner ? 1 : 0
+        s.losses += r.is_winner ? 0 : 1
+        s.weeklyPoints += r.total_weekly_points
+        s.pointsFor += r.team_score
+        s.pointsAgainst += r.opponent_score
+        s.ratingDelta += r.rating_delta ?? 0
+        statsMap.set(r.player_id, s)
+      }
+
+      const weekly: SessionWeeklyStats[] = Array.from(statsMap.entries())
+        .map(([playerId, s]) => {
+          const p = playerMap.get(playerId)
+          return {
+            playerId,
+            name: p?.name ?? 'Unknown',
+            avatarUrl: p?.avatar_url ?? null,
+            weeklyPoints: s.weeklyPoints,
+            wins: s.wins,
+            losses: s.losses,
+            matchesPlayed: s.matchesPlayed,
+            pointDifference: s.pointsFor - s.pointsAgainst,
+            ratingDelta: s.ratingDelta,
+          }
+        })
+        .sort((a, b) => {
+          if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
+          if (b.wins !== a.wins) return b.wins - a.wins
+          return b.pointDifference - a.pointDifference
+        })
+
+      return weekly
+    },
+  })
+}

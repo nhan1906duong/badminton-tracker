@@ -73,6 +73,16 @@ export function useCreateMatch() {
 - No inline styles except dynamic values
 - Mobile-first design (max-w-lg centered)
 
+## Player Name Display
+
+- Store and edit the full player name in `players.name`.
+- Show the full player name only on that player's profile page (`/players/:playerId`) and in name-editing inputs.
+- Everywhere else, display the shortened form with `formatShortPlayerName()` from `src/lib/player-name.ts`.
+- Short-name format keeps the first word and initials every remaining word:
+  - `Danh Nguyen` → `Danh N.`
+  - `Nhan Duong Ngoc` → `Nhan D. N.`
+- Keep avatar `name` props and search/filter matching on the full stored name so initials, image alt text, and lookup behavior remain stable.
+
 ## Error Handling
 
 ```typescript

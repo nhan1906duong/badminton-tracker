@@ -1,0 +1,2116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#faf8f5">
+<meta name="theme-color" content="#1e1a17" media="(prefers-color-scheme: dark)">
+<title>Match Detail</title>
+<style>
+/* ================================================================
+   TOKENS — Japanese Sport / Vermilion
+   (matches Design System.html exactly)
+   ================================================================ */
+:root {
+  --bg:       oklch(99%  0.003 50);
+  --surface:  oklch(100% 0     0);
+  --fg:       oklch(12%  0.02  50);
+  --muted:    oklch(50%  0.01  50);
+  --border:   oklch(88%  0.008 50);
+  --accent:   oklch(55%  0.20  30);
+  --accent-soft: oklch(96% 0.025 30);
+
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text',  'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+
+  --success:  oklch(50% 0.14 145);
+  --danger:   oklch(55% 0.20 25);
+
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px;  --space-5: 24px;  --space-6: 32px;
+  --space-7: 48px;  --space-8: 64px;
+
+  --text-xs: 11px;  --text-sm: 13px;  --text-base: 15px;
+  --text-lg: 18px;  --text-xl: 24px;  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  --radius-sm: 0px;  --radius-md: 4px;  --radius-lg: 8px;
+  --border-width: 1px;
+}
+
+[data-theme="dark"] {
+  --bg:       oklch(12%  0.02  50);
+  --surface:  oklch(15%  0.018 50);
+  --fg:       oklch(95%  0.005 50);
+  --muted:    oklch(55%  0.01  50);
+  --border:   oklch(28%  0.015 50);
+  --accent:   oklch(60%  0.18  30);
+  --accent-soft: oklch(22% 0.04 30);
+  --success:  oklch(55% 0.12 145);
+  --danger:   oklch(60% 0.18 25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+/* ================================================================
+   SCREEN SHELL
+   ================================================================ */
+.screen {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 600px) {
+  body { background: var(--border); }
+  .screen {
+    border-left: var(--border-width) solid var(--border);
+    border-right: var(--border-width) solid var(--border);
+  }
+}
+
+/* ================================================================
+   TOP NAV
+   ================================================================ */
+.nav {
+  position: sticky; top: 0; z-index: 30;
+  background: color-mix(in oklch, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  padding: max(var(--space-3), env(safe-area-inset-top) + var(--space-2)) var(--space-3) var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  border-bottom: var(--border-width) solid transparent;
+  transition: border-color 0.2s;
+}
+.nav.is-stuck { border-bottom-color: var(--border); }
+.nav-btn {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent; border: none; cursor: pointer;
+  padding: var(--space-2); min-height: 44px;
+  display: inline-flex; align-items: center; gap: 2px;
+  letter-spacing: -0.01em;
+}
+.nav-btn:active { opacity: 0.55; }
+.nav-btn.is-right { justify-self: end; padding-right: 4px; }
+.nav-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.nav-title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center; white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.nav.is-stuck .nav-title { opacity: 1; transform: translateY(0); }
+
+/* ================================================================
+   SCROLL AREA
+   ================================================================ */
+.screen-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding-bottom: max(140px, env(safe-area-inset-bottom) + 120px);
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+.hero { padding: var(--space-3) var(--space-5) var(--space-5); }
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+  min-height: 18px;
+}
+.hero-eyebrow--live { color: var(--accent); }
+.hero-eyebrow--ended { color: var(--fg); }
+.live-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin-bottom: var(--space-3);
+}
+.hero-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.hero-meta strong { color: var(--fg); font-weight: 600; }
+.hero-meta-dot {
+  width: 3px; height: 3px;
+  background: var(--border);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   SCOREBOARD — two team panels + center divider
+   ================================================================ */
+.score-wrap {
+  margin: 0 var(--space-5) var(--space-5);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+.score-grid::before {
+  content: '';
+  position: absolute;
+  top: var(--space-5); bottom: var(--space-5);
+  left: 50%;
+  width: 1px;
+  background: var(--border);
+}
+
+.score-side {
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  position: relative;
+  min-height: 240px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.score-side[aria-disabled="true"] { cursor: default; }
+.score-side:not([aria-disabled="true"]):active {
+  background: color-mix(in oklch, var(--accent) 4%, var(--surface));
+}
+.score-side:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.team-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  line-height: 1;
+}
+.team-label-mark {
+  width: 16px; height: 16px;
+  border-radius: 3px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--surface);
+  background: var(--fg);
+}
+.score-side[data-team="B"] .team-label-mark { background: var(--accent); }
+
+.team-roster {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  line-height: 1.2;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-wrap: balance;
+}
+.team-roster small {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.score-num {
+  font-family: var(--font-display);
+  font-size: 88px;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--fg);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  user-select: none;
+  transition: color 0.2s, transform 0.18s cubic-bezier(0.32, 0, 0.15, 1);
+  position: relative;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+}
+.score-num::after {
+  content: '';
+  position: absolute;
+  left: 8px; right: 8px;
+  bottom: 0;
+  border-bottom: 1.5px dotted var(--border);
+  pointer-events: none;
+}
+.score-side[aria-disabled="true"] .score-num {
+  cursor: default;
+}
+.score-side[aria-disabled="true"] .score-num::after { display: none; }
+.score-num:not([data-disabled="true"]):active {
+  background: var(--bg);
+}
+.score-num.is-bumped {
+  animation: bump 0.32s cubic-bezier(0.32, 0, 0.15, 1);
+}
+@keyframes bump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
+
+/* States */
+.score-side.is-winner .score-num { color: var(--accent); }
+.score-side.is-loser .score-num { color: var(--muted); }
+.score-side.is-loser .team-roster { color: var(--muted); font-weight: 500; }
+
+.serve-pin {
+  position: absolute;
+  top: var(--space-4);
+  inset-inline-end: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.score-side[data-team="A"] .serve-pin { inset-inline-end: auto; inset-inline-start: var(--space-4); }
+.score-side.is-serving .serve-pin { opacity: 1; }
+.serve-pin::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* +1 hint at bottom of each panel */
+.tap-hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.65;
+  margin-top: auto;
+}
+.score-side:disabled .tap-hint { opacity: 0; }
+
+/* Winner stamp — replaces tap-hint when ended */
+.win-stamp {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  padding: 4px 10px 3px;
+  border-radius: var(--radius-sm);
+  margin-top: auto;
+  background: var(--accent-soft);
+}
+
+/* Minus / correction control */
+.score-tools {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 2px;
+  align-items: center;
+  min-height: 28px;
+}
+.score-tool {
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  color: var(--muted);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.score-tool:active { background: var(--border); color: var(--fg); }
+.score-tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.score-tool svg { width: 14px; height: 14px; }
+.score-tools .pts {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ================================================================
+   SET METER — bar under the scoreboard
+   ================================================================ */
+.set-meter {
+  margin: 0 var(--space-5) var(--space-5);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.set-meter-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.set-meter-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+.set-meter-fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: var(--accent);
+  border-radius: 999px;
+  width: 0%;
+  transition: width 0.3s cubic-bezier(0.32, 0, 0.15, 1);
+}
+.set-meter-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--fg);
+  font-feature-settings: "tnum" 1;
+}
+
+/* ================================================================
+   ACTION ROW — secondary buttons (award win / swap serve / undo)
+   ================================================================ */
+.actions {
+  padding: 0 var(--space-5);
+  margin-bottom: var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.action-btn {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  -webkit-appearance: none;
+}
+.action-btn:active { background: var(--bg); }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.action-btn svg { width: 16px; height: 16px; color: var(--muted); }
+.action-btn.is-full { grid-column: 1 / -1; }
+
+/* ================================================================
+   POINT LOG — chronological record of every point
+   ================================================================ */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--space-5);
+  margin-bottom: var(--space-3);
+  gap: var(--space-3);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.section-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.log {
+  margin: 0 var(--space-5);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.log-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--border);
+  min-height: 38px;
+}
+.log-row:last-child { border-bottom: none; }
+.log-row .pt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.log-row .side {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+.log-row .side--A { text-align: left; color: var(--fg); }
+.log-row .side--B { text-align: right; color: var(--fg); }
+.log-row .side--muted { color: var(--muted); font-weight: 500; }
+.log-row .colon {
+  color: var(--border);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.log-row.is-latest {
+  background: color-mix(in oklch, var(--accent) 5%, var(--surface));
+}
+.log-empty {
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* ================================================================
+   PRE-MATCH HUDDLE  (scheduled state)
+   ================================================================ */
+.huddle {
+  margin: 0 var(--space-5) var(--space-5);
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+.huddle-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.huddle-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.huddle-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  max-width: 280px;
+  line-height: 1.5;
+}
+.huddle-vs {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-3);
+}
+.huddle-team {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  line-height: 1.2;
+}
+.huddle-team small {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.huddle-vs-mark {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+/* Serve pick (scheduled) — choose who serves first */
+.serve-pick {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.serve-pick-btn {
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  -webkit-appearance: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.serve-pick-btn small {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.serve-pick-btn.is-on {
+  border-color: var(--accent);
+  border-width: 2px;
+  padding: calc(var(--space-3) - 1px);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.serve-pick-btn.is-on small { color: var(--accent); }
+
+/* ================================================================
+   BOTTOM CTA
+   ================================================================ */
+.bottom-bar {
+  position: sticky;
+  bottom: 0;
+  padding: var(--space-3) var(--space-5) max(var(--space-4), env(safe-area-inset-bottom) + var(--space-3));
+  background: color-mix(in oklch, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-top: var(--border-width) solid var(--border);
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.btn-cta {
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--accent);
+  color: var(--surface);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  letter-spacing: 0.005em;
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.08),
+    0 6px 18px oklch(55% 0.20 30 / 0.22);
+  transition: opacity 0.12s, transform 0.12s;
+}
+.btn-cta:active { transform: scale(0.985); opacity: 0.92; }
+.btn-cta svg { width: 18px; height: 18px; }
+.btn-cta--ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: var(--border-width) solid var(--border);
+  box-shadow: none;
+}
+.btn-cta--danger {
+  background: var(--surface);
+  color: var(--danger);
+  border: var(--border-width) solid var(--danger);
+  box-shadow: none;
+}
+.btn-cta-meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  opacity: 0.7;
+  margin-left: var(--space-1);
+}
+.bottom-bar[hidden] { display: none; }
+
+/* ================================================================
+   SHEET — overflow menu / confirm
+   ================================================================ */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.45);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(2px);
+}
+.sheet-backdrop.is-open { opacity: 1; pointer-events: all; }
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(110%);
+  width: 100%;
+  max-width: 430px;
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 101;
+  padding: var(--space-3) var(--space-3) max(var(--space-5), env(safe-area-inset-bottom) + var(--space-4));
+  transition: transform 0.3s cubic-bezier(0.32, 0, 0.15, 1);
+  box-shadow: 0 -4px 32px oklch(0% 0 0 / 0.12);
+}
+.sheet.is-open { transform: translateX(-50%) translateY(0); }
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto var(--space-4);
+}
+.sheet-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  min-height: 52px;
+  border-radius: var(--radius-md);
+}
+.sheet-item:active { background: var(--bg); }
+.sheet-item--danger { color: var(--danger); }
+.sheet-item svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--muted); }
+.sheet-item--danger svg { color: var(--danger); }
+.sheet-divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-2) var(--space-2);
+}
+.sheet-cancel {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  min-height: 48px;
+  margin-top: var(--space-3);
+}
+
+/* Confirm dialog */
+.sheet-confirm-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-2);
+}
+.sheet-confirm-desc {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}
+.sheet-confirm-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+}
+.sheet-confirm-actions button {
+  flex: 1;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+  border: var(--border-width) solid var(--border);
+}
+.btn-confirm-cancel { background: var(--surface); color: var(--fg); }
+.btn-confirm-delete {
+  background: var(--danger);
+  color: var(--surface);
+  border-color: var(--danger);
+}
+.btn-confirm-delete:active { opacity: 0.85; }
+
+/* ================================================================
+   QUICK SCORE EDITOR — numeric keypad sheet
+   ================================================================ */
+.kp-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.kp-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.kp-title-mark {
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--surface);
+}
+.kp-title-mark[data-team="A"] { background: var(--fg); }
+.kp-title-mark[data-team="B"] { background: var(--accent); }
+.kp-title small {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-left: var(--space-1);
+}
+.kp-current {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.kp-current b {
+  color: var(--fg);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+.kp-display {
+  margin: 0 var(--space-2) var(--space-3);
+  padding: var(--space-4) var(--space-4);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.kp-display-value {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--fg);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+}
+.kp-display-value--empty { color: var(--muted); opacity: 0.4; }
+.kp-display-delta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.4;
+  min-width: 110px;
+}
+.kp-display-delta b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-top: 2px;
+}
+.kp-display-delta.is-pos b { color: var(--accent); }
+.kp-display-delta.is-neg b { color: var(--muted); }
+
+/* Quick chips */
+.kp-quick {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+.kp-quick-chip {
+  flex: 1;
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: 999px;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--fg);
+  cursor: pointer;
+  min-height: 36px;
+  font-feature-settings: "tnum" 1;
+  -webkit-appearance: none;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  min-width: 60px;
+}
+.kp-quick-chip:active { background: var(--bg); }
+
+/* Numeric pad */
+.kp-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.kp-key {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--fg);
+  cursor: pointer;
+  min-height: 56px;
+  display: grid;
+  place-items: center;
+  -webkit-appearance: none;
+  letter-spacing: -0.02em;
+  transition: background 0.1s;
+}
+.kp-key:active { background: var(--bg); transform: scale(0.97); }
+.kp-key--util {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--bg);
+}
+.kp-key--util svg { width: 20px; height: 20px; }
+
+.kp-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+}
+.kp-actions button {
+  flex: 1;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 48px;
+  border: var(--border-width) solid var(--border);
+}
+.btn-kp-cancel { background: var(--surface); color: var(--fg); }
+.btn-kp-save {
+  background: var(--accent);
+  color: var(--surface);
+  border-color: var(--accent);
+}
+.btn-kp-save:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-kp-save:not(:disabled):active { opacity: 0.85; }
+
+/* Award-winner picker */
+.award-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  padding: 0 var(--space-2) var(--space-2);
+}
+.award-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  background: var(--bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 96px;
+}
+.award-card:active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.award-card-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.award-card-name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  text-align: center;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.award-card-mark {
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--surface);
+  margin-bottom: 2px;
+}
+.award-card[data-team="A"] .award-card-mark { background: var(--fg); }
+.award-card[data-team="B"] .award-card-mark { background: var(--accent); }
+
+/* ================================================================
+   DEMO STATE SWITCHER
+   ================================================================ */
+.demo {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(var(--space-3), env(safe-area-inset-bottom) + var(--space-2));
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  pointer-events: none;
+}
+.demo-toggle {
+  pointer-events: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--fg);
+  color: var(--bg);
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.82;
+}
+.demo-toggle:hover { opacity: 1; }
+.demo-toggle svg { width: 10px; height: 10px; }
+.demo-panel {
+  pointer-events: auto;
+  background: var(--fg);
+  color: var(--bg);
+  border-radius: 14px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  max-width: 330px;
+  width: calc(100vw - 32px);
+  box-shadow: 0 12px 40px oklch(0% 0 0 / 0.3);
+}
+.demo-panel[hidden] { display: none; }
+.demo-section {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in oklch, var(--bg) 55%, var(--fg));
+  margin: 4px 6px 2px;
+}
+.demo-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--bg);
+  border: 1px solid color-mix(in oklch, var(--bg) 22%, transparent);
+  border-radius: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.1;
+}
+.demo-chip:hover { background: color-mix(in oklch, var(--bg) 12%, transparent); }
+.demo-chip.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+/* Tiny screens */
+@media (max-width: 360px) {
+  .hero-title { font-size: 40px; }
+  .score-num { font-size: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="screen">
+
+  <!-- ============================================================
+       TOP NAV
+       ============================================================ -->
+  <nav class="nav" id="topNav">
+    <button class="nav-btn" type="button" onclick="onBack()" aria-label="Back to session">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>Session</span>
+    </button>
+    <div class="nav-title" id="navTitle">Match 5 · Men's Doubles</div>
+    <button class="nav-btn is-right" type="button" onclick="openMenu()" aria-label="More options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="5"  r="1.2"></circle>
+        <circle cx="12" cy="12" r="1.2"></circle>
+        <circle cx="12" cy="19" r="1.2"></circle>
+      </svg>
+    </button>
+  </nav>
+
+  <div class="screen-scroll" id="scrollEl">
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+    <header class="hero">
+      <div class="hero-eyebrow" id="heroEyebrow">
+        <span class="live-dot" id="heroDot"></span>
+        <span id="heroEyebrowText">Live · in progress</span>
+      </div>
+      <h1 class="hero-title" id="heroTitle">Match 5</h1>
+      <div class="hero-meta" id="heroMeta">
+        <span><strong>Men's Doubles</strong></span>
+        <span class="hero-meta-dot"></span>
+        <span id="heroTime">Started 7:42 PM</span>
+        <span class="hero-meta-dot"></span>
+        <span id="heroDuration">14m elapsed</span>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         CONTENT REGION — switches per status
+         ========================================================= -->
+    <div id="contentRegion"><!-- populated by render() --></div>
+
+  </div>
+
+  <!-- ===========================================================
+       BOTTOM CTA — start / end / re-open
+       =========================================================== -->
+  <div class="bottom-bar" id="bottomBar">
+    <!-- populated by render() -->
+  </div>
+
+</div>
+
+<!-- =============================================================
+     SHEET
+     ============================================================= -->
+<div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="sheet-handle"></div>
+  <div id="sheetBody"><!-- swapped per intent --></div>
+</div>
+
+<!-- =============================================================
+     DEMO STATE SWITCHER
+     ============================================================= -->
+<div class="demo">
+  <div class="demo-panel" id="demoPanel" hidden>
+    <div class="demo-section">Status</div>
+    <button class="demo-chip" data-status="scheduled" onclick="setStatus('scheduled')">Scheduled</button>
+    <button class="demo-chip is-active" data-status="live" onclick="setStatus('live')">Live</button>
+    <button class="demo-chip" data-status="ended" onclick="setStatus('ended')">Ended</button>
+    <div class="demo-section">Live preset</div>
+    <button class="demo-chip is-active" data-preset="mid" onclick="setPreset('mid')">Mid 18:14</button>
+    <button class="demo-chip" data-preset="start" onclick="setPreset('start')">Fresh 0:0</button>
+    <button class="demo-chip" data-preset="match" onclick="setPreset('match')">Match pt</button>
+  </div>
+  <button class="demo-toggle" type="button" onclick="toggleDemo()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    Demo States
+  </button>
+</div>
+
+<script>
+/* ================================================================
+   MODEL
+   ================================================================ */
+const MATCH = {
+  num: 5,
+  type: "Men's Doubles",
+  startedAt: "7:42 PM",
+  duration: "14m elapsed",
+  teamA: { tag: "Team A", roster: "Minh + Tuan" },
+  teamB: { tag: "Team B", roster: "Huy + Dat"  },
+  pointsTarget: 21,        // first to 21
+  winByTwo: true,          // win by 2
+  hardCap: 30,             // cap if both reach 29
+};
+
+const state = {
+  status: 'live',          // 'scheduled' | 'live' | 'ended'
+  scoreA: 18,
+  scoreB: 14,
+  serving: 'A',            // 'A' | 'B' | null
+  winner: null,            // 'A' | 'B' | null (set when ended)
+  log: [
+    // {team:'A'|'B', a:int, b:int}
+  ],
+};
+
+/* Reconstruct demo log to match current score */
+function seedLog() {
+  state.log = [];
+  let a = 0, b = 0;
+  // simple alternating-ish sequence ending at scoreA:scoreB
+  while (a < state.scoreA || b < state.scoreB) {
+    if (a < state.scoreA && (b >= state.scoreB || Math.random() < 0.6)) {
+      a++; state.log.push({ team:'A', a, b });
+    } else if (b < state.scoreB) {
+      b++; state.log.push({ team:'B', a, b });
+    }
+  }
+}
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+/* ================================================================
+   RENDER
+   ================================================================ */
+function render() {
+  renderHero();
+  renderContent();
+  renderBottomBar();
+  renderDemoChips();
+}
+
+function renderHero() {
+  const dot = $("heroDot");
+  const eyebrow = $("heroEyebrow");
+  const text = $("heroEyebrowText");
+  const time = $("heroTime");
+  const dur = $("heroDuration");
+  const title = $("heroTitle");
+
+  $("navTitle").textContent = `Match ${MATCH.num} · ${MATCH.type}`;
+  title.textContent = `Match ${MATCH.num}`;
+
+  eyebrow.classList.remove("hero-eyebrow--live", "hero-eyebrow--ended");
+  dot.style.display = "none";
+
+  if (state.status === "live") {
+    eyebrow.classList.add("hero-eyebrow--live");
+    dot.style.display = "";
+    text.textContent = "Live · in progress";
+    time.textContent = `Started ${MATCH.startedAt}`;
+    dur.textContent = MATCH.duration;
+  } else if (state.status === "scheduled") {
+    text.textContent = "Ready to start";
+    time.textContent = "Not started";
+    dur.textContent = "—";
+  } else {
+    eyebrow.classList.add("hero-eyebrow--ended");
+    text.textContent = "Final";
+    time.textContent = `Started ${MATCH.startedAt}`;
+    dur.textContent = MATCH.duration.replace("elapsed", "total");
+  }
+}
+
+function renderContent() {
+  const el = $("contentRegion");
+  if (state.status === "scheduled") {
+    el.innerHTML = renderHuddle();
+    bindHuddle();
+    return;
+  }
+  // live or ended → scoreboard
+  el.innerHTML = `
+    ${renderScoreboard()}
+    ${renderSetMeter()}
+    ${renderActionRow()}
+    <div class="section-head">
+      <h2 class="section-title">Point log</h2>
+      <span class="section-count" id="sectionCount">${state.log.length} points</span>
+    </div>
+    ${renderLog()}
+  `;
+  bindScoreboard();
+}
+
+/* ---- Huddle (scheduled) ---- */
+function renderHuddle() {
+  return `
+    <section class="huddle" role="status">
+      <span class="huddle-eyebrow">Ready when you are</span>
+      <h2 class="huddle-title">Confirm players &amp; first serve</h2>
+      <p class="huddle-desc">First to ${MATCH.pointsTarget}${MATCH.winByTwo ? ', win by 2 (cap ' + MATCH.hardCap + ')' : ''}.</p>
+
+      <div class="huddle-vs">
+        <div class="huddle-team" style="text-align:right">
+          <small>Team A</small>
+          ${esc(MATCH.teamA.roster)}
+        </div>
+        <div class="huddle-vs-mark">VS</div>
+        <div class="huddle-team" style="text-align:left">
+          <small>Team B</small>
+          ${esc(MATCH.teamB.roster)}
+        </div>
+      </div>
+
+      <div class="serve-pick" role="radiogroup" aria-label="First serve">
+        <button class="serve-pick-btn ${state.serving === 'A' ? 'is-on' : ''}" data-serve="A" type="button">
+          <small>Serves first</small>
+          Team A
+        </button>
+        <button class="serve-pick-btn ${state.serving === 'B' ? 'is-on' : ''}" data-serve="B" type="button">
+          <small>Serves first</small>
+          Team B
+        </button>
+      </div>
+    </section>
+  `;
+}
+function bindHuddle() {
+  document.querySelectorAll('.serve-pick-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      state.serving = b.dataset.serve;
+      renderContent();
+      renderBottomBar();
+    });
+  });
+}
+
+/* ---- Scoreboard (live + ended) ---- */
+function renderScoreboard() {
+  const ended = state.status === 'ended';
+  const live = state.status === 'live';
+  const aIsWinner = ended && state.winner === 'A';
+  const bIsWinner = ended && state.winner === 'B';
+  const aIsLoser  = ended && state.winner === 'B';
+  const bIsLoser  = ended && state.winner === 'A';
+
+  return `
+    <section class="score-wrap" aria-label="Live score">
+      <div class="score-grid">
+        <div class="score-side
+                ${state.serving === 'A' && live ? 'is-serving' : ''}
+                ${aIsWinner ? 'is-winner' : ''}
+                ${aIsLoser  ? 'is-loser'  : ''}"
+             data-team="A" role="button" tabindex="${live ? '0' : '-1'}"
+             aria-disabled="${live ? 'false' : 'true'}"
+             aria-label="Score point for Team A">
+          <span class="serve-pin" aria-hidden="true">Serving</span>
+          <span class="team-label">
+            <span class="team-label-mark">A</span>
+            Team A
+          </span>
+          <span class="team-roster">${esc(MATCH.teamA.roster)}</span>
+          <span class="score-num" id="scoreA"
+                onclick="event.stopPropagation(); openScoreEdit('A')"
+                data-disabled="${live ? 'false' : 'true'}"
+                role="button" aria-label="Edit Team A score">${state.scoreA}</span>
+          <div class="score-tools" onclick="event.stopPropagation()">
+            <button class="score-tool" type="button" onclick="decrement('A')" ${state.scoreA === 0 || !live ? 'disabled' : ''} aria-label="Subtract one point from Team A">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <button class="score-tool" type="button" onclick="openScoreEdit('A')" ${!live ? 'disabled' : ''} aria-label="Enter score directly">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><line x1="7" y1="10" x2="7" y2="10"></line><line x1="12" y1="10" x2="12" y2="10"></line><line x1="17" y1="10" x2="17" y2="10"></line><line x1="7" y1="14" x2="17" y2="14"></line></svg>
+            </button>
+            <span class="pts">pt</span>
+          </div>
+          ${ended && state.winner === 'A' ? '<span class="win-stamp">Winner</span>' : (live ? '<span class="tap-hint">Tap to score +1</span>' : '<span class="tap-hint" style="visibility:hidden">.</span>')}
+        </div>
+
+        <div class="score-side
+                ${state.serving === 'B' && live ? 'is-serving' : ''}
+                ${bIsWinner ? 'is-winner' : ''}
+                ${bIsLoser  ? 'is-loser'  : ''}"
+             data-team="B" role="button" tabindex="${live ? '0' : '-1'}"
+             aria-disabled="${live ? 'false' : 'true'}"
+             aria-label="Score point for Team B">
+          <span class="serve-pin" aria-hidden="true">Serving</span>
+          <span class="team-label">
+            <span class="team-label-mark">B</span>
+            Team B
+          </span>
+          <span class="team-roster">${esc(MATCH.teamB.roster)}</span>
+          <span class="score-num" id="scoreB"
+                onclick="event.stopPropagation(); openScoreEdit('B')"
+                data-disabled="${live ? 'false' : 'true'}"
+                role="button" aria-label="Edit Team B score">${state.scoreB}</span>
+          <div class="score-tools" onclick="event.stopPropagation()">
+            <button class="score-tool" type="button" onclick="decrement('B')" ${state.scoreB === 0 || !live ? 'disabled' : ''} aria-label="Subtract one point from Team B">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <button class="score-tool" type="button" onclick="openScoreEdit('B')" ${!live ? 'disabled' : ''} aria-label="Enter score directly">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><line x1="7" y1="10" x2="7" y2="10"></line><line x1="12" y1="10" x2="12" y2="10"></line><line x1="17" y1="10" x2="17" y2="10"></line><line x1="7" y1="14" x2="17" y2="14"></line></svg>
+            </button>
+            <span class="pts">pt</span>
+          </div>
+          ${ended && state.winner === 'B' ? '<span class="win-stamp">Winner</span>' : (live ? '<span class="tap-hint">Tap to score +1</span>' : '<span class="tap-hint" style="visibility:hidden">.</span>')}
+        </div>
+      </div>
+    </section>
+  `;
+}
+function bindScoreboard() {
+  document.querySelectorAll('.score-side').forEach(side => {
+    const isDisabled = side.getAttribute('aria-disabled') === 'true';
+    side.addEventListener('click', (e) => {
+      if (isDisabled) return;
+      if (e.target.closest('.score-tools')) return;
+      increment(side.dataset.team);
+    });
+    side.addEventListener('keydown', (e) => {
+      if (isDisabled) return;
+      if (e.target.closest('.score-tools')) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        increment(side.dataset.team);
+      }
+    });
+  });
+}
+
+/* ---- Set meter — progress toward 21 ---- */
+function renderSetMeter() {
+  const lead = Math.max(state.scoreA, state.scoreB);
+  const pct  = Math.min(100, Math.round((lead / MATCH.pointsTarget) * 100));
+  return `
+    <div class="set-meter">
+      <span class="set-meter-label">To ${MATCH.pointsTarget}</span>
+      <div class="set-meter-bar"><div class="set-meter-fill" style="width:${pct}%"></div></div>
+      <span class="set-meter-value">${lead} / ${MATCH.pointsTarget}</span>
+    </div>
+  `;
+}
+
+/* ---- Action row ---- */
+function renderActionRow() {
+  if (state.status === 'ended') {
+    return `
+      <div class="actions">
+        <button class="action-btn is-full" type="button" onclick="reopenMatch()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
+          Re-open match for editing
+        </button>
+      </div>
+    `;
+  }
+  return `
+    <div class="actions">
+      <button class="action-btn" type="button" onclick="swapServe()" ${state.status !== 'live' ? 'disabled' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        Swap serve
+      </button>
+      <button class="action-btn" type="button" onclick="undoLast()" ${state.log.length === 0 ? 'disabled' : ''}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg>
+        Undo last point
+      </button>
+    </div>
+  `;
+}
+
+/* ---- Point log ---- */
+function renderLog() {
+  if (state.log.length === 0) {
+    return `<div class="log"><div class="log-empty">No points yet. Tap either team to score.</div></div>`;
+  }
+  const recent = state.log.slice(-8).reverse(); // last 8, newest first
+  const startIdx = state.log.length;
+  return `
+    <div class="log" id="logEl">
+      ${recent.map((p, i) => {
+        const num = startIdx - i;
+        const isLatest = i === 0 && state.status === 'live';
+        const aClass = p.team === 'A' ? '' : 'side--muted';
+        const bClass = p.team === 'B' ? '' : 'side--muted';
+        return `
+          <div class="log-row ${isLatest ? 'is-latest' : ''}">
+            <span class="pt">#${num}</span>
+            <span class="side side--A ${aClass}">${p.a}</span>
+            <span class="colon">:</span>
+            <span class="side side--B ${bClass}">${p.b}</span>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+/* ---- Bottom bar ---- */
+function renderBottomBar() {
+  const bar = $("bottomBar");
+  bar.hidden = false;
+
+  if (state.status === 'scheduled') {
+    const ready = !!state.serving;
+    bar.innerHTML = `
+      <button class="btn-cta" type="button" onclick="startMatch()" ${ready ? '' : 'disabled style="opacity:0.55"'}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"></polygon>
+        </svg>
+        ${ready ? 'Start match' : 'Pick who serves first'}
+        ${ready ? '<span class="btn-cta-meta">→</span>' : ''}
+      </button>
+    `;
+  } else if (state.status === 'live') {
+    const w = computeWinner();
+    if (w) {
+      bar.innerHTML = `
+        <button class="btn-cta" type="button" onclick="finalizeWin('${w}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Award match to Team ${w}
+          <span class="btn-cta-meta">${state.scoreA}–${state.scoreB}</span>
+        </button>
+      `;
+    } else {
+      bar.innerHTML = `
+        <button class="btn-cta btn-cta--ghost" type="button" onclick="openAward()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          Record team win
+        </button>
+        <button class="btn-cta btn-cta--danger" type="button" onclick="confirmEnd()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" fill="currentColor" stroke="none"></rect></svg>
+          End match
+        </button>
+      `;
+    }
+  } else {
+    // ended
+    bar.innerHTML = `
+      <button class="btn-cta btn-cta--ghost" type="button" onclick="onBack()">
+        Back to session
+      </button>
+    `;
+  }
+}
+
+/* ---- Demo chips ---- */
+function renderDemoChips() {
+  document.querySelectorAll('[data-status]').forEach(el => {
+    el.classList.toggle('is-active', el.dataset.status === state.status);
+  });
+}
+
+/* ================================================================
+   SCORE ACTIONS
+   ================================================================ */
+function increment(team) {
+  if (state.status !== 'live') return;
+  if (team === 'A') state.scoreA++; else state.scoreB++;
+  state.serving = team; // server goes to the side that scored
+  state.log.push({ team, a: state.scoreA, b: state.scoreB });
+  renderContent();
+  renderBottomBar();
+  bump(team);
+}
+function decrement(team) {
+  if (state.status !== 'live') return;
+  if (team === 'A' && state.scoreA > 0) state.scoreA--;
+  if (team === 'B' && state.scoreB > 0) state.scoreB--;
+  // pop the last matching point if it was this team's
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    if (state.log[i].team === team) { state.log.splice(i, 1); break; }
+  }
+  renderContent();
+  renderBottomBar();
+}
+function undoLast() {
+  if (state.log.length === 0) return;
+  const last = state.log.pop();
+  if (last.team === 'A') state.scoreA = Math.max(0, state.scoreA - 1);
+  else                   state.scoreB = Math.max(0, state.scoreB - 1);
+  // restore serve to whoever scored the previous point
+  const prev = state.log[state.log.length - 1];
+  state.serving = prev ? prev.team : state.serving;
+  renderContent();
+  renderBottomBar();
+}
+function swapServe() {
+  if (state.status !== 'live') return;
+  state.serving = state.serving === 'A' ? 'B' : 'A';
+  renderContent();
+}
+function bump(team) {
+  const el = $(`score${team}`);
+  if (!el) return;
+  el.classList.remove('is-bumped');
+  // force reflow
+  void el.offsetWidth;
+  el.classList.add('is-bumped');
+}
+
+/* Winner detection — first to 21, win by 2, hard cap 30 */
+function computeWinner() {
+  const a = state.scoreA, b = state.scoreB;
+  const T = MATCH.pointsTarget, cap = MATCH.hardCap;
+  if (a >= cap && a > b) return 'A';
+  if (b >= cap && b > a) return 'B';
+  if (a >= T && a - b >= 2) return 'A';
+  if (b >= T && b - a >= 2) return 'B';
+  return null;
+}
+
+function finalizeWin(team) {
+  state.winner = team;
+  state.status = 'ended';
+  MATCH.duration = MATCH.duration.replace('elapsed', 'total');
+  render();
+}
+
+/* ================================================================
+   STATUS ACTIONS
+   ================================================================ */
+function startMatch() {
+  if (!state.serving) return;
+  state.status = 'live';
+  state.scoreA = 0;
+  state.scoreB = 0;
+  state.winner = null;
+  state.log = [];
+  MATCH.startedAt = nowLabel();
+  MATCH.duration = '0m elapsed';
+  render();
+}
+
+function confirmEnd() {
+  $("sheetBody").innerHTML = `
+    <div class="sheet-confirm-title">End match without a winner?</div>
+    <div class="sheet-confirm-desc">
+      The current score (${state.scoreA}–${state.scoreB}) will be saved and the match marked as ended. To declare a winner instead, tap <strong>Record team win</strong>.
+    </div>
+    <div class="sheet-confirm-actions">
+      <button class="btn-confirm-cancel" type="button" onclick="closeSheet()">Cancel</button>
+      <button class="btn-confirm-delete" type="button" onclick="endNoWinner()" style="background:var(--fg);border-color:var(--fg);color:var(--surface)">End match</button>
+    </div>
+  `;
+  openSheet();
+}
+function endNoWinner() {
+  state.winner = state.scoreA === state.scoreB
+    ? null
+    : (state.scoreA > state.scoreB ? 'A' : 'B');
+  state.status = 'ended';
+  MATCH.duration = MATCH.duration.replace('elapsed', 'total');
+  closeSheet();
+  render();
+}
+
+function openAward() {
+  $("sheetBody").innerHTML = `
+    <div class="sheet-confirm-title">Record team win</div>
+    <div class="sheet-confirm-desc">
+      Pick the winning team. Current score is locked in as the final.
+    </div>
+    <div class="award-pick">
+      <button class="award-card" data-team="A" type="button" onclick="finalizeWin('A');closeSheet()">
+        <span class="award-card-mark">A</span>
+        <span class="award-card-tag">Team A</span>
+        <span class="award-card-name">${esc(MATCH.teamA.roster)}</span>
+      </button>
+      <button class="award-card" data-team="B" type="button" onclick="finalizeWin('B');closeSheet()">
+        <span class="award-card-mark">B</span>
+        <span class="award-card-tag">Team B</span>
+        <span class="award-card-name">${esc(MATCH.teamB.roster)}</span>
+      </button>
+    </div>
+    <button class="sheet-cancel" type="button" onclick="closeSheet()">Cancel</button>
+  `;
+  openSheet();
+}
+
+function reopenMatch() {
+  state.status = 'live';
+  state.winner = null;
+  render();
+}
+
+/* ================================================================
+   QUICK SCORE EDIT — numeric keypad
+   ================================================================ */
+let kpState = { team: 'A', value: '' };
+
+function openScoreEdit(team) {
+  if (state.status !== 'live') return;
+  kpState = { team, value: '' };
+  $("sheetBody").innerHTML = renderKeypad();
+  openSheet();
+  // hint mobile to suggest numeric keyboard if user pastes externally — not strictly used
+}
+
+function renderKeypad() {
+  const team = kpState.team;
+  const teamData = team === 'A' ? MATCH.teamA : MATCH.teamB;
+  const current = team === 'A' ? state.scoreA : state.scoreB;
+  const entered = kpState.value === '' ? null : parseInt(kpState.value, 10);
+  const display = entered === null
+    ? `<span class="kp-display-value kp-display-value--empty">${current}</span>`
+    : `<span class="kp-display-value">${entered}</span>`;
+
+  let deltaHtml = '';
+  if (entered !== null) {
+    const d = entered - current;
+    const cls = d > 0 ? 'is-pos' : (d < 0 ? 'is-neg' : '');
+    const sign = d > 0 ? '+' : '';
+    deltaHtml = `<div class="kp-display-delta ${cls}">
+        From ${current}<b>${sign}${d}</b>
+      </div>`;
+  } else {
+    deltaHtml = `<div class="kp-display-delta">Current<b>${current}</b></div>`;
+  }
+
+  const max = MATCH.hardCap; // 30
+  const canSave = entered !== null && entered >= 0 && entered <= max && entered !== current;
+
+  const key = (n) => `<button class="kp-key" type="button" onclick="kpInput('${n}')">${n}</button>`;
+
+  return `
+    <div class="kp-header">
+      <div class="kp-title">
+        <span class="kp-title-mark" data-team="${team}">${team}</span>
+        Set Team ${team}
+        <small>${esc(teamData.roster)}</small>
+      </div>
+      <span class="kp-current"></span>
+    </div>
+
+    <div class="kp-display">
+      ${display}
+      ${deltaHtml}
+    </div>
+
+    <div class="kp-quick">
+      <button class="kp-quick-chip" type="button" onclick="kpSet('${current + 1}')">+1</button>
+      <button class="kp-quick-chip" type="button" onclick="kpSet('${Math.max(0, current - 1)}')">−1</button>
+      <button class="kp-quick-chip" type="button" onclick="kpSet('${current + 5}')">+5</button>
+      <button class="kp-quick-chip" type="button" onclick="kpSet('${MATCH.pointsTarget}')">${MATCH.pointsTarget}</button>
+    </div>
+
+    <div class="kp-pad" role="group" aria-label="Numeric keypad">
+      ${key(1)}${key(2)}${key(3)}
+      ${key(4)}${key(5)}${key(6)}
+      ${key(7)}${key(8)}${key(9)}
+      <button class="kp-key kp-key--util" type="button" onclick="kpInput('back')" aria-label="Backspace">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 5H8l-7 7 7 7h13a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"></path>
+          <line x1="18" y1="9" x2="12" y2="15"></line>
+          <line x1="12" y1="9" x2="18" y2="15"></line>
+        </svg>
+      </button>
+      ${key(0)}
+      <button class="kp-key kp-key--util" type="button" onclick="kpClear()" aria-label="Clear">C</button>
+    </div>
+
+    <div class="kp-actions">
+      <button class="btn-kp-cancel" type="button" onclick="closeSheet()">Cancel</button>
+      <button class="btn-kp-save" type="button" onclick="kpSave()" ${canSave ? '' : 'disabled'}>Set score</button>
+    </div>
+  `;
+}
+
+function kpInput(k) {
+  if (k === 'back') {
+    kpState.value = kpState.value.slice(0, -1);
+  } else {
+    // Cap at 2 digits, also cap value at hardCap
+    const next = (kpState.value + k).replace(/^0+(?=\d)/, '');
+    if (next.length > 2) return;
+    const n = parseInt(next, 10);
+    if (isNaN(n) || n > MATCH.hardCap) return;
+    kpState.value = next;
+  }
+  $("sheetBody").innerHTML = renderKeypad();
+}
+function kpClear() {
+  kpState.value = '';
+  $("sheetBody").innerHTML = renderKeypad();
+}
+function kpSet(v) {
+  kpState.value = String(v);
+  $("sheetBody").innerHTML = renderKeypad();
+}
+function kpSave() {
+  if (kpState.value === '') return;
+  const target = parseInt(kpState.value, 10);
+  const team = kpState.team;
+  const current = team === 'A' ? state.scoreA : state.scoreB;
+  if (isNaN(target) || target < 0 || target > MATCH.hardCap || target === current) return;
+
+  const delta = target - current;
+
+  if (delta > 0) {
+    // add (delta) points to team, log each
+    for (let i = 0; i < delta; i++) {
+      if (team === 'A') state.scoreA++; else state.scoreB++;
+      state.log.push({ team, a: state.scoreA, b: state.scoreB });
+    }
+    state.serving = team;
+  } else {
+    // negative delta — remove |delta| points by walking back log entries for this team
+    let remove = -delta;
+    // First, prune log entries of this team from the tail
+    for (let i = state.log.length - 1; i >= 0 && remove > 0; i--) {
+      if (state.log[i].team === team) {
+        state.log.splice(i, 1);
+        remove--;
+      }
+    }
+    if (team === 'A') state.scoreA = target;
+    else              state.scoreB = target;
+    // Rebuild log running totals to match scores
+    let a = 0, b = 0;
+    state.log = state.log.map(p => {
+      if (p.team === 'A') a++; else b++;
+      return { team: p.team, a, b };
+    });
+    const prev = state.log[state.log.length - 1];
+    state.serving = prev ? prev.team : state.serving;
+  }
+
+  closeSheet();
+  renderContent();
+  renderBottomBar();
+  bump(team);
+}
+
+/* ================================================================
+   MENU
+   ================================================================ */
+function openMenu() {
+  const items = [];
+
+  if (state.status === 'live') {
+    items.push(`<button class="sheet-item" type="button" onclick="closeSheet();openScoreEdit('A')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><line x1="7" y1="10" x2="7" y2="10"></line><line x1="12" y1="10" x2="12" y2="10"></line><line x1="17" y1="10" x2="17" y2="10"></line><line x1="7" y1="14" x2="17" y2="14"></line></svg>
+      Enter score directly
+    </button>`);
+    items.push(`<button class="sheet-item" type="button" onclick="closeSheet();openAward()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      Record team win
+    </button>`);
+    items.push(`<button class="sheet-item" type="button" onclick="closeSheet();swapServe()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+      Swap serve
+    </button>`);
+    items.push(`<button class="sheet-item" type="button" onclick="closeSheet();undoLast()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg>
+      Undo last point
+    </button>`);
+  }
+
+  if (state.status === 'scheduled') {
+    items.push(`<button class="sheet-item" type="button" onclick="closeSheet();startMatch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"></polygon></svg>
+      Start match
+    </button>`);
+  }
+
+  if (state.status === 'ended') {
+    items.push(`<button class="sheet-item" type="button" onclick="closeSheet();reopenMatch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><polyline points="21 3 21 8 16 8"></polyline></svg>
+      Re-open match
+    </button>`);
+  }
+
+  items.push(`<button class="sheet-item" type="button" onclick="closeSheet();onEditPlayers()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z"></path></svg>
+    Edit players
+  </button>`);
+
+  items.push(`<div class="sheet-divider"></div>`);
+
+  if (state.status === 'live') {
+    items.push(`<button class="sheet-item sheet-item--danger" type="button" onclick="closeSheet();confirmEnd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" fill="currentColor" stroke="none"></rect></svg>
+      End match
+    </button>`);
+  }
+
+  items.push(`<button class="sheet-item sheet-item--danger" type="button" onclick="confirmDelete()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+    Delete match
+  </button>`);
+
+  $("sheetBody").innerHTML = items.join('') +
+    `<button class="sheet-cancel" type="button" onclick="closeSheet()">Cancel</button>`;
+  openSheet();
+}
+
+function confirmDelete() {
+  $("sheetBody").innerHTML = `
+    <div class="sheet-confirm-title">Delete this match?</div>
+    <div class="sheet-confirm-desc">
+      Match ${MATCH.num} (${esc(MATCH.teamA.roster)} vs ${esc(MATCH.teamB.roster)}) will be permanently removed from the session. This can't be undone.
+    </div>
+    <div class="sheet-confirm-actions">
+      <button class="btn-confirm-cancel" type="button" onclick="openMenu()">Cancel</button>
+      <button class="btn-confirm-delete" type="button" onclick="onDelete()">Delete</button>
+    </div>
+  `;
+  openSheet();
+}
+
+function onDelete() {
+  closeSheet();
+  setTimeout(() => onBack(), 200);
+}
+function onEditPlayers() {
+  console.log('[nav] edit players');
+}
+
+/* ================================================================
+   SHEET PRIMITIVES
+   ================================================================ */
+function openSheet() {
+  $("sheetBackdrop").classList.add("is-open");
+  $("sheet").classList.add("is-open");
+}
+function closeSheet() {
+  $("sheetBackdrop").classList.remove("is-open");
+  $("sheet").classList.remove("is-open");
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+/* ================================================================
+   NAV
+   ================================================================ */
+function onBack() {
+  // Route back to session (best-effort)
+  if (window.history.length > 1) window.history.back();
+  else window.location.href = 'Session Detail.html';
+}
+
+/* ================================================================
+   DEMO
+   ================================================================ */
+function toggleDemo() { $("demoPanel").hidden = !$("demoPanel").hidden; }
+
+function setStatus(s) {
+  state.status = s;
+  if (s === 'scheduled') {
+    state.scoreA = 0; state.scoreB = 0; state.log = []; state.winner = null;
+    state.serving = null;
+  } else if (s === 'live') {
+    setPreset('mid');
+    return;
+  } else {
+    // ended — pick whichever team is ahead, else A
+    state.winner = state.scoreB > state.scoreA ? 'B' : 'A';
+  }
+  render();
+}
+function setPreset(p) {
+  document.querySelectorAll('[data-preset]').forEach(el => el.classList.toggle('is-active', el.dataset.preset === p));
+  state.status = 'live';
+  state.winner = null;
+  if (p === 'start')      { state.scoreA = 0;  state.scoreB = 0;  state.serving = 'A'; }
+  else if (p === 'mid')   { state.scoreA = 18; state.scoreB = 14; state.serving = 'A'; }
+  else if (p === 'match') { state.scoreA = 20; state.scoreB = 18; state.serving = 'A'; }
+  seedLog();
+  render();
+}
+
+/* ================================================================
+   UTIL
+   ================================================================ */
+function nowLabel() {
+  const d = new Date();
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2,'0');
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if (h === 0) h = 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+/* ================================================================
+   STICKY NAV
+   ================================================================ */
+$("scrollEl").addEventListener("scroll", () => {
+  $("topNav").classList.toggle("is-stuck", $("scrollEl").scrollTop > 24);
+}, { passive: true });
+
+/* ================================================================
+   INIT
+   ================================================================ */
+seedLog();
+render();
+</script>
+
+</body>
+</html>

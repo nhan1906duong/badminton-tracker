@@ -1,104 +1,634 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCreateSession } from '../hooks/useSessions'
-import { usePlayers } from '../hooks/usePlayers'
-import { useTopJoinedPlayers } from '../hooks/useTopJoinedPlayers'
-import { useSessionStore } from '../stores/session-store'
-import ActivePlayersEditor from '../components/ActivePlayersEditor'
-import { Loader2, Play, Users } from 'lucide-react'
+import { useCreateSession, DuplicateTournamentError } from '../hooks/useSessions'
+import { useNearbyBwfTournaments, type BwfTournament } from '../hooks/useBwfTournaments'
+import { AppBar, Dialog } from '../../design-system/components'
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function toDateInput(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function toTimeInput(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function friendlyDate(d: Date): string {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const tom = new Date(today); tom.setDate(tom.getDate() + 1)
+  const day0 = new Date(d); day0.setHours(0, 0, 0, 0)
+  if (day0.getTime() === today.getTime()) return 'Today'
+  if (day0.getTime() === tom.getTime()) return 'Tomorrow'
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
+function friendlyTime(d: Date): string {
+  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+}
+
+function friendlyFull(d: Date): string {
+  return `${friendlyDate(d)} · ${friendlyTime(d)}`
+}
+
+function roundedSoon(addMin: number): Date {
+  const d = new Date()
+  d.setMinutes(d.getMinutes() + addMin)
+  const m = d.getMinutes()
+  d.setMinutes(Math.ceil(m / 15) * 15, 0, 0)
+  return d
+}
+
+function formatDateRange(startDate: string, endDate: string): string {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const startDay = start.getDate()
+  const endDay = end.getDate()
+  const month = start.toLocaleDateString('en-US', { month: 'short' })
+  const year = start.getFullYear()
+  if (startDate === endDate) return `${month} ${startDay}, ${year}`
+  return `${month} ${startDay}–${endDay}, ${year}`
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+interface SuggestCardProps {
+  index: number
+  name: string
+  tag: string
+  isSelected: boolean
+  onSelect: () => void
+}
+
+function SuggestCard({ index, name, tag, isSelected, onSelect }: SuggestCardProps) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={isSelected}
+      onClick={onSelect}
+      style={isSelected ? { borderWidth: 2, padding: '11px 15px' } : {}}
+      className={`flex items-center gap-3 w-full min-h-[56px] px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-left transition-colors active:bg-[var(--bg)] ${isSelected ? 'border-[var(--accent)]' : ''}`}
+    >
+      <div
+        className={`w-8 h-8 rounded-[var(--radius-md)] border flex-shrink-0 grid place-items-center font-[family:var(--font-display)] text-[var(--text-sm)] font-black transition-all ${
+          isSelected
+            ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+            : 'bg-[var(--bg)] border-[var(--border)] text-[var(--muted)]'
+        }`}
+        style={{ fontSize: 13 }}
+      >
+        {index + 1}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="font-[family:var(--font-display)] font-bold leading-tight tracking-[-0.01em] text-[var(--fg)]" style={{ fontSize: 15 }}>
+          {name}
+        </div>
+        <div className="font-[family:var(--font-mono)] text-[var(--muted)] uppercase tracking-[0.06em] mt-0.5" style={{ fontSize: 11 }}>
+          {tag}
+        </div>
+      </div>
+
+      <div
+        className={`w-[22px] h-[22px] rounded-full border flex-shrink-0 grid place-items-center transition-all ${
+          isSelected ? 'bg-[var(--accent)] border-[var(--accent)]' : 'border-[var(--border)]'
+        }`}
+      >
+        {isSelected && (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--surface)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+      </div>
+    </button>
+  )
+}
+
+function SuggestSkeleton() {
+  return (
+    <div className="flex items-center gap-3 w-full min-h-[56px] px-4 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] animate-pulse">
+      <div className="w-8 h-8 rounded-[var(--radius-md)] bg-[var(--border)] opacity-55 flex-shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-2.5 bg-[var(--border)] rounded opacity-55" style={{ width: '65%' }} />
+        <div className="h-2 bg-[var(--border)] rounded opacity-35" style={{ width: '40%' }} />
+      </div>
+      <div className="w-[22px] h-[22px] rounded-full bg-[var(--border)] opacity-55 flex-shrink-0" />
+    </div>
+  )
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
+
+type StartMode = 'now' | 'schedule'
 
 export default function CreateSessionPage() {
   const navigate = useNavigate()
   const createSession = useCreateSession()
-  const { data: allPlayers, isLoading: playersLoading } = usePlayers()
-  const { players: topPlayers, isLoading: topLoading } = useTopJoinedPlayers(5)
-  const setSessionPlayers = useSessionStore((s) => s.setPlayers)
+  const { tournaments, isLoading: tournamentsLoading, refetch } = useNearbyBwfTournaments(7)
 
-  const [label, setLabel] = useState('')
-  const [error, setError] = useState('')
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
-  // Apply top-5 defaults only once after data loads, so user edits aren't overwritten
-  const defaultsAppliedRef = useRef(false)
+  // ── Name state
+  const [selectedTournament, setSelectedTournament] = useState<BwfTournament | null>(null)
+  const [customName, setCustomName] = useState('')
+  const customInputRef = useRef<HTMLInputElement>(null)
 
+  // ── Time state
+  const [mode, setMode] = useState<StartMode>('now')
+  const [scheduledAt, setScheduledAt] = useState<Date | null>(null)
+  const [nowTime, setNowTime] = useState(new Date())
+
+  // ── Nav scroll border
+  const [navStuck, setNavStuck] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // ── Dialog
+  type DialogKind = 'duplicate' | 'error'
+  const [dialog, setDialog] = useState<{ kind: DialogKind; message: string } | null>(null)
+
+  // Live clock tick
   useEffect(() => {
-    if (defaultsAppliedRef.current) return
-    if (topLoading || playersLoading) return
-    setSelectedIds(topPlayers.map((p) => p.id))
-    defaultsAppliedRef.current = true
-  }, [topLoading, playersLoading, topPlayers])
+    const id = setInterval(() => setNowTime(new Date()), 15_000)
+    return () => clearInterval(id)
+  }, [])
 
-  const defaultLabel = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  // Scroll listener for nav border
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const handler = () => setNavStuck(el.scrollTop > 4)
+    el.addEventListener('scroll', handler, { passive: true })
+    return () => el.removeEventListener('scroll', handler)
+  }, [])
 
-  async function handleStart() {
-    setError('')
-    try {
-      const session = await createSession.mutateAsync({
-        label: label.trim() || undefined,
-      })
-      setSessionPlayers(session.id, selectedIds)
-      navigate(`/sessions/${session.id}`, { replace: true })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create session')
+  // Derived state
+  const resolvedName = customName.trim() || selectedTournament?.name || ''
+  const resolvedTournamentId = !customName.trim() ? (selectedTournament?.id ?? null) : null
+  const isReady = resolvedName.length > 0 && (mode === 'now' || scheduledAt !== null)
+
+  function handleSelectTournament(t: BwfTournament) {
+    setSelectedTournament(t)
+    setCustomName('')
+  }
+
+  function handleCustomFocus() {
+    setSelectedTournament(null)
+  }
+
+  function handleCustomInput(e: React.ChangeEvent<HTMLInputElement>) {
+    setCustomName(e.target.value)
+    if (e.target.value) setSelectedTournament(null)
+  }
+
+  function handleSetMode(next: StartMode) {
+    setMode(next)
+    if (next === 'schedule' && !scheduledAt) {
+      setScheduledAt(roundedSoon(60))
     }
   }
 
+  const handleSetScheduledAt = useCallback((d: Date) => {
+    setScheduledAt(d)
+  }, [])
+
+  function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.value) return
+    const [y, m, day] = e.target.value.split('-').map(Number)
+    const d = scheduledAt ? new Date(scheduledAt) : new Date()
+    d.setFullYear(y, m - 1, day)
+    handleSetScheduledAt(d)
+  }
+
+  function handleTimeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.value) return
+    const [hh, mm] = e.target.value.split(':').map(Number)
+    const d = scheduledAt ? new Date(scheduledAt) : new Date()
+    d.setHours(hh, mm, 0, 0)
+    handleSetScheduledAt(d)
+  }
+
+  function quickPick(addMin: number) {
+    handleSetScheduledAt(roundedSoon(addMin))
+  }
+
+  function quickPickTomorrow() {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    d.setHours(19, 0, 0, 0)
+    handleSetScheduledAt(d)
+  }
+
+  function isQuickActive(key: '30' | '60' | 'tom'): boolean {
+    if (!scheduledAt) return false
+    const diffMin = Math.round((scheduledAt.getTime() - nowTime.getTime()) / 60_000)
+    if (key === '30') return diffMin >= 25 && diffMin <= 40
+    if (key === '60') return diffMin >= 55 && diffMin <= 70
+    if (key === 'tom') {
+      const t = new Date(nowTime); t.setDate(t.getDate() + 1)
+      return (
+        scheduledAt.getDate() === t.getDate() &&
+        scheduledAt.getHours() === 19 &&
+        scheduledAt.getMinutes() === 0
+      )
+    }
+    return false
+  }
+
+  async function handleCreate() {
+    if (!isReady) return
+    setDialog(null)
+    try {
+      const session = await createSession.mutateAsync({
+        label: resolvedName,
+        started_at: mode === 'schedule' && scheduledAt ? scheduledAt.toISOString() : undefined,
+        bwf_tournament_id: resolvedTournamentId ?? undefined,
+      })
+      navigate(`/sessions/${session.id}`, { replace: true })
+    } catch (err) {
+      if (err instanceof DuplicateTournamentError) {
+        setDialog({ kind: 'duplicate', message: err.message })
+      } else {
+        setDialog({
+          kind: 'error',
+          message: err instanceof Error ? err.message : 'Failed to create session',
+        })
+      }
+    }
+  }
+
+  // CTA label
+  function ctaLabel(): string {
+    if (!resolvedName) return 'Pick a name to continue'
+    if (mode === 'now') return 'Start session now'
+    if (scheduledAt) return `Schedule for ${friendlyFull(scheduledAt)}`
+    return 'Pick a time to continue'
+  }
+
   return (
-    <div className="min-h-svh bg-gray-50">
-      <div className="px-4 py-5 space-y-6 pb-32">
-        <section className="space-y-3">
-          <span className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Active Players
-          </span>
-          <ActivePlayersEditor
-            players={allPlayers ?? []}
-            selectedIds={selectedIds}
-            onChange={setSelectedIds}
-            isLoading={playersLoading || topLoading}
-          />
-        </section>
+    <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
 
-        <section className="space-y-3">
-          <span className="text-sm font-bold text-gray-900">Session Name</span>
-          <input
-            type="text"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            placeholder={defaultLabel}
-            className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            style={{ minHeight: 52 }}
-          />
-          <p className="text-xs text-gray-400">Leave blank to auto-fill with today's date.</p>
-        </section>
+      {/* ── Nav ── */}
+      <AppBar
+        title=""
+        backLabel="Cancel"
+        onBack={() => navigate(-1)}
+        stuck={navStuck}
+        safeArea
+      />
 
-        {error && (
-          <div className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
-            <p className="text-sm font-medium text-red-600">{error}</p>
+      {/* ── Scroll area ── */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain"
+        style={{ paddingBottom: 'max(120px, calc(env(safe-area-inset-bottom) + 104px))' }}
+      >
+        {/* Large title */}
+        <header className="px-6 pt-3 pb-8">
+          <h1
+            className="font-[family:var(--font-display)] font-black leading-none tracking-[-0.035em] text-[var(--fg)]"
+            style={{ fontSize: 48 }}
+          >
+            New session
+          </h1>
+          <p className="font-[family:var(--font-mono)] text-[var(--muted)] mt-2" style={{ fontSize: 11 }}>
+            Pick a name. Set a time. Start swinging.
+          </p>
+        </header>
+
+        {/* ── Section 1: Session Name ── */}
+        <section className="px-6 mb-12">
+          <div className="flex items-baseline justify-between gap-3 mb-4">
+            <span
+              className="font-[family:var(--font-mono)] font-bold uppercase tracking-[0.1em] text-[var(--muted)]"
+              style={{ fontSize: 11 }}
+            >
+              Session name
+            </span>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="flex items-center gap-1 font-[family:var(--font-body)] text-[var(--accent)] font-semibold min-h-[32px] active:opacity-50 transition-opacity"
+              style={{ fontSize: 13 }}
+            >
+              <svg
+                className={tournamentsLoading ? 'animate-spin' : ''}
+                width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              >
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <path d="M21 4v5h-5" />
+              </svg>
+              {tournamentsLoading ? 'Loading' : 'Refresh'}
+            </button>
           </div>
-        )}
+
+          {/* Suggestion list */}
+          <div className="flex flex-col gap-2 mb-4" role="radiogroup" aria-label="Tournament suggestions">
+            {tournamentsLoading ? (
+              <>
+                <SuggestSkeleton />
+                <SuggestSkeleton />
+                <SuggestSkeleton />
+              </>
+            ) : tournaments.length === 0 ? (
+              <p className="text-[var(--muted)] font-[family:var(--font-mono)]" style={{ fontSize: 13 }}>
+                No tournaments in the next 7 days. Type a custom name below.
+              </p>
+            ) : (
+              tournaments.map((t, i) => (
+                <SuggestCard
+                  key={`${t.categorySlug}-${t.startDate}`}
+                  index={i}
+                  name={t.name}
+                  tag={`${t.categoryName} · ${formatDateRange(t.startDate, t.endDate)}`}
+                  isSelected={selectedTournament?.name === t.name && selectedTournament?.startDate === t.startDate}
+                  onSelect={() => handleSelectTournament(t)}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Divider */}
+          <div
+            className="flex items-center gap-3 my-4 font-[family:var(--font-mono)] uppercase tracking-[0.1em] text-[var(--muted)]"
+            style={{ fontSize: 11 }}
+          >
+            <span className="flex-1 h-px bg-[var(--border)]" />
+            Or
+            <span className="flex-1 h-px bg-[var(--border)]" />
+          </div>
+
+          {/* Custom name input */}
+          <input
+            ref={customInputRef}
+            type="text"
+            value={customName}
+            onFocus={handleCustomFocus}
+            onChange={handleCustomInput}
+            placeholder="Type your own name…"
+            maxLength={48}
+            autoComplete="off"
+            autoCapitalize="words"
+            spellCheck={false}
+            className="w-full px-4 py-3 font-[family:var(--font-body)] text-[var(--fg)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] outline-none min-h-[48px] transition-colors placeholder:text-[var(--muted)] placeholder:opacity-55"
+            style={{ fontSize: 15, ...(customName ? { borderColor: 'var(--accent)', borderWidth: 2, padding: '11px 15px' } : {}) }}
+          />
+        </section>
+
+        {/* ── Section 2: Start Time ── */}
+        <section className="px-6 mb-12">
+          <div className="mb-4">
+            <span
+              className="font-[family:var(--font-mono)] font-bold uppercase tracking-[0.1em] text-[var(--muted)]"
+              style={{ fontSize: 11 }}
+            >
+              Start time
+            </span>
+          </div>
+
+          {/* Segmented control */}
+          <div
+            className="grid grid-cols-2 bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[3px] relative mb-4"
+            role="tablist"
+            aria-label="Start time mode"
+          >
+            {/* Sliding track */}
+            <div
+              className="absolute top-[3px] bottom-[3px] bg-[var(--fg)] rounded-[6px] transition-transform duration-250"
+              style={{
+                width: 'calc(50% - 3px)',
+                transform: mode === 'schedule' ? 'translateX(100%)' : 'translateX(0)',
+                transitionTimingFunction: 'cubic-bezier(0.32,0,0.15,1)',
+              }}
+              aria-hidden
+            />
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'now'}
+              onClick={() => handleSetMode('now')}
+              className={`relative z-10 flex items-center justify-center gap-2 font-[family:var(--font-body)] font-semibold min-h-[40px] transition-colors ${mode === 'now' ? 'text-[var(--surface)]' : 'text-[var(--muted)]'}`}
+              style={{ fontSize: 13 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 3 4 14 12 14 11 21 20 10 12 10 13 3" />
+              </svg>
+              Start now
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mode === 'schedule'}
+              onClick={() => handleSetMode('schedule')}
+              className={`relative z-10 flex items-center justify-center gap-2 font-[family:var(--font-body)] font-semibold min-h-[40px] transition-colors ${mode === 'schedule' ? 'text-[var(--surface)]' : 'text-[var(--muted)]'}`}
+              style={{ fontSize: 13 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Schedule
+            </button>
+          </div>
+
+          {/* Now panel */}
+          <div
+            className="overflow-hidden transition-all"
+            style={{
+              display: 'grid',
+              gridTemplateRows: mode === 'now' ? '1fr' : '0fr',
+              transition: 'grid-template-rows 280ms cubic-bezier(0.32,0,0.15,1)',
+            }}
+          >
+            <div className="overflow-hidden">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)]">
+                <div className="flex items-center gap-3 p-4">
+                  {/* Live dot */}
+                  <span
+                    className="w-2 h-2 rounded-full bg-[var(--accent)] flex-shrink-0 animate-pulse"
+                    aria-hidden
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="font-[family:var(--font-mono)] text-[var(--accent)] font-bold uppercase tracking-[0.08em] mb-0.5"
+                      style={{ fontSize: 11 }}
+                    >
+                      Starting in a moment
+                    </div>
+                    <div
+                      className="font-[family:var(--font-display)] font-black leading-tight tracking-[-0.02em] text-[var(--fg)]"
+                      style={{ fontSize: 24, fontFeatureSettings: '"tnum" 1' }}
+                    >
+                      {friendlyTime(nowTime)}
+                    </div>
+                    <div className="font-[family:var(--font-mono)] text-[var(--muted)] mt-0.5" style={{ fontSize: 11 }}>
+                      Today · {nowTime.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Schedule panel */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateRows: mode === 'schedule' ? '1fr' : '0fr',
+              transition: 'grid-template-rows 280ms cubic-bezier(0.32,0,0.15,1)',
+            }}
+          >
+            <div className="overflow-hidden">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
+                {/* Date row */}
+                <label
+                  className="flex items-center justify-between gap-3 px-4 min-h-[56px] border-b border-[var(--border)] active:bg-[var(--bg)] transition-colors relative cursor-pointer"
+                  htmlFor="schedDate"
+                >
+                  <span className="flex items-center gap-3 text-[var(--fg)] font-medium" style={{ fontSize: 15 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Date
+                  </span>
+                  <span className="flex items-center gap-2 font-[family:var(--font-display)] font-bold text-[var(--accent)]" style={{ fontSize: 15, fontFeatureSettings: '"tnum" 1' }}>
+                    {scheduledAt ? friendlyDate(scheduledAt) : 'Today'}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </span>
+                  <input
+                    id="schedDate"
+                    type="date"
+                    value={scheduledAt ? toDateInput(scheduledAt) : toDateInput(new Date())}
+                    onChange={handleDateChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ WebkitAppearance: 'none' }}
+                  />
+                </label>
+
+                {/* Time row */}
+                <label
+                  className="flex items-center justify-between gap-3 px-4 min-h-[56px] active:bg-[var(--bg)] transition-colors relative cursor-pointer"
+                  htmlFor="schedTime"
+                >
+                  <span className="flex items-center gap-3 text-[var(--fg)] font-medium" style={{ fontSize: 15 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Time
+                  </span>
+                  <span className="flex items-center gap-2 font-[family:var(--font-display)] font-bold text-[var(--accent)]" style={{ fontSize: 15, fontFeatureSettings: '"tnum" 1' }}>
+                    {scheduledAt ? friendlyTime(scheduledAt) : '8:00 PM'}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </span>
+                  <input
+                    id="schedTime"
+                    type="time"
+                    value={scheduledAt ? toTimeInput(scheduledAt) : '20:00'}
+                    onChange={handleTimeChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ WebkitAppearance: 'none' }}
+                  />
+                </label>
+              </div>
+
+              {/* Quick chips */}
+              <div className="flex gap-2 flex-wrap mt-3">
+                {(
+                  [
+                    { key: '30' as const, label: 'In 30 min', action: () => quickPick(30) },
+                    { key: '60' as const, label: 'In 1 hr',   action: () => quickPick(60) },
+                    { key: 'tom' as const, label: 'Tomorrow 7:00 PM', action: quickPickTomorrow },
+                  ] as const
+                ).map(({ key, label, action }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={action}
+                    className={`font-[family:var(--font-body)] font-semibold border rounded-full min-h-[36px] px-4 transition-all active:bg-[var(--bg)] ${
+                      isQuickActive(key)
+                        ? 'bg-[var(--fg)] text-[var(--surface)] border-[var(--fg)]'
+                        : 'bg-[var(--surface)] text-[var(--fg)] border-[var(--border)]'
+                    }`}
+                    style={{ fontSize: 13, fontFeatureSettings: '"tnum" 1' }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
 
-      {/* Bottom Start button */}
-      <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 max-w-lg mx-auto z-30 px-4 py-3">
+      {/* ── Bottom CTA ── */}
+      <div
+        className="sticky bottom-0 left-0 right-0 border-t border-[var(--border)] z-15"
+        style={{
+          padding: `12px 24px max(16px, calc(env(safe-area-inset-bottom) + 12px))`,
+          background: 'color-mix(in oklch, var(--bg) 92%, transparent)',
+          backdropFilter: 'saturate(180%) blur(12px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(12px)',
+        }}
+      >
         <button
-          onClick={handleStart}
-          disabled={createSession.isPending}
-          className="w-full py-4 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-green-600 text-white shadow-lg shadow-green-600/25"
-          style={{ minHeight: 56 }}
+          type="button"
+          onClick={handleCreate}
+          disabled={!isReady || createSession.isPending}
+          className={`w-full font-[family:var(--font-body)] font-bold border-none rounded-[var(--radius-lg)] min-h-[52px] flex items-center justify-center gap-2 transition-all active:scale-[0.985] active:opacity-90 ${
+            isReady && !createSession.isPending
+              ? 'bg-[var(--accent)] text-[var(--surface)] cursor-pointer'
+              : 'bg-[var(--border)] text-[var(--muted)] cursor-not-allowed'
+          }`}
+          style={{
+            fontSize: 15,
+            letterSpacing: '0.005em',
+            boxShadow: isReady && !createSession.isPending
+              ? '0 1px 2px oklch(0% 0 0 / 0.08), 0 6px 18px oklch(55% 0.20 30 / 0.22)'
+              : 'none',
+          }}
         >
           {createSession.isPending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <>
+              <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+              </svg>
+              Creating…
+            </>
           ) : (
-            <Play className="w-5 h-5" />
+            <>
+              {ctaLabel()}
+              {isReady && (
+                <span className="font-[family:var(--font-mono)] opacity-70 ml-1" style={{ fontSize: 11 }}>→</span>
+              )}
+            </>
           )}
-          {createSession.isPending ? 'Starting...' : 'Start Session'}
         </button>
       </div>
+
+      <Dialog
+        open={dialog !== null}
+        onClose={() => setDialog(null)}
+        kind={dialog?.kind === 'duplicate' ? 'warning' : 'danger'}
+        title={dialog?.kind === 'duplicate' ? 'Tournament already tracked' : 'Failed to create session'}
+        description={
+          dialog?.kind === 'duplicate'
+            ? 'A session for this tournament already exists. Choose a different tournament or use a custom name.'
+            : (dialog?.message ?? '')
+        }
+      />
     </div>
   )
 }

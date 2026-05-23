@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import type { Player } from '../types/database'
+import { formatShortPlayerName } from '../lib/player-name'
 import Avatar from './Avatar'
 import ActivePlayersBottomSheet from './ActivePlayersBottomSheet'
 
@@ -70,7 +71,7 @@ export default function ActivePlayersEditor({
               bgColor="rgba(255,255,255,0.2)"
               textColor="#ffffff"
             />
-            <span className="truncate max-w-[160px]">{player.name}</span>
+            <span className="truncate max-w-[160px]">{formatShortPlayerName(player.name)}</span>
           </button>
         ))}
 
