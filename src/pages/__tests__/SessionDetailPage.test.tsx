@@ -139,13 +139,16 @@ function makeMatch(id: string): MatchWithDetails {
   return {
     id,
     session_id: 'sess-1',
-    match_type: 'singles',
+    match_type: 'MEN_SINGLES',
     played_at: PAST,
+    status: 'COMPLETED',
+    queue_position: null,
     notes: null,
     created_by: 'user-1',
     created_at: PAST,
     teams: [],
     participants: [],
+    scores: [],
   }
 }
 
