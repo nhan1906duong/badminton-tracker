@@ -7,10 +7,6 @@ interface MatchesContentProps {
   isLoading: boolean
   isError: boolean
   onRetry: () => void
-  swipedMatchId: string | null
-  onSwipeOpen: (id: string) => void
-  onSwipeClose: () => void
-  onDeleteRequest: (id: string) => void
 }
 
 function SkeletonCard() {
@@ -42,16 +38,7 @@ function SkeletonCard() {
   )
 }
 
-export default function MatchesContent({
-  matches,
-  isLoading,
-  isError,
-  onRetry,
-  swipedMatchId,
-  onSwipeOpen,
-  onSwipeClose,
-  onDeleteRequest,
-}: MatchesContentProps) {
+export default function MatchesContent({ matches, isLoading, isError, onRetry }: MatchesContentProps) {
   if (isLoading) {
     return (
       <div className="space-y-[var(--space-3)]">
@@ -130,10 +117,6 @@ export default function MatchesContent({
           key={match.id}
           match={match}
           matchNumber={numberMap.get(match.id) ?? 0}
-          isSwiped={swipedMatchId === match.id}
-          onSwipeOpen={() => onSwipeOpen(match.id)}
-          onSwipeClose={onSwipeClose}
-          onDelete={() => onDeleteRequest(match.id)}
         />
       ))}
     </div>

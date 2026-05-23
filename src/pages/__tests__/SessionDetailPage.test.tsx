@@ -401,6 +401,14 @@ describe('SessionDetailPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-1/matches/new')
     })
 
+    it('navigates to player stats on "View player stats" click', () => {
+      mockMatchesData = [makeMatch('m1')]
+      renderPage()
+      clickMenuButton()
+      fireEvent.click(screen.getByRole('button', { name: 'View player stats' }))
+      expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-1/stats')
+    })
+
     it('calls startSession.mutateAsync on "Start session" click', async () => {
       mockSessionData = makeSession({ started_at: FUTURE })
       mockStartSession.mutateAsync.mockResolvedValue(undefined)

@@ -257,12 +257,46 @@ See [design-system/components/session-card.tsx](../design-system/components/sess
 ### MatchCard
 See [design-system/components/match-card.tsx](../design-system/components/match-card.tsx).
 
-- Live: `border-2 border-[var(--accent)]` + animated `LIVE` label in accent
-- Team name: 18px display font — winner `font-weight: 800 color: --fg`, loser `font-weight: 500 color: --muted`
-- Score: 32px extrabold display — winner score `--accent`, loser score `--muted`
-- Score divider: `text-[24px]` in `--border` color
-- Footer: 11px mono `--muted` with duration and match type, separated by top border
-- Compact variant: 15px team names, 24px scores, no footer
+Three states driven by `match.status: 'SCHEDULED' | 'LIVE' | 'COMPLETED'`.
+
+**Border:**
+- `LIVE` → `border-2 border-[var(--accent)]`
+- `SCHEDULED` / `COMPLETED` → `border border-[var(--border)]` (1px normal)
+
+**Meta bar (top row):**
+- Left: `M{N} · HH:MM` — match number + start time (`played_at`), 11px mono muted uppercase. Shows `dateLabel` instead when provided (e.g. on player history page).
+- Right: pulsing dot + `LIVE` label in accent for LIVE; `Scheduled` neutral badge for SCHEDULED; nothing for COMPLETED.
+
+**Teams row:**
+- Each player rendered on its own row (13px display font).
+- `Team A` / `Team B` label in 11px mono muted below the player names.
+- Winner side: `font-weight: 800`, `color: --fg`. Loser side: `font-weight: 500`, `color: --muted`.
+- Score center anchor: 32px extrabold display. Winner score `--accent`, loser score `--muted`, no-result `--fg`. Divider `:` in `--border` at 24px.
+- `W` / `L` indicator: 11px bold mono uppercase below the score, shown only for `COMPLETED`. `W` in `--accent`, `L` in `--muted` — always from Team A's perspective.
+
+**Footer (bottom row, separated by top border):**
+- Left: duration string (e.g. `32 min`, `1h 5m`). Computed from `ended_at − played_at` when `ended_at` is present; falls back to elapsed from `played_at` for LIVE. Shows `Not started` for SCHEDULED. Shows additional set scores when match has more than one set.
+- Right: match type label (e.g. `Men's Doubles`), 11px mono muted uppercase.
+
+**`ended_at` field:** Set on the `matches` table when `useRecordResult` is called. Used to compute exact match duration. Defined as `ended_at?: string | null` on the `Match` type in `src/types/database.ts`.
+
+```tsx
+// Design-system dumb component (for /settings/design-system preview)
+<MatchCard
+  status="COMPLETED"
+  teamAWon
+  teamAPlayers={['Minh', 'Tuan']}
+  teamBPlayers={['Huy', 'Dat']}
+  scoreA={21}
+  scoreB={18}
+  matchLabel="M2 · 18:30"
+  duration="48 min"
+  type="Men's Doubles"
+/>
+
+// Production component (src/components/MatchCard.tsx) — takes MatchWithDetails directly
+<MatchCard match={match} matchNumber={2} />
+```
 
 ### ListItem
 See [design-system/components/list-item.tsx](../design-system/components/list-item.tsx).

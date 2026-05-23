@@ -8,6 +8,14 @@ export const MATCH_TYPE_SHORT: Record<MatchType, string> = {
   MIXED_DOUBLES: 'XD',
 }
 
+export const MATCH_TYPE_LABEL: Record<MatchType, string> = {
+  MEN_SINGLES: "Men's Singles",
+  WOMEN_SINGLES: "Women's Singles",
+  MEN_DOUBLES: "Men's Doubles",
+  WOMEN_DOUBLES: "Women's Doubles",
+  MIXED_DOUBLES: 'Mixed Doubles',
+}
+
 export function getRequiredPlayerCount(type: MatchType): number {
   return type === 'MEN_SINGLES' || type === 'WOMEN_SINGLES' ? 2 : 4
 }

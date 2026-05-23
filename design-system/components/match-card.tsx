@@ -1,176 +1,219 @@
-import { Badge } from './badge'
-
 interface MatchCardProps {
-  status: 'live' | 'ended'
-  outcome?: 'win' | 'loss'
-  teamA: { name: string; players: string[] }
-  teamB: { name: string; players: string[] }
-  scoreA: number
-  scoreB: number
-  date: string
+  status: 'SCHEDULED' | 'LIVE' | 'COMPLETED'
+  teamAPlayers: string[]
+  teamBPlayers: string[]
+  matchLabel: string
+  scoreA?: number
+  scoreB?: number
   duration?: string
   type: string
-  compact?: boolean
+  teamAWon?: boolean
+}
+
+function formatDuration(duration: string | undefined, status: 'SCHEDULED' | 'LIVE' | 'COMPLETED'): string {
+  if (status === 'SCHEDULED') return 'Not started'
+  return duration ?? '—'
 }
 
 export function MatchCard({
   status,
-  outcome,
-  teamA,
-  teamB,
+  teamAPlayers,
+  teamBPlayers,
+  matchLabel,
   scoreA,
   scoreB,
-  date,
   duration,
   type,
-  compact,
+  teamAWon,
 }: MatchCardProps) {
-  const isLive = status === 'live'
-  const isWin = outcome === 'win'
-  const isLoss = outcome === 'loss'
-  const winnerA = scoreA > scoreB
+  const isLive = status === 'LIVE'
+  const isCompleted = status === 'COMPLETED'
+  const teamBWon = isCompleted && teamAWon === false
+  const hasScores = scoreA != null && scoreB != null
 
   return (
     <div
-      className={`bg-[var(--surface)] p-4 ${compact ? 'p-3' : ''}`}
+      className="bg-[var(--surface)] select-none"
       style={{
         border: isLive ? '2px solid var(--accent)' : '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-4) var(--space-5)',
       }}
     >
       {/* Meta bar */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
         <span
-          className="text-[11px] font-mono uppercase tracking-[0.06em]"
-          style={{ color: 'var(--muted)' }}
+          className="uppercase tracking-[0.06em]"
+          style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}
         >
-          {date}
+          {matchLabel}
         </span>
-        {isLive ? (
-          <div className="flex items-center gap-2">
+
+        {isLive && (
+          <div
+            className="inline-flex items-center uppercase tracking-[0.08em]"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              fontWeight: 700,
+              color: 'var(--accent)',
+              gap: 'var(--space-2)',
+            }}
+          >
             <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ background: 'var(--accent)' }}
+              className="rounded-full animate-pulse"
+              style={{ width: 8, height: 8, background: 'var(--accent)', display: 'inline-block', flexShrink: 0 }}
             />
-            <span
-              className="text-[11px] font-bold font-mono uppercase tracking-[0.08em]"
-              style={{ color: 'var(--accent)' }}
-            >
-              Live
-            </span>
+            Live
           </div>
-        ) : isWin ? (
-          <Badge variant="win">Win</Badge>
-        ) : isLoss ? (
-          <Badge variant="loss">Loss</Badge>
-        ) : null}
+        )}
+        {status === 'SCHEDULED' && (
+          <span
+            className="inline-flex items-center uppercase tracking-[0.06em]"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              fontWeight: 700,
+              padding: 'var(--space-1) var(--space-2)',
+              background: 'var(--bg)',
+              color: 'var(--muted)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              lineHeight: 1,
+            }}
+          >
+            Scheduled
+          </span>
+        )}
       </div>
 
       {/* Teams + Score */}
-      <div className="flex items-center gap-3">
-        {/* Team A */}
-        <div className="flex-1 min-w-0 text-left">
+      <div className="flex items-center" style={{ gap: 'var(--space-3)' }}>
+        {/* Team A — left */}
+        <div className="flex-1 min-w-0 text-left flex flex-col" style={{ gap: 2 }}>
+          {teamAPlayers.map((name) => (
+            <div
+              key={name}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: teamAWon ? 800 : teamBWon ? 500 : 700,
+                lineHeight: 1.2,
+                letterSpacing: '-0.01em',
+                color: teamBWon ? 'var(--muted)' : 'var(--fg)',
+              }}
+            >
+              {name}
+            </div>
+          ))}
           <div
-            className={`font-semibold leading-[1.2] tracking-[-0.01em] ${compact ? 'text-[15px]' : 'text-[18px]'}`}
             style={{
-              fontFamily: 'var(--font-display)',
-              color: winnerA ? 'var(--fg)' : 'var(--muted)',
-              fontWeight: winnerA ? 800 : 500,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              color: 'var(--muted)',
+              marginTop: 2,
             }}
           >
-            {teamA.name}
-          </div>
-          <div
-            className={`mt-0.5 ${compact ? 'text-[11px]' : 'text-[13px]'}`}
-            style={{ color: winnerA ? 'var(--fg)' : 'var(--muted)' }}
-          >
-            {teamA.players.join(', ')}
+            Team A
           </div>
         </div>
 
-        {/* Score */}
-        <div className="flex flex-col items-center justify-center shrink-0 min-w-[80px]">
-          <div className="flex items-center gap-2">
+        {/* Score center */}
+        <div className="flex flex-col items-center justify-center shrink-0" style={{ minWidth: 80 }}>
+          <div className="flex items-center leading-none" style={{ gap: 'var(--space-2)' }}>
             <span
-              className={`font-extrabold leading-none tracking-[-0.03em] ${compact ? 'text-[24px]' : 'text-[32px]'}`}
               style={{
                 fontFamily: 'var(--font-display)',
-                color: winnerA ? 'var(--accent)' : 'var(--muted)',
+                fontSize: 'var(--text-2xl)',
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                color: teamAWon ? 'var(--accent)' : teamBWon ? 'var(--muted)' : 'var(--fg)',
               }}
             >
-              {scoreA}
+              {hasScores ? scoreA : '—'}
             </span>
-            <span
-              className="text-[24px] font-normal"
-              style={{ color: 'var(--border)' }}
-            >
+            <span style={{ color: 'var(--border)', fontWeight: 400, fontSize: 'var(--text-xl)' }}>
               :
             </span>
             <span
-              className={`font-extrabold leading-none tracking-[-0.03em] ${compact ? 'text-[24px]' : 'text-[32px]'}`}
               style={{
                 fontFamily: 'var(--font-display)',
-                color: !winnerA ? 'var(--accent)' : 'var(--muted)',
+                fontSize: 'var(--text-2xl)',
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                color: teamBWon ? 'var(--accent)' : teamAWon ? 'var(--muted)' : 'var(--fg)',
               }}
             >
-              {scoreB}
+              {hasScores ? scoreB : '—'}
             </span>
           </div>
-          {!isLive && !compact && (
-            <span
-              className="text-[11px] font-bold font-mono uppercase tracking-[0.08em] mt-2"
-              style={{ color: isWin ? 'var(--accent)' : 'var(--muted)' }}
+
+          {isCompleted && (
+            <div
+              className="uppercase tracking-[0.08em]"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                marginTop: 'var(--space-2)',
+                lineHeight: 1,
+                color: teamAWon ? 'var(--accent)' : 'var(--muted)',
+              }}
             >
-              {isWin ? 'W' : isLoss ? 'L' : ''}
-            </span>
+              {teamAWon ? 'W' : 'L'}
+            </div>
           )}
         </div>
 
-        {/* Team B */}
-        <div className="flex-1 min-w-0 text-right">
+        {/* Team B — right */}
+        <div className="flex-1 min-w-0 text-right flex flex-col" style={{ gap: 2 }}>
+          {teamBPlayers.map((name) => (
+            <div
+              key={name}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: teamBWon ? 800 : teamAWon ? 500 : 700,
+                lineHeight: 1.2,
+                letterSpacing: '-0.01em',
+                color: teamAWon ? 'var(--muted)' : 'var(--fg)',
+              }}
+            >
+              {name}
+            </div>
+          ))}
           <div
-            className={`font-semibold leading-[1.2] tracking-[-0.01em] ${compact ? 'text-[15px]' : 'text-[18px]'}`}
             style={{
-              fontFamily: 'var(--font-display)',
-              color: !winnerA ? 'var(--fg)' : 'var(--muted)',
-              fontWeight: !winnerA ? 800 : 500,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              color: 'var(--muted)',
+              marginTop: 2,
             }}
           >
-            {teamB.name}
-          </div>
-          <div
-            className={`mt-0.5 ${compact ? 'text-[11px]' : 'text-[13px]'}`}
-            style={{ color: !winnerA ? 'var(--fg)' : 'var(--muted)' }}
-          >
-            {teamB.players.join(', ')}
+            Team B
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      {(duration || type) && !compact && (
-        <div
-          className="flex items-center justify-between mt-3 pt-3"
-          style={{ borderTop: '1px solid var(--border)' }}
+      <div
+        className="flex items-center justify-between"
+        style={{
+          marginTop: 'var(--space-4)',
+          paddingTop: 'var(--space-3)',
+          borderTop: '1px solid var(--border)',
+        }}
+      >
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+          {formatDuration(duration, status)}
+        </span>
+        <span
+          className="uppercase tracking-[0.06em]"
+          style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}
         >
-          {duration && (
-            <span
-              className="text-[11px] font-mono"
-              style={{ color: 'var(--muted)' }}
-            >
-              {duration}
-            </span>
-          )}
-          {type && (
-            <span
-              className="text-[11px] font-mono uppercase tracking-[0.06em]"
-              style={{ color: 'var(--muted)' }}
-            >
-              {type}
-            </span>
-          )}
-        </div>
-      )}
+          {type}
+        </span>
+      </div>
     </div>
   )
 }

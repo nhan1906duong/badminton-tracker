@@ -21,6 +21,7 @@ export interface Player {
   email?: string | null
   avatar_url?: string | null
   is_active: boolean
+  rating: number
   created_at: string
   created_by: string
 }
@@ -42,6 +43,7 @@ export interface Match {
   session_id: string
   match_type: MatchType
   played_at: string
+  ended_at?: string | null
   notes?: string | null
   status: MatchStatus
   queue_position: number | null
@@ -100,4 +102,23 @@ export interface SetScore {
   set_number: number
   team_a_score: number
   team_b_score: number
+}
+
+export interface PlayerMatchResult {
+  id: string
+  player_id: string
+  match_id: string
+  session_id: string
+  is_winner: boolean
+  team_score: number
+  opponent_score: number
+  base_points: number
+  attendance_points: number
+  score_bonus: number
+  strength_bonus: number
+  total_weekly_points: number
+  rating_before: number | null
+  rating_after: number | null
+  rating_delta: number | null
+  created_at: string
 }
