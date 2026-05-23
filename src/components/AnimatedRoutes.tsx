@@ -11,6 +11,7 @@ import CreateMatchPage from '../pages/CreateMatchPage'
 import EditMatchPage from '../pages/EditMatchPage'
 import MatchDetailPage from '../pages/MatchDetailPage'
 import SettingsPage from '../pages/SettingsPage'
+import PointSystemPage from '../pages/PointSystemPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
 import SessionDonatedListPage from '../pages/SessionDonatedListPage'
 import PlayerDetailPage from '../pages/PlayerDetailPage'
@@ -104,6 +105,7 @@ const routes = [
   { path: '/players/:playerId', element: <PlayerDetailPage />, auth: true },
   { path: '/ranking', element: <RankingPage />, auth: true },
   { path: '/settings', element: <SettingsPage />, auth: true },
+  { path: '/settings/points', element: <PointSystemPage />, auth: true },
   ...(IS_DEV ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }] : []),
   { path: '*', element: <Navigate to="/" replace />, auth: false },
 ]
