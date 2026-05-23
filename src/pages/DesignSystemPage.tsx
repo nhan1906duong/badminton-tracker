@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState } from '../../design-system/components'
+import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState } from '../../design-system/components'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -18,6 +18,7 @@ export default function DesignSystemPage() {
     <div className="min-h-svh" style={{ background: 'var(--bg)' }}>
       <div className="px-4 py-5 space-y-8 pb-32">
         <HeaderSection />
+        <AppBarSection />
         <ColorTokensSection />
         <TypographyTokensSection />
         <SpacingTokensSection />
@@ -119,6 +120,41 @@ function ColorSwatch({ label, token }: { label: string; token: string }) {
         </p>
       </div>
     </div>
+  )
+}
+
+function AppBarSection() {
+  return (
+    <Section title="App Bar">
+      <Card>
+        <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
+          Sticky top navigation for sub-pages and detail views.
+        </p>
+        <div className="space-y-4">
+          <AppBar
+            title="Session detail"
+            leftAction={{
+              icon: (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              ),
+              onClick: () => {},
+            }}
+            rightAction={{
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="19" cy="12" r="1" />
+                  <circle cx="5" cy="12" r="1" />
+                </svg>
+              ),
+              onClick: () => {},
+            }}
+          />
+        </div>
+      </Card>
+    </Section>
   )
 }
 

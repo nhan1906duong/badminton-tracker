@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCreateSession } from '../hooks/useSessions'
 import { useSessionStore } from '../stores/session-store'
 import { useNearbyBwfTournaments, type BwfTournament } from '../hooks/useBwfTournaments'
+import { AppBar } from '../../design-system/components'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -268,30 +269,19 @@ export default function CreateSessionPage() {
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
 
       {/* ── Nav ── */}
-      <nav
-        className={`sticky top-0 z-20 backdrop-blur-xl grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 transition-colors ${navStuck ? 'border-b border-[var(--border)]' : 'border-b border-transparent'}`}
+      <AppBar
+        title="New Session"
+        leftAction={{
+          label: 'Cancel',
+          onClick: handleCancel,
+        }}
+        className={`sticky top-0 z-20 transition-colors ${navStuck ? 'border-b border-[var(--border)]' : 'border-b border-transparent'}`}
         style={{
           paddingTop: 'max(12px, calc(env(safe-area-inset-top) + 8px))',
           paddingBottom: 12,
           background: 'color-mix(in oklch, var(--bg) 88%, transparent)',
         }}
-      >
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="font-[family:var(--font-body)] text-[var(--accent)] font-medium text-left min-h-[44px] flex items-center active:opacity-55 transition-opacity"
-          style={{ fontSize: 15 }}
-        >
-          Cancel
-        </button>
-        <span
-          className="font-[family:var(--font-display)] font-bold tracking-[-0.01em] text-center whitespace-nowrap text-[var(--fg)]"
-          style={{ fontSize: 15 }}
-        >
-          New Session
-        </span>
-        <span aria-hidden />
-      </nav>
+      />
 
       {/* ── Scroll area ── */}
       <div

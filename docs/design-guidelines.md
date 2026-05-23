@@ -309,6 +309,18 @@ Horizontal rule with centred text — separates recommended options from a custo
 </div>
 ```
 
+### App Bar
+
+Sticky top app bar for page-level navigation and detail views.
+
+- Container: `sticky top-0 z-40 bg-[color-mix(in oklch, var(--bg) 88%, transparent)] backdrop-blur-xl border-b border-transparent`
+- Layout: `grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3`
+- Left action: icon button with `text-[var(--accent)]`, `font-[family:var(--font-body)]`, `font-medium`, and `active:opacity-70`
+- Title: centered, `font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em]`
+- Right action: optional icon or text button in the right slot
+- Use icon-only back buttons with `aria-label="Back"`
+- AppBar is visible on sub-pages and details, hidden on tab routes and full-screen routes
+
 ### Full-screen Page Layout
 
 Pages that own their full viewport (no global AppBar or bottom nav). Add the route to `FULL_SCREEN_ROUTES` in `src/App.tsx`.
