@@ -222,11 +222,11 @@ export default function CreateSessionPage() {
 
   function isQuickActive(key: '30' | '60' | 'tom'): boolean {
     if (!scheduledAt) return false
-    const diffMin = Math.round((scheduledAt.getTime() - Date.now()) / 60_000)
+    const diffMin = Math.round((scheduledAt.getTime() - nowTime.getTime()) / 60_000)
     if (key === '30') return diffMin >= 25 && diffMin <= 40
     if (key === '60') return diffMin >= 55 && diffMin <= 70
     if (key === 'tom') {
-      const t = new Date(); t.setDate(t.getDate() + 1)
+      const t = new Date(nowTime); t.setDate(t.getDate() + 1)
       return (
         scheduledAt.getDate() === t.getDate() &&
         scheduledAt.getHours() === 19 &&
@@ -258,10 +258,6 @@ export default function CreateSessionPage() {
     }
   }
 
-  function handleCancel() {
-    navigate(-1)
-  }
-
   // CTA label
   function ctaLabel(): string {
     if (!resolvedName) return 'Pick a name to continue'
@@ -276,16 +272,10 @@ export default function CreateSessionPage() {
       {/* ── Nav ── */}
       <AppBar
         title=""
-        leftAction={{
-          label: 'Cancel',
-          onClick: handleCancel,
-        }}
-        className={`sticky top-0 z-20 transition-colors ${navStuck ? 'border-b border-[var(--border)]' : 'border-b border-transparent'}`}
-        style={{
-          paddingTop: 'max(12px, calc(env(safe-area-inset-top) + 8px))',
-          paddingBottom: 12,
-          background: 'color-mix(in oklch, var(--bg) 88%, transparent)',
-        }}
+        backLabel="Cancel"
+        onBack={() => navigate(-1)}
+        stuck={navStuck}
+        safeArea
       />
 
       {/* ── Scroll area ── */}

@@ -1,4 +1,5 @@
 import Avatar from './Avatar'
+import { formatShortPlayerName } from '../lib/player-name'
 
 /**
  * PodiumChart — modern sports podium for top-5 rankings.
@@ -241,7 +242,7 @@ function PodiumBlock({
               className="text-[9px] font-semibold text-white truncate w-full mt-1 px-1"
               style={{ lineHeight: 1.2 }}
             >
-              {player.name}
+              {formatShortPlayerName(player.name)}
             </span>
 
             {/* Value — prominent pill badge */}

@@ -231,6 +231,13 @@ import Avatar from '../components/Avatar'
 <Avatar name="Tuan" size={28} bgColor="var(--fg)" textColor="var(--surface)" />
 ```
 
+### Player Names
+
+- Use full player names only on the player's own profile page and in edit/search inputs.
+- Use `formatShortPlayerName()` from `src/lib/player-name.ts` for visible player names everywhere else.
+- Format: first word + initials for every remaining word (`"Danh Nguyen"` → `"Danh N."`, `"Nhan Duong Ngoc"` → `"Nhan D. N."`).
+- Continue passing the full stored name into `<Avatar name={player.name} />` so initials and image alt text remain correct.
+
 ---
 
 ### SessionCard
@@ -363,13 +370,37 @@ Horizontal rule with centred text — separates recommended options from a custo
 
 Sticky top app bar for page-level navigation and detail views.
 
+**Always use `<AppBar>` from `design-system/components` — never build a custom nav bar.** Import it as:
+
+```tsx
+import { AppBar } from '../../design-system/components'
+```
+
+- AppBar is required on all sub-pages and detail views (e.g. `/players/:id`, `/sessions/:id`, `/sessions/:id/matches/:id`)
+- AppBar is hidden on tab routes (`/`, `/sessions`, `/players`, `/settings`) — the bottom nav replaces it
+- Full-screen flow pages (e.g. `/sessions/new`) own their own nav bar but should still use `<AppBar>` for consistency
+- Pass `safeArea` prop on pages that are the first thing below the status bar
+- Pass `stuck` when the page is scrolled (bind to a scroll listener on the content container)
+
+Props reference (see [design-system/components/app-bar.tsx](../design-system/components/app-bar.tsx)):
+
+| Prop | Type | Notes |
+|------|------|-------|
+| `title` | `string` | Page or entity name |
+| `titleAlign` | `'center' \| 'left'` | Default `'left'` |
+| `titleVisible` | `boolean` | Animate title in/out on scroll |
+| `backLabel` | `string` | Label next to the back chevron |
+| `onBack` | `() => void` | Use `navigate(-1)` or a specific route |
+| `leftAction` / `rightAction` | `AppBarAction` | Custom icon/text buttons |
+| `stuck` | `boolean` | Adds `border-b border-[var(--border)]` when scrolled |
+| `safeArea` | `boolean` | Adds `env(safe-area-inset-top)` top padding |
+
+Underlying styles (for reference only — use the component, not raw CSS):
+
 - Container: `sticky top-0 z-40 bg-[color-mix(in oklch, var(--bg) 88%, transparent)] backdrop-blur-xl border-b border-transparent`
 - Layout: `grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3`
 - Left action: icon button with `text-[var(--accent)]`, `font-[family:var(--font-body)]`, `font-medium`, and `active:opacity-70`
 - Title: centered, `font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em]`
-- Right action: optional icon or text button in the right slot
-- Use icon-only back buttons with `aria-label="Back"`
-- AppBar is visible on sub-pages and details, hidden on tab routes and full-screen routes
 
 ### Full-screen Page Layout
 
@@ -529,6 +560,29 @@ See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading
 - `touch-action: manipulation` globally — no double-tap zoom.
 - `-webkit-tap-highlight-color: transparent` — replaced by `active:` states.
 - Always provide `aria-label` on icon-only buttons.
+
+### MatchDetailPage
+
+Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match states: `SCHEDULED`, `LIVE`, and `COMPLETED`.
+
+**States:**
+
+| State | Description |
+|-------|-------------|
+| `SCHEDULED` | Pre-match huddle: player roster + serve-first picker. CTA disabled until serve side is chosen. |
+| `LIVE` | Live scoreboard with tap-to-score panels, serve indicator, score tools (−1, direct edit), set meter, action row (swap serve / undo), point log. CTA auto-promotes to "Award match to Team X" when winner condition is met. |
+| `COMPLETED` | Read-only scoreboard with winner stamp. "Re-open for editing" action row. CTA: "Back to session". |
+
+**Key primitives (page-local, not in design-system):**
+- **Scoreboard panel** — 2-column grid with 88px score numerals, `score-bump` keyframe on increment, dotted underline on editable scores.
+- **Set meter** — progress bar to `POINTS_TARGET` (21), transitions on width.
+- **Point log** — last 8 entries, newest first; latest row highlighted with 5% accent tint.
+- **Score keypad sheet** — numeric pad (0–9 + backspace + clear) with quick-chip row (+1, −1, +5, target), delta display.
+- **Award-winner sheet** — two team cards side by side.
+
+**Score bump animation** — `@keyframes score-bump` in `tokens.css`; applied inline via `animation: score-bump 0.32s …` on the score numeral element.
+
+**Live score is ephemeral** — individual points are tracked in React state only. The DB score (`match_scores`) is written only when the match is finalized via `useRecordResult`. Stored as a single set: `{ set_number: 1, team_a_score, team_b_score }`.
 
 ---
 

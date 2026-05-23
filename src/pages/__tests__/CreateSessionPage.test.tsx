@@ -44,12 +44,26 @@ vi.mock('../../hooks/useBwfTournaments', () => ({
 
 // design-system components used in CreateSessionPage
 vi.mock('../../../design-system/components', () => ({
-  AppBar: ({ title, leftAction }: { title: string; leftAction: { label: string; onClick: () => void } }) => (
-    <header>
-      <h1>{title}</h1>
-      <button onClick={leftAction.onClick}>{leftAction.label}</button>
-    </header>
-  ),
+  AppBar: ({
+    title,
+    leftAction,
+    backLabel,
+    onBack,
+  }: {
+    title: string
+    leftAction?: { label: string; onClick: () => void }
+    backLabel?: string
+    onBack?: () => void
+  }) => {
+    const action = leftAction ?? (onBack ? { label: backLabel ?? 'Back', onClick: onBack } : undefined)
+
+    return (
+      <header>
+        <h1>{title}</h1>
+        {action && <button onClick={action.onClick}>{action.label}</button>}
+      </header>
+    )
+  },
   Dialog: ({
     open,
     title,

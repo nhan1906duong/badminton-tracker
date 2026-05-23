@@ -48,6 +48,7 @@ import { AppBar } from '../../design-system/components/app-bar'
 import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
+import { formatShortPlayerName } from '../lib/player-name'
 import { Plus, X, ChevronLeft, MoreVertical, Play, Activity, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -93,10 +94,7 @@ export default function SessionDetailPage() {
     : 0
 
   const mvpPlayer = sortedByWins.find((s) => s.matchesPlayed > 0)
-  const mvpName = mvpPlayer ? (() => {
-    const parts = mvpPlayer.name.trim().split(/\s+/)
-    return parts.length >= 2 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0]
-  })() : undefined
+  const mvpName = mvpPlayer ? formatShortPlayerName(mvpPlayer.name) : undefined
   const mvpLabel = mvpPlayer
     ? `${sessionStatus === 'ended' ? 'MVP' : 'Leading'} · ${Math.round((mvpPlayer.wins / mvpPlayer.matchesPlayed) * 100)}%`
     : undefined

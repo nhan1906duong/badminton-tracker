@@ -4,14 +4,21 @@ import { usePlayers } from '../hooks/usePlayers'
 import { useMatches, useCreateMatch } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useNewMatchStore } from '../stores/new-match-store'
+import { AppBar } from '../../design-system/components'
 import { MatchTypeChips } from '../../design-system/components/match-type-chips'
 import { BottomSheet } from '../../design-system/components/bottom-sheet'
 import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
+import { formatShortPlayerName } from '../lib/player-name'
 import type { Player } from '../types/database'
 import { Plus, X, Zap, Calendar, List, ChevronRight, Loader2 } from 'lucide-react'
-import Avatar from '../components/Avatar'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
 
 function toDateInput(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -49,6 +56,8 @@ interface PlayerSlotProps {
 }
 
 function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) {
+  const initials = player ? getInitials(player.name) : null
+
   return (
     <button
       type="button"
@@ -72,23 +81,26 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
       }}
     >
       {/* Avatar */}
-      {player ? (
-        <Avatar name={player.name} size={36} />
-      ) : (
-        <div style={{
+      <div
+        style={{
           width: 36,
           height: 36,
           borderRadius: 'var(--radius-md)',
-          background: 'var(--bg)',
-          border: '1.5px dashed var(--border)',
+          background: player ? 'var(--accent)' : 'var(--bg)',
+          border: player ? 'none' : '1.5px dashed var(--border)',
           display: 'grid',
           placeItems: 'center',
           flexShrink: 0,
-          color: 'var(--muted)',
-        }}>
+          color: player ? 'var(--surface)' : 'var(--muted)',
+          fontFamily: 'var(--font-display)',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 800,
+        }}
+      >
+        {player ? initials : (
           <Plus style={{ width: 16, height: 16 }} />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -110,7 +122,7 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
           letterSpacing: '-0.01em',
           color: player ? 'var(--fg)' : 'var(--muted)',
         }}>
-          {player ? player.name : 'Tap to add'}
+          {player ? formatShortPlayerName(player.name) : 'Tap to add'}
         </div>
       </div>
 
@@ -167,19 +179,18 @@ export default function CreateMatchPage() {
   const [pickerTarget, setPickerTarget] = useState<{ team: 'A' | 'B'; index: number } | null>(null)
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
+  const [navStuck, setNavStuck] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const navRef = useRef<HTMLElement>(null)
 
   // Reset store on unmount so stale data doesn't bleed into the next open
   useEffect(() => () => reset(), [reset])
 
-  // Sticky nav shadow
+  // Sticky nav border
   useEffect(() => {
     const el = scrollRef.current
-    const nav = navRef.current
-    if (!el || !nav) return
-    const onScroll = () => nav.classList.toggle('is-stuck', el.scrollTop > 4)
+    if (!el) return
+    const onScroll = () => setNavStuck(el.scrollTop > 4)
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
@@ -309,7 +320,7 @@ export default function CreateMatchPage() {
   // ── Section label helper ─────────────────────────────────────────────────────
 
   function teamName(arr: (string | null)[], size: number): string {
-    const names = arr.slice(0, size).filter(Boolean).map(id => allPlayers?.find(p => p.id === id)?.name ?? '')
+    const names = arr.slice(0, size).filter(Boolean).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? ''))
     if (!names.length) return `Pick ${size} player${size > 1 ? 's' : ''}`
     return names.join(' + ')
   }
@@ -321,58 +332,14 @@ export default function CreateMatchPage() {
     <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
 
       {/* ── Top nav ──────────────────────────────────────────────────────── */}
-      <nav
-        ref={navRef}
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 20,
-          background: 'color-mix(in oklch, var(--bg) 88%, transparent)',
-          backdropFilter: 'saturate(180%) blur(12px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(12px)',
-          padding: `max(var(--space-3), calc(env(safe-area-inset-top) + var(--space-2))) var(--space-4) var(--space-3)`,
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center',
-          gap: 'var(--space-3)',
-          borderBottom: '1px solid transparent',
-          transition: 'border-color 0.2s',
-        }}
-        className="nav"
-      >
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 'var(--text-base)',
-            fontWeight: 500,
-            color: 'var(--accent)',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 'var(--space-2) 0',
-            minHeight: 44,
-            textAlign: 'left',
-            letterSpacing: '-0.01em',
-            touchAction: 'manipulation',
-          }}
-        >
-          Cancel
-        </button>
-        <span style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'var(--text-base)',
-          fontWeight: 700,
-          letterSpacing: '-0.01em',
-          textAlign: 'center',
-          color: 'var(--fg)',
-          whiteSpace: 'nowrap',
-        }}>
-          New Match
-        </span>
-        <span />
-      </nav>
+      <AppBar
+        title=""
+        titleAlign="center"
+        backLabel="Cancel"
+        onBack={() => navigate(-1)}
+        stuck={navStuck}
+        safeArea
+      />
 
       {/* ── Scrollable body ──────────────────────────────────────────────── */}
       <div
@@ -809,11 +776,11 @@ export default function CreateMatchPage() {
                     <span style={{ flex: 1, color: 'var(--accent)', fontWeight: 700 }}>
                       {liveMatch.participants
                         .filter(p => p.team_id === liveMatch.teams.find(t => t.team_label === 'TEAM_A')?.id)
-                        .map(p => p.player.name).join(' + ')}
+                        .map(p => formatShortPlayerName(p.player.name)).join(' + ')}
                       {' vs '}
                       {liveMatch.participants
                         .filter(p => p.team_id === liveMatch.teams.find(t => t.team_label === 'TEAM_B')?.id)
-                        .map(p => p.player.name).join(' + ')}
+                        .map(p => formatShortPlayerName(p.player.name)).join(' + ')}
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)' }}>
                       <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }} />
@@ -827,7 +794,7 @@ export default function CreateMatchPage() {
                     </span>
                     <span style={{ flex: 1, color: 'var(--accent)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}>
                       {allFilled
-                        ? `${teamA.slice(0, teamSize).map(id => allPlayers?.find(p => p.id === id)?.name).join(' + ')} vs ${teamB.slice(0, teamSize).map(id => allPlayers?.find(p => p.id === id)?.name).join(' + ')}`
+                        ? `${teamA.slice(0, teamSize).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? '')).join(' + ')} vs ${teamB.slice(0, teamSize).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? '')).join(' + ')}`
                         : 'This match'}
                     </span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)' }}>
@@ -973,10 +940,24 @@ export default function CreateMatchPage() {
                 touchAction: 'manipulation',
               }}
             >
-              <Avatar name={p.name} size={36} />
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--fg)',
+                color: 'var(--surface)',
+                display: 'grid',
+                placeItems: 'center',
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 800,
+                flexShrink: 0,
+              }}>
+                {p.name.charAt(0).toUpperCase()}
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.2 }}>
-                  {p.name}
+                  {formatShortPlayerName(p.name)}
                 </div>
               </div>
             </button>

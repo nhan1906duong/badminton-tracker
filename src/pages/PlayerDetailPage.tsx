@@ -9,6 +9,7 @@ import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import MatchCard from '../components/MatchCard'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
+import { formatShortPlayerName } from '../lib/player-name'
 import { Trophy, Users, TrendingUp, TrendingDown, Medal, Pencil } from 'lucide-react'
 
 export default function PlayerDetailPage() {
@@ -149,7 +150,7 @@ export default function PlayerDetailPage() {
             <div className="flex items-center gap-3">
               <Avatar src={partner.avatar_url} name={partner.name} size={44} bgColor="#dcfce7" textColor="#15803d" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{partner.name}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{formatShortPlayerName(partner.name)}</p>
                 <p className="text-xs text-gray-500">
                   {partnerWins}W / {partnerMatches - partnerWins}L · {Math.round(winRate * 100)}% win rate
                 </p>

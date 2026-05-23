@@ -8,6 +8,7 @@ import { TrendingUp } from 'lucide-react'
 import { SessionCard } from '../../design-system/components'
 import DonorListItem from '../components/DonorListItem'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
+import { formatShortPlayerName } from '../lib/player-name'
 import {
   formatSessionDuration,
   formatSessionDateTime,
@@ -85,7 +86,7 @@ export default function HomePage() {
     const winRate = Math.round((best.wins / best.played) * 100)
 
     return {
-      name: best.name,
+      name: formatShortPlayerName(best.name),
       record: `${best.wins}W – ${best.played - best.wins}L · played ${best.played}`,
       winRate,
     }

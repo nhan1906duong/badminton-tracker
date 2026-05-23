@@ -317,6 +317,23 @@ export function useRecordResult() {
   })
 }
 
+export function useReopenMatch() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (matchId: string) => {
+      const { error } = await supabase
+        .from('matches')
+        .update({ status: 'LIVE' })
+        .eq('id', matchId)
+      if (error) throw error
+    },
+    onSuccess: (_, matchId) => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY, matchId] })
+    },
+  })
+}
+
 export function useReorderQueue() {
   const qc = useQueryClient()
   return useMutation({

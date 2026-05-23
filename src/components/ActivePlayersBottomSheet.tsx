@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Check, X } from 'lucide-react'
 import type { Player } from '../types/database'
+import { formatShortPlayerName } from '../lib/player-name'
 import Avatar from './Avatar'
 
 interface ActivePlayersBottomSheetProps {
@@ -126,7 +127,7 @@ export default function ActivePlayersBottomSheet({
                       size={40}
                     />
                     <span className="flex-1 text-left text-[15px] font-medium text-gray-900 truncate">
-                      {player.name}
+                      {formatShortPlayerName(player.name)}
                     </span>
                     <CircleIndicator selected={isPicked} />
                   </button>

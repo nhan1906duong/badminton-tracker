@@ -52,6 +52,7 @@ src/
 | 32 | components/FloatingActionButton.tsx | Reusable FAB constrained to mobile container |
 | 20 | hooks/useProfile.ts | Fetch user profile from profiles table |
 | 17 | lib/avatar.ts | Deterministic default avatar from name hash |
+| 7 | lib/player-name.ts | Player display-name formatter (`Danh Nguyen` → `Danh N.`) |
 | 13 | lib/supabase.ts | Supabase client initialization |
 | 9 | lib/currency.ts | `formatCurrency` + `LOSS_PENALTY_VND` constant |
 
@@ -135,8 +136,19 @@ lib/
 ├── image.ts         # Canvas-based image compression (center-crop → square → JPEG)
 ├── avatar.ts        # Multiavatar utilities (SVG generation, URL helpers)
 ├── match-helpers.ts # Match logic helpers (getTeamSize, MATCH_TYPE_SHORT, etc.)
+├── player-name.ts   # Short player display names outside profile pages
 ├── currency.ts      # formatCurrency + LOSS_PENALTY_VND
 ```
+
+## Player Name Display
+
+Canonical formatter: `src/lib/player-name.ts`.
+
+- Full names are stored in `players.name`.
+- Full names are shown only on the player profile page (`/players/:playerId`) and in edit/search inputs.
+- Other UI surfaces use `formatShortPlayerName(name)`: first word plus initials for the remaining words.
+- Examples: `Danh Nguyen` → `Danh N.`, `Nhan Duong Ngoc` → `Nhan D. N.`
+- Avatar `name` props intentionally receive the full name for initials and image alt text.
 
 ## Avatar Upload Flow
 
