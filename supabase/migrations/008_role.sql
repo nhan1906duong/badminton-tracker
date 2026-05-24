@@ -1,3 +1,8 @@
+-- 0. Create profiles table (1:1 with auth.users) if it doesn't exist yet
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
 -- 1. Add role column to profiles
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'user'
@@ -21,7 +26,10 @@ AS $$
 $$;
 
 -- 4. RLS: only admins can delete sessions, matches, players
---    Drop existing permissive delete policies first if any exist, then add these.
+DROP POLICY IF EXISTS "sessions_delete_own" ON sessions;
+DROP POLICY IF EXISTS "matches_delete_own" ON matches;
+DROP POLICY IF EXISTS "players_delete_any_auth" ON players;
+
 CREATE POLICY "admins_delete_sessions" ON sessions
   FOR DELETE USING (is_admin());
 

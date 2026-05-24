@@ -25,7 +25,8 @@ export function useUpdatePlayerLink() {
     mutationFn: async ({ userId, playerId }: { userId: string; playerId: string | null }) => {
       const { error } = await supabase
         .from('profiles')
-        .upsert({ id: userId, player_id: playerId }, { onConflict: 'id' })
+        .update({ player_id: playerId })
+        .eq('id', userId)
       if (error) throw error
     },
     onSuccess: (_, { userId }) => {
