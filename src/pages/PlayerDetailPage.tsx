@@ -9,6 +9,8 @@ import { usePlayerRankings } from '../hooks/useRankings'
 import type { PartnerEntry } from '../hooks/useBestPartner'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { AppBar, Badge, PullToRefresh, SegmentedControl } from '../../design-system/components'
@@ -88,6 +90,10 @@ export default function PlayerDetailPage() {
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
   const [showAllH2H, setShowAllH2H] = useState(false)
   const [isStuck, setIsStuck] = useState(false)
+
+  const { user } = useAuth()
+  const { data: myProfile } = useProfile(user?.id)
+  const isMe = !!myProfile?.player_id && myProfile.player_id === id
 
   const isAdmin = useIsAdmin()
   const updatePlayer = useUpdatePlayer()
@@ -180,25 +186,43 @@ export default function PlayerDetailPage() {
 
       {/* Header */}
       <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
-        {/* 1. Rank */}
-        {rankData && (
-          <div
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--accent)',
-              marginBottom: 'var(--space-3)',
-            }}
-          >
-            {t('common.rank', { rank: rankData.rank })}
-          </div>
-        )}
+        {/* 1. Rank + You chip */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
+          {rankData && (
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--accent)',
+              }}
+            >
+              {t('common.rank', { rank: rankData.rank })}
+            </span>
+          )}
+          {isMe && (
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--accent)',
+                background: 'var(--accent-soft)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 6px',
+              }}
+            >
+              {t('common.you')}
+            </span>
+          )}
+        </div>
 
         {/* 2. Avatar */}
-        {isAdmin ? (
+        {isAdmin || isMe ? (
           <button
             onClick={() => setShowAvatarPicker(true)}
             aria-label={t('players.changeAvatar')}
@@ -214,7 +238,7 @@ export default function PlayerDetailPage() {
         )}
 
         {/* 3. Name + edit */}
-        {isAdmin && isEditingName ? (
+        {(isAdmin || isMe) && isEditingName ? (
           <input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
@@ -238,7 +262,7 @@ export default function PlayerDetailPage() {
               marginBottom: 'var(--space-2)',
             }}
           />
-        ) : isAdmin ? (
+        ) : isAdmin || isMe ? (
           <button
             onClick={handleStartEditName}
             className="flex items-center gap-2 active:opacity-70 text-left"
@@ -557,7 +581,7 @@ export default function PlayerDetailPage() {
         )}
       </div>
 
-      {isAdmin && showAvatarPicker && (
+      {(isAdmin || isMe) && showAvatarPicker && (
         <AvatarPicker
           currentAvatarUrl={player.avatar_url}
           onSelect={(file) => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}

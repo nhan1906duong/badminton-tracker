@@ -14,6 +14,7 @@ export interface Profile {
   avatar_url?: string | null
   updated_at?: string
   role: 'admin' | 'user'
+  player_id?: string | null
 }
 
 export interface Player {
