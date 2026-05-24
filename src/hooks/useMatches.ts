@@ -221,6 +221,164 @@ export function useUpdateMatch() {
   })
 }
 
+export interface UpdateMatchPlayersInput {
+  id: string
+  team_a_player_ids: string[]
+  team_b_player_ids: string[]
+}
+
+export function useUpdateMatchPlayers() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: UpdateMatchPlayersInput) => {
+      const allPlayerIds = [...input.team_a_player_ids, ...input.team_b_player_ids]
+      if (new Set(allPlayerIds).size !== allPlayerIds.length) {
+        throw new Error('A player can only appear once in a match.')
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data: matchData, error: matchError } = await supabase
+        .from('matches')
+        .select(`
+          id, session_id, status,
+          teams:match_teams(id, team_label, is_winner),
+          scores:match_scores(set_number, team_a_score, team_b_score)
+        `)
+        .eq('id', input.id)
+        .single()
+      if (matchError) throw matchError
+
+      type TeamRow = { id: string; team_label: 'TEAM_A' | 'TEAM_B'; is_winner: boolean }
+      type ScoreRow = { set_number: number; team_a_score: number; team_b_score: number }
+
+      const teams = (matchData.teams ?? []) as unknown as TeamRow[]
+      const scores = (matchData.scores ?? []) as unknown as ScoreRow[]
+      const teamA = teams.find(t => t.team_label === 'TEAM_A')
+      const teamB = teams.find(t => t.team_label === 'TEAM_B')
+      if (!teamA || !teamB) throw new Error('Match teams were not found.')
+
+      const { error: deleteParticipantsError } = await supabase
+        .from('match_participants')
+        .delete()
+        .eq('match_id', input.id)
+      if (deleteParticipantsError) throw deleteParticipantsError
+
+      const participantRows = [
+        ...input.team_a_player_ids.map(playerId => ({
+          match_id: input.id,
+          team_id: teamA.id,
+          player_id: playerId,
+        })),
+        ...input.team_b_player_ids.map(playerId => ({
+          match_id: input.id,
+          team_id: teamB.id,
+          player_id: playerId,
+        })),
+      ]
+
+      const { error: insertParticipantsError } = await supabase
+        .from('match_participants')
+        .insert(participantRows)
+      if (insertParticipantsError) throw insertParticipantsError
+
+      const { error: deleteResultsError } = await supabase
+        .from('player_match_results')
+        .delete()
+        .eq('match_id', input.id)
+      if (deleteResultsError) throw deleteResultsError
+
+      const winnerTeam = teams.find(t => t.is_winner)?.team_label
+      const score = [...scores].sort((a, b) => a.set_number - b.set_number)[0]
+      if (matchData.status === 'COMPLETED' && winnerTeam && score) {
+        const { data: players, error: playersError } = await supabase
+          .from('players')
+          .select('id, rating')
+          .in('id', allPlayerIds)
+        if (playersError) throw playersError
+
+        const ratingMap = new Map(
+          ((players ?? []) as { id: string; rating: number | null }[])
+            .map(p => [p.id, p.rating ?? SCORING_CONFIG.initialRating])
+        )
+        const ratingOf = (playerId: string) => ratingMap.get(playerId) ?? SCORING_CONFIG.initialRating
+        const teamARating = teamAvgRating(input.team_a_player_ids.map(ratingOf))
+        const teamBRating = teamAvgRating(input.team_b_player_ids.map(ratingOf))
+        const isTeamAWinner = winnerTeam === 'TEAM_A'
+
+        const buildResultRow = (
+          playerId: string,
+          isWinner: boolean,
+          teamScore: number,
+          opponentScore: number,
+          teamRating: number,
+          opponentTeamRating: number
+        ) => {
+          const breakdown = calculateMatchPoints({
+            isWinner,
+            teamScore,
+            opponentScore,
+            teamRating,
+            opponentTeamRating,
+          })
+
+          return {
+            player_id: playerId,
+            match_id: input.id,
+            session_id: matchData.session_id as string,
+            is_winner: isWinner,
+            team_score: teamScore,
+            opponent_score: opponentScore,
+            base_points: breakdown.basePoints,
+            attendance_points: breakdown.attendancePoints,
+            score_bonus: breakdown.scoreBonus,
+            strength_bonus: breakdown.strengthBonus,
+            total_weekly_points: breakdown.total,
+          }
+        }
+
+        const resultRows = [
+          ...input.team_a_player_ids.map(playerId =>
+            buildResultRow(
+              playerId,
+              isTeamAWinner,
+              score.team_a_score,
+              score.team_b_score,
+              teamARating,
+              teamBRating
+            )
+          ),
+          ...input.team_b_player_ids.map(playerId =>
+            buildResultRow(
+              playerId,
+              !isTeamAWinner,
+              score.team_b_score,
+              score.team_a_score,
+              teamBRating,
+              teamARating
+            )
+          ),
+        ]
+
+        const { error: insertResultsError } = await supabase
+          .from('player_match_results')
+          .insert(resultRows)
+        if (insertResultsError) throw insertResultsError
+      }
+
+      return input.id
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
+      qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: ['player-rankings'] })
+    },
+  })
+}
+
 export function useDeleteMatch() {
   const qc = useQueryClient()
   return useMutation({

@@ -572,7 +572,7 @@ export default function MatchDetailPage() {
         {isCompleted && (
           <BottomSheetItem icon={<RefreshCw size={20} />} label="Re-open match" onClick={() => { setSheet(null); handleReopenMatch() }} />
         )}
-        <BottomSheetItem icon={<Pencil size={20} />} label="Edit players" onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/edit`)} />
+        <BottomSheetItem icon={<Pencil size={20} />} label="Edit players" onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/players/edit`)} />
         <BottomSheetDivider />
         {isLive && (
           <BottomSheetItem icon={<Square size={20} />} label="End match" onClick={() => setSheet('confirm-end')} danger />
@@ -590,11 +590,9 @@ export default function MatchDetailPage() {
 
       {/* ── Sticky nav ───────────────────────────────────────────────────── */}
       <AppBar
-        title={`Match ${matchNumber} · ${MATCH_TYPE_LABELS[match.match_type]}`}
-        titleAlign="center"
+        title=''
         titleVisible={isNavStuck}
         leftAction={{
-          label: 'Session',
           icon: <ChevronLeft style={{ width: 18, height: 18 }} />,
           onClick: () => navigate(-1),
         }}

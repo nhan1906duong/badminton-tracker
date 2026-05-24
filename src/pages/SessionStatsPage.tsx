@@ -178,10 +178,8 @@ export default function SessionStatsPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
-        title="Player stats"
-        titleAlign="center"
+        title=""
         leftAction={{
-          label: 'Session',
           icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
           onClick: () => navigate(`/sessions/${sessionId}`),
         }}

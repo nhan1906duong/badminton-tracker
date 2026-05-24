@@ -334,7 +334,6 @@ export default function CreateMatchPage() {
       {/* ── Top nav ──────────────────────────────────────────────────────── */}
       <AppBar
         title=""
-        titleAlign="center"
         backLabel="Cancel"
         onBack={() => navigate(-1)}
         stuck={navStuck}

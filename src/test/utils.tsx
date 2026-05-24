@@ -71,7 +71,7 @@ export function renderRoute(
       <Route path="/sessions/:id/donated" element={<div data-testid="donated-list">Donated</div>} />
       <Route path="/sessions/:id/matches/new" element={<div data-testid="match-players">Select Players</div>} />
       <Route path="/sessions/:id/matches/new/result" element={<div data-testid="match-result">Final Result</div>} />
-      <Route path="/sessions/:id/matches/:matchId/edit" element={<div data-testid="edit-match">Edit Match</div>} />
+      <Route path="/sessions/:id/matches/:matchId/players/edit" element={<div data-testid="edit-players">Edit Players</div>} />
       <Route path="/players/:playerId" element={<div data-testid="player-detail">Player Detail</div>} />
     </Routes>,
     {

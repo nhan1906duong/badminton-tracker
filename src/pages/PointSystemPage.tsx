@@ -88,10 +88,8 @@ export default function PointSystemPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
-        title="Points"
-        titleAlign="center"
+        title=""
         leftAction={{
-          label: 'Settings',
           icon: <ChevronLeft className="h-5 w-5 -ml-1" />,
           onClick: () => navigate('/settings'),
         }}
