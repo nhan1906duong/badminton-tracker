@@ -33,7 +33,7 @@ src/
 | 232 | hooks/useRankings.ts | usePlayerRankings (Elo) + useSessionWeeklyRankings |
 | 217 | pages/RankingPage.tsx | Player rankings by Elo rating (`/ranking`) |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
-| 208 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
+| 208 | pages/SettingsPage.tsx | Profile, avatar upload, link player, change password, logout, dev tools |
 | 203 | components/AnimatedRoutes.tsx | All routes, auth guard, page transition animations |
 | 192 | pages/SessionsListPage.tsx | List all sessions |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
@@ -102,8 +102,9 @@ pages/
 ├── MatchDetailPage.tsx          # /sessions/:id/matches/:matchId - Match detail + actions
 ├── EditPlayersPage.tsx          # /sessions/:id/matches/:matchId/players/edit - Reassign match players
 ├── RankingPage.tsx              # /ranking - Player rankings by Elo
-├── SettingsPage.tsx             # /settings - Profile, logout, dev tools
+├── SettingsPage.tsx             # /settings - Profile, avatar, link player, change password, logout, dev tools
 ├── PointSystemPage.tsx          # /settings/points - Point system explanation
+├── ChangePasswordPage.tsx       # /settings/change-password - Re-auth then update password
 ├── DesignSystemPage.tsx         # /settings/design-system - Dev-only design catalogue
 ```
 
@@ -121,7 +122,7 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 
 ## Type Definitions
 
-- **Profile:** id, avatar_url, updated_at, role (`'admin' | 'user'`) (1:1 with auth.users)
+- **Profile:** id, avatar_url, updated_at, role (`'admin' | 'user'`), player_id (nullable FK → players.id — links the auth user to a player row) (1:1 with auth.users)
 - **Player:** id, name, email, avatar_url, is_active, created_at, created_by
 - **MatchStatus:** `'SCHEDULED' | 'LIVE' | 'COMPLETED'`
 - **Match:** id, session_id, match_type, played_at, notes, status, queue_position, created_by, created_at
@@ -147,7 +148,7 @@ hooks/
 ├── usePlayers.ts           # Player CRUD operations
 ├── usePlayerStats.ts       # Player win/loss statistics + useSessionDonationStats
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
-├── useProfile.ts           # Fetch user profile (avatar_url, role)
+├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
 ├── useRankings.ts          # usePlayerRankings (Elo) + useSessionWeeklyRankings
 ├── useSessions.ts          # Session CRUD + useOpenSession()
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
@@ -246,3 +247,14 @@ Each loss = 5,000 VND penalty (`LOSS_PENALTY_VND` in `lib/currency.ts`).
 ## Auth Flow
 
 1. Enter email + password → 2. `supabase.auth.signInWithPassword` → 3. Session created → 4. Redirected to original route
+
+## Link Account (Player ↔ User)
+
+Users can link their auth account to a player row via Settings → "Link to a player". This sets `profiles.player_id` (FK → `players.id`). Managed by `useUpdatePlayerLink` in `useProfile.ts`. Displayed in `SettingsPage` as a bottom-sheet player picker; unlinking sets `player_id` to `null`.
+
+## Change Password Flow
+
+At `/settings/change-password` (`ChangePasswordPage`):
+1. Enter current password — verified via `supabase.auth.signInWithPassword` (re-auth)
+2. Enter new password + confirm
+3. Call `supabase.auth.updateUser({ password })` on success
