@@ -10,6 +10,7 @@ interface SessionCardProps {
   matchCount: number
   topPlayer?: {
     name: string
+    avatarUrl?: string | null
     record: string
     winRate: number
   }
@@ -109,7 +110,7 @@ export function SessionCard({
         </div>
         {topPlayer ? (
           <div className="flex items-center gap-3">
-            <Avatar name={topPlayer.name} size={compact ? 24 : 32} />
+            <Avatar src={topPlayer.avatarUrl} name={topPlayer.name} size={compact ? 24 : 32} />
             <div className="flex-1 min-w-0">
               <div
                 className={`font-semibold leading-[1.2] ${compact ? 'text-[13px]' : 'text-[15px]'}`}

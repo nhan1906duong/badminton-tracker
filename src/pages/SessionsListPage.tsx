@@ -18,6 +18,7 @@ interface SessionStat {
   matchCount: number
   topPlayer?: {
     name: string
+    avatarUrl?: string | null
     record: string
     winRate: number
   }
@@ -52,7 +53,7 @@ export default function SessionsListPage() {
     }
 
     for (const [sessionId, matches] of matchesBySession) {
-      const playerMap = new Map<string, { name: string; wins: number; played: number }>()
+      const playerMap = new Map<string, { name: string; avatarUrl?: string | null; wins: number; played: number }>()
 
       for (const match of matches) {
         const winnerTeam = match.teams.find((t) => t.is_winner)
@@ -69,6 +70,7 @@ export default function SessionsListPage() {
           } else {
             playerMap.set(p.player_id, {
               name: p.player.name,
+              avatarUrl: p.player.avatar_url,
               wins: team.id === winnerTeam.id ? 1 : 0,
               played: 1,
             })
@@ -76,7 +78,7 @@ export default function SessionsListPage() {
         }
       }
 
-      let best: { name: string; wins: number; played: number } | null = null
+      let best: { name: string; avatarUrl?: string | null; wins: number; played: number } | null = null
       for (const [, p] of playerMap) {
         if (!best || p.wins > best.wins || (p.wins === best.wins && p.played < best.played)) {
           best = p
@@ -87,6 +89,7 @@ export default function SessionsListPage() {
         best && best.played > 0
           ? {
               name: best.name,
+              avatarUrl: best.avatarUrl,
               record: t('units.winLossPlayed', { wins: best.wins, losses: best.played - best.wins, played: best.played }),
               winRate: Math.round((best.wins / best.played) * 100),
             }
