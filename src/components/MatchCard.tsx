@@ -108,11 +108,8 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
         {/* Team A — left */}
         <div className="flex-1 min-w-0 text-left flex flex-col" style={{ gap: 2 }}>
           {teamA.map((p) => (
-            <button
+            <span
               key={p.player.id}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); navigate(`/players/${p.player.id}`) }}
-              className="active:opacity-60"
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 'var(--text-base)',
@@ -120,17 +117,10 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
                 lineHeight: 1.2,
                 letterSpacing: '-0.01em',
                 color: teamBWon ? 'var(--muted)' : 'var(--fg)',
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                textAlign: 'left',
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {formatShortPlayerName(p.player.name)}
-            </button>
+            </span>
           ))}
           <div
             style={{
@@ -150,10 +140,10 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
             <span
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-2xl)',
-                fontWeight: 800,
+                fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
+                fontWeight: hasScores ? 800 : 400,
                 letterSpacing: '-0.03em',
-                color: teamAWon ? 'var(--accent)' : teamBWon ? 'var(--muted)' : 'var(--fg)',
+                color: teamAWon ? 'var(--accent)' : teamBWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
               }}
             >
               {hasScores ? match.scores[0].team_a_score : '—'}
@@ -164,10 +154,10 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
             <span
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-2xl)',
-                fontWeight: 800,
+                fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
+                fontWeight: hasScores ? 800 : 400,
                 letterSpacing: '-0.03em',
-                color: teamBWon ? 'var(--accent)' : teamAWon ? 'var(--muted)' : 'var(--fg)',
+                color: teamBWon ? 'var(--accent)' : teamAWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
               }}
             >
               {hasScores ? match.scores[0].team_b_score : '—'}
@@ -194,11 +184,8 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
         {/* Team B — right */}
         <div className="flex-1 min-w-0 text-right flex flex-col" style={{ gap: 2 }}>
           {teamB.map((p) => (
-            <button
+            <span
               key={p.player.id}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); navigate(`/players/${p.player.id}`) }}
-              className="active:opacity-60"
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 'var(--text-base)',
@@ -206,17 +193,10 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
                 lineHeight: 1.2,
                 letterSpacing: '-0.01em',
                 color: teamAWon ? 'var(--muted)' : 'var(--fg)',
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                textAlign: 'right',
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {formatShortPlayerName(p.player.name)}
-            </button>
+            </span>
           ))}
           <div
             style={{
