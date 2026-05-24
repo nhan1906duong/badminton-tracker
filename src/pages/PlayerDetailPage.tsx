@@ -1,13 +1,11 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { useBestPartner } from '../hooks/useBestPartner'
-import { usePlayerMatches } from '../hooks/usePlayerMatches'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
-import MatchCard from '../components/MatchCard'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import { Trophy, Users, TrendingUp, TrendingDown, Medal, Pencil } from 'lucide-react'
@@ -20,18 +18,6 @@ export default function PlayerDetailPage() {
   const { stats } = usePlayerStats()
   const { partner, winRate, totalMatches: partnerMatches, wins: partnerWins, isLoading: partnerLoading } = useBestPartner(id)
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading: matchesLoading,
-  } = usePlayerMatches(id)
-
-  const allMatches = useMemo(() => {
-    return data?.pages.flatMap(p => p.matches) ?? []
-  }, [data])
-
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
@@ -41,20 +27,7 @@ export default function PlayerDetailPage() {
   const removeAvatar = useAvatarDelete()
   const setDefaultAvatar = useSetDefaultAvatar()
 
-  const observerRef = useRef<IntersectionObserver | null>(null)
-
   const playerStats = stats.find(s => s.playerId === id)
-
-  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
-    if (isFetchingNextPage || !hasNextPage) return
-    if (observerRef.current) observerRef.current.disconnect()
-    observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        fetchNextPage()
-      }
-    })
-    if (node) observerRef.current.observe(node)
-  }, [isFetchingNextPage, hasNextPage, fetchNextPage])
 
   const handleStartEditName = useCallback(() => {
     if (player) {
@@ -161,39 +134,6 @@ export default function PlayerDetailPage() {
           )}
         </div>
 
-        {/* Match History — hidden due to layout error */}
-        {false && (
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Match History</h3>
-            <div className="space-y-2">
-              {matchesLoading ? (
-                <div className="text-center py-8 text-gray-400 text-sm">Loading matches...</div>
-              ) : allMatches.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 text-sm">No matches yet.</div>
-              ) : (
-                allMatches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    matchNumber={0}
-                    isSwiped={false}
-                    onSwipeOpen={() => {}}
-                    onSwipeClose={() => {}}
-                    onDelete={() => {}}
-                    dateLabel={formatMatchDate(match.played_at)}
-                    readonly
-                    hideAvatars
-                  />
-                ))
-              )}
-              {hasNextPage && (
-                <div ref={loadMoreRef} className="py-4 flex justify-center">
-                  <div className="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Avatar Picker */}
@@ -210,11 +150,6 @@ export default function PlayerDetailPage() {
       )}
     </div>
   )
-}
-
-function formatMatchDate(playedAt: string): string {
-  const d = new Date(playedAt)
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
 }
 
 function StatCard({ icon, label, value, color, isCurrency }: {

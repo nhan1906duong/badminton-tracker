@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CreateSessionPage from '../CreateSessionPage'
 import { DuplicateTournamentError } from '../../hooks/useSessions'
+import type { BwfTournament } from '../../hooks/useBwfTournaments'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -33,13 +34,20 @@ vi.mock('../../stores/session-store', () => ({
 }))
 
 const mockRefetch = vi.fn()
-const mockUseNearbyBwfTournaments = vi.fn(() => ({
-  tournaments: [],
-  isLoading: false,
-  refetch: mockRefetch,
-}))
+const mockUseNearbyBwfTournaments = vi.fn((dayRange?: number): {
+  tournaments: BwfTournament[]
+  isLoading: boolean
+  refetch: typeof mockRefetch
+} => {
+  void dayRange
+  return {
+    tournaments: [],
+    isLoading: false,
+    refetch: mockRefetch,
+  }
+})
 vi.mock('../../hooks/useBwfTournaments', () => ({
-  useNearbyBwfTournaments: (...args: unknown[]) => mockUseNearbyBwfTournaments(...args),
+  useNearbyBwfTournaments: (dayRange?: number) => mockUseNearbyBwfTournaments(dayRange),
 }))
 
 // design-system components used in CreateSessionPage

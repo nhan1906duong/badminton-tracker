@@ -2,7 +2,6 @@ import { useReducer, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginPage from '../pages/LoginPage'
-import HomePage from '../pages/HomePage'
 import PlayersPage from '../pages/PlayersPage'
 import SessionsListPage from '../pages/SessionsListPage'
 import CreateSessionPage from '../pages/CreateSessionPage'
@@ -12,6 +11,7 @@ import CreateMatchPage from '../pages/CreateMatchPage'
 import EditMatchPage from '../pages/EditMatchPage'
 import MatchDetailPage from '../pages/MatchDetailPage'
 import SettingsPage from '../pages/SettingsPage'
+import PointSystemPage from '../pages/PointSystemPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
 import SessionDonatedListPage from '../pages/SessionDonatedListPage'
 import PlayerDetailPage from '../pages/PlayerDetailPage'
@@ -91,7 +91,7 @@ function ActiveSessionRedirect() {
 
 const routes = [
   { path: '/login', element: <LoginPage />, auth: false },
-  { path: '/', element: <HomePage />, auth: true },
+  { path: '/', element: <Navigate to="/sessions" replace />, auth: true },
   { path: '/players', element: <PlayersPage />, auth: true },
   { path: '/sessions', element: <SessionsListPage />, auth: true },
   { path: '/sessions/active', element: <ActiveSessionRedirect />, auth: true },
@@ -105,6 +105,7 @@ const routes = [
   { path: '/players/:playerId', element: <PlayerDetailPage />, auth: true },
   { path: '/ranking', element: <RankingPage />, auth: true },
   { path: '/settings', element: <SettingsPage />, auth: true },
+  { path: '/settings/points', element: <PointSystemPage />, auth: true },
   ...(IS_DEV ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }] : []),
   { path: '*', element: <Navigate to="/" replace />, auth: false },
 ]

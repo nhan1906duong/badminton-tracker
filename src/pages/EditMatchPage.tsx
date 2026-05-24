@@ -72,10 +72,7 @@ export default function EditMatchPage() {
           <MatchCard
             match={match}
             matchNumber={1}
-            isSwiped={false}
-            onSwipeOpen={() => {}}
-            onSwipeClose={() => {}}
-            onDelete={() => {}}
+            readonly
           />
         </section>
 

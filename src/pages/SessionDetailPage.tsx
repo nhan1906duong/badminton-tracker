@@ -68,6 +68,7 @@ export default function SessionDetailPage() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [confirmDeleteSessionOpen, setConfirmDeleteSessionOpen] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   if (!sessionId) {
     return (
@@ -99,10 +100,13 @@ export default function SessionDetailPage() {
 
   async function handleEndSession() {
     try {
+      setActionError(null)
       await endSession.mutateAsync(sid)
       setConfirmEndOpen(false)
     } catch (err) {
       console.error('Failed to end session:', err)
+      setConfirmEndOpen(false)
+      setActionError(err instanceof Error ? err.message : 'Failed to end session')
     }
   }
 
@@ -347,6 +351,14 @@ export default function SessionDetailPage() {
           { label: 'Cancel', variant: 'secondary', onClick: () => setConfirmDeleteSessionOpen(false) },
           { label: deleteSession.isPending ? 'Deleting…' : 'Delete', variant: 'danger', onClick: handleDeleteSession },
         ]}
+      />
+
+      <Dialog
+        open={actionError !== null}
+        onClose={() => setActionError(null)}
+        title="Couldn't end session"
+        description={actionError ?? 'Please try again.'}
+        kind="danger"
       />
 
     </div>

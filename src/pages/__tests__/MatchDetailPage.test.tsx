@@ -64,11 +64,9 @@ vi.mock('../../../design-system/components', () => ({
 vi.mock('../../../design-system/components/bottom-sheet', () => ({
   BottomSheet: ({
     open,
-    onClose,
     children,
   }: {
     open: boolean
-    onClose: () => void
     children: React.ReactNode
   }) => (open ? <div role="dialog">{children}</div> : null),
   BottomSheetItem: ({
@@ -91,6 +89,7 @@ const PLAYER_ALICE: Player = {
   id: 'p1',
   name: 'Alice Smith',
   is_active: true,
+  rating: 1000,
   created_by: 'user-1',
   created_at: '2026-01-01T00:00:00Z',
 }
@@ -98,6 +97,7 @@ const PLAYER_BOB: Player = {
   id: 'p2',
   name: 'Bob Jones',
   is_active: true,
+  rating: 1000,
   created_by: 'user-1',
   created_at: '2026-01-01T00:00:00Z',
 }
@@ -105,6 +105,7 @@ const PLAYER_CAROL: Player = {
   id: 'p3',
   name: 'Carol Davis',
   is_active: true,
+  rating: 1000,
   created_by: 'user-1',
   created_at: '2026-01-01T00:00:00Z',
 }
@@ -112,6 +113,7 @@ const PLAYER_DAN: Player = {
   id: 'p4',
   name: 'Dan Wilson',
   is_active: true,
+  rating: 1000,
   created_by: 'user-1',
   created_at: '2026-01-01T00:00:00Z',
 }
