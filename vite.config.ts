@@ -19,10 +19,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.png', 'icons/*.png'],
       manifest: {
-        name: 'Badminton Match Tracker',
-        short_name: 'BadmintonTracker',
+        name: 'Liên Quân Cầu Lông',
+        short_name: 'Liên Quân CL',
         description: 'Track badminton matches, players, and rankings',
         theme_color: '#16a34a',
         background_color: '#ffffff',
