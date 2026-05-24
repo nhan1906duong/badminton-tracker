@@ -8,6 +8,7 @@ import { useHeadToHead } from '../hooks/useHeadToHead'
 import { usePlayerRankings } from '../hooks/useRankings'
 import type { PartnerEntry } from '../hooks/useBestPartner'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { AppBar, Badge, PullToRefresh, SegmentedControl } from '../../design-system/components'
@@ -88,6 +89,7 @@ export default function PlayerDetailPage() {
   const [showAllH2H, setShowAllH2H] = useState(false)
   const [isStuck, setIsStuck] = useState(false)
 
+  const isAdmin = useIsAdmin()
   const updatePlayer = useUpdatePlayer()
   const uploadAvatar = useAvatarUpload()
   const removeAvatar = useAvatarDelete()
@@ -196,17 +198,23 @@ export default function PlayerDetailPage() {
         )}
 
         {/* 2. Avatar */}
-        <button
-          onClick={() => setShowAvatarPicker(true)}
-          aria-label={t('players.changeAvatar')}
-          className="active:opacity-70 transition-opacity"
-          style={{ marginBottom: 'var(--space-3)' }}
-        >
-          <Avatar src={player.avatar_url} name={player.name} size={52} />
-        </button>
+        {isAdmin ? (
+          <button
+            onClick={() => setShowAvatarPicker(true)}
+            aria-label={t('players.changeAvatar')}
+            className="active:opacity-70 transition-opacity"
+            style={{ marginBottom: 'var(--space-3)' }}
+          >
+            <Avatar src={player.avatar_url} name={player.name} size={52} />
+          </button>
+        ) : (
+          <div style={{ marginBottom: 'var(--space-3)' }}>
+            <Avatar src={player.avatar_url} name={player.name} size={52} />
+          </div>
+        )}
 
         {/* 3. Name + edit */}
-        {isEditingName ? (
+        {isAdmin && isEditingName ? (
           <input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
@@ -230,7 +238,7 @@ export default function PlayerDetailPage() {
               marginBottom: 'var(--space-2)',
             }}
           />
-        ) : (
+        ) : isAdmin ? (
           <button
             onClick={handleStartEditName}
             className="flex items-center gap-2 active:opacity-70 text-left"
@@ -250,6 +258,20 @@ export default function PlayerDetailPage() {
             </h1>
             <Pencil className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
           </button>
+        ) : (
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 800,
+              lineHeight: 1.02,
+              letterSpacing: '-0.035em',
+              color: 'var(--fg)',
+              marginBottom: 'var(--space-2)',
+            }}
+          >
+            {player.name}
+          </h1>
         )}
 
         {/* 4. Rating */}
@@ -535,7 +557,7 @@ export default function PlayerDetailPage() {
         )}
       </div>
 
-      {showAvatarPicker && (
+      {isAdmin && showAvatarPicker && (
         <AvatarPicker
           currentAvatarUrl={player.avatar_url}
           onSelect={(file) => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}

@@ -13,6 +13,7 @@ export interface Profile {
   id: string
   avatar_url?: string | null
   updated_at?: string
+  role: 'admin' | 'user'
 }
 
 export interface Player {
