@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { Medal } from 'lucide-react'
 import { usePlayerRankings } from '../hooks/useRankings'
 import Avatar from '../components/Avatar'
-import { formatShortPlayerName } from '../lib/player-name'
 import { PullToRefresh } from '../../design-system/components'
 import { useI18n } from '../i18n'
 
@@ -182,14 +181,14 @@ export default function RankingPage() {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {formatShortPlayerName(s.name)}
+                    {s.name}
                   </div>
                   <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
                     <span>{t('units.match', { count: s.matchesPlayed })}</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
-                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.wins}</span> W</span>
+                    <span>{s.wins} {t('ranking.wins')}</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
-                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{winRate}%</span> {t('ranking.rate')}</span>
+                    <span>{winRate}% {t('ranking.rate')}</span>
                   </div>
                 </div>
 

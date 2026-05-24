@@ -4,7 +4,7 @@ import { usePlayers } from '../hooks/usePlayers'
 import { useMatches, useCreateMatch } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useNewMatchStore } from '../stores/new-match-store'
-import { AppBar } from '../../design-system/components'
+import { AppBar, SegmentedControl } from '../../design-system/components'
 import { MatchTypeChips } from '../../design-system/components/match-type-chips'
 import { BottomSheet } from '../../design-system/components/bottom-sheet'
 import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
@@ -540,72 +540,17 @@ export default function CreateMatchPage() {
           </div>
 
           {/* Segmented control */}
-          <div
-            role="tablist"
-            aria-label={t('createMatch.matchStartMode')}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              background: 'var(--bg)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 3,
-              position: 'relative',
-              marginBottom: 'var(--space-4)',
-            }}
-          >
-            {/* Sliding track */}
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                top: 3,
-                bottom: 3,
-                width: 'calc((100% - 6px) / 3)',
-                left: 3,
-                background: 'var(--fg)',
-                borderRadius: 6,
-                transition: 'transform 280ms cubic-bezier(0.32, 0, 0.15, 1)',
-                transform: mode === 'now' ? 'translateX(0)' : mode === 'schedule' ? 'translateX(100%)' : 'translateX(200%)',
-              }}
+          <div style={{ marginBottom: 'var(--space-4)' }}>
+            <SegmentedControl
+              ariaLabel={t('createMatch.matchStartMode')}
+              value={mode}
+              onChange={handleSetMode}
+              tabs={[
+                { id: 'now' as const, label: t('createMatch.now'), icon: <Zap style={{ width: 13, height: 13 }} /> },
+                { id: 'schedule' as const, label: t('createMatch.schedule'), icon: <Calendar style={{ width: 13, height: 13 }} /> },
+                { id: 'queue' as const, label: t('createMatch.queue'), icon: <List style={{ width: 13, height: 13 }} /> },
+              ]}
             />
-            {([ 'now', 'schedule', 'queue' ] as const).map((m) => {
-              const active = mode === m
-              const Icon = m === 'now' ? Zap : m === 'schedule' ? Calendar : List
-              const label = m === 'now' ? t('createMatch.now') : m === 'schedule' ? t('createMatch.schedule') : t('createMatch.queue')
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => handleSetMode(m)}
-                  style={{
-                    position: 'relative',
-                    zIndex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    padding: 'var(--space-3) var(--space-2)',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: 'var(--text-sm)',
-                    fontWeight: 600,
-                    color: active ? 'var(--surface)' : 'var(--muted)',
-                    cursor: 'pointer',
-                    minHeight: 40,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 'var(--space-1)',
-                    transition: 'color 0.2s',
-                    letterSpacing: '-0.005em',
-                    touchAction: 'manipulation',
-                  }}
-                >
-                  <Icon style={{ width: 13, height: 13, flexShrink: 0 }} />
-                  {label}
-                </button>
-              )
-            })}
           </div>
 
           {/* Now panel */}
