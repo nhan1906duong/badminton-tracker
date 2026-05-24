@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages, User, X } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
-import { useProfile } from '../hooks/useProfile'
+import { useProfile, useUpdatePlayerLink } from '../hooks/useProfile'
+import { usePlayers } from '../hooks/usePlayers'
 import { useI18n, type Locale } from '../i18n'
+import { BottomSheet } from '../../design-system/components'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -25,8 +27,12 @@ export default function SettingsPage() {
   const upload = useAvatarUpload()
   const remove = useAvatarDelete()
   const setDefault = useSetDefaultAvatar()
+  const updatePlayerLink = useUpdatePlayerLink()
+  const { data: players = [] } = usePlayers()
+  const [showPlayerPicker, setShowPlayerPicker] = useState(false)
 
   const userAvatarUrl = profile?.avatar_url
+  const linkedPlayer = profile?.player_id ? players.find((p) => p.id === profile.player_id) : null
 
   const handleClear = () => {
     if (!confirming) {
@@ -86,6 +92,71 @@ export default function SettingsPage() {
             onClose={() => setShowPicker(false)}
           />
         )}
+
+        {/* Your Player Profile */}
+        <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
+          <div className="px-[var(--space-4)] pt-[var(--space-4)] pb-[var(--space-2)]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+              {t('settings.yourPlayer')}
+            </p>
+          </div>
+          {linkedPlayer ? (
+            <div className="flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)]">
+              <Avatar src={linkedPlayer.avatar_url} name={linkedPlayer.name} size={36} />
+              <span className="flex-1 text-[15px] font-semibold text-[var(--fg)] truncate">
+                {linkedPlayer.name}
+              </span>
+              <button
+                onClick={() => user && updatePlayerLink.mutate({ userId: user.id, playerId: null })}
+                disabled={updatePlayerLink.isPending}
+                className="text-[13px] font-semibold text-[var(--danger)] active:opacity-60 transition-opacity flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                {t('settings.unlinkPlayer')}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowPlayerPicker(true)}
+              className="w-full flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)] active:opacity-60 transition-opacity"
+            >
+              <div className="w-9 h-9 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                <User className="w-4 h-4 text-[var(--muted)]" />
+              </div>
+              <span className="flex-1 text-left text-[15px] font-semibold text-[var(--accent)]">
+                {t('settings.linkPlayer')}
+              </span>
+              <ChevronRight className="w-4 h-4 text-[var(--muted)] shrink-0" />
+            </button>
+          )}
+        </section>
+
+        {/* Player picker bottom sheet */}
+        <BottomSheet open={showPlayerPicker} onClose={() => setShowPlayerPicker(false)}>
+          <div className="px-[var(--space-4)] pt-[var(--space-3)] pb-[var(--space-2)]">
+            <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+              {t('settings.selectPlayer')}
+            </p>
+          </div>
+          <div className="max-h-[50vh] overflow-y-auto pb-[var(--space-2)]">
+            {players.map((player) => (
+              <button
+                key={player.id}
+                onClick={() => {
+                  if (!user) return
+                  updatePlayerLink.mutate({ userId: user.id, playerId: player.id })
+                  setShowPlayerPicker(false)
+                }}
+                className="w-full flex items-center gap-3 px-[var(--space-4)] py-3 active:bg-[var(--bg)] transition-colors"
+              >
+                <Avatar src={player.avatar_url} name={player.name} size={36} />
+                <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)] truncate">
+                  {player.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </BottomSheet>
 
         {/* Actions */}
         <section className="space-y-[var(--space-2)]">

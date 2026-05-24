@@ -50,11 +50,13 @@ import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } f
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
 import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2 } from 'lucide-react'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useState, useCallback } from 'react'
 import { PullToRefresh } from '../../design-system/components'
 
 export default function SessionDetailPage() {
   const { locale, t } = useI18n()
+  const isAdmin = useIsAdmin()
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -325,12 +327,14 @@ export default function SessionDetailPage() {
             />
           </>
         )}
-        <BottomSheetItem
-          icon={<Trash2 className="w-5 h-5" />}
-          label={t('sessionDetail.deleteSession')}
-          danger
-          onClick={() => { closeMenu(); setConfirmDeleteSessionOpen(true) }}
-        />
+        {isAdmin && (
+          <BottomSheetItem
+            icon={<Trash2 className="w-5 h-5" />}
+            label={t('sessionDetail.deleteSession')}
+            danger
+            onClick={() => { closeMenu(); setConfirmDeleteSessionOpen(true) }}
+          />
+        )}
         <BottomSheetCancel onClick={closeMenu} />
       </BottomSheet>
 

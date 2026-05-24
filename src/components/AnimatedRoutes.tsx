@@ -2,7 +2,6 @@ import { useReducer, useEffect, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigationType, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginPage from '../pages/LoginPage'
-import PlayersPage from '../pages/PlayersPage'
 import SessionsListPage from '../pages/SessionsListPage'
 import CreateSessionPage from '../pages/CreateSessionPage'
 import SessionDetailPage from '../pages/SessionDetailPage'
@@ -97,7 +96,6 @@ function LegacyEditMatchRedirect() {
 const routes = [
   { path: '/login', element: <LoginPage />, auth: false },
   { path: '/', element: <Navigate to="/sessions" replace />, auth: true },
-  { path: '/players', element: <PlayersPage />, auth: true },
   { path: '/sessions', element: <SessionsListPage />, auth: true },
   { path: '/sessions/active', element: <ActiveSessionRedirect />, auth: true },
   { path: '/sessions/new', element: <CreateSessionPage />, auth: true },

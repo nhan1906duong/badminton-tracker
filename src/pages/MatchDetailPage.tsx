@@ -13,6 +13,7 @@ import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } f
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Player } from '../types/database'
 import { LOCALE_TAG, matchTypeLabel, useI18n, type Locale } from '../i18n'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import {
   ChevronLeft, MoreVertical, Minus, RotateCcw, ArrowLeftRight,
   CheckCircle, RefreshCw, Trash2, Pencil, Loader2,
@@ -190,6 +191,7 @@ const scoreNumStyle: React.CSSProperties = {
 
 export default function MatchDetailPage() {
   const { locale, t } = useI18n()
+  const isAdmin = useIsAdmin()
   const { id: sessionId, matchId } = useParams<{ id: string; matchId: string }>()
   const navigate = useNavigate()
 
@@ -576,7 +578,9 @@ export default function MatchDetailPage() {
         {isLive && (
           <BottomSheetItem icon={<Square size={20} />} label={t('matchDetail.endMatch')} onClick={() => setSheet('confirm-end')} danger />
         )}
-        <BottomSheetItem icon={<Trash2 size={20} />} label={t('matchDetail.deleteMatch')} onClick={() => setSheet('confirm-delete')} danger />
+        {isAdmin && (
+          <BottomSheetItem icon={<Trash2 size={20} />} label={t('matchDetail.deleteMatch')} onClick={() => setSheet('confirm-delete')} danger />
+        )}
         <BottomSheetCancel onClick={() => setSheet(null)} />
       </>
     )
