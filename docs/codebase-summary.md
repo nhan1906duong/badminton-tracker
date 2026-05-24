@@ -36,14 +36,13 @@ src/
 | 208 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
 | 203 | components/AnimatedRoutes.tsx | All routes, auth guard, page transition animations |
 | 192 | pages/SessionsListPage.tsx | List all sessions |
-| 177 | pages/PlayersPage.tsx | Player list + swipe-to-delete + avatar upload |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
 | 138 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
 | 135 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
 | 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states) |
 | 119 | pages/LoginPage.tsx | OTP email login flow |
-| 113 | components/SwipeableItem.tsx | Swipe-to-reveal action row (delete) |
+| 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
 | 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
 | 104 | types/database.ts | TypeScript types for all entities including MatchStatus |
 | 102 | hooks/useBestPartner.ts | Compute best doubles partner from match history |
@@ -85,7 +84,6 @@ components/
 ├── PlayerSelector.tsx       # Bottom-sheet player picker with search
 ├── PodiumChart.tsx          # SVG podium chart for top-5 rankings
 ├── ScoreEntry.tsx           # Set score inputs
-├── SwipeableItem.tsx        # Swipe-to-reveal action row (delete)
 ├── TeamAssignment.tsx       # Team slot assignment UI for match creation
 ```
 
@@ -93,9 +91,8 @@ components/
 
 ```
 pages/
-├── LoginPage.tsx                # /login - OTP auth
-├── PlayersPage.tsx              # /players - Player list
-├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit, stats, best partner, match history
+├── LoginPage.tsx                # /login - email+password auth
+├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit (admin), stats, best partner, match history
 ├── SessionsListPage.tsx         # /sessions - Session history
 ├── CreateSessionPage.tsx        # /sessions/new - Create session
 ├── SessionDetailPage.tsx        # /sessions/:id - Session detail (stats panel + matches)
@@ -124,7 +121,7 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 
 ## Type Definitions
 
-- **Profile:** id, avatar_url, updated_at (1:1 with auth.users)
+- **Profile:** id, avatar_url, updated_at, role (`'admin' | 'user'`) (1:1 with auth.users)
 - **Player:** id, name, email, avatar_url, is_active, created_at, created_by
 - **MatchStatus:** `'SCHEDULED' | 'LIVE' | 'COMPLETED'`
 - **Match:** id, session_id, match_type, played_at, notes, status, queue_position, created_by, created_at
@@ -149,7 +146,8 @@ hooks/
 ├── usePlayerMatches.ts     # Infinite-scroll paginated match history for a player
 ├── usePlayers.ts           # Player CRUD operations
 ├── usePlayerStats.ts       # Player win/loss statistics + useSessionDonationStats
-├── useProfile.ts           # Fetch user profile (avatar_url)
+├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
+├── useProfile.ts           # Fetch user profile (avatar_url, role)
 ├── useRankings.ts          # usePlayerRankings (Elo) + useSessionWeeklyRankings
 ├── useSessions.ts          # Session CRUD + useOpenSession()
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
@@ -247,4 +245,4 @@ Each loss = 5,000 VND penalty (`LOSS_PENALTY_VND` in `lib/currency.ts`).
 
 ## Auth Flow
 
-1. Enter email → 2. Supabase sends magic link → 3. User clicks link → 4. OTP verify → 5. Session created
+1. Enter email + password → 2. `supabase.auth.signInWithPassword` → 3. Session created → 4. Redirected to original route

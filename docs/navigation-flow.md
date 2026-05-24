@@ -18,7 +18,6 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 | `/sessions/:id/matches/:matchId` | `MatchDetailPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/players/edit` | `EditPlayersPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/edit` | `LegacyEditMatchRedirect` | Yes | No |
-| `/players` | `PlayersPage` | Yes | No |
 | `/players/:playerId` | `PlayerDetailPage` | Yes | No |
 | `/ranking` | `RankingPage` | Yes | Yes |
 | `/settings` | `SettingsPage` | Yes | Yes |
@@ -135,8 +134,7 @@ Protected routes redirect to `/login` if unauthenticated. After login, user retu
 
 | Modal | Triggered from |
 |-------|---------------|
-| `PlayerForm` | Players page (+ FAB) |
-| `AvatarPicker` | Players page, Settings page (avatar tap) |
-| Delete confirmation | Players page (swipe), Session detail (swipe match) |
+| `AvatarPicker` | Player Detail page (admin only), Settings page (avatar tap) |
+| Delete confirmation | Session detail (⋮ menu, admin only), Match Detail (⋮ menu, admin only) |
 | Bottom sheet (match actions) | Match Detail page (⋮ menu) |
 | Score entry sheet | Match Detail page (record result) |

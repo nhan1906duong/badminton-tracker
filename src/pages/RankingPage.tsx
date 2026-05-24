@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Medal } from 'lucide-react'
 import { usePlayerRankings } from '../hooks/useRankings'
 import Avatar from '../components/Avatar'
+import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
 import { PullToRefresh } from '../../design-system/components'
 import { useI18n } from '../i18n'
 
@@ -97,6 +99,9 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
 export default function RankingPage() {
   const navigate = useNavigate()
   const { t } = useI18n()
+  const { user } = useAuth()
+  const { data: myProfile } = useProfile(user?.id)
+  const myPlayerId = myProfile?.player_id
   const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
 
   const playerCount = rankings.length
@@ -171,17 +176,38 @@ export default function RankingPage() {
                 <Avatar src={s.avatarUrl} name={s.name} size={32} />
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    className="text-[18px] font-extrabold leading-[1.15] tracking-[-0.01em]"
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      color: 'var(--fg)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {s.name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div
+                      className="text-[18px] font-extrabold leading-[1.15] tracking-[-0.01em]"
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        color: 'var(--fg)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        minWidth: 0,
+                      }}
+                    >
+                      {s.name}
+                    </div>
+                    {myPlayerId === s.playerId && (
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          color: 'var(--accent)',
+                          background: 'var(--accent-soft)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '2px 6px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {t('common.you')}
+                      </span>
+                    )}
                   </div>
                   <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
                     <span>{t('units.match', { count: s.matchesPlayed })}</span>

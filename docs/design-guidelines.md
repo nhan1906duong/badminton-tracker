@@ -410,8 +410,8 @@ Sticky top app bar for page-level navigation and detail views.
 import { AppBar } from '../../design-system/components'
 ```
 
-- AppBar is required on all sub-pages and detail views (e.g. `/players/:id`, `/sessions/:id`, `/sessions/:id/matches/:id`)
-- AppBar is hidden on tab routes (`/`, `/sessions`, `/players`, `/settings`) — the bottom nav replaces it
+- AppBar is required on all sub-pages and detail views (e.g. `/players/:playerId`, `/sessions/:id`, `/sessions/:id/matches/:matchId`)
+- AppBar is hidden on tab routes (`/sessions`, `/ranking`, `/settings`) — the bottom nav replaces it
 - Full-screen flow pages (e.g. `/sessions/new`) own their own nav bar but should still use `<AppBar>` for consistency
 - Pass `safeArea` prop on pages that are the first thing below the status bar
 - Pass `stuck` when the page is scrolled (bind to a scroll listener on the content container)

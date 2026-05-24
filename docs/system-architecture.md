@@ -52,7 +52,6 @@
 | /sessions/:id/matches/:matchId | MatchDetailPage | Yes |
 | /sessions/:id/matches/:matchId/players/edit | EditPlayersPage | Yes |
 | /sessions/:id/matches/:matchId/edit | LegacyEditMatchRedirect | Yes |
-| /players | PlayersPage | Yes |
 | /players/:playerId | PlayerDetailPage | Yes |
 | /ranking | RankingPage | Yes |
 | /settings | SettingsPage | Yes |
@@ -90,11 +89,9 @@
 ## Authentication Flow
 
 ```
-1. User enters email → POST /auth/v1/otp
-2. Supabase sends magic link to email
-3. User clicks link → redirects to app with OTP token
-4. App calls verifyOtp → exchanges token for session
-5. Session stored, user redirected to home
+1. User enters email + password → supabase.auth.signInWithPassword
+2. On success: session stored, user redirected to original route
+3. RequireAuth guard in AnimatedRoutes.tsx redirects unauthenticated users to /login
 ```
 
 ## Navigation & Back Button Behavior
@@ -119,6 +116,10 @@ All sub-page routes use `navigate(-1)` (browser back) via the `AppBar` component
 - Web app manifest for install prompt
 - App icon placeholders in `/public`
 
+## Role-based Access Control
+
+Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. RLS policies on `sessions`, `matches`, and `players` restrict DELETE to admins only (`is_admin()` SQL function defined in `supabase/migrations/008_role.sql`). The `useIsAdmin` hook drives admin-gated UI (delete actions, avatar/name editing).
+
 ## Key Files
 
 | File | Role |
@@ -127,4 +128,5 @@ All sub-page routes use `navigate(-1)` (browser back) via the `AppBar` component
 | src/contexts/AuthContext.tsx | Auth state management |
 | src/hooks/useMatches.ts | Match CRUD with optimistic updates |
 | src/hooks/usePlayers.ts | Player CRUD |
+| src/hooks/useIsAdmin.ts | Admin role check from current user's profile |
 | vite.config.ts | PWA + React plugin configuration |

@@ -59,6 +59,7 @@ const en = {
   'common.untitledSession': 'Untitled Session',
   'common.user': 'User',
   'common.yes': 'Yes',
+  'common.you': 'You',
 
   'nav.sessions': 'Sessions',
   'nav.ranking': 'Ranking',
@@ -126,6 +127,11 @@ const en = {
   'settings.language': 'Language',
   'settings.languageEnglish': 'English',
   'settings.languageVietnamese': 'Tiếng Việt',
+  'settings.yourPlayer': 'Your Player Profile',
+  'settings.linkPlayer': 'Link to a player',
+  'settings.unlinkPlayer': 'Unlink',
+  'settings.notLinked': 'Not linked',
+  'settings.selectPlayer': 'Select your player',
 
   'players.loading': 'Loading players...',
   'players.noneYet': 'No players yet.',
@@ -454,6 +460,7 @@ const vi: Record<TranslationKey, string> = {
   'common.untitledSession': 'Giải đấu chưa đặt tên',
   'common.user': 'Người dùng',
   'common.yes': 'Có',
+  'common.you': 'Bạn',
 
   'nav.sessions': 'Giải đấu',
   'nav.ranking': 'Xếp hạng',
@@ -521,6 +528,11 @@ const vi: Record<TranslationKey, string> = {
   'settings.language': 'Ngôn ngữ',
   'settings.languageEnglish': 'English',
   'settings.languageVietnamese': 'Tiếng Việt',
+  'settings.yourPlayer': 'Hồ sơ người chơi của bạn',
+  'settings.linkPlayer': 'Liên kết với người chơi',
+  'settings.unlinkPlayer': 'Hủy liên kết',
+  'settings.notLinked': 'Chưa liên kết',
+  'settings.selectPlayer': 'Chọn người chơi của bạn',
 
   'players.loading': 'Đang tải vđv...',
   'players.noneYet': 'Chưa có vđv.',
