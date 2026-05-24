@@ -166,6 +166,8 @@ export default function AnimatedRoutes() {
 
     prevPathRef.current = currentPath
 
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+
     if (!direction) {
       queueMicrotask(() => {
         dispatch({ type: 'instant', path: currentPath })

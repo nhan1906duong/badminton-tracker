@@ -61,7 +61,10 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-svh bg-[var(--bg)]">
-      <div className="px-[var(--space-5)] py-[var(--space-5)] space-y-[var(--space-3)] pb-32">
+      <div
+        className="px-[var(--space-5)] pb-32 space-y-[var(--space-3)]"
+        style={{ paddingTop: 'max(var(--space-7), calc(env(safe-area-inset-top) + var(--space-5)))' }}
+      >
         {/* User profile */}
         <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)] flex items-center gap-3">
           <button

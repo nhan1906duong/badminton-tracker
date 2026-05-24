@@ -31,9 +31,9 @@ button, input, select, textarea {
   touch-action: manipulation;
 }
 
-/* Smooth scrolling */
 html {
-  scroll-behavior: smooth;
+  /* smooth scroll only for in-page anchors, not programmatic scrollTo */
+  scroll-behavior: auto;
   -webkit-tap-highlight-color: transparent;
 }
 

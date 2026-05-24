@@ -29,7 +29,7 @@ export function AppBar({
   backLabel,
   onBack,
   stuck = false,
-  safeArea = false,
+  safeArea = true,
   leftAction,
   rightAction,
   className = '',
