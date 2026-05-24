@@ -37,7 +37,7 @@ Password changes use `supabase.auth.updateUser({ password })` after re-authentic
 Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. Admins are the only ones who can delete sessions, matches, or players — enforced at both the app layer and via Supabase RLS policies (see `supabase/migrations/008_role.sql`).
 
 - `src/hooks/useIsAdmin.ts` — returns `true` if the current user's profile role is `'admin'`
-- Admin-gated UI: "Delete session" (SessionDetailPage ⋮ menu), "Delete match" (MatchDetailPage ⋮ menu), avatar change and name editing (PlayerDetailPage)
+- Admin-gated UI: "Delete session" (SessionDetailPage ⋮ menu), "Delete match" (MatchDetailPage ⋮ menu), avatar change and name editing (PlayerDetailPage), "Add player" FAB (RankingPage)
 
 ### Navigation & Back Button
 
@@ -114,6 +114,8 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/App.tsx` | Bottom nav, app layout |
 | `src/hooks/useMatches.ts` | Match CRUD + optimistic updates |
 | `src/hooks/usePlayers.ts` | Player CRUD |
+| `src/components/PlayerForm.tsx` | Bottom-sheet modal for adding a player (design-system styled) |
+| `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + per-session weekly stats |

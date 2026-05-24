@@ -1,11 +1,14 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Medal } from 'lucide-react'
+import { Medal, UserPlus } from 'lucide-react'
 import { usePlayerRankings } from '../hooks/useRankings'
 import Avatar from '../components/Avatar'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import { PullToRefresh } from '../../design-system/components'
+import FloatingActionButton from '../components/FloatingActionButton'
+import PlayerForm from '../components/PlayerForm'
 import { useI18n } from '../i18n'
 
 // Ghost rank number — pos 1/2/3 get faded accent, rest get faded border
@@ -103,6 +106,8 @@ export default function RankingPage() {
   const { data: myProfile } = useProfile(user?.id)
   const myPlayerId = myProfile?.player_id
   const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
+  const isAdmin = useIsAdmin()
+  const [showAddPlayer, setShowAddPlayer] = useState(false)
 
   const playerCount = rankings.length
   const totalMatches = (rankings.reduce((s, r) => s + r.matchesPlayed, 0) / 2) | 0
@@ -112,6 +117,7 @@ export default function RankingPage() {
   }, [refetch])
 
   return (
+    <>
     <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh pb-24" style={{ background: 'var(--bg)' }}>
 
@@ -239,5 +245,16 @@ export default function RankingPage() {
       )}
     </div>
     </PullToRefresh>
+
+    {isAdmin && (
+      <FloatingActionButton
+        onClick={() => setShowAddPlayer(true)}
+        icon={<UserPlus size={22} />}
+        ariaLabel={t('playerForm.addPlayer')}
+      />
+    )}
+
+    {showAddPlayer && <PlayerForm onClose={() => setShowAddPlayer(false)} />}
+    </>
   )
 }
