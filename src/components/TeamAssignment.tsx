@@ -3,6 +3,7 @@ import type { Player, MatchType } from '../types/database'
 import { getTeamSize } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
 import { Shuffle } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 interface TeamAssignmentProps {
   players: Player[]
@@ -23,6 +24,7 @@ export default function TeamAssignment({
   onShuffle,
   onMoveToTeam,
 }: TeamAssignmentProps) {
+  const { t } = useI18n()
   const teamSize = getTeamSize(matchType)
   const selected = useMemo(() =>
     selectedIds.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[],
@@ -59,20 +61,20 @@ export default function TeamAssignment({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">Team Assignment</label>
+        <label className="block text-sm font-medium text-gray-700">{t('teamAssignment.title')}</label>
         <button
           onClick={onShuffle}
           className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100"
         >
           <Shuffle className="w-3 h-3" />
-          Shuffle
+          {t('teamAssignment.shuffle')}
         </button>
       </div>
 
       {/* Team A */}
       <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">Team A</span>
+          <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">{t('team.teamA')}</span>
           <span className="text-xs text-blue-400">{teamAIds.length}/{teamSize}</span>
         </div>
         <div className="flex flex-wrap gap-1.5 min-h-[40px]">
@@ -80,17 +82,17 @@ export default function TeamAssignment({
             const p = players.find(pl => pl.id === id)
             return p ? <PlayerChip key={id} player={p} team="A" /> : null
           })}
-          {teamAIds.length === 0 && <span className="text-xs text-blue-300 italic">Empty</span>}
+          {teamAIds.length === 0 && <span className="text-xs text-blue-300 italic">{t('teamAssignment.empty')}</span>}
         </div>
       </div>
 
       {/* VS */}
-      <div className="text-center text-xs font-bold text-gray-300 uppercase tracking-widest">vs</div>
+      <div className="text-center text-xs font-bold text-gray-300 uppercase tracking-widest">{t('team.vs')}</div>
 
       {/* Team B */}
       <div className="bg-red-50/50 border border-red-100 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-red-700 uppercase tracking-wide">Team B</span>
+          <span className="text-xs font-bold text-red-700 uppercase tracking-wide">{t('team.teamB')}</span>
           <span className="text-xs text-red-400">{teamBIds.length}/{teamSize}</span>
         </div>
         <div className="flex flex-wrap gap-1.5 min-h-[40px]">
@@ -98,14 +100,14 @@ export default function TeamAssignment({
             const p = players.find(pl => pl.id === id)
             return p ? <PlayerChip key={id} player={p} team="B" /> : null
           })}
-          {teamBIds.length === 0 && <span className="text-xs text-red-300 italic">Empty</span>}
+          {teamBIds.length === 0 && <span className="text-xs text-red-300 italic">{t('teamAssignment.empty')}</span>}
         </div>
       </div>
 
       {/* Unassigned */}
       {unassigned.length > 0 && (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-          <p className="text-xs text-gray-500 mb-2">Click to assign:</p>
+          <p className="text-xs text-gray-500 mb-2">{t('teamAssignment.clickToAssign')}</p>
           <div className="flex flex-wrap gap-1.5">
             {unassigned.map(player => (
               <button

@@ -1,11 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Activity, ChevronLeft, Medal } from 'lucide-react'
-import { AppBar, Avatar, EmptyState, LoadingState, StatRow } from '../../design-system/components'
+import { AppBar, Avatar, EmptyState, LoadingState, StatRow, PullToRefresh } from '../../design-system/components'
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useSessionWeeklyRankings, type SessionWeeklyStats } from '../hooks/useRankings'
 import { formatShortPlayerName } from '../lib/player-name'
+import { useI18n } from '../i18n'
 
 function formatSigned(value: number): string {
   if (value > 0) return `+${value}`
@@ -13,6 +14,7 @@ function formatSigned(value: number): string {
 }
 
 function SessionRank({ rank }: { rank: number }) {
+  const { t } = useI18n()
   const color =
     rank === 1 ? 'var(--accent)'
     : rank === 2 ? 'color-mix(in oklch, var(--accent) 70%, var(--muted))'
@@ -21,7 +23,7 @@ function SessionRank({ rank }: { rank: number }) {
 
   return (
     <div
-      aria-label={`Rank ${rank}`}
+      aria-label={t('common.rank', { rank })}
       style={{
         width: 36,
         flexShrink: 0,
@@ -47,6 +49,7 @@ interface PlayerStatsRowProps {
 }
 
 function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
+  const { t } = useI18n()
   const winRate = stat.matchesPlayed > 0 ? Math.round((stat.wins / stat.matchesPlayed) * 100) : 0
 
   return (
@@ -101,14 +104,14 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             color: 'var(--muted)',
           }}
         >
-          <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{stat.matchesPlayed}</strong> matches</span>
+          <span>{t('units.match', { count: stat.matchesPlayed })}</span>
           <span style={{ color: 'var(--border)' }}>·</span>
           <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{stat.wins}</strong>W</span>
           <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{stat.losses}</strong>L</span>
           <span style={{ color: 'var(--border)' }}>·</span>
           <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{winRate}%</strong></span>
           <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{formatSigned(stat.pointDifference)} diff</span>
+          <span>{formatSigned(stat.pointDifference)} {t('sessionStats.diff')}</span>
         </div>
       </div>
 
@@ -145,7 +148,7 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             color: 'var(--muted)',
           }}
         >
-          points
+          {t('sessionStats.points')}
         </span>
       </div>
     </button>
@@ -153,11 +156,12 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
 }
 
 export default function SessionStatsPage() {
+  const { t } = useI18n()
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: session } = useSession(sessionId)
-  const { data: matches, isLoading: matchesLoading } = useMatches(sessionId)
-  const { data: rankings = [], isLoading: rankingsLoading } = useSessionWeeklyRankings(sessionId)
+  const { data: matches, isLoading: matchesLoading, refetch: refetchMatches } = useMatches(sessionId)
+  const { data: rankings = [], isLoading: rankingsLoading, refetch: refetchRankings } = useSessionWeeklyRankings(sessionId)
 
   const completedMatches = useMemo(
     () => matches?.filter((m) => m.status === 'COMPLETED') ?? [],
@@ -167,21 +171,24 @@ export default function SessionStatsPage() {
   const averagePoints = rankings.length > 0 ? Math.round(totalPoints / rankings.length) : 0
   const isLoading = matchesLoading || rankingsLoading
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchMatches(), refetchRankings()])
+  }, [refetchMatches, refetchRankings])
+
   if (!sessionId) {
     return (
       <div className="min-h-[100dvh] bg-[var(--bg)] px-[var(--space-5)] py-[var(--space-5)]">
-        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Session not found.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>{t('sessionDetail.notFound')}</p>
       </div>
     )
   }
 
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
-        title="Player stats"
-        titleAlign="center"
+        title=""
         leftAction={{
-          label: 'Session',
           icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
           onClick: () => navigate(`/sessions/${sessionId}`),
         }}
@@ -205,7 +212,7 @@ export default function SessionStatsPage() {
             }}
           >
             <Activity size={14} aria-hidden="true" />
-            Session ranking
+            {t('sessionStats.eyebrow')}
           </div>
           <h1
             style={{
@@ -218,7 +225,7 @@ export default function SessionStatsPage() {
               marginBottom: 'var(--space-2)',
             }}
           >
-            Player stats
+            {t('sessionStats.title')}
           </h1>
           <p
             style={{
@@ -227,18 +234,37 @@ export default function SessionStatsPage() {
               color: 'var(--muted)',
             }}
           >
-            {session?.label ?? 'Session'} · {completedMatches.length} completed match{completedMatches.length === 1 ? '' : 'es'}
+            {session?.label ?? t('common.session')} · {t('units.completedMatches', { count: completedMatches.length })}
           </p>
+          {session && !session.ended_at && (
+            <div
+              className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-2)]"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--accent)',
+              }}
+            >
+              <span
+                className="rounded-full animate-pulse flex-shrink-0"
+                style={{ width: 7, height: 7, background: 'var(--accent)' }}
+              />
+              {t('common.liveInProgress')}
+            </div>
+          )}
         </header>
 
         <main className="px-[var(--space-5)]">
           {isLoading ? (
-            <LoadingState message="Loading player stats..." />
+            <LoadingState message={t('sessionStats.loading')} />
           ) : rankings.length === 0 ? (
             <EmptyState
               icon={<Medal className="w-10 h-10 mx-auto" />}
-              title="No player stats yet"
-              description="Complete a match to populate this session ranking."
+              title={t('sessionStats.emptyTitle')}
+              description={t('sessionStats.emptyDescription')}
             />
           ) : (
             <>
@@ -251,9 +277,9 @@ export default function SessionStatsPage() {
                   marginBottom: 'var(--space-6)',
                 }}
               >
-                <StatRow label="Completed matches" value={completedMatches.length} />
-                <StatRow label="Ranked players" value={rankings.length} />
-                <StatRow label="Average points" value={averagePoints} />
+                <StatRow label={t('sessionStats.completedMatches')} value={completedMatches.length} />
+                <StatRow label={t('sessionStats.rankedPlayers')} value={rankings.length} />
+                <StatRow label={t('sessionStats.averagePoints')} value={averagePoints} />
               </section>
 
               <section>
@@ -268,7 +294,7 @@ export default function SessionStatsPage() {
                       color: 'var(--fg)',
                     }}
                   >
-                    Ranking
+                    {t('sessionStats.ranking')}
                   </h2>
                   <span
                     style={{
@@ -280,7 +306,7 @@ export default function SessionStatsPage() {
                       color: 'var(--muted)',
                     }}
                   >
-                    Weekly points
+                    {t('sessionStats.weeklyPoints')}
                   </span>
                 </div>
 
@@ -301,5 +327,6 @@ export default function SessionStatsPage() {
         </main>
       </div>
     </div>
+    </PullToRefresh>
   )
 }

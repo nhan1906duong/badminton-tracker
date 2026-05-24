@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
-import { SessionCard, LoadingState, EmptyState, ErrorState } from '../../design-system/components'
+import { SessionCard, LoadingState, EmptyState, ErrorState, PullToRefresh } from '../../design-system/components'
 import { Plus, Trophy } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
 import { formatShortPlayerName } from '../lib/player-name'
@@ -13,6 +13,7 @@ import {
   getSessionStatus,
 } from '../lib/session-format'
 import type { MatchWithDetails } from '../types/database'
+import { useI18n } from '../i18n'
 
 interface SessionStat {
   matchCount: number
@@ -25,6 +26,7 @@ interface SessionStat {
 
 export default function SessionsListPage() {
   const navigate = useNavigate()
+  const { locale, t } = useI18n()
   const {
     data: sessions,
     isLoading: sessionsLoading,
@@ -86,7 +88,7 @@ export default function SessionsListPage() {
         best && best.played > 0
           ? {
               name: formatShortPlayerName(best.name),
-              record: `${best.wins}W – ${best.played - best.wins}L · played ${best.played}`,
+              record: t('units.winLossPlayed', { wins: best.wins, losses: best.played - best.wins, played: best.played }),
               winRate: Math.round((best.wins / best.played) * 100),
             }
           : undefined
@@ -95,7 +97,7 @@ export default function SessionsListPage() {
     }
 
     return stats
-  }, [allMatches])
+  }, [allMatches, t])
 
   const isLoading = sessionsLoading || matchesLoading
   const isError = sessionsError || matchesError
@@ -104,15 +106,20 @@ export default function SessionsListPage() {
   const scheduledCount = sessions?.filter((s) => getSessionStatus(s) === 'scheduled').length ?? 0
   const subtitle = sessions
     ? [
-        `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`,
-        activeCount > 0 ? `${activeCount} active` : null,
-        scheduledCount > 0 ? `${scheduledCount} scheduled` : null,
+        t('units.session', { count: sessions.length }),
+        activeCount > 0 ? t('units.active', { count: activeCount }) : null,
+        scheduledCount > 0 ? t('units.scheduled', { count: scheduledCount }) : null,
       ]
         .filter(Boolean)
         .join(' · ')
     : null
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchSessions(), refetchMatches()])
+  }, [refetchSessions, refetchMatches])
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh bg-[var(--bg)]">
       {/* Page Header */}
       <div
@@ -123,7 +130,7 @@ export default function SessionsListPage() {
           className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em] mb-[var(--space-2)]"
           style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
         >
-          Sessions
+          {t('sessions.title')}
         </h1>
         {subtitle && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
@@ -135,10 +142,10 @@ export default function SessionsListPage() {
       {/* List */}
       <div className="px-[var(--space-5)] space-y-[var(--space-3)] pb-32">
         {isLoading ? (
-          <LoadingState message="Loading sessions..." />
+          <LoadingState message={t('sessions.loading')} />
         ) : isError ? (
           <ErrorState
-            message="Couldn't load sessions. Check your connection and try again."
+            message={t('sessions.loadError')}
             onRetry={() => {
               refetchSessions()
               refetchMatches()
@@ -156,9 +163,9 @@ export default function SessionsListPage() {
               >
                 <SessionCard
                   status={getSessionStatus(session)}
-                  name={getSessionName(session)}
-                  dateTime={formatSessionDateTime(session.started_at)}
-                  duration={formatSessionDuration(session.started_at, session.ended_at)}
+                  name={getSessionName(session, locale)}
+                  dateTime={formatSessionDateTime(session.started_at, locale)}
+                  duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
                   matchCount={stat?.matchCount ?? 0}
                   topPlayer={stat?.topPlayer}
                   compact
@@ -169,8 +176,8 @@ export default function SessionsListPage() {
         ) : (
           <EmptyState
             icon={<Trophy className="w-9 h-9 mx-auto" />}
-            title="No sessions yet"
-            description="Tap + to start your first session."
+            title={t('sessions.noneYet')}
+            description={t('sessions.emptyDescription')}
           />
         )}
       </div>
@@ -178,8 +185,9 @@ export default function SessionsListPage() {
       <FloatingActionButton
         onClick={() => navigate('/sessions/new')}
         icon={<Plus className="w-6 h-6" />}
-        ariaLabel="Create new session"
+        ariaLabel={t('sessions.createNew')}
       />
     </div>
+    </PullToRefresh>
   )
 }

@@ -10,9 +10,9 @@ import {
 } from '../hooks/useMatches'
 import { AppBar } from '../../design-system/components'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
-import { MATCH_TYPE_LABELS } from '../types/database'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Player } from '../types/database'
+import { LOCALE_TAG, matchTypeLabel, useI18n, type Locale } from '../i18n'
 import {
   ChevronLeft, MoreVertical, Minus, RotateCcw, ArrowLeftRight,
   CheckCircle, RefreshCw, Trash2, Pencil, Loader2,
@@ -53,13 +53,11 @@ function buildSeedLog(a: number, b: number): LogEntry[] {
   return log
 }
 
-function formatTime(iso: string): string {
-  const d = new Date(iso)
-  let h = d.getHours()
-  const m = String(d.getMinutes()).padStart(2, '0')
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  h = h % 12; if (h === 0) h = 12
-  return `${h}:${m} ${ampm}`
+function formatTime(iso: string, locale: Locale): string {
+  return new Date(iso).toLocaleTimeString(LOCALE_TAG[locale], {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 function getElapsed(startIso: string): string {
@@ -191,6 +189,7 @@ const scoreNumStyle: React.CSSProperties = {
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function MatchDetailPage() {
+  const { locale, t } = useI18n()
   const { id: sessionId, matchId } = useParams<{ id: string; matchId: string }>()
   const navigate = useNavigate()
 
@@ -254,7 +253,7 @@ export default function MatchDetailPage() {
   if (!match) {
     return (
       <div style={{ minHeight: '100dvh', background: 'var(--bg)', padding: 'var(--space-5)' }}>
-        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Match not found.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>{t('matchDetail.notFound')}</p>
       </div>
     )
   }
@@ -412,7 +411,7 @@ export default function MatchDetailPage() {
             <span style={{ width: 18, height: 18, borderRadius: 3, display: 'grid', placeItems: 'center', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 800, color: 'var(--surface)', background: kpTeam === 'A' ? 'var(--fg)' : 'var(--accent)' }}>
               {kpTeam}
             </span>
-            Set Team {kpTeam}
+            {t('matchDetail.setTeam', { team: kpTeam })}
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginLeft: 4 }}>
               {teamData}
             </span>
@@ -428,14 +427,14 @@ export default function MatchDetailPage() {
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', textAlign: 'right', lineHeight: 1.4, minWidth: 110 }}>
             {kpDelta !== null ? (
               <>
-                From {kpCurrentScore}
+                {t('matchDetail.fromScore', { score: kpCurrentScore })}
                 <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginTop: 2, color: kpDelta > 0 ? 'var(--accent)' : 'var(--muted)' }}>
                   {kpDelta > 0 ? '+' : ''}{kpDelta}
                 </span>
               </>
             ) : (
               <>
-                Current
+                {t('matchDetail.current')}
                 <span style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginTop: 2, color: 'var(--fg)' }}>
                   {kpCurrentScore}
                 </span>
@@ -472,11 +471,11 @@ export default function MatchDetailPage() {
         {/* Actions */}
         <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '0 var(--space-2)' }}>
           <button type="button" onClick={() => setSheet(null)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="button" onClick={kpSave} disabled={!kpCanSave}
             style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: kpCanSave ? 'pointer' : 'not-allowed', minHeight: 48, border: 'none', background: kpCanSave ? 'var(--accent)' : 'var(--border)', color: kpCanSave ? 'var(--surface)' : 'var(--muted)', opacity: kpCanSave ? 1 : 0.6, touchAction: 'manipulation' }}>
-            Set score
+            {t('matchDetail.setScore')}
           </button>
         </div>
       </div>
@@ -487,10 +486,10 @@ export default function MatchDetailPage() {
     return (
       <div>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)' }}>
-          Record team win
+          {t('matchDetail.awardTitle')}
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '0 var(--space-4)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
-          Pick the winning team. Current score is locked in as the final.
+          {t('matchDetail.awardDescription')}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', padding: '0 var(--space-2) var(--space-2)' }}>
           {(['A', 'B'] as const).map(team => (
@@ -500,7 +499,7 @@ export default function MatchDetailPage() {
                 {team}
               </span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-                Team {team}
+                {t('team.teamLabel', { team })}
               </span>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)', textAlign: 'center', lineHeight: 1.2 }}>
                 {team === 'A' ? teamAName : teamBName}
@@ -517,17 +516,17 @@ export default function MatchDetailPage() {
     return (
       <div>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)' }}>
-          End match without a winner?
+          {t('matchDetail.endNoWinnerTitle')}
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '0 var(--space-4)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
-          The current score ({liveScore.a}–{liveScore.b}) will be saved and the match marked as ended. To declare a winner instead, tap <strong>Record team win</strong>.
+          {t('matchDetail.endNoWinnerDescription', { score: `${liveScore.a}–${liveScore.b}` })}
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '0 var(--space-2)' }}>
           <button type="button" onClick={() => setSheet(null)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="button" onClick={handleEndNoWinner} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: 'none', background: 'var(--fg)', color: 'var(--surface)', touchAction: 'manipulation' }}>
-            End match
+            {t('matchDetail.endMatch')}
           </button>
         </div>
       </div>
@@ -538,17 +537,17 @@ export default function MatchDetailPage() {
     return (
       <div>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)' }}>
-          Delete this match?
+          {t('matchDetail.deleteTitle')}
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '0 var(--space-4)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
-          Match {matchNumber} ({teamAName} vs {teamBName}) will be permanently removed. This can't be undone.
+          {t('matchDetail.deleteDescription', { number: matchNumber, teamA: teamAName, teamB: teamBName })}
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '0 var(--space-2)' }}>
           <button type="button" onClick={() => setSheet('menu')} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
-            Cancel
+            {t('common.cancel')}
           </button>
           <button type="button" onClick={handleDeleteMatch} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: 'none', background: 'var(--danger)', color: 'var(--surface)', touchAction: 'manipulation' }}>
-            Delete
+            {t('common.delete')}
           </button>
         </div>
       </div>
@@ -560,24 +559,24 @@ export default function MatchDetailPage() {
       <>
         {isLive && (
           <>
-            <BottomSheetItem icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="10" x2="7" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="17" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="17" y2="14"/></svg>} label="Enter score directly" onClick={() => { setSheet(null); setTimeout(() => openScoreEdit('A'), 300) }} />
-            <BottomSheetItem icon={<CheckCircle size={20} />} label="Record team win" onClick={() => setSheet('award')} />
-            <BottomSheetItem icon={<ArrowLeftRight size={20} />} label="Swap serve" onClick={() => { setSheet(null); swapServe() }} />
-            <BottomSheetItem icon={<RotateCcw size={20} />} label="Undo last point" onClick={() => { setSheet(null); undoLast() }} />
+            <BottomSheetItem icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="10" x2="7" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="17" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="17" y2="14"/></svg>} label={t('matchDetail.enterScoreDirectly')} onClick={() => { setSheet(null); setTimeout(() => openScoreEdit('A'), 300) }} />
+            <BottomSheetItem icon={<CheckCircle size={20} />} label={t('matchDetail.recordTeamWin')} onClick={() => setSheet('award')} />
+            <BottomSheetItem icon={<ArrowLeftRight size={20} />} label={t('matchDetail.swapServe')} onClick={() => { setSheet(null); swapServe() }} />
+            <BottomSheetItem icon={<RotateCcw size={20} />} label={t('matchDetail.undoLastPoint')} onClick={() => { setSheet(null); undoLast() }} />
           </>
         )}
         {isScheduled && (
-          <BottomSheetItem icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"/></svg>} label="Start match" onClick={() => { setSheet(null); handleStartMatch() }} />
+          <BottomSheetItem icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"/></svg>} label={t('matchDetail.startMatchMenu')} onClick={() => { setSheet(null); handleStartMatch() }} />
         )}
         {isCompleted && (
-          <BottomSheetItem icon={<RefreshCw size={20} />} label="Re-open match" onClick={() => { setSheet(null); handleReopenMatch() }} />
+          <BottomSheetItem icon={<RefreshCw size={20} />} label={t('matchDetail.reopenMatch')} onClick={() => { setSheet(null); handleReopenMatch() }} />
         )}
-        <BottomSheetItem icon={<Pencil size={20} />} label="Edit players" onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/edit`)} />
+        <BottomSheetItem icon={<Pencil size={20} />} label={t('matchDetail.editPlayers')} onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/players/edit`)} />
         <BottomSheetDivider />
         {isLive && (
-          <BottomSheetItem icon={<Square size={20} />} label="End match" onClick={() => setSheet('confirm-end')} danger />
+          <BottomSheetItem icon={<Square size={20} />} label={t('matchDetail.endMatch')} onClick={() => setSheet('confirm-end')} danger />
         )}
-        <BottomSheetItem icon={<Trash2 size={20} />} label="Delete match" onClick={() => setSheet('confirm-delete')} danger />
+        <BottomSheetItem icon={<Trash2 size={20} />} label={t('matchDetail.deleteMatch')} onClick={() => setSheet('confirm-delete')} danger />
         <BottomSheetCancel onClick={() => setSheet(null)} />
       </>
     )
@@ -590,16 +589,16 @@ export default function MatchDetailPage() {
 
       {/* ── Sticky nav ───────────────────────────────────────────────────── */}
       <AppBar
-        title={`Match ${matchNumber} · ${MATCH_TYPE_LABELS[match.match_type]}`}
-        titleAlign="center"
+        title=''
         titleVisible={isNavStuck}
         leftAction={{
-          label: 'Session',
+          ariaLabel: t('common.session'),
+          label: t('common.session'),
           icon: <ChevronLeft style={{ width: 18, height: 18 }} />,
           onClick: () => navigate(-1),
         }}
         rightAction={{
-          ariaLabel: 'More options',
+          ariaLabel: t('common.moreOptions'),
           icon: <MoreVertical style={{ width: 18, height: 18 }} />,
           onClick: () => setSheet('menu'),
         }}
@@ -615,21 +614,21 @@ export default function MatchDetailPage() {
           {/* Eyebrow */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 'var(--space-3)', minHeight: 18, color: isLive ? 'var(--accent)' : isScheduled ? 'var(--muted)' : 'var(--fg)' }}>
             {isLive && <span className="animate-pulse" style={{ width: 8, height: 8, background: 'var(--accent)', borderRadius: '50%', flexShrink: 0 }} />}
-            {isLive ? 'Live · in progress' : isScheduled ? 'Ready to start' : 'Final'}
+            {isLive ? t('common.liveInProgress') : isScheduled ? t('matchDetail.readyToStart') : t('matchDetail.final')}
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-3xl)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.035em', marginBottom: 'var(--space-3)', color: 'var(--fg)' }}>
-            Match {matchNumber}
+            {t('matchDetail.matchTitle', { number: matchNumber })}
           </h1>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-            <span style={{ color: 'var(--fg)', fontWeight: 600 }}>{MATCH_TYPE_LABELS[match.match_type]}</span>
+            <span style={{ color: 'var(--fg)', fontWeight: 600 }}>{matchTypeLabel(match.match_type, t)}</span>
             <span style={{ width: 3, height: 3, background: 'var(--border)', borderRadius: '50%', flexShrink: 0 }} />
             {isScheduled ? (
-              <span>Not started</span>
+              <span>{t('common.notStarted')}</span>
             ) : (
               <>
-                <span>Started {formatTime(match.played_at)}</span>
+                <span>{t('matchDetail.startedAt', { time: formatTime(match.played_at, locale) })}</span>
                 <span style={{ width: 3, height: 3, background: 'var(--border)', borderRadius: '50%', flexShrink: 0 }} />
-                <span>{isLive ? `${getElapsed(match.played_at)} elapsed` : 'Completed'}</span>
+                <span>{isLive ? t('units.elapsed', { duration: getElapsed(match.played_at) }) : t('matchDetail.completed')}</span>
               </>
             )}
           </div>
@@ -639,36 +638,36 @@ export default function MatchDetailPage() {
         {isScheduled && (
           <section style={{ margin: '0 var(--space-5) var(--space-5)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-5) var(--space-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)', textAlign: 'center' }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-              Ready when you are
+              {t('matchDetail.readyWhenYouAre')}
             </span>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
-              Confirm players &amp; first serve
+              {t('matchDetail.confirmPlayersServe')}
             </h2>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: 280, lineHeight: 1.5 }}>
-              First to {POINTS_TARGET}, win by 2 (cap {HARD_CAP}).
+              {t('matchDetail.rulesSummary', { target: POINTS_TARGET, cap: HARD_CAP })}
             </p>
 
             {/* VS layout */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'var(--space-3)', width: '100%', marginTop: 'var(--space-3)' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.01em', textAlign: 'right', lineHeight: 1.2 }}>
-                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 2 }}>Team A</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 2 }}>{t('team.teamA')}</span>
                 {teamAName}
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--muted)' }}>VS</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--muted)' }}>{t('team.VS')}</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.01em', textAlign: 'left', lineHeight: 1.2 }}>
-                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 2 }}>Team B</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', marginBottom: 2 }}>{t('team.teamB')}</span>
                 {teamBName}
               </div>
             </div>
 
             {/* Serve pick */}
-            <div role="radiogroup" aria-label="First serve" style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
+            <div role="radiogroup" aria-label={t('team.firstServe')} style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
               {(['A', 'B'] as const).map(team => (
                 <button key={team} type="button" role="radio" aria-checked={serving === team}
                   onClick={() => dispatch({ type: 'set_serving', serving: team })}
                   style={{ background: serving === team ? 'var(--accent-soft)' : 'var(--bg)', border: serving === team ? '2px solid var(--accent)' : '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: serving === team ? 'calc(var(--space-3) - 1px)' : 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: serving === team ? 'var(--accent)' : 'var(--fg)', cursor: 'pointer', minHeight: 44, display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 2, touchAction: 'manipulation', transition: 'border-color 0.12s, background 0.12s' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: serving === team ? 'var(--accent)' : 'var(--muted)' }}>Serves first</span>
-                  Team {team}
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: serving === team ? 'var(--accent)' : 'var(--muted)' }}>{t('team.servesFirst')}</span>
+                  {t('team.teamLabel', { team })}
                 </button>
               ))}
             </div>
@@ -698,7 +697,7 @@ export default function MatchDetailPage() {
                       key={team}
                       role={isLive ? 'button' : undefined}
                       tabIndex={isLive ? 0 : -1}
-                      aria-label={isLive ? `Score point for Team ${team}` : undefined}
+                      aria-label={isLive ? t('matchDetail.scorePoint', { team }) : undefined}
                       onClick={() => isLive && increment(team)}
                       onKeyDown={e => { if (isLive && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); increment(team) } }}
                       style={{
@@ -710,10 +709,10 @@ export default function MatchDetailPage() {
                       }}>
 
                       {/* Serve indicator */}
-                      <div style={{ position: 'absolute', top: 'var(--space-4)', ...(team === 'A' ? { left: 'var(--space-4)' } : { right: 'var(--space-4)' }), display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent)', opacity: isServingNow ? 1 : 0, transition: 'opacity 0.18s' }}>
-                        {team === 'B' && <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
-                        Serving
+                      <div style={{ alignSelf: team === 'A' ? 'flex-start' : 'flex-end', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent)', visibility: isServingNow ? 'visible' : 'hidden', transition: 'opacity 0.18s', minHeight: 14 }}>
                         {team === 'A' && <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
+                        {t('matchDetail.serving')}
+                        {team === 'B' && <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
                       </div>
 
                       {/* Team label */}
@@ -721,7 +720,7 @@ export default function MatchDetailPage() {
                         <span style={{ width: 16, height: 16, borderRadius: 3, display: 'inline-grid', placeItems: 'center', fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 800, color: 'var(--surface)', background: team === 'A' ? 'var(--fg)' : 'var(--accent)' }}>
                           {team}
                         </span>
-                        Team {team}
+                        {t('team.teamLabel', { team })}
                       </span>
 
                       {/* Roster */}
@@ -745,25 +744,25 @@ export default function MatchDetailPage() {
 
                       {/* Score tools (minus + edit) */}
                       <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 2, alignItems: 'center', minHeight: 28 }}>
-                        <button type="button" onClick={() => decrement(team)} disabled={score === 0 || !isLive} aria-label={`Subtract one from Team ${team}`}
+                        <button type="button" onClick={() => decrement(team)} disabled={score === 0 || !isLive} aria-label={t('matchDetail.subtractOne', { team })}
                           style={{ background: 'var(--bg)', border: '1px solid var(--border)', width: 28, height: 28, display: 'grid', placeItems: 'center', color: 'var(--muted)', borderRadius: 'var(--radius-md)', cursor: score === 0 || !isLive ? 'not-allowed' : 'pointer', opacity: score === 0 || !isLive ? 0.35 : 1, touchAction: 'manipulation' }}>
                           <Minus style={{ width: 14, height: 14 }} />
                         </button>
-                        <button type="button" onClick={() => openScoreEdit(team)} disabled={!isLive} aria-label="Enter score directly"
+                        <button type="button" onClick={() => openScoreEdit(team)} disabled={!isLive} aria-label={t('matchDetail.enterScoreDirectly')}
                           style={{ background: 'var(--bg)', border: '1px solid var(--border)', width: 28, height: 28, display: 'grid', placeItems: 'center', color: 'var(--muted)', borderRadius: 'var(--radius-md)', cursor: !isLive ? 'not-allowed' : 'pointer', opacity: !isLive ? 0.35 : 1, touchAction: 'manipulation' }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="7" y1="10" x2="7" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="17" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="17" y2="14"/></svg>
                         </button>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>pt</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>{t('matchDetail.pt')}</span>
                       </div>
 
                       {/* Footer: win stamp or tap hint */}
                       {isCompleted && isWinner ? (
                         <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--accent)', border: '1.5px solid var(--accent)', padding: '4px 10px 3px', borderRadius: 'var(--radius-sm)', marginTop: 'auto', background: 'var(--accent-soft)' }}>
-                          Winner
+                          {t('matchDetail.winner')}
                         </span>
                       ) : isLive ? (
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)', display: 'inline-flex', alignItems: 'center', gap: 4, opacity: 0.65, marginTop: 'auto' }}>
-                          Tap to score +1
+                          {t('matchDetail.tapToScore')}
                         </span>
                       ) : (
                         <span style={{ visibility: 'hidden', marginTop: 'auto', fontSize: 10 }}>.</span>
@@ -777,7 +776,7 @@ export default function MatchDetailPage() {
             {/* Set meter */}
             <div style={{ margin: '0 var(--space-5) var(--space-5)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3) var(--space-4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
-                To {POINTS_TARGET}
+                {t('matchDetail.toTarget', { target: POINTS_TARGET })}
               </span>
               <div style={{ flex: 1, height: 4, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 999, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, background: 'var(--accent)', borderRadius: 999, width: `${pct}%`, transition: 'width 0.3s cubic-bezier(0.32, 0, 0.15, 1)' }} />
@@ -793,17 +792,17 @@ export default function MatchDetailPage() {
                 <button type="button" onClick={handleReopenMatch} disabled={reopenMatch.isPending}
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
                   {reopenMatch.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <RefreshCw style={{ width: 16, height: 16, color: 'var(--muted)' }} />}
-                  Re-open match for editing
+                  {t('matchDetail.reopenEditing')}
                 </button>
               ) : (
                 <>
                   <button type="button" onClick={swapServe} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
                     <ArrowLeftRight style={{ width: 16, height: 16, color: 'var(--muted)' }} />
-                    Swap serve
+                    {t('matchDetail.swapServe')}
                   </button>
                   <button type="button" onClick={undoLast} disabled={pointLog.length === 0} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: pointLog.length === 0 ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, opacity: pointLog.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}>
                     <RotateCcw style={{ width: 16, height: 16, color: 'var(--muted)' }} />
-                    Undo last point
+                    {t('matchDetail.undoLastPoint')}
                   </button>
                 </>
               )}
@@ -811,16 +810,16 @@ export default function MatchDetailPage() {
 
             {/* Point log */}
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '0 var(--space-5)', marginBottom: 'var(--space-3)', gap: 'var(--space-3)' }}>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--fg)' }}>Point log</h2>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--fg)' }}>{t('matchDetail.pointLog')}</h2>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
-                {pointLog.length} points
+                {t('units.point', { count: pointLog.length })}
               </span>
             </div>
 
             <div style={{ margin: '0 var(--space-5)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
               {pointLog.length === 0 ? (
                 <div style={{ padding: 'var(--space-5) var(--space-4)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                  No points yet. Tap either team to score.
+                  {t('matchDetail.noPointsYet')}
                 </div>
               ) : (
                 pointLog.slice(-8).reverse().map((entry, i) => {
@@ -852,7 +851,7 @@ export default function MatchDetailPage() {
             ) : (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4" /></svg>
             )}
-            {startMatch.isPending ? 'Starting…' : serving ? 'Start match' : 'Pick who serves first'}
+            {startMatch.isPending ? t('matchDetail.starting') : serving ? t('matchDetail.startMatch') : t('matchDetail.pickServeFirst')}
             {serving && !startMatch.isPending && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', opacity: 0.7, marginLeft: 'var(--space-1)' }}>→</span>}
           </button>
         )}
@@ -864,7 +863,7 @@ export default function MatchDetailPage() {
               <button type="button" onClick={() => handleFinalizeWin(autoWinner)} disabled={recordResult.isPending}
                 style={{ width: '100%', padding: 'var(--space-4)', background: 'var(--accent)', color: 'var(--surface)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 700, border: 'none', borderRadius: 'var(--radius-lg)', cursor: 'pointer', minHeight: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', boxShadow: '0 1px 2px oklch(0% 0 0 / 0.08), 0 6px 18px oklch(55% 0.20 30 / 0.22)', touchAction: 'manipulation' }}>
                 {recordResult.isPending ? <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" /> : <CheckCircle style={{ width: 18, height: 18 }} />}
-                Award match to Team {autoWinner}
+                {t('matchDetail.awardMatchTo', { team: autoWinner })}
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', opacity: 0.7, marginLeft: 'var(--space-1)' }}>{liveScore.a}–{liveScore.b}</span>
               </button>
             )
@@ -874,12 +873,12 @@ export default function MatchDetailPage() {
               <button type="button" onClick={() => setSheet('award')}
                 style={{ width: '100%', padding: 'var(--space-4)', background: 'var(--surface)', color: 'var(--fg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 700, border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', minHeight: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', touchAction: 'manipulation' }}>
                 <CheckCircle style={{ width: 18, height: 18 }} />
-                Record team win
+                {t('matchDetail.recordTeamWin')}
               </button>
               <button type="button" onClick={() => setSheet('confirm-end')}
                 style={{ width: '100%', padding: 'var(--space-4)', background: 'var(--surface)', color: 'var(--danger)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 700, border: '1px solid var(--danger)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', minHeight: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', touchAction: 'manipulation' }}>
                 <Square style={{ width: 18, height: 18 }} />
-                End match
+                {t('matchDetail.endMatch')}
               </button>
             </>
           )
@@ -888,7 +887,7 @@ export default function MatchDetailPage() {
         {isCompleted && (
           <button type="button" onClick={() => navigate(-1)}
             style={{ width: '100%', padding: 'var(--space-4)', background: 'var(--surface)', color: 'var(--fg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 700, border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', minHeight: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', touchAction: 'manipulation' }}>
-            Back to session
+            {t('matchDetail.backToSession')}
           </button>
         )}
       </div>

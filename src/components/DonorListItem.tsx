@@ -1,6 +1,7 @@
 import Avatar from './Avatar'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
+import { useI18n } from '../i18n'
 
 interface Props {
   playerId: string
@@ -16,6 +17,7 @@ export default function DonorListItem({
   losses,
   matchesPlayed,
 }: Props) {
+  const { t } = useI18n()
   const amount = losses * LOSS_PENALTY_VND
   const displayName = formatShortPlayerName(name)
 
@@ -33,10 +35,10 @@ export default function DonorListItem({
       </div>
       <div className="text-right shrink-0">
         <p className="text-base font-bold text-yellow-500 leading-tight tabular-nums">
-          {losses} {losses === 1 ? 'Loss' : 'Losses'}
+          {t('donations.losses', { count: losses })}
         </p>
         <p className="text-xs text-gray-400 leading-tight">
-          {formatCurrency(amount)} ({matchesPlayed} matches)
+          {formatCurrency(amount)} ({t('units.match', { count: matchesPlayed })})
         </p>
       </div>
     </div>

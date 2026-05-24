@@ -4,7 +4,17 @@ import type { Player } from '../types/database'
 
 const DOUBLES_TYPES = ['MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES']
 
+export interface PartnerEntry {
+  partner: Player
+  winRate: number
+  totalMatches: number
+  wins: number
+}
+
 export interface BestPartnerResult {
+  best: PartnerEntry | null
+  worst: PartnerEntry | null
+  // legacy fields kept for backwards compat
   partner: Player | null
   winRate: number
   totalMatches: number
@@ -16,7 +26,7 @@ export function useBestPartner(playerId: string) {
 
   const result = useMemo<BestPartnerResult>(() => {
     if (!matches || !playerId) {
-      return { partner: null, winRate: 0, totalMatches: 0, wins: 0 }
+      return { best: null, worst: null, partner: null, winRate: 0, totalMatches: 0, wins: 0 }
     }
 
     const playerMatches = matches.filter((m) => {
@@ -25,7 +35,7 @@ export function useBestPartner(playerId: string) {
     })
 
     if (playerMatches.length === 0) {
-      return { partner: null, winRate: 0, totalMatches: 0, wins: 0 }
+      return { best: null, worst: null, partner: null, winRate: 0, totalMatches: 0, wins: 0 }
     }
 
     const teammateStats = new Map<string, { total: number; wins: number; player: Player }>()
@@ -57,7 +67,7 @@ export function useBestPartner(playerId: string) {
     }
 
     if (teammateStats.size === 0) {
-      return { partner: null, winRate: 0, totalMatches: 0, wins: 0 }
+      return { best: null, worst: null, partner: null, winRate: 0, totalMatches: 0, wins: 0 }
     }
 
     const sorted = Array.from(teammateStats.values()).sort((a, b) => {
@@ -68,11 +78,22 @@ export function useBestPartner(playerId: string) {
       return b.total - a.total
     })
 
-    const best = sorted[0]
+    const toEntry = (s: typeof sorted[0]): PartnerEntry => ({
+      partner: s.player,
+      winRate: s.total > 0 ? s.wins / s.total : 0,
+      totalMatches: s.total,
+      wins: s.wins,
+    })
+
+    const best = toEntry(sorted[0])
+    const worst = sorted.length > 1 ? toEntry(sorted[sorted.length - 1]) : null
+
     return {
-      partner: best.player,
-      winRate: best.total > 0 ? best.wins / best.total : 0,
-      totalMatches: best.total,
+      best,
+      worst,
+      partner: best.partner,
+      winRate: best.winRate,
+      totalMatches: best.totalMatches,
       wins: best.wins,
     }
   }, [matches, playerId])

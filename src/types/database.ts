@@ -20,7 +20,6 @@ export interface Player {
   name: string
   email?: string | null
   avatar_url?: string | null
-  is_active: boolean
   rating: number
   created_at: string
   created_by: string

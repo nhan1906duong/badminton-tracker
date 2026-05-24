@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useI18n } from '../../src/i18n'
 
 interface AppBarAction {
   label?: string
@@ -34,11 +35,12 @@ export function AppBar({
   className = '',
   style,
 }: AppBarProps) {
+  const { t } = useI18n()
   const isLeft = titleAlign === 'left'
   const resolvedLeftAction: AppBarAction | undefined = leftAction ?? (
     backLabel || onBack
       ? {
-          label: backLabel ?? 'Back',
+          label: backLabel ?? t('common.back'),
           onClick: onBack ?? (() => window.history.back()),
         }
       : undefined
@@ -67,7 +69,7 @@ export function AppBar({
           <button
             type="button"
             onClick={resolvedLeftAction.onClick}
-            aria-label={resolvedLeftAction.ariaLabel ?? resolvedLeftAction.label ?? 'Back'}
+            aria-label={resolvedLeftAction.ariaLabel ?? resolvedLeftAction.label ?? t('common.back')}
             className="inline-flex items-center gap-2 text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium active:opacity-70 transition-opacity"
           >
             {resolvedLeftAction.icon ?? null}
@@ -93,7 +95,7 @@ export function AppBar({
           <button
             type="button"
             onClick={rightAction.onClick}
-            aria-label={rightAction.ariaLabel ?? rightAction.label ?? 'Action'}
+            aria-label={rightAction.ariaLabel ?? rightAction.label ?? t('common.action')}
             className="inline-flex items-center justify-end gap-2 text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium active:opacity-70 transition-opacity"
           >
             {rightAction.icon}

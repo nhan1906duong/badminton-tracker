@@ -1,33 +1,108 @@
-import { useState, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useCallback, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { useBestPartner } from '../hooks/useBestPartner'
+import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
+import { useHeadToHead } from '../hooks/useHeadToHead'
+import { usePlayerRankings } from '../hooks/useRankings'
+import type { PartnerEntry } from '../hooks/useBestPartner'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
+import { AppBar, Badge, PullToRefresh } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Trophy, Users, TrendingUp, TrendingDown, Medal, Pencil } from 'lucide-react'
+import type { MatchWithDetails, Session } from '../types/database'
+import { ChevronLeft, ChevronDown, ChevronRight, Pencil, Medal, Swords } from 'lucide-react'
+import { LOCALE_TAG, useI18n, type Locale } from '../i18n'
+
+const MATCH_TYPE_SHORT: Record<string, string> = {
+  MEN_SINGLES: 'MS',
+  WOMEN_SINGLES: 'WS',
+  MEN_DOUBLES: 'MD',
+  WOMEN_DOUBLES: 'WD',
+  MIXED_DOUBLES: 'XD',
+}
+
+function getMatchRow(match: MatchWithDetails, playerId: string) {
+  const pp = match.participants.find((p) => p.player_id === playerId)
+  if (!pp) return null
+  const playerTeam = match.teams.find((t) => t.id === pp.team_id)
+  if (!playerTeam) return null
+  const isTeamA = playerTeam.team_label === 'TEAM_A'
+  const teammates = match.participants
+    .filter((p) => p.team_id === pp.team_id && p.player_id !== playerId)
+    .map((p) => formatShortPlayerName(p.player.name))
+  const opponents = match.participants
+    .filter((p) => p.team_id !== pp.team_id)
+    .map((p) => formatShortPlayerName(p.player.name))
+  const scoreStr = match.scores
+    .map((s) => {
+      const my = isTeamA ? s.team_a_score : s.team_b_score
+      const opp = isTeamA ? s.team_b_score : s.team_a_score
+      return `${my}–${opp}`
+    })
+    .join(', ')
+  return {
+    isWin: playerTeam.is_winner,
+    teammates: teammates.join(' & '),
+    opponents: opponents.join(' & '),
+    scoreStr: scoreStr || '—',
+    type: MATCH_TYPE_SHORT[match.match_type] ?? '—',
+  }
+}
+
+function formatSessionLabel(session: Session, locale: Locale): string {
+  return (
+    session.label ??
+    new Date(session.started_at).toLocaleDateString(LOCALE_TAG[locale], {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  )
+}
 
 export default function PlayerDetailPage() {
+  const { locale, t } = useI18n()
   const { playerId } = useParams<{ playerId: string }>()
+  const navigate = useNavigate()
   const id = playerId ?? ''
 
-  const { data: player, isLoading: playerLoading, isError: playerError } = usePlayer(id)
+  const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = usePlayer(id)
   const { stats } = usePlayerStats()
-  const { partner, winRate, totalMatches: partnerMatches, wins: partnerWins, isLoading: partnerLoading } = useBestPartner(id)
+  const { best: bestPartner, worst: worstPartner, isLoading: partnerLoading } = useBestPartner(id)
+  const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
+  const { entries: h2hEntries, isLoading: h2hLoading } = useHeadToHead(id)
+  const { data: rankings } = usePlayerRankings()
+  const rankData = rankings?.find((r) => r.playerId === id)
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
+  const [h2hExpanded, setH2HExpanded] = useState(true)
+  const [showAllH2H, setShowAllH2H] = useState(false)
+  const [isStuck, setIsStuck] = useState(false)
 
   const updatePlayer = useUpdatePlayer()
   const uploadAvatar = useAvatarUpload()
   const removeAvatar = useAvatarDelete()
   const setDefaultAvatar = useSetDefaultAvatar()
 
-  const playerStats = stats.find(s => s.playerId === id)
+  useEffect(() => {
+    const onScroll = () => setIsStuck(window.scrollY > 4)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const playerStats = stats.find((s) => s.playerId === id)
+  const total = playerStats?.matchesPlayed ?? 0
+  const wins = playerStats?.wins ?? 0
+  const losses = playerStats?.losses ?? 0
+  const winRateStr = total > 0 ? `${Math.round((wins / total) * 100)}%` : '—'
+  const donated = losses * LOSS_PENALTY_VND
 
   const handleStartEditName = useCallback(() => {
     if (player) {
@@ -43,100 +118,362 @@ export default function PlayerDetailPage() {
     setIsEditingName(false)
   }, [player, editName, updatePlayer])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSaveName()
-    if (e.key === 'Escape') setIsEditingName(false)
-  }, [handleSaveName])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') handleSaveName()
+      if (e.key === 'Escape') setIsEditingName(false)
+    },
+    [handleSaveName]
+  )
+
+  const handleRefresh = useCallback(async () => {
+    await refetchPlayer()
+  }, [refetchPlayer])
+
+  function toggleSession(sessionId: string) {
+    setExpandedSessions((prev) => {
+      const next = new Set(prev)
+      if (next.has(sessionId)) next.delete(sessionId)
+      else next.add(sessionId)
+      return next
+    })
+  }
 
   if (playerLoading) {
     return (
-      <div className="min-h-svh bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
-  if (playerError || !player) {
+  if (!player) {
     return (
-      <div className="min-h-svh bg-gray-50 flex items-center justify-center text-gray-400 text-sm">
-        Player not found
+      <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center">
+      <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.notFound')}</span>
       </div>
     )
   }
-
-  const donated = (playerStats?.losses ?? 0) * LOSS_PENALTY_VND
 
   return (
-    <div className="min-h-svh bg-gray-50">
-      <div className="px-4 py-6 space-y-6 pb-8">
-        {/* Avatar + Name */}
-        <div className="flex flex-col items-center gap-3">
-          <button onClick={() => setShowAvatarPicker(true)} className="relative">
-            <Avatar
-              src={player.avatar_url}
-              name={player.name}
-              size={80}
-              bgColor="#dcfce7"
-              textColor="#15803d"
-            />
-            <div className="absolute inset-0 rounded-full bg-black/10 opacity-0 active:opacity-100 transition-opacity" />
-          </button>
+    <PullToRefresh onRefresh={handleRefresh}>
+    <div className="min-h-svh bg-[var(--bg)]">
+      <AppBar
+        title=''
+        leftAction={{
+          icon: <ChevronLeft className="w-5 h-5" />,
+          onClick: () => navigate(-1),
+        }}
+        stuck={isStuck}
+        safeArea
+      />
 
-          {isEditingName ? (
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onBlur={handleSaveName}
-              onKeyDown={handleKeyDown}
-              autoFocus
-              className="text-lg font-bold text-gray-900 text-center bg-white border border-gray-200 rounded-xl px-3 py-1.5 w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          ) : (
-            <button
-              onClick={handleStartEditName}
-              className="flex items-center gap-1.5 text-lg font-bold text-gray-900 active:opacity-60 transition-opacity"
+      {/* Hero */}
+      <div
+        className="flex flex-col items-center gap-3 px-6 pt-5 pb-6 bg-[var(--surface)]"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        {/* Rank number */}
+        {rankData && (
+          <div
+          aria-label={t('common.rank', { rank: rankData.rank })}
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 80,
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: '-0.04em',
+              userSelect: 'none',
+              fontVariantNumeric: 'tabular-nums',
+              color:
+                rankData.rank === 1 ? 'color-mix(in oklch, var(--accent) 35%, transparent)'
+                : rankData.rank === 2 ? 'color-mix(in oklch, var(--accent) 20%, transparent)'
+                : rankData.rank === 3 ? 'color-mix(in oklch, var(--accent) 10%, transparent)'
+                : 'color-mix(in oklch, var(--border) 80%, transparent)',
+            }}
+          >
+            {rankData.rank}
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowAvatarPicker(true)}
+          aria-label={t('players.changeAvatar')}
+          className="active:opacity-70 transition-opacity"
+        >
+          <Avatar src={player.avatar_url} name={player.name} size={60} />
+        </button>
+
+        {isEditingName ? (
+          <input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={handleSaveName}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            className="text-[24px] font-extrabold text-center bg-transparent outline-none w-full max-w-xs pb-1"
+            style={{
+              fontFamily: 'var(--font-display)',
+              color: 'var(--fg)',
+              borderBottom: '2px solid var(--accent)',
+            }}
+          />
+        ) : (
+          <button
+            onClick={handleStartEditName}
+            className="flex items-center gap-2 active:opacity-70"
+          >
+            <span
+              className="text-[24px] font-extrabold"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
             >
               {player.name}
-              <Pencil className="w-3.5 h-3.5 text-gray-400" />
-            </button>
-          )}
-        </div>
+            </span>
+            <Pencil className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+          </button>
+        )}
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-4 gap-2">
-          <StatCard icon={<Users className="w-4 h-4" />} label="Matches" value={playerStats?.matchesPlayed ?? 0} />
-          <StatCard icon={<TrendingUp className="w-4 h-4 text-green-600" />} label="Wins" value={playerStats?.wins ?? 0} color="text-green-600" />
-          <StatCard icon={<TrendingDown className="w-4 h-4 text-red-500" />} label="Losses" value={playerStats?.losses ?? 0} color="text-red-500" />
-          <StatCard icon={<Trophy className="w-4 h-4 text-amber-500" />} label="Donated" value={formatCurrency(donated)} isCurrency />
-        </div>
-
-        {/* Best Partner */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Medal className="w-4 h-4 text-amber-500" />
-            <h3 className="text-sm font-semibold text-gray-900">Best Partner</h3>
-          </div>
-          {partnerLoading ? (
-            <div className="text-xs text-gray-400">Loading...</div>
-          ) : partner ? (
-            <div className="flex items-center gap-3">
-              <Avatar src={partner.avatar_url} name={partner.name} size={44} bgColor="#dcfce7" textColor="#15803d" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{formatShortPlayerName(partner.name)}</p>
-                <p className="text-xs text-gray-500">
-                  {partnerWins}W / {partnerMatches - partnerWins}L · {Math.round(winRate * 100)}% win rate
-                </p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-xs text-gray-400">No doubles matches yet.</p>
-          )}
-        </div>
-
+        <span className="text-[13px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
+          {t('players.ratingPts', { rating: player.rating })}
+        </span>
       </div>
 
-      {/* Avatar Picker */}
+      <div className="px-4 pt-5 pb-24 space-y-3">
+        {/* Stats grid */}
+        <div className="grid grid-cols-4 gap-2">
+          <StatCard label={t('players.played')} value={total} />
+          <StatCard label={t('players.winPercent')} value={winRateStr} valueColor="var(--accent)" />
+          <StatCard label={t('players.wins')} value={wins} valueColor="var(--success)" />
+          <StatCard label={t('players.losses')} value={losses} valueColor="var(--danger)" />
+        </div>
+
+        {/* Donation */}
+        <div
+          className="bg-[var(--surface)] border border-[var(--border)] px-4 py-3 flex items-center justify-between"
+          style={{ borderRadius: 'var(--radius-lg)' }}
+        >
+          <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.totalDonated')}</span>
+          <span
+            className="text-[18px] font-extrabold"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+          >
+            {formatCurrency(donated)}
+          </span>
+        </div>
+
+        {/* Partner stats */}
+        <div
+          className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+          style={{ borderRadius: 'var(--radius-lg)' }}
+        >
+          {partnerLoading ? (
+            <div className="p-4">
+              <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+            </div>
+          ) : !bestPartner ? (
+            <div className="p-4">
+              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
+            </div>
+          ) : (
+            <>
+              <PartnerRow
+                label={t('players.bestPartner')}
+                icon={<Medal className="w-4 h-4" style={{ color: 'var(--success)' }} />}
+                entry={bestPartner}
+              />
+              {worstPartner && (
+                <>
+                  <div style={{ height: 1, background: 'var(--border)' }} />
+                  <PartnerRow
+                    label={t('players.worstPartner')}
+                    icon={<Medal className="w-4 h-4" style={{ color: 'var(--danger)' }} />}
+                    entry={worstPartner}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Head to Head */}
+        {!h2hLoading && h2hEntries.length > 0 && (
+          <div
+            className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+            style={{ borderRadius: 'var(--radius-lg)' }}
+          >
+            <AppBar
+              title={t('players.headToHead')}
+              titleAlign="left"
+              className="!static !z-auto"
+              style={{ background: 'var(--surface)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+              leftAction={{
+                icon: <Swords className="w-[18px] h-[18px]" />,
+                ariaLabel: t('players.headToHead'),
+                onClick: () => setH2HExpanded((v) => !v),
+              }}
+              rightAction={{
+                icon: h2hExpanded
+                  ? <ChevronDown className="w-[18px] h-[18px]" />
+                  : <ChevronRight className="w-[18px] h-[18px]" />,
+                ariaLabel: h2hExpanded ? t('players.collapse') : t('players.expand'),
+                onClick: () => setH2HExpanded((v) => !v),
+              }}
+            />
+
+            {h2hExpanded && (
+              <div style={{ borderTop: '1px solid var(--border)' }}>
+                {(showAllH2H ? h2hEntries : h2hEntries.slice(0, 5)).map((entry, i) => {
+                  const winRate = entry.totalMatches > 0 ? entry.wins / entry.totalMatches : 0
+                  const isWinning = entry.wins > entry.losses
+                  const isTied = entry.wins === entry.losses
+                  return (
+                    <div
+                      key={entry.opponent.id}
+                      className="flex items-center gap-3 px-4 py-2.5"
+                      style={{ borderBottom: '1px solid var(--border)' }}
+                    >
+                      <span
+                        className="text-[11px] font-bold w-4 text-right shrink-0"
+                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                      >
+                        {i + 1}
+                      </span>
+                      <Avatar src={entry.opponent.avatar_url} name={entry.opponent.name} size={32} />
+                      <p className="text-[14px] font-medium flex-1 min-w-0 truncate" style={{ color: 'var(--fg)' }}>
+                        {formatShortPlayerName(entry.opponent.name)}
+                      </p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className="text-[13px] font-bold"
+                          style={{ color: isWinning ? 'var(--success)' : isTied ? 'var(--muted)' : 'var(--danger)' }}
+                        >
+                          {entry.wins}W
+                        </span>
+                        <span className="text-[11px]" style={{ color: 'var(--border)' }}>·</span>
+                        <span className="text-[13px] font-bold" style={{ color: 'var(--muted)' }}>
+                          {entry.losses}L
+                        </span>
+                        <span
+                          className="text-[11px] w-8 text-right"
+                          style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                        >
+                          {Math.round(winRate * 100)}%
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {h2hEntries.length > 5 && (
+                  <button
+                    onClick={() => setShowAllH2H((v) => !v)}
+                    className="w-full py-2.5 text-[13px] font-semibold active:bg-[var(--bg)]"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    {showAllH2H ? t('players.showLess') : t('players.showAll', { count: h2hEntries.length })}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Session History */}
+        {!historyLoading && history.length > 0 && (
+          <div className="space-y-2 pt-1">
+            <div
+              className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
+              style={{ color: 'var(--muted)' }}
+            >
+              {t('players.sessionsCount', { count: history.length })}
+            </div>
+
+            {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
+              const isExpanded = expandedSessions.has(session.id)
+              const completedMatches = matches.filter((m) => m.status === 'COMPLETED')
+              return (
+                <div
+                  key={session.id}
+                  className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+                  style={{ borderRadius: 'var(--radius-lg)' }}
+                >
+                  <button
+                    onClick={() => toggleSession(session.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
+                  >
+                    <div className="flex-1 min-w-0 text-left">
+                      <p
+                        className="text-[15px] font-semibold truncate"
+                        style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                      >
+                        {formatSessionLabel(session, locale)}
+                      </p>
+                      <p
+                        className="text-[11px] mt-0.5"
+                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                      >
+                        {t('units.match', { count: completedMatches.length })} ·{' '}
+                        <span style={{ color: 'var(--success)' }}>{sWins}W</span>{' '}
+                        <span style={{ color: 'var(--danger)' }}>{sLosses}L</span>
+                      </p>
+                    </div>
+                    {isExpanded
+                      ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                      : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                    }
+                  </button>
+
+                  {isExpanded && (
+                    <div style={{ borderTop: '1px solid var(--border)' }}>
+                      {completedMatches.length === 0 ? (
+                        <div className="px-4 py-3">
+                          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
+                        </div>
+                      ) : (
+                        completedMatches.map((match) => {
+                          const row = getMatchRow(match, id)
+                          if (!row) return null
+                          return (
+                            <div
+                              key={match.id}
+                              className="flex items-center gap-3 px-4 py-2.5"
+                              style={{ borderBottom: '1px solid var(--border)' }}
+                            >
+                              <Badge variant={row.isWin ? 'win' : 'loss'}>
+                                {row.isWin ? 'W' : 'L'}
+                              </Badge>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
+                                  {row.teammates
+                                    ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
+                                    : t('players.vsOpponent', { opponents: row.opponents || '—' })}
+                                </p>
+                                <p
+                                  className="text-[11px]"
+                                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                >
+                                  {row.scoreStr}
+                                </p>
+                              </div>
+                              <span
+                                className="text-[11px] font-bold uppercase tracking-[0.06em] shrink-0"
+                                style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                              >
+                                {row.type}
+                              </span>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       {showAvatarPicker && (
         <AvatarPicker
           currentAvatarUrl={player.avatar_url}
@@ -144,26 +481,72 @@ export default function PlayerDetailPage() {
           onSelectDefault={(url) =>
             setDefaultAvatar.mutate({ url, entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
           }
-          onRemove={() => removeAvatar.mutate({ entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })}
+          onRemove={() =>
+            removeAvatar.mutate({ entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
+          }
           onClose={() => setShowAvatarPicker(false)}
         />
       )}
     </div>
+    </PullToRefresh>
   )
 }
 
-function StatCard({ icon, label, value, color, isCurrency }: {
-  icon: React.ReactNode
+function StatCard({
+  label,
+  value,
+  valueColor,
+}: {
   label: string
-  value: number | string
-  color?: string
-  isCurrency?: boolean
+  value: string | number
+  valueColor?: string
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-3 flex flex-col items-center gap-1">
-      <div className={`text-gray-400 ${color ?? ''}`}>{icon}</div>
-      <p className={`text-sm font-bold ${color ?? 'text-gray-900'} ${isCurrency ? 'text-[11px]' : ''}`}>{value}</p>
-      <p className="text-[10px] text-gray-400 font-medium">{label}</p>
+    <div
+      className="bg-[var(--surface)] border border-[var(--border)] p-3 flex flex-col items-center gap-1"
+      style={{ borderRadius: 'var(--radius-lg)' }}
+    >
+      <span
+        className="text-[20px] font-extrabold leading-none"
+        style={{ fontFamily: 'var(--font-display)', color: valueColor ?? 'var(--fg)' }}
+      >
+        {value}
+      </span>
+      <span
+        className="text-[10px] font-bold uppercase tracking-[0.06em]"
+        style={{ color: 'var(--muted)' }}
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function PartnerRow({ label, icon, entry }: { label: string; icon: React.ReactNode; entry: PartnerEntry }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-2">
+          {icon}
+          <span
+            className="text-[11px] font-bold uppercase tracking-[0.06em]"
+            style={{ color: 'var(--muted)' }}
+          >
+            {label}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={40} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--fg)' }}>
+              {formatShortPlayerName(entry.partner.name)}
+            </p>
+            <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
+              {entry.wins}W / {entry.totalMatches - entry.wins}L · {Math.round(entry.winRate * 100)}%
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

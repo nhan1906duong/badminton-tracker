@@ -2,17 +2,19 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useProfile } from '../hooks/useProfile'
+import { useI18n, type Locale } from '../i18n'
 
 const IS_DEV = import.meta.env.DEV
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const { locale, setLocale, t } = useI18n()
   const clearAll = useClearAllData()
   const recalculate = useRecalculateAllRatings()
   const [confirming, setConfirming] = useState(false)
@@ -59,7 +61,7 @@ export default function SettingsPage() {
           >
             <Avatar
               src={userAvatarUrl}
-              name={user?.email || 'User'}
+              name={user?.email || t('common.user')}
               size={48}
             />
             <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center border-2 border-[var(--surface)]">
@@ -68,9 +70,9 @@ export default function SettingsPage() {
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-bold text-[var(--fg)] truncate">
-              {user?.email || 'User'}
+              {user?.email || t('common.user')}
             </p>
-            <p className="text-[13px] text-[var(--muted)]">Signed in</p>
+            <p className="text-[13px] text-[var(--muted)]">{t('auth.signedIn')}</p>
           </div>
         </section>
 
@@ -87,12 +89,39 @@ export default function SettingsPage() {
 
         {/* Actions */}
         <section className="space-y-[var(--space-2)]">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)]">
+            <div className="flex items-center gap-3 mb-3">
+              <Languages className="w-5 h-5 shrink-0 text-[var(--fg)]" />
+              <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)]">{t('settings.language')}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(['en', 'vi'] as Locale[]).map((option) => {
+                const active = locale === option
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setLocale(option)}
+                    className={`min-h-[42px] rounded-[var(--radius-md)] border text-[14px] font-semibold transition-colors ${
+                      active
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
+                        : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]'
+                    }`}
+                  >
+                    {option === 'en' ? t('settings.languageEnglish') : t('settings.languageVietnamese')}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <button
             onClick={() => navigate('/settings/points')}
             className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
           >
             <Info className="w-5 h-5 shrink-0" />
-            <span className="flex-1 text-left text-[15px] font-semibold">How Points Work</span>
+            <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.howPointsWork')}</span>
             <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
           </button>
 
@@ -112,10 +141,10 @@ export default function SettingsPage() {
             )}
             <span className="text-[15px] font-semibold">
               {recalculate.isPending
-                ? 'Recalculating...'
+                ? t('settings.recalculating')
                 : confirmRecalc
-                  ? 'Tap again to recalculate all ratings'
-                  : 'Recalculate All Ratings'}
+                  ? t('settings.tapAgainRecalculate')
+                  : t('settings.recalculateAllRatings')}
             </span>
           </button>
 
@@ -124,7 +153,7 @@ export default function SettingsPage() {
             className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--danger)] active:bg-[var(--bg)] transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            <span className="text-[15px] font-semibold">Log Out</span>
+            <span className="text-[15px] font-semibold">{t('settings.logOut')}</span>
           </button>
         </section>
 
@@ -133,7 +162,7 @@ export default function SettingsPage() {
           <section className="space-y-[var(--space-2)]">
             <div className="flex items-center gap-2 px-1">
               <span className="font-[family:var(--font-mono)] text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--warn)] bg-[var(--bg)] border border-[var(--border)] px-2 py-0.5 rounded-[var(--radius-sm)]">
-                Dev Only
+                {t('common.devOnly')}
               </span>
             </div>
             <button
@@ -141,7 +170,7 @@ export default function SettingsPage() {
               className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
             >
               <Palette className="w-5 h-5 shrink-0" />
-              <span className="flex-1 text-left text-[15px] font-semibold">Design System</span>
+              <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.designSystem')}</span>
               <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
             </button>
             <button
@@ -160,10 +189,10 @@ export default function SettingsPage() {
               )}
               <span className="text-[15px] font-semibold">
                 {clearAll.isPending
-                  ? 'Clearing...'
+                  ? t('settings.clearing')
                   : confirming
-                    ? 'Tap again to confirm clear all'
-                    : 'Clear All Data & Avatars'}
+                    ? t('settings.tapAgainClearAll')
+                    : t('settings.clearAllData')}
               </span>
             </button>
           </section>

@@ -135,7 +135,7 @@ function AppBarSection() {
         </p>
         <div className="space-y-4">
           <AppBar
-            title="Session detail"
+            title=""
             leftAction={{
               icon: (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">

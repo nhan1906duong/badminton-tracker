@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useRef } from 'react'
-import { Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigationType, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginPage from '../pages/LoginPage'
 import PlayersPage from '../pages/PlayersPage'
@@ -8,7 +8,7 @@ import CreateSessionPage from '../pages/CreateSessionPage'
 import SessionDetailPage from '../pages/SessionDetailPage'
 import SessionStatsPage from '../pages/SessionStatsPage'
 import CreateMatchPage from '../pages/CreateMatchPage'
-import EditMatchPage from '../pages/EditMatchPage'
+import EditPlayersPage from '../pages/EditPlayersPage'
 import MatchDetailPage from '../pages/MatchDetailPage'
 import SettingsPage from '../pages/SettingsPage'
 import PointSystemPage from '../pages/PointSystemPage'
@@ -20,7 +20,7 @@ import { useOpenSession } from '../hooks/useSessions'
 import { useNavigate } from 'react-router-dom'
 
 const IS_DEV = import.meta.env.DEV
-const TAB_ROUTES = ['/', '/sessions', '/ranking', '/settings']
+const TAB_ROUTES = ['/sessions', '/ranking', '/settings']
 
 type TransitionDirection = 'forward' | 'backward' | null
 type TransitionStage = 'idle' | 'entering'
@@ -89,6 +89,11 @@ function ActiveSessionRedirect() {
   )
 }
 
+function LegacyEditMatchRedirect() {
+  const { id, matchId } = useParams<{ id: string; matchId: string }>()
+  return <Navigate to={`/sessions/${id}/matches/${matchId}/players/edit`} replace />
+}
+
 const routes = [
   { path: '/login', element: <LoginPage />, auth: false },
   { path: '/', element: <Navigate to="/sessions" replace />, auth: true },
@@ -100,7 +105,8 @@ const routes = [
   { path: '/sessions/:id/stats', element: <SessionStatsPage />, auth: true },
   { path: '/sessions/:id/matches/new', element: <CreateMatchPage />, auth: true },
   { path: '/sessions/:id/matches/:matchId', element: <MatchDetailPage />, auth: true },
-  { path: '/sessions/:id/matches/:matchId/edit', element: <EditMatchPage />, auth: true },
+  { path: '/sessions/:id/matches/:matchId/players/edit', element: <EditPlayersPage />, auth: true },
+  { path: '/sessions/:id/matches/:matchId/edit', element: <LegacyEditMatchRedirect />, auth: true },
   { path: '/sessions/:id/donated', element: <SessionDonatedListPage />, auth: true },
   { path: '/players/:playerId', element: <PlayerDetailPage />, auth: true },
   { path: '/ranking', element: <RankingPage />, auth: true },

@@ -165,7 +165,7 @@ describe('Tab Bar Visibility', () => {
     '/sessions/abc-123/donated',
     '/sessions/abc-123/matches/new',
     '/sessions/abc-123/matches/new/result',
-    '/sessions/abc-123/matches/m1/edit',
+    '/sessions/abc-123/matches/m1/players/edit',
     '/players/abc-123',
   ]
 
@@ -215,7 +215,7 @@ describe('AppBar Visibility', () => {
       if (PAGE_TITLES[path]) return PAGE_TITLES[path]
       if (path.startsWith('/sessions/') && path.endsWith('/matches/new')) return 'Select Players'
       if (path.startsWith('/sessions/') && path.endsWith('/matches/new/result')) return 'Final Result'
-      if (path.includes('/matches/') && path.endsWith('/edit')) return 'Edit Match'
+      if (path.includes('/matches/') && path.endsWith('/players/edit')) return 'Edit Players'
       if (path.startsWith('/sessions/') && path.endsWith('/donated')) return 'Donated'
       if (path.startsWith('/sessions/')) return 'Session Detail'
       if (path.startsWith('/players/') && path !== '/players') return 'Player Detail'
@@ -245,7 +245,7 @@ describe('AppBar Visibility', () => {
       { path: '/sessions/abc-123/donated', title: 'Donated' },
       { path: '/sessions/abc-123/matches/new', title: 'Select Players' },
       { path: '/sessions/abc-123/matches/new/result', title: 'Final Result' },
-      { path: '/sessions/abc-123/matches/m1/edit', title: 'Edit Match' },
+      { path: '/sessions/abc-123/matches/m1/players/edit', title: 'Edit Players' },
       { path: '/players/abc-123', title: 'Player Detail' },
     ]
 
@@ -392,7 +392,7 @@ describe('Route Matching', () => {
     { path: '/sessions/:id/donated', element: <div data-testid="page">Donated</div> },
     { path: '/sessions/:id/matches/new', element: <div data-testid="page">Select Players</div> },
     { path: '/sessions/:id/matches/new/result', element: <div data-testid="page">Final Result</div> },
-    { path: '/sessions/:id/matches/:matchId/edit', element: <div data-testid="page">Edit Match</div> },
+    { path: '/sessions/:id/matches/:matchId/players/edit', element: <div data-testid="page">Edit Players</div> },
     { path: '/players/:playerId', element: <div data-testid="page">Player Detail</div> },
     { path: '*', element: <Navigate to="/" replace /> },
   ]
@@ -409,7 +409,7 @@ describe('Route Matching', () => {
       { path: '/sessions/abc-123/donated', text: 'Donated' },
       { path: '/sessions/abc-123/matches/new', text: 'Select Players' },
       { path: '/sessions/abc-123/matches/new/result', text: 'Final Result' },
-      { path: '/sessions/abc-123/matches/m1/edit', text: 'Edit Match' },
+      { path: '/sessions/abc-123/matches/m1/players/edit', text: 'Edit Players' },
       { path: '/players/abc-123', text: 'Player Detail' },
     ]
 
