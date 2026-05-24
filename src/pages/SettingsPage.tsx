@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages, User, X, Lock } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages, User, X, Lock, Download } from 'lucide-react'
+import { useBackupData } from '../hooks/useBackup'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
@@ -19,6 +21,8 @@ export default function SettingsPage() {
   const { locale, setLocale, t } = useI18n()
   const clearAll = useClearAllData()
   const recalculate = useRecalculateAllRatings()
+  const backup = useBackupData()
+  const isAdmin = useIsAdmin()
   const [confirming, setConfirming] = useState(false)
   const [confirmRecalc, setConfirmRecalc] = useState(false)
   const [showPicker, setShowPicker] = useState(false)
@@ -236,6 +240,30 @@ export default function SettingsPage() {
             <span className="text-[15px] font-semibold">{t('settings.logOut')}</span>
           </button>
         </section>
+
+        {/* Admin-only: Backup */}
+        {isAdmin && (
+          <section className="space-y-[var(--space-2)]">
+            <div className="flex items-center gap-2 px-1">
+              <span className="font-[family:var(--font-mono)] text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--accent)] bg-[var(--bg)] border border-[var(--border)] px-2 py-0.5 rounded-[var(--radius-sm)]">
+                {t('settings.adminSection')}
+              </span>
+            </div>
+            <button
+              onClick={() => backup.mutate()}
+              disabled={backup.isPending}
+              className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
+            >
+              <Download className={`w-5 h-5 shrink-0 ${backup.isPending ? 'animate-pulse' : ''}`} />
+              <div className="flex-1 text-left">
+                <p className="text-[15px] font-semibold">
+                  {backup.isPending ? t('settings.backingUp') : t('settings.backupData')}
+                </p>
+                <p className="text-[12px] text-[var(--muted)]">{t('settings.backupDescription')}</p>
+              </div>
+            </button>
+          </section>
+        )}
 
         {/* Version */}
         <p className="text-center text-[12px] text-[var(--muted)]">

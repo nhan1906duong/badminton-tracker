@@ -115,6 +115,11 @@ const en = {
   'auth.invalidCredentials': 'Invalid email or password',
   'auth.signedIn': 'Signed in',
 
+  'settings.adminSection': 'Admin',
+  'settings.backupData': 'Backup Data',
+  'settings.backingUp': 'Backing up...',
+  'settings.backupDescription': 'Download all data as JSON',
+
   'settings.howPointsWork': 'How Points Work',
   'settings.recalculateAllRatings': 'Recalculate All Ratings',
   'settings.recalculating': 'Recalculating...',
@@ -526,6 +531,11 @@ const vi: Record<TranslationKey, string> = {
   'auth.signingIn': 'Đang đăng nhập...',
   'auth.invalidCredentials': 'Email hoặc mật khẩu không đúng',
   'auth.signedIn': 'Đã đăng nhập',
+
+  'settings.adminSection': 'Quản trị',
+  'settings.backupData': 'Sao lưu dữ liệu',
+  'settings.backingUp': 'Đang sao lưu...',
+  'settings.backupDescription': 'Tải tất cả dữ liệu dưới dạng JSON',
 
   'settings.howPointsWork': 'Cách tính điểm',
   'settings.recalculateAllRatings': 'Tính lại tất cả xếp hạng',
