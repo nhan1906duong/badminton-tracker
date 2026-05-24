@@ -20,7 +20,7 @@ import { useOpenSession } from '../hooks/useSessions'
 import { useNavigate } from 'react-router-dom'
 
 const IS_DEV = import.meta.env.DEV
-const TAB_ROUTES = ['/', '/sessions', '/ranking', '/settings']
+const TAB_ROUTES = ['/sessions', '/ranking', '/settings']
 
 type TransitionDirection = 'forward' | 'backward' | null
 type TransitionStage = 'idle' | 'entering'
