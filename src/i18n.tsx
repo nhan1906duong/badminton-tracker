@@ -487,7 +487,7 @@ const vi: Record<TranslationKey, string> = {
   'units.scheduled': '{count} đã lên lịch',
   'units.session': '{count} giải đấu',
   'units.total': 'Tổng {duration}',
-  'units.winLossPlayed': '{wins}W - {losses}L · đã chơi {played}',
+  'units.winLossPlayed': '{wins}W - {losses}L · {played} trận',
 
   'date.startsIn': 'Bắt đầu sau {duration}',
 
