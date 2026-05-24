@@ -157,6 +157,11 @@ export default function SettingsPage() {
           </button>
         </section>
 
+        {/* Version */}
+        <p className="text-center text-[12px] text-[var(--muted)]">
+          v{__APP_VERSION__} ({__APP_BUILD_DATE__})
+        </p>
+
         {/* Dev-only: Clear all data */}
         {IS_DEV && (
           <section className="space-y-[var(--space-2)]">
