@@ -1,6 +1,7 @@
 import type { MatchWithDetails } from '../types/database'
 import MatchCard from './MatchCard'
 import { RotateCcw } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 interface MatchesContentProps {
   matches: MatchWithDetails[] | undefined
@@ -39,6 +40,8 @@ function SkeletonCard() {
 }
 
 export default function MatchesContent({ matches, isLoading, isError, onRetry }: MatchesContentProps) {
+  const { t } = useI18n()
+
   if (isLoading) {
     return (
       <div className="space-y-[var(--space-3)]">
@@ -77,10 +80,10 @@ export default function MatchesContent({ matches, isLoading, isError, onRetry }:
         </div>
         <div>
           <p className="text-[18px] font-extrabold tracking-[-0.02em] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}>
-            Couldn't load matches
+            {t('matches.loadTitle')}
           </p>
           <p className="text-[13px] max-w-[260px] mx-auto" style={{ color: 'var(--muted)' }}>
-            Check your connection and try again.
+            {t('matches.loadDescription')}
           </p>
         </div>
         <button
@@ -94,7 +97,7 @@ export default function MatchesContent({ matches, isLoading, isError, onRetry }:
           }}
         >
           <RotateCcw className="w-[14px] h-[14px]" />
-          Retry
+          {t('common.retry')}
         </button>
       </div>
     )

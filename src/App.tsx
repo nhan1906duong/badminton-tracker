@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext'
 import AnimatedRoutes from './components/AnimatedRoutes'
 import { Trophy, Medal, Settings } from 'lucide-react'
+import { LocaleProvider, useI18n } from './i18n'
 import './index.css'
 
 const TAB_ROUTES = ['/sessions', '/ranking', '/settings']
@@ -11,6 +12,7 @@ const queryClient = new QueryClient()
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
+  const { t } = useI18n()
   const isTabRoute = TAB_ROUTES.includes(location.pathname)
 
   return (
@@ -19,9 +21,9 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       {isTabRoute && (
         <nav className="fixed bottom-0 left-0 right-0 bg-[var(--surface)] border-t border-[var(--border)] max-w-lg mx-auto z-40">
           <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
-            <NavButton to="/sessions" icon={<Trophy className="w-5 h-5" />} label="Sessions" />
-            <NavButton to="/ranking" icon={<Medal className="w-5 h-5" />} label="Ranking" />
-            <NavButton to="/settings" icon={<Settings className="w-5 h-5" />} label="Settings" />
+            <NavButton to="/sessions" icon={<Trophy className="w-5 h-5" />} label={t('nav.sessions')} />
+            <NavButton to="/ranking" icon={<Medal className="w-5 h-5" />} label={t('nav.ranking')} />
+            <NavButton to="/settings" icon={<Settings className="w-5 h-5" />} label={t('nav.settings')} />
           </div>
         </nav>
       )}
@@ -48,13 +50,15 @@ function NavButton({ to, icon, label }: { to: string; icon: React.ReactNode; lab
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <AppLayout>
-            <AnimatedRoutes />
-          </AppLayout>
-        </AuthProvider>
-      </BrowserRouter>
+      <LocaleProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <AppLayout>
+              <AnimatedRoutes />
+            </AppLayout>
+          </AuthProvider>
+        </BrowserRouter>
+      </LocaleProvider>
     </QueryClientProvider>
   )
 }

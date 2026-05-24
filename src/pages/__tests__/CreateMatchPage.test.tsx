@@ -21,10 +21,10 @@ vi.mock('react-router-dom', async () => {
 // ─── Test data ────────────────────────────────────────────────────────────────
 
 const PLAYERS: Player[] = [
-  { id: 'p1', name: 'Alice Smith', is_active: true, rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p2', name: 'Bob Jones', is_active: true, rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p3', name: 'Carol Davis', is_active: true, rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p4', name: 'Dan Wilson', is_active: true, rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'p1', name: 'Alice Smith', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'p2', name: 'Bob Jones', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'p3', name: 'Carol Davis', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'p4', name: 'Dan Wilson', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
 ]
 
 // ─── Hook mocks ───────────────────────────────────────────────────────────────

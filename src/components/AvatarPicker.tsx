@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { Camera, ImageIcon, Trash2, X } from 'lucide-react'
 import { getMultiavatarSvgUrl } from '../lib/avatar'
+import { useI18n } from '../i18n'
 
 interface AvatarPickerProps {
   currentAvatarUrl?: string | null
@@ -22,6 +23,7 @@ export default function AvatarPicker({
   onRemove,
   onClose,
 }: AvatarPickerProps) {
+  const { t } = useI18n()
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
   const hasAvatar = !!currentAvatarUrl
@@ -52,7 +54,7 @@ export default function AvatarPicker({
 
         {/* Default avatar grid */}
         <div className="pb-2">
-          <p className="text-xs font-medium text-gray-500 mb-3 px-1">Choose a default avatar</p>
+          <p className="text-xs font-medium text-gray-500 mb-3 px-1">{t('avatar.chooseDefault')}</p>
           <div className="grid grid-cols-5 gap-3">
             {DEFAULT_AVATARS.map((url) => {
               const isSelected = currentAvatarUrl === url
@@ -69,7 +71,7 @@ export default function AvatarPicker({
                 >
                   <img
                     src={getMultiavatarSvgUrl(id)}
-                    alt="Default avatar"
+                    alt={t('avatar.defaultAlt')}
                     className="w-full h-full object-cover"
                     draggable={false}
                   />
@@ -86,7 +88,7 @@ export default function AvatarPicker({
           className="w-full flex items-center gap-3 px-4 py-4 text-left active:bg-gray-50 rounded-xl transition-colors"
         >
           <Camera className="w-5 h-5 text-gray-600" />
-          <span className="text-[15px] font-medium text-gray-900">Take Photo</span>
+          <span className="text-[15px] font-medium text-gray-900">{t('avatar.takePhoto')}</span>
         </button>
 
         <button
@@ -94,7 +96,7 @@ export default function AvatarPicker({
           className="w-full flex items-center gap-3 px-4 py-4 text-left active:bg-gray-50 rounded-xl transition-colors"
         >
           <ImageIcon className="w-5 h-5 text-gray-600" />
-          <span className="text-[15px] font-medium text-gray-900">Choose from Gallery</span>
+          <span className="text-[15px] font-medium text-gray-900">{t('avatar.chooseGallery')}</span>
         </button>
 
         {hasAvatar && (
@@ -103,7 +105,7 @@ export default function AvatarPicker({
             className="w-full flex items-center gap-3 px-4 py-4 text-left active:bg-red-50 rounded-xl transition-colors"
           >
             <Trash2 className="w-5 h-5 text-red-500" />
-            <span className="text-[15px] font-medium text-red-600">Remove Photo</span>
+            <span className="text-[15px] font-medium text-red-600">{t('avatar.removePhoto')}</span>
           </button>
         )}
 
@@ -112,7 +114,7 @@ export default function AvatarPicker({
           className="w-full flex items-center justify-center gap-2 px-4 py-4 mt-2 bg-gray-100 rounded-xl active:bg-gray-200 transition-colors"
         >
           <X className="w-5 h-5 text-gray-500" />
-          <span className="text-[15px] font-medium text-gray-600">Cancel</span>
+          <span className="text-[15px] font-medium text-gray-600">{t('common.cancel')}</span>
         </button>
 
         <input

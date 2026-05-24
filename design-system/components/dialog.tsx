@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Button } from './button'
 import type { ButtonProps } from './button'
+import { useI18n } from '../../src/i18n'
 
 export interface DialogAction {
   label: string
@@ -82,11 +83,12 @@ export function Dialog({
   icon,
   actions,
 }: DialogProps) {
+  const { t } = useI18n()
   if (!open) return null
 
   const { color, tint, defaultIcon } = KIND_CONFIG[kind]
   const resolvedIcon = icon ?? defaultIcon
-  const resolvedActions: DialogAction[] = actions ?? [{ label: 'Got it', onClick: onClose, variant: 'primary' }]
+  const resolvedActions: DialogAction[] = actions ?? [{ label: t('common.gotIt'), onClick: onClose, variant: 'primary' }]
 
   return (
     <div

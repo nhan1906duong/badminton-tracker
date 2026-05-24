@@ -23,13 +23,11 @@ export default function PlayerSelector({
 }: PlayerSelectorProps) {
   const required = getRequiredPlayerCount(matchType)
 
-  const activePlayers = players.filter(p => p.is_active)
-
   return (
     <div className="space-y-4">
       {/* Player grid */}
       <div className="grid grid-cols-2 gap-2.5 [@media(max-width:380px)]:gap-2">
-        {activePlayers.map(player => {
+        {players.map(player => {
           const isSelected = selectedIds.includes(player.id)
           const team = teamAIds.includes(player.id) ? 'A' : teamBIds.includes(player.id) ? 'B' : null
           const isDisabled = !isSelected && selectedIds.length >= required

@@ -1,26 +1,29 @@
 import type { MatchType } from '../../src/types/database'
+import { matchTypeTag, useI18n } from '../../src/i18n'
 
 export interface MatchTypeChipsProps {
   value: MatchType
   onChange: (type: MatchType) => void
 }
 
-const CHIPS: { type: MatchType; code: string; tag: string }[] = [
-  { type: 'MEN_SINGLES',    code: 'MS', tag: 'Men S.'  },
-  { type: 'WOMEN_SINGLES',  code: 'WS', tag: 'Women S.' },
-  { type: 'MEN_DOUBLES',    code: 'MD', tag: 'Men D.'  },
-  { type: 'WOMEN_DOUBLES',  code: 'WD', tag: 'Women D.' },
-  { type: 'MIXED_DOUBLES',  code: 'XD', tag: 'Mixed'   },
+const CHIPS: { type: MatchType; code: string }[] = [
+  { type: 'MEN_SINGLES', code: 'MS' },
+  { type: 'WOMEN_SINGLES', code: 'WS' },
+  { type: 'MEN_DOUBLES', code: 'MD' },
+  { type: 'WOMEN_DOUBLES', code: 'WD' },
+  { type: 'MIXED_DOUBLES', code: 'XD' },
 ]
 
 export function MatchTypeChips({ value, onChange }: MatchTypeChipsProps) {
+  const { t } = useI18n()
+
   return (
     <div
       role="radiogroup"
-      aria-label="Match type"
+            aria-label={t('createMatch.matchType')}
       style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--space-2)' }}
     >
-      {CHIPS.map(({ type, code, tag }) => {
+      {CHIPS.map(({ type, code }) => {
         const active = value === type
         return (
           <button
@@ -72,7 +75,7 @@ export function MatchTypeChips({ value, onChange }: MatchTypeChipsProps) {
                 opacity: active ? 0.8 : 1,
               }}
             >
-              {tag}
+              {matchTypeTag(type, t)}
             </span>
           </button>
         )

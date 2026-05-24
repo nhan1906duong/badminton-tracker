@@ -1,5 +1,6 @@
 import { Activity } from 'lucide-react'
 import { Avatar } from './avatar'
+import { useI18n } from '../../src/i18n'
 
 export interface SessionStatsPanelProps {
   matchCount: number
@@ -21,9 +22,12 @@ export function SessionStatsPanel({
   mvpName,
   mvpLabel,
   mvpAvatarUrl,
-  footerMeta = 'Rankings · win rate · streaks',
+  footerMeta,
   onPress,
 }: SessionStatsPanelProps) {
+  const { t } = useI18n()
+  const resolvedFooterMeta = footerMeta ?? `${t('sessionStats.ranking')} · ${t('sessions.winRate')} · ${t('sessionStats.streaks')}`
+
   return (
     <button
       type="button"
@@ -39,8 +43,8 @@ export function SessionStatsPanel({
     >
       {/* Three stat cells */}
       <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-        <StatCell value={String(matchCount)} label="Matches" />
-        <StatCell value={String(playerCount)} label="Players" divider />
+        <StatCell value={String(matchCount)} label={t('sessionDetail.matches')} />
+        <StatCell value={String(playerCount)} label={t('sessions.players')} divider />
         <StatCell
           value={mvpName ?? '—'}
           label={mvpLabel ?? '—'}
@@ -71,7 +75,7 @@ export function SessionStatsPanel({
           }}
         >
           <Activity size={14} aria-hidden="true" />
-          View player stats
+          {t('sessionDetail.viewPlayerStats')}
         </span>
         <span
           style={{
@@ -80,7 +84,7 @@ export function SessionStatsPanel({
             color: 'var(--muted)',
           }}
         >
-          {footerMeta}
+          {resolvedFooterMeta}
         </span>
       </div>
     </button>
@@ -174,4 +178,3 @@ function StatCell({ value, label, accent = false, mvp = false, divider = false, 
     </div>
   )
 }
-

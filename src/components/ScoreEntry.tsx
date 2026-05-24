@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import type { SetScore } from '../types/database'
 import { Plus, Trash2 } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 interface ScoreEntryProps {
   scores: SetScore[]
@@ -24,6 +25,7 @@ function calculateWinner(scores: SetScore[]): 'TEAM_A' | 'TEAM_B' | null {
 }
 
 export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }: ScoreEntryProps) {
+  const { t } = useI18n()
   const applyScores = useCallback((newScores: SetScore[]) => {
     onChange(newScores)
     const autoWinner = calculateWinner(newScores)
@@ -58,14 +60,14 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
       {/* Scores section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-700">Set Scores</span>
+          <span className="text-sm font-semibold text-gray-700">{t('scoreEntry.setScores')}</span>
           <button
             onClick={addSet}
             disabled={scores.length >= 5}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-green-700 bg-green-50 rounded-xl active:bg-green-100 disabled:opacity-40 transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add Set
+            {t('scoreEntry.addSet')}
           </button>
         </div>
 
@@ -74,13 +76,13 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
             onClick={addSet}
             className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-sm text-gray-400 font-medium active:bg-gray-50 transition-colors"
           >
-            Tap to add set scores
+            {t('scoreEntry.tapAddSetScores')}
           </button>
         ) : (
           <div className="space-y-2">
             {scores.map((set, i) => (
               <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3">
-                <span className="text-xs font-bold text-gray-400 w-10 shrink-0">Set {set.set_number}</span>
+                <span className="text-xs font-bold text-gray-400 w-10 shrink-0">{t('scoreEntry.setNumber', { number: set.set_number })}</span>
 
                 <div className="flex items-center gap-2 flex-1 justify-center">
                   <input
@@ -116,7 +118,7 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
 
       {/* Winner selection */}
       <div className="space-y-3 pt-2">
-        <span className="text-sm font-semibold text-gray-700">Winner</span>
+        <span className="text-sm font-semibold text-gray-700">{t('scoreEntry.winner')}</span>
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => onWinnerChange('TEAM_A')}
@@ -127,7 +129,7 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
             }`}
             style={{ minHeight: 56 }}
           >
-            Team A
+            {t('team.teamA')}
           </button>
           <button
             onClick={() => onWinnerChange('TEAM_B')}
@@ -138,7 +140,7 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
             }`}
             style={{ minHeight: 56 }}
           >
-            Team B
+            {t('team.teamB')}
           </button>
         </div>
       </div>

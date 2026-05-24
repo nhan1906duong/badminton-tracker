@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { MATCH_TYPE_LABELS, type MatchType } from '../types/database'
+import type { MatchType } from '../types/database'
 import { ChevronDown, Check } from 'lucide-react'
+import { matchTypeLabel, useI18n } from '../i18n'
 
 interface MatchTypeSelectorProps {
   value: MatchType
@@ -16,6 +17,7 @@ const TYPES: MatchType[] = [
 ]
 
 export default function MatchTypeSelector({ value, onChange }: MatchTypeSelectorProps) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -33,12 +35,12 @@ export default function MatchTypeSelector({ value, onChange }: MatchTypeSelector
     <div ref={ref} className="relative inline-block">
       <div className="flex items-center gap-1">
         <span className="text-[15px] font-medium text-gray-900">
-          {MATCH_TYPE_LABELS[value]}
+          {matchTypeLabel(value, t)}
         </span>
         <button
           onClick={() => setOpen(v => !v)}
           className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-          aria-label="Change match type"
+          aria-label={t('matchType.change')}
         >
           <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
@@ -57,7 +59,7 @@ export default function MatchTypeSelector({ value, onChange }: MatchTypeSelector
                 type === value ? 'text-green-700 font-semibold bg-green-50/50' : 'text-gray-700'
               }`}
             >
-              {MATCH_TYPE_LABELS[type]}
+              {matchTypeLabel(type, t)}
               {type === value && <Check className="w-4 h-4 text-green-600 shrink-0" />}
             </button>
           ))}
