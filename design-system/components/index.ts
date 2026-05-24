@@ -38,6 +38,9 @@ export type { SessionStatsPanelProps } from './session-stats-panel'
 export { MatchTypeChips } from './match-type-chips'
 export type { MatchTypeChipsProps } from './match-type-chips'
 
+export { SegmentedControl } from './segmented-control'
+export type { SegmentedControlProps, SegmentedTab } from './segmented-control'
+
 export { EmptyState } from '../patterns/empty-state'
 export { LoadingState } from '../patterns/loading-state'
 export { ErrorState } from '../patterns/error-state'

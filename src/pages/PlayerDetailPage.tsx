@@ -10,11 +10,11 @@ import type { PartnerEntry } from '../hooks/useBestPartner'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
-import { AppBar, Badge, PullToRefresh } from '../../design-system/components'
+import { AppBar, Badge, PullToRefresh, SegmentedControl } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Session } from '../types/database'
-import { ChevronLeft, ChevronDown, ChevronRight, Pencil, Medal, Swords } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronRight, Pencil, Swords, Users, History, Activity } from 'lucide-react'
 import { LOCALE_TAG, useI18n, type Locale } from '../i18n'
 
 const MATCH_TYPE_SHORT: Record<string, string> = {
@@ -64,6 +64,8 @@ function formatSessionLabel(session: Session, locale: Locale): string {
   )
 }
 
+type PlayerTab = 'partners' | 'h2h' | 'history'
+
 export default function PlayerDetailPage() {
   const { locale, t } = useI18n()
   const { playerId } = useParams<{ playerId: string }>()
@@ -78,11 +80,11 @@ export default function PlayerDetailPage() {
   const { data: rankings } = usePlayerRankings()
   const rankData = rankings?.find((r) => r.playerId === id)
 
+  const [activeTab, setActiveTab] = useState<PlayerTab>('partners')
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
-  const [h2hExpanded, setH2HExpanded] = useState(true)
   const [showAllH2H, setShowAllH2H] = useState(false)
   const [isStuck, setIsStuck] = useState(false)
 
@@ -150,10 +152,16 @@ export default function PlayerDetailPage() {
   if (!player) {
     return (
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center">
-      <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.notFound')}</span>
+        <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.notFound')}</span>
       </div>
     )
   }
+
+  const tabs = [
+    { id: 'partners' as const, label: t('players.tabPartners'), icon: <Users style={{ width: 13, height: 13 }} /> },
+    { id: 'h2h' as const, label: t('players.tabH2H'), icon: <Swords style={{ width: 13, height: 13 }} /> },
+    { id: 'history' as const, label: t('players.tabHistory'), icon: <History style={{ width: 13, height: 13 }} /> },
+  ]
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -168,42 +176,36 @@ export default function PlayerDetailPage() {
         safeArea
       />
 
-      {/* Hero */}
-      <div
-        className="flex flex-col items-center gap-3 px-6 pt-5 pb-6 bg-[var(--surface)]"
-        style={{ borderBottom: '1px solid var(--border)' }}
-      >
-        {/* Rank number */}
+      {/* Header */}
+      <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
+        {/* 1. Rank */}
         {rankData && (
           <div
-          aria-label={t('common.rank', { rank: rankData.rank })}
             style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 80,
-              fontWeight: 900,
-              lineHeight: 1,
-              letterSpacing: '-0.04em',
-              userSelect: 'none',
-              fontVariantNumeric: 'tabular-nums',
-              color:
-                rankData.rank === 1 ? 'color-mix(in oklch, var(--accent) 35%, transparent)'
-                : rankData.rank === 2 ? 'color-mix(in oklch, var(--accent) 20%, transparent)'
-                : rankData.rank === 3 ? 'color-mix(in oklch, var(--accent) 10%, transparent)'
-                : 'color-mix(in oklch, var(--border) 80%, transparent)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: 'var(--accent)',
+              marginBottom: 'var(--space-3)',
             }}
           >
-            {rankData.rank}
+            {t('common.rank', { rank: rankData.rank })}
           </div>
         )}
 
+        {/* 2. Avatar */}
         <button
           onClick={() => setShowAvatarPicker(true)}
           aria-label={t('players.changeAvatar')}
           className="active:opacity-70 transition-opacity"
+          style={{ marginBottom: 'var(--space-3)' }}
         >
-          <Avatar src={player.avatar_url} name={player.name} size={60} />
+          <Avatar src={player.avatar_url} name={player.name} size={52} />
         </button>
 
+        {/* 3. Name + edit */}
         {isEditingName ? (
           <input
             value={editName}
@@ -211,117 +213,161 @@ export default function PlayerDetailPage() {
             onBlur={handleSaveName}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="text-[24px] font-extrabold text-center bg-transparent outline-none w-full max-w-xs pb-1"
             style={{
               fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 800,
+              letterSpacing: '-0.035em',
+              lineHeight: 1.02,
               color: 'var(--fg)',
+              background: 'transparent',
+              border: 'none',
               borderBottom: '2px solid var(--accent)',
+              outline: 'none',
+              width: '100%',
+              padding: 0,
+              display: 'block',
+              marginBottom: 'var(--space-2)',
             }}
           />
         ) : (
           <button
             onClick={handleStartEditName}
-            className="flex items-center gap-2 active:opacity-70"
+            className="flex items-center gap-2 active:opacity-70 text-left"
+            style={{ marginBottom: 'var(--space-2)' }}
           >
-            <span
-              className="text-[24px] font-extrabold"
-              style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-3xl)',
+                fontWeight: 800,
+                lineHeight: 1.02,
+                letterSpacing: '-0.035em',
+                color: 'var(--fg)',
+              }}
             >
               {player.name}
-            </span>
+            </h1>
             <Pencil className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
           </button>
         )}
 
-        <span className="text-[13px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
+        {/* 4. Rating */}
+        <div
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: 'var(--muted)',
+          }}
+        >
           {t('players.ratingPts', { rating: player.rating })}
-        </span>
-      </div>
-
-      <div className="px-4 pt-5 pb-24 space-y-3">
-        {/* Stats grid */}
-        <div className="grid grid-cols-4 gap-2">
-          <StatCard label={t('players.played')} value={total} />
-          <StatCard label={t('players.winPercent')} value={winRateStr} valueColor="var(--accent)" />
-          <StatCard label={t('players.wins')} value={wins} valueColor="var(--success)" />
-          <StatCard label={t('players.losses')} value={losses} valueColor="var(--danger)" />
         </div>
+      </header>
 
-        {/* Donation */}
+      <div className="px-4 pb-24 space-y-4">
+        {/* Stats panel — 4 cells + footer, mirrors SessionStatsPanel */}
         <div
-          className="bg-[var(--surface)] border border-[var(--border)] px-4 py-3 flex items-center justify-between"
-          style={{ borderRadius: 'var(--radius-lg)' }}
+          className="overflow-hidden"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+          }}
         >
-          <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.totalDonated')}</span>
-          <span
-            className="text-[18px] font-extrabold"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}>
+            <PlayerStatCell value={String(total)} label={t('players.played')} />
+            <PlayerStatCell value={winRateStr} label={t('players.winPercent')} accent divider />
+            <PlayerStatCell value={String(wins)} label={t('players.wins')} divider />
+            <PlayerStatCell value={String(losses)} label={t('players.losses')} divider />
+          </div>
+          <div
+            className="flex items-center justify-between"
+            style={{
+              padding: 'var(--space-3) var(--space-4)',
+              borderTop: '1px solid var(--border)',
+              background: 'color-mix(in oklch, var(--bg) 50%, transparent)',
+            }}
           >
-            {formatCurrency(donated)}
-          </span>
+            <span
+              className="inline-flex items-center gap-[var(--space-2)]"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 600,
+                color: 'var(--accent)',
+              }}
+            >
+              <Activity size={14} aria-hidden />
+              {t('players.totalDonated')}
+            </span>
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-base)',
+                fontWeight: 800,
+                letterSpacing: '-0.01em',
+                color: 'var(--fg)',
+              }}
+            >
+              {formatCurrency(donated)}
+            </span>
+          </div>
         </div>
 
-        {/* Partner stats */}
-        <div
-          className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
-          style={{ borderRadius: 'var(--radius-lg)' }}
-        >
-          {partnerLoading ? (
-            <div className="p-4">
-              <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
-            </div>
-          ) : !bestPartner ? (
-            <div className="p-4">
-              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
-            </div>
-          ) : (
-            <>
-              <PartnerRow
-                label={t('players.bestPartner')}
-                icon={<Medal className="w-4 h-4" style={{ color: 'var(--success)' }} />}
-                entry={bestPartner}
-              />
-              {worstPartner && (
-                <>
-                  <div style={{ height: 1, background: 'var(--border)' }} />
-                  <PartnerRow
-                    label={t('players.worstPartner')}
-                    icon={<Medal className="w-4 h-4" style={{ color: 'var(--danger)' }} />}
-                    entry={worstPartner}
-                  />
-                </>
-              )}
-            </>
-          )}
-        </div>
+        {/* Tab bar */}
+        <SegmentedControl
+          tabs={tabs}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
 
-        {/* Head to Head */}
-        {!h2hLoading && h2hEntries.length > 0 && (
+        {/* ── Partners tab ── */}
+        {activeTab === 'partners' && (
           <div
             className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
             style={{ borderRadius: 'var(--radius-lg)' }}
           >
-            <AppBar
-              title={t('players.headToHead')}
-              titleAlign="left"
-              className="!static !z-auto"
-              style={{ background: 'var(--surface)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
-              leftAction={{
-                icon: <Swords className="w-[18px] h-[18px]" />,
-                ariaLabel: t('players.headToHead'),
-                onClick: () => setH2HExpanded((v) => !v),
-              }}
-              rightAction={{
-                icon: h2hExpanded
-                  ? <ChevronDown className="w-[18px] h-[18px]" />
-                  : <ChevronRight className="w-[18px] h-[18px]" />,
-                ariaLabel: h2hExpanded ? t('players.collapse') : t('players.expand'),
-                onClick: () => setH2HExpanded((v) => !v),
-              }}
-            />
+            {partnerLoading ? (
+              <div className="p-4">
+                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+              </div>
+            ) : !bestPartner ? (
+              <div className="p-4">
+                <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
+              </div>
+            ) : (
+              <>
+                <PartnerRow label={t('players.bestPartner')} entry={bestPartner} />
+                {worstPartner && (
+                  <>
+                    <div style={{ height: 1, background: 'var(--border)' }} />
+                    <PartnerRow label={t('players.worstPartner')} entry={worstPartner} />
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
-            {h2hExpanded && (
-              <div style={{ borderTop: '1px solid var(--border)' }}>
+        {/* ── Head to Head tab ── */}
+        {activeTab === 'h2h' && (
+          <div
+            className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+            style={{ borderRadius: 'var(--radius-lg)' }}
+          >
+            {h2hLoading ? (
+              <div className="p-4">
+                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+              </div>
+            ) : h2hEntries.length === 0 ? (
+              <div className="p-4">
+                <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
+              </div>
+            ) : (
+              <>
                 {(showAllH2H ? h2hEntries : h2hEntries.slice(0, 5)).map((entry, i) => {
                   const winRate = entry.totalMatches > 0 ? entry.wins / entry.totalMatches : 0
                   const isWinning = entry.wins > entry.losses
@@ -340,18 +386,18 @@ export default function PlayerDetailPage() {
                       </span>
                       <Avatar src={entry.opponent.avatar_url} name={entry.opponent.name} size={32} />
                       <p className="text-[14px] font-medium flex-1 min-w-0 truncate" style={{ color: 'var(--fg)' }}>
-                        {formatShortPlayerName(entry.opponent.name)}
+                        {entry.opponent.name}
                       </p>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span
                           className="text-[13px] font-bold"
                           style={{ color: isWinning ? 'var(--success)' : isTied ? 'var(--muted)' : 'var(--danger)' }}
                         >
-                          {entry.wins}W
+                          {entry.wins} {t('players.wins')}
                         </span>
                         <span className="text-[11px]" style={{ color: 'var(--border)' }}>·</span>
                         <span className="text-[13px] font-bold" style={{ color: 'var(--muted)' }}>
-                          {entry.losses}L
+                          {entry.losses} {t('players.losses')}
                         </span>
                         <span
                           className="text-[11px] w-8 text-right"
@@ -373,103 +419,118 @@ export default function PlayerDetailPage() {
                     {showAllH2H ? t('players.showLess') : t('players.showAll', { count: h2hEntries.length })}
                   </button>
                 )}
-              </div>
+              </>
             )}
           </div>
         )}
 
-        {/* Session History */}
-        {!historyLoading && history.length > 0 && (
-          <div className="space-y-2 pt-1">
-            <div
-              className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
-              style={{ color: 'var(--muted)' }}
-            >
-              {t('players.sessionsCount', { count: history.length })}
-            </div>
-
-            {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
-              const isExpanded = expandedSessions.has(session.id)
-              const completedMatches = matches.filter((m) => m.status === 'COMPLETED')
-              return (
+        {/* ── History tab ── */}
+        {activeTab === 'history' && (
+          <div className="space-y-2">
+            {historyLoading ? (
+              <div className="p-4">
+                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+              </div>
+            ) : history.length === 0 ? (
+              <div
+                className="bg-[var(--surface)] border border-[var(--border)] p-4"
+                style={{ borderRadius: 'var(--radius-lg)' }}
+              >
+                <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
+              </div>
+            ) : (
+              <>
                 <div
-                  key={session.id}
-                  className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
-                  style={{ borderRadius: 'var(--radius-lg)' }}
+                  className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
+                  style={{ color: 'var(--muted)' }}
                 >
-                  <button
-                    onClick={() => toggleSession(session.id)}
-                    className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
-                  >
-                    <div className="flex-1 min-w-0 text-left">
-                      <p
-                        className="text-[15px] font-semibold truncate"
-                        style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
-                      >
-                        {formatSessionLabel(session, locale)}
-                      </p>
-                      <p
-                        className="text-[11px] mt-0.5"
-                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                      >
-                        {t('units.match', { count: completedMatches.length })} ·{' '}
-                        <span style={{ color: 'var(--success)' }}>{sWins}W</span>{' '}
-                        <span style={{ color: 'var(--danger)' }}>{sLosses}L</span>
-                      </p>
-                    </div>
-                    {isExpanded
-                      ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                      : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                    }
-                  </button>
+                  {t('players.sessionsCount', { count: history.length })}
+                </div>
 
-                  {isExpanded && (
-                    <div style={{ borderTop: '1px solid var(--border)' }}>
-                      {completedMatches.length === 0 ? (
-                        <div className="px-4 py-3">
-                          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
+                {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
+                  const isExpanded = expandedSessions.has(session.id)
+                  const completedMatches = matches.filter((m) => m.status === 'COMPLETED')
+                  return (
+                    <div
+                      key={session.id}
+                      className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+                      style={{ borderRadius: 'var(--radius-lg)' }}
+                    >
+                      <button
+                        onClick={() => toggleSession(session.id)}
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
+                      >
+                        <div className="flex-1 min-w-0 text-left">
+                          <p
+                            className="text-[15px] font-semibold truncate"
+                            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                          >
+                            {formatSessionLabel(session, locale)}
+                          </p>
+                          <p
+                            className="text-[11px] mt-0.5"
+                            style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                          >
+                            {t('units.match', { count: completedMatches.length })} ·{' '}
+                            <span style={{ color: 'var(--success)' }}>{sWins}W</span>{' '}
+                            <span style={{ color: 'var(--danger)' }}>{sLosses}L</span>
+                          </p>
                         </div>
-                      ) : (
-                        completedMatches.map((match) => {
-                          const row = getMatchRow(match, id)
-                          if (!row) return null
-                          return (
-                            <div
-                              key={match.id}
-                              className="flex items-center gap-3 px-4 py-2.5"
-                              style={{ borderBottom: '1px solid var(--border)' }}
-                            >
-                              <Badge variant={row.isWin ? 'win' : 'loss'}>
-                                {row.isWin ? 'W' : 'L'}
-                              </Badge>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
-                                  {row.teammates
-                                    ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
-                                    : t('players.vsOpponent', { opponents: row.opponents || '—' })}
-                                </p>
-                                <p
-                                  className="text-[11px]"
-                                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                                >
-                                  {row.scoreStr}
-                                </p>
-                              </div>
-                              <span
-                                className="text-[11px] font-bold uppercase tracking-[0.06em] shrink-0"
-                                style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                              >
-                                {row.type}
-                              </span>
+                        {isExpanded
+                          ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                          : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                        }
+                      </button>
+
+                      {isExpanded && (
+                        <div style={{ borderTop: '1px solid var(--border)' }}>
+                          {completedMatches.length === 0 ? (
+                            <div className="px-4 py-3">
+                              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
                             </div>
-                          )
-                        })
+                          ) : (
+                            completedMatches.map((match) => {
+                              const row = getMatchRow(match, id)
+                              if (!row) return null
+                              return (
+                                <div
+                                  key={match.id}
+                                  className="flex items-center gap-3 px-4 py-2.5"
+                                  style={{ borderBottom: '1px solid var(--border)' }}
+                                >
+                                  <Badge variant={row.isWin ? 'win' : 'loss'}>
+                                    {row.isWin ? 'W' : 'L'}
+                                  </Badge>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
+                                      {row.teammates
+                                        ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
+                                        : t('players.vsOpponent', { opponents: row.opponents || '—' })}
+                                    </p>
+                                    <p
+                                      className="text-[11px]"
+                                      style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                    >
+                                      {row.scoreStr}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className="text-[11px] font-bold uppercase tracking-[0.06em] shrink-0"
+                                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                  >
+                                    {row.type}
+                                  </span>
+                                </div>
+                              )
+                            })
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-              )
-            })}
+                  )
+                })}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -492,29 +553,57 @@ export default function PlayerDetailPage() {
   )
 }
 
-function StatCard({
-  label,
+function PlayerStatCell({
   value,
-  valueColor,
+  label,
+  accent = false,
+  divider = false,
 }: {
+  value: string
   label: string
-  value: string | number
-  valueColor?: string
+  accent?: boolean
+  divider?: boolean
 }) {
   return (
     <div
-      className="bg-[var(--surface)] border border-[var(--border)] p-3 flex flex-col items-center gap-1"
-      style={{ borderRadius: 'var(--radius-lg)' }}
+      className="flex flex-col items-center justify-center text-center"
+      style={{
+        padding: 'var(--space-4) var(--space-3)',
+        gap: 4,
+        borderLeft: divider ? '1px solid var(--border)' : undefined,
+        minWidth: 0,
+      }}
     >
       <span
-        className="text-[20px] font-extrabold leading-none"
-        style={{ fontFamily: 'var(--font-display)', color: valueColor ?? 'var(--fg)' }}
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'var(--text-xl)',
+          fontWeight: 800,
+          lineHeight: 1,
+          letterSpacing: '-0.02em',
+          fontFeatureSettings: '"tnum" 1',
+          color: accent ? 'var(--accent)' : 'var(--fg)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '100%',
+        }}
       >
         {value}
       </span>
       <span
-        className="text-[10px] font-bold uppercase tracking-[0.06em]"
-        style={{ color: 'var(--muted)' }}
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: accent ? 'var(--accent)' : 'var(--muted)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          maxWidth: '100%',
+        }}
       >
         {label}
       </span>
@@ -522,30 +611,24 @@ function StatCard({
   )
 }
 
-function PartnerRow({ label, icon, entry }: { label: string; icon: React.ReactNode; entry: PartnerEntry }) {
+function PartnerRow({ label, entry }: { label: string; entry: PartnerEntry }) {
+  const { t } = useI18n()
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-2">
-          {icon}
-          <span
-            className="text-[11px] font-bold uppercase tracking-[0.06em]"
-            style={{ color: 'var(--muted)' }}
-          >
-            {label}
+    <div className="px-4 py-3">
+      <p
+        className="text-[11px] font-bold uppercase tracking-[0.06em] mb-1.5"
+        style={{ color: 'var(--muted)' }}
+      >
+        {label}
+      </p>
+      <div className="flex items-center gap-2">
+        <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={20} />
+        <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--fg)' }}>
+          {entry.partner.name}
+          <span className="text-[13px] font-normal" style={{ color: 'var(--muted)' }}>
+            {' · '}{entry.wins} {t('players.wins')}/{entry.totalMatches - entry.wins} {t('players.losses')} · {Math.round(entry.winRate * 100)}%
           </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={40} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--fg)' }}>
-              {formatShortPlayerName(entry.partner.name)}
-            </p>
-            <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
-              {entry.wins}W / {entry.totalMatches - entry.wins}L · {Math.round(entry.winRate * 100)}%
-            </p>
-          </div>
-        </div>
+        </p>
       </div>
     </div>
   )
