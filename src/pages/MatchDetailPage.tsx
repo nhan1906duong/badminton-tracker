@@ -709,10 +709,10 @@ export default function MatchDetailPage() {
                       }}>
 
                       {/* Serve indicator */}
-                      <div style={{ position: 'absolute', top: 'var(--space-4)', ...(team === 'A' ? { left: 'var(--space-4)' } : { right: 'var(--space-4)' }), display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent)', opacity: isServingNow ? 1 : 0, transition: 'opacity 0.18s' }}>
-                        {team === 'B' && <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
-                        {t('matchDetail.serving')}
+                      <div style={{ alignSelf: team === 'A' ? 'flex-start' : 'flex-end', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--accent)', visibility: isServingNow ? 'visible' : 'hidden', transition: 'opacity 0.18s', minHeight: 14 }}>
                         {team === 'A' && <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
+                        {t('matchDetail.serving')}
+                        {team === 'B' && <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%' }} />}
                       </div>
 
                       {/* Team label */}
