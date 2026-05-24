@@ -605,7 +605,6 @@ export default function MatchDetailPage() {
           onClick: () => setSheet('menu'),
         }}
         stuck={isNavStuck}
-        safeArea
       />
 
       {/* ── Scroll area ──────────────────────────────────────────────────── */}

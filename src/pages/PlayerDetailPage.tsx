@@ -181,7 +181,6 @@ export default function PlayerDetailPage() {
           onClick: () => navigate(-1),
         }}
         stuck={isStuck}
-        safeArea
       />
 
       {/* Header */}

@@ -16,7 +16,10 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const isTabRoute = TAB_ROUTES.includes(location.pathname)
 
   return (
-    <div className="min-h-svh bg-[var(--bg)] max-w-lg mx-auto relative">
+    <div
+      className="min-h-dvh bg-[var(--bg)] max-w-lg mx-auto relative"
+      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
       <main>{children}</main>
       {isTabRoute && (
         <nav className="fixed bottom-0 left-0 right-0 bg-[var(--surface)] border-t border-[var(--border)] max-w-lg mx-auto z-40">

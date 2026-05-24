@@ -126,7 +126,7 @@ export default function SessionsListPage() {
       {/* Page Header */}
       <div
         className="px-[var(--space-5)] pb-[var(--space-4)]"
-        style={{ paddingTop: 'max(var(--space-7), calc(env(safe-area-inset-top) + var(--space-5)))' }}
+        style={{ paddingTop: 'var(--space-6)' }}
       >
         <h1
           className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em] mb-[var(--space-2)]"

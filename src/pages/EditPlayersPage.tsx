@@ -239,7 +239,6 @@ export default function EditPlayersPage() {
           icon: <ChevronLeft className="h-5 w-5 -ml-1" />,
           onClick: () => navigate(-1),
         }}
-        safeArea
       />
 
       <div

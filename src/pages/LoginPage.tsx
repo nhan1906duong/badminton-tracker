@@ -30,11 +30,7 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-svh flex items-center justify-center p-[var(--space-5)]"
-      style={{
-        background: 'var(--bg)',
-        paddingTop: 'max(var(--space-5), calc(env(safe-area-inset-top) + var(--space-3)))',
-        paddingBottom: 'max(var(--space-5), calc(env(safe-area-inset-bottom) + var(--space-3)))',
-      }}
+      style={{ background: 'var(--bg)' }}
     >
       <div
         className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-5)]"

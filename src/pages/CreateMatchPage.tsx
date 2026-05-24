@@ -341,7 +341,6 @@ export default function CreateMatchPage() {
         backLabel={t('common.cancel')}
         onBack={() => navigate(-1)}
         stuck={navStuck}
-        safeArea
       />
 
       {/* ── Scrollable body ──────────────────────────────────────────────── */}

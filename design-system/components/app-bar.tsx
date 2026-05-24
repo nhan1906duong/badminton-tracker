@@ -15,7 +15,6 @@ export interface AppBarProps {
   backLabel?: string
   onBack?: () => void
   stuck?: boolean
-  safeArea?: boolean
   leftAction?: AppBarAction
   rightAction?: AppBarAction
   className?: string
@@ -29,7 +28,6 @@ export function AppBar({
   backLabel,
   onBack,
   stuck = false,
-  safeArea = true,
   leftAction,
   rightAction,
   className = '',
@@ -48,18 +46,12 @@ export function AppBar({
 
   return (
     <nav
-      className={`sticky top-0 z-40 grid items-center gap-3 px-4 py-3 bg-[color-mix(in_oklch,var(--bg)_88%,transparent)] backdrop-blur-xl ${stuck ? 'border-b border-[var(--border)]' : 'border-b border-transparent'} ${
+      className={`sticky z-40 grid items-center gap-3 px-4 py-3 bg-[color-mix(in_oklch,var(--bg)_88%,transparent)] backdrop-blur-xl ${stuck ? 'border-b border-[var(--border)]' : 'border-b border-transparent'} ${
         isLeft ? 'grid-cols-[auto_1fr_auto]' : 'grid-cols-[1fr_auto_1fr]'
       } ${className}`}
       style={{
+        top: 'env(safe-area-inset-top)',
         WebkitBackdropFilter: 'saturate(180%) blur(12px)',
-        ...(safeArea
-          ? {
-              paddingTop: 'max(12px, calc(env(safe-area-inset-top) + 8px))',
-              paddingBottom: 12,
-              background: 'color-mix(in oklch, var(--bg) 88%, transparent)',
-            }
-          : {}),
         ...style,
       }}
     >

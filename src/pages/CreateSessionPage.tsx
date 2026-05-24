@@ -277,7 +277,6 @@ export default function CreateSessionPage() {
         backLabel={t('common.cancel')}
         onBack={() => navigate(-1)}
         stuck={navStuck}
-        safeArea
       />
 
       {/* ── Scroll area ── */}
