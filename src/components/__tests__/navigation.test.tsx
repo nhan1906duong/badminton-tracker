@@ -22,12 +22,8 @@ function createAuthValue(partial: Partial<AuthContextValue> = {}): AuthContextVa
   return {
     user: null,
     isLoading: false,
-    isSendingOtp: false,
-    isVerifying: false,
-    otpSent: false,
-    signIn: vi.fn(),
-    verifyOtp: vi.fn(),
-    resetOtp: vi.fn(),
+    isSigningIn: false,
+    signInWithPassword: vi.fn(),
     signOut: vi.fn(),
     ...partial,
   }

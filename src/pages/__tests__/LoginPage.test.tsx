@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthContext, type AuthContextValue } from '../../contexts/AuthContext'
 import LoginPage from '../LoginPage'
@@ -40,7 +40,7 @@ const testQueryClient = new QueryClient({
 
 function renderLoginPage(
   authValue: AuthContextValue,
-  initialEntries: MemoryRouter['props']['initialEntries'] = ['/login'],
+  initialEntries: MemoryRouterProps['initialEntries'] = ['/login'],
 ) {
   return render(
     <QueryClientProvider client={testQueryClient}>
