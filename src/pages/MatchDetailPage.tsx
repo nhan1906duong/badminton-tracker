@@ -596,8 +596,6 @@ export default function MatchDetailPage() {
         title=''
         titleVisible={isNavStuck}
         leftAction={{
-          ariaLabel: t('common.session'),
-          label: t('common.session'),
           icon: <ChevronLeft style={{ width: 18, height: 18 }} />,
           onClick: () => navigate(-1),
         }}

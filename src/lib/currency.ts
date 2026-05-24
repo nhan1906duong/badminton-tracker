@@ -5,5 +5,5 @@
 export const LOSS_PENALTY_VND = 5000
 
 export function formatCurrency(vnd: number): string {
-  return new Intl.NumberFormat('vi-VN').format(vnd) + ' VND'
+  return new Intl.NumberFormat('vi-VN').format(vnd) + ' VNĐ'
 }

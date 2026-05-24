@@ -5,7 +5,6 @@ import { AppBar, Avatar, EmptyState, LoadingState, StatRow, PullToRefresh } from
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useSessionWeeklyRankings, type SessionWeeklyStats } from '../hooks/useRankings'
-import { formatShortPlayerName } from '../lib/player-name'
 import { useI18n } from '../i18n'
 
 function formatSigned(value: number): string {
@@ -89,7 +88,7 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             whiteSpace: 'nowrap',
           }}
         >
-          {formatShortPlayerName(stat.name)}
+          {stat.name}
         </div>
         <div
           style={{
@@ -106,10 +105,10 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
         >
           <span>{t('units.match', { count: stat.matchesPlayed })}</span>
           <span style={{ color: 'var(--border)' }}>·</span>
-          <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{stat.wins}</strong>W</span>
-          <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{stat.losses}</strong>L</span>
+          <span>{stat.wins}W</span>
+          <span>{stat.losses}L</span>
           <span style={{ color: 'var(--border)' }}>·</span>
-          <span><strong style={{ color: 'var(--fg)', fontWeight: 700 }}>{winRate}%</strong></span>
+          <span>{winRate}%</span>
           <span style={{ color: 'var(--border)' }}>·</span>
           <span>{formatSigned(stat.pointDifference)} {t('sessionStats.diff')}</span>
         </div>
