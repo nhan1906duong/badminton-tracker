@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
-import { SessionCard, LoadingState, EmptyState, ErrorState } from '../../design-system/components'
+import { SessionCard, LoadingState, EmptyState, ErrorState, PullToRefresh } from '../../design-system/components'
 import { Plus, Trophy } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
 import { formatShortPlayerName } from '../lib/player-name'
@@ -112,7 +112,12 @@ export default function SessionsListPage() {
         .join(' · ')
     : null
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchSessions(), refetchMatches()])
+  }, [refetchSessions, refetchMatches])
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh bg-[var(--bg)]">
       {/* Page Header */}
       <div
@@ -181,5 +186,6 @@ export default function SessionsListPage() {
         ariaLabel="Create new session"
       />
     </div>
+    </PullToRefresh>
   )
 }

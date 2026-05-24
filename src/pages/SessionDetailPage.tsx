@@ -50,7 +50,8 @@ import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } f
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
 import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { PullToRefresh } from '../../design-system/components'
 
 export default function SessionDetailPage() {
   const { id: sessionId } = useParams<{ id: string }>()
@@ -133,7 +134,12 @@ export default function SessionDetailPage() {
 
   const backTo = (location.state as { from?: string } | null)?.from ?? '/sessions'
 
+  const handleRefresh = useCallback(async () => {
+    await refetchMatches()
+  }, [refetchMatches])
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
         title=""
@@ -362,5 +368,6 @@ export default function SessionDetailPage() {
       />
 
     </div>
+    </PullToRefresh>
   )
 }

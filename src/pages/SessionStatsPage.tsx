@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Activity, ChevronLeft, Medal } from 'lucide-react'
-import { AppBar, Avatar, EmptyState, LoadingState, StatRow } from '../../design-system/components'
+import { AppBar, Avatar, EmptyState, LoadingState, StatRow, PullToRefresh } from '../../design-system/components'
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useSessionWeeklyRankings, type SessionWeeklyStats } from '../hooks/useRankings'
@@ -156,8 +156,8 @@ export default function SessionStatsPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: session } = useSession(sessionId)
-  const { data: matches, isLoading: matchesLoading } = useMatches(sessionId)
-  const { data: rankings = [], isLoading: rankingsLoading } = useSessionWeeklyRankings(sessionId)
+  const { data: matches, isLoading: matchesLoading, refetch: refetchMatches } = useMatches(sessionId)
+  const { data: rankings = [], isLoading: rankingsLoading, refetch: refetchRankings } = useSessionWeeklyRankings(sessionId)
 
   const completedMatches = useMemo(
     () => matches?.filter((m) => m.status === 'COMPLETED') ?? [],
@@ -166,6 +166,10 @@ export default function SessionStatsPage() {
   const totalPoints = rankings.reduce((sum, s) => sum + s.weeklyPoints, 0)
   const averagePoints = rankings.length > 0 ? Math.round(totalPoints / rankings.length) : 0
   const isLoading = matchesLoading || rankingsLoading
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchMatches(), refetchRankings()])
+  }, [refetchMatches, refetchRankings])
 
   if (!sessionId) {
     return (
@@ -176,6 +180,7 @@ export default function SessionStatsPage() {
   }
 
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
         title=""
@@ -318,5 +323,6 @@ export default function SessionStatsPage() {
         </main>
       </div>
     </div>
+    </PullToRefresh>
   )
 }

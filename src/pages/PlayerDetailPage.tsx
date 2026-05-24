@@ -10,7 +10,7 @@ import type { PartnerEntry } from '../hooks/useBestPartner'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
-import { AppBar, Badge } from '../../design-system/components'
+import { AppBar, Badge, PullToRefresh } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Session } from '../types/database'
@@ -68,7 +68,7 @@ export default function PlayerDetailPage() {
   const navigate = useNavigate()
   const id = playerId ?? ''
 
-  const { data: player, isLoading: playerLoading } = usePlayer(id)
+  const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = usePlayer(id)
   const { stats } = usePlayerStats()
   const { best: bestPartner, worst: worstPartner, isLoading: partnerLoading } = useBestPartner(id)
   const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
@@ -149,7 +149,12 @@ export default function PlayerDetailPage() {
     )
   }
 
+  const handleRefresh = useCallback(async () => {
+    await refetchPlayer()
+  }, [refetchPlayer])
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh bg-[var(--bg)]">
       <AppBar
         title=''
@@ -481,6 +486,7 @@ export default function PlayerDetailPage() {
         />
       )}
     </div>
+    </PullToRefresh>
   )
 }
 

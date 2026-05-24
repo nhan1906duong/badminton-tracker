@@ -1,8 +1,10 @@
+import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Medal } from 'lucide-react'
 import { usePlayerRankings } from '../hooks/useRankings'
 import Avatar from '../components/Avatar'
 import { formatShortPlayerName } from '../lib/player-name'
+import { PullToRefresh } from '../../design-system/components'
 
 // Ghost rank number — pos 1/2/3 get faded accent, rest get faded border
 function GhostRank({ rank }: { rank: number }) {
@@ -92,12 +94,17 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
 
 export default function RankingPage() {
   const navigate = useNavigate()
-  const { data: rankings = [], isLoading } = usePlayerRankings()
+  const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
 
   const playerCount = rankings.length
   const totalMatches = (rankings.reduce((s, r) => s + r.matchesPlayed, 0) / 2) | 0
 
+  const handleRefresh = useCallback(async () => {
+    await refetch()
+  }, [refetch])
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh pb-24" style={{ background: 'var(--bg)' }}>
 
       {/* Page Header */}
@@ -202,5 +209,6 @@ export default function RankingPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   )
 }

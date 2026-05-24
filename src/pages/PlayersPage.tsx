@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePlayers, useDeletePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
+import { PullToRefresh } from '../../design-system/components'
 import { Plus, Trash2, User } from 'lucide-react'
 import { SwipeableItem } from '../components/SwipeableItem'
 import PlayerForm from '../components/PlayerForm'
@@ -14,7 +15,7 @@ import type { Player } from '../types/database'
 
 export default function PlayersPage() {
   const navigate = useNavigate()
-  const { data: players, isLoading } = usePlayers()
+  const { data: players, isLoading, refetch: refetchPlayers } = usePlayers()
   const { stats, isLoading: statsLoading } = usePlayerStats()
   const deletePlayer = useDeletePlayer()
   const [showForm, setShowForm] = useState(false)
@@ -34,6 +35,10 @@ export default function PlayersPage() {
     return (bStats?.matchesPlayed ?? 0) - (aStats?.matchesPlayed ?? 0)
   })
 
+  const handleRefresh = useCallback(async () => {
+    await refetchPlayers()
+  }, [refetchPlayers])
+
   async function handleDelete(id: string) {
     setSwipedId(null)
     try {
@@ -46,6 +51,7 @@ export default function PlayersPage() {
   }
 
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh bg-gray-50">
       <div className="px-4 py-5 space-y-3 pb-32">
         {isLoading || statsLoading ? (
@@ -164,5 +170,6 @@ export default function PlayersPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   )
 }
