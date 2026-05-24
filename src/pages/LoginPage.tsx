@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useI18n } from '../i18n'
 import { Button, Input } from '../../design-system/components'
 
@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -69,12 +70,23 @@ export default function LoginPage() {
           />
           <Input
             label={t('auth.password')}
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"
             required
             autoComplete="current-password"
+            rightAction={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            }
           />
 
           {error && (

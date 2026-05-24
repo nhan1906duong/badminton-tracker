@@ -56,6 +56,7 @@
 | /ranking | RankingPage | Yes |
 | /settings | SettingsPage | Yes |
 | /settings/points | PointSystemPage | Yes |
+| /settings/change-password | ChangePasswordPage | Yes |
 | /settings/design-system | DesignSystemPage | Yes (dev) |
 | * | → / | Redirect |
 
@@ -92,6 +93,7 @@
 1. User enters email + password → supabase.auth.signInWithPassword
 2. On success: session stored, user redirected to original route
 3. RequireAuth guard in AnimatedRoutes.tsx redirects unauthenticated users to /login
+4. Password change: re-authenticate with current password → supabase.auth.updateUser({ password })
 ```
 
 ## Navigation & Back Button Behavior

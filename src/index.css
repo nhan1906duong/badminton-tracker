@@ -79,3 +79,9 @@ html {
 .page-enter-left {
   animation: page-enter-from-left 300ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
+
+/* Suppress browser-native password reveal button */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}

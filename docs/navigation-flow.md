@@ -22,6 +22,7 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 | `/ranking` | `RankingPage` | Yes | Yes |
 | `/settings` | `SettingsPage` | Yes | Yes |
 | `/settings/points` | `PointSystemPage` | Yes | No |
+| `/settings/change-password` | `ChangePasswordPage` | Yes | No |
 | `/settings/design-system` | `DesignSystemPage` | Yes (dev) | No |
 
 ## Route Types
@@ -58,11 +59,14 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
 │   /sessions    │   /ranking    │   /settings       │
 │                │               │                   │
 │ Session card   │ Player list   │ Profile avatar    │
-│   ─────►       │ by Elo rating │ Point System ──►  │
-│   /:id         │               │ /settings/points  │
-│ + FAB          │               │ Design Sys (dev)  │
-│   ───►         │               │ Log Out ──► /login│
-│ /sessions/new  │               │                   │
+│   ─────►       │ by Elo rating │ Link Player       │
+│   /:id         │               │ Point System ──►  │
+│ + FAB          │               │ /settings/points  │
+│   ───►         │               │ Change Pwd ──►    │
+│ /sessions/new  │               │ /change-password  │
+│                │               │ Design Sys (dev)  │
+│                │               │ Log Out ──► /login│
+│                │               │                   │
 └───────┬────────┴───────────────┴───────────────────┘
         │
         ▼
@@ -113,6 +117,7 @@ The `AppBar` component handles back navigation for sub-page routes via `navigate
 
 | From | Back goes to |
 |------|-------------|
+| `/settings/change-password` | `/settings` |
 | `/sessions/:id/matches/:matchId/players/edit` | `/sessions/:id/matches/:matchId` |
 | `/sessions/:id/matches/:matchId` | `/sessions/:id` |
 | `/sessions/:id/matches/new` | `/sessions/:id` |
