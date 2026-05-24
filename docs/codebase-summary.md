@@ -19,42 +19,56 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 988 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue) |
-| 518 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
-| 405 | pages/SessionDetailPage.tsx | Session detail: stats panel, match list, session menu |
-| 335 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useReorderQueue |
-| 305 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
-| 270 | App.tsx | Router, frosted glass header, bottom nav |
-| 226 | pages/PlayersPage.tsx | Player list + swipe-to-delete + avatar upload |
-| 152 | pages/EditMatchPage.tsx | Edit match: result + scores |
+| 1060 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
+| 917 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue) |
+| 906 | pages/MatchDetailPage.tsx | Match detail: start, record result, edit players, reopen, delete |
+| 636 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
+| 635 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history |
+| 589 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
+| 551 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
+| 374 | pages/SessionDetailPage.tsx | Session detail: stats panel, match list, session menu |
+| 343 | pages/EditPlayersPage.tsx | Edit match players: reassign slots for an existing match |
+| 332 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player |
+| 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
+| 232 | hooks/useRankings.ts | usePlayerRankings (Elo) + useSessionWeeklyRankings |
+| 217 | pages/RankingPage.tsx | Player rankings by Elo rating (`/ranking`) |
+| 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
+| 208 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
+| 203 | components/AnimatedRoutes.tsx | All routes, auth guard, page transition animations |
+| 192 | pages/SessionsListPage.tsx | List all sessions |
+| 177 | pages/PlayersPage.tsx | Player list + swipe-to-delete + avatar upload |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
-| 127 | pages/HomePage.tsx | Stats cards + recent matches + PodiumChart |
-| 130 | pages/SettingsPage.tsx | Profile, avatar upload, logout, dev tools |
-| 112 | pages/LoginPage.tsx | OTP email login flow |
-| 110 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
-| 104 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
-| 93 | contexts/AuthContext.tsx | Supabase auth state management |
-| 93 | components/MatchCard.tsx | Match list card component |
-| 134 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
-| 87 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
-| 86 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
-| 62 | stores/new-match-store.ts | Zustand store for match creation flow (matchType, teamA/B, mode, scheduledAt) |
-| 84 | pages/SessionDonatedListPage.tsx | Sorted donor list for a session (`/sessions/:id/donated`) |
-| 84 | hooks/usePlayers.ts | Player CRUD hooks |
+| 138 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
+| 135 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
+| 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
+| 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states) |
+| 119 | pages/LoginPage.tsx | OTP email login flow |
+| 113 | components/SwipeableItem.tsx | Swipe-to-reveal action row (delete) |
+| 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
 | 104 | types/database.ts | TypeScript types for all entities including MatchStatus |
-| 81 | components/PlayerForm.tsx | Add player modal |
+| 102 | hooks/useBestPartner.ts | Compute best doubles partner from match history |
+| 100 | lib/rating.ts | Elo rating algorithm + SCORING_CONFIG constants |
+| 91 | components/PlayerSelector.tsx | Bottom-sheet player picker with search |
+| 90 | hooks/usePlayers.ts | Player CRUD hooks |
+| 87 | components/FloatingActionButton.tsx | Reusable FAB constrained to mobile container |
+| 83 | components/PlayerForm.tsx | Add player modal |
+| 70 | components/MatchTypeSelector.tsx | Segmented chip selector for match type |
+| 69 | lib/match-helpers.ts | Helper functions for match logic (getTeamSize, MATCH_TYPE_SHORT, etc.) |
+| 69 | pages/SessionDonatedListPage.tsx | Sorted donor list for a session (`/sessions/:id/donated`) |
+| 68 | hooks/useBwfTournaments.ts | Read BWF tournament cache from Supabase; filter by date window |
+| 61 | stores/new-match-store.ts | Zustand store for match creation flow (matchType, teamA/B, mode, scheduledAt) |
+| 59 | hooks/usePlayerMatchHistory.ts | Paginated match history for a player (cursor-based) |
+| 50 | lib/image.ts | Canvas-based image compression utility (center-crop → square → JPEG) |
+| 47 | lib/session-format.ts | `formatSessionDuration` utility |
+| 46 | components/DonorListItem.tsx | Row for SessionDonatedListPage (avatar + losses + match count) |
+| 45 | hooks/usePlayerMatches.ts | Paginated match history for a player (infinite scroll) |
+| 45 | hooks/useHeadToHead.ts | Head-to-head stats between two players |
 | — | design-system/components/avatar.tsx | Rectangle avatar: accent bg, 2-letter initials, image support |
 | 2 | components/Avatar.tsx | Re-export shim → design-system/components/avatar.tsx |
-| 56 | pages/SessionsListPage.tsx | List all sessions |
-| 53 | lib/match-helpers.ts | Helper functions for match logic |
-| 50 | lib/image.ts | Canvas-based image compression utility |
-| 3 | stores/session-store.ts | Empty module (active players removed) |
-| 32 | components/FloatingActionButton.tsx | Reusable FAB constrained to mobile container |
-| 20 | hooks/useProfile.ts | Fetch user profile from profiles table |
-| 17 | lib/avatar.ts | Deterministic default avatar from name hash |
-| 7 | lib/player-name.ts | Player display-name formatter (`Danh Nguyen` → `Danh N.`) |
 | 13 | lib/supabase.ts | Supabase client initialization |
 | 9 | lib/currency.ts | `formatCurrency` + `LOSS_PENALTY_VND` constant |
+| 17 | lib/avatar.ts | Deterministic default avatar from name hash |
+| 7 | lib/player-name.ts | Player display-name formatter (`Danh Nguyen` → `Danh N.`) |
 
 ## Components
 
@@ -62,12 +76,17 @@ src/
 components/
 ├── Avatar.tsx               # Re-export shim → design-system/components/avatar.tsx
 ├── AvatarPicker.tsx         # Bottom sheet: 2x5 default grid + camera / gallery / remove
-├── MatchCard.tsx           # Match list card
-├── MatchesContent.tsx      # Match list renderer (loading / error / empty states)
+├── DonorListItem.tsx        # Row for SessionDonatedListPage
+├── FloatingActionButton.tsx # Reusable FAB anchored to mobile container
+├── MatchCard.tsx            # Match list card
+├── MatchesContent.tsx       # Match list renderer (loading / error / empty states)
+├── MatchTypeSelector.tsx    # Segmented chip selector for match type
 ├── PlayerForm.tsx           # Add player modal
+├── PlayerSelector.tsx       # Bottom-sheet player picker with search
 ├── PodiumChart.tsx          # SVG podium chart for top-5 rankings
 ├── ScoreEntry.tsx           # Set score inputs
-├── FloatingActionButton.tsx # Reusable FAB anchored to mobile container
+├── SwipeableItem.tsx        # Swipe-to-reveal action row (delete)
+├── TeamAssignment.tsx       # Team slot assignment UI for match creation
 ```
 
 ## Pages
@@ -75,16 +94,19 @@ components/
 ```
 pages/
 ├── LoginPage.tsx                # /login - OTP auth
-├── HomePage.tsx                 # / - Dashboard
 ├── PlayersPage.tsx              # /players - Player list
-├── PlayerDetailPage.tsx         # /players/:playerId - Player detail with avatar/name edit, stats, best partner, match history
+├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit, stats, best partner, match history
 ├── SessionsListPage.tsx         # /sessions - Session history
 ├── CreateSessionPage.tsx        # /sessions/new - Create session
 ├── SessionDetailPage.tsx        # /sessions/:id - Session detail (stats panel + matches)
-├── CreateMatchPage.tsx          # /sessions/:id/matches/new - Create match (type + players + mode)
-├── EditMatchPage.tsx            # /sessions/:id/matches/:matchId/edit
+├── SessionStatsPage.tsx         # /sessions/:id/stats - Weekly stats per player
 ├── SessionDonatedListPage.tsx   # /sessions/:id/donated - Sorted donor list
+├── CreateMatchPage.tsx          # /sessions/:id/matches/new - Create match (type + players + mode)
+├── MatchDetailPage.tsx          # /sessions/:id/matches/:matchId - Match detail + actions
+├── EditPlayersPage.tsx          # /sessions/:id/matches/:matchId/players/edit - Reassign match players
+├── RankingPage.tsx              # /ranking - Player rankings by Elo
 ├── SettingsPage.tsx             # /settings - Profile, logout, dev tools
+├── PointSystemPage.tsx          # /settings/points - Point system explanation
 ├── DesignSystemPage.tsx         # /settings/design-system - Dev-only design catalogue
 ```
 
@@ -114,30 +136,37 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 
 ```
 hooks/
-├── useAuth.ts            # Supabase auth state
-├── useAvatarUpload.ts    # Upload/delete/set-default avatar to Supabase Storage
-├── useBestPartner.ts     # Compute best doubles partner from match history
-├── useMatches.ts         # Match CRUD: useMatches, useMatch, useCreateMatch,
-│                         #   useUpdateMatch, useDeleteMatch, useStartMatch,
-│                         #   useRecordResult, useReorderQueue
-├── usePlayerMatches.ts   # Paginated match history for a player (infinite scroll)
-├── usePlayers.ts         # Player CRUD operations
-├── usePlayerStats.ts     # Player win/loss statistics
-├── useProfile.ts         # Fetch user profile (avatar_url)
-├── useSessions.ts        # Session CRUD + useOpenSession()
-├── useTopJoinedPlayers.ts # Top-N players by matchesPlayed (used for default selection)
+├── useAuth.ts              # Supabase auth state
+├── useAvatarUpload.ts      # Upload/delete/set-default avatar to Supabase Storage
+├── useBestPartner.ts       # Compute best doubles partner from match history
+├── useBwfTournaments.ts    # Read BWF tournament cache; filter by date window
+├── useHeadToHead.ts        # Head-to-head stats between two players
+├── useMatches.ts           # Match CRUD: useMatches, useMatch, useCreateMatch,
+│                           #   useUpdateMatch, useDeleteMatch, useStartMatch,
+│                           #   useRecordResult, useReorderQueue, useReopenMatch,
+│                           #   useUpdateMatchPlayers
+├── usePlayerMatchHistory.ts # Cursor-based paginated match history for a player
+├── usePlayerMatches.ts     # Infinite-scroll paginated match history for a player
+├── usePlayers.ts           # Player CRUD operations
+├── usePlayerStats.ts       # Player win/loss statistics + useSessionDonationStats
+├── useProfile.ts           # Fetch user profile (avatar_url)
+├── useRankings.ts          # usePlayerRankings (Elo) + useSessionWeeklyRankings
+├── useSessions.ts          # Session CRUD + useOpenSession()
+├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
 
 ## Lib
 
 ```
 lib/
-├── supabase.ts      # Supabase client initialization
-├── image.ts         # Canvas-based image compression (center-crop → square → JPEG)
-├── avatar.ts        # Multiavatar utilities (SVG generation, URL helpers)
-├── match-helpers.ts # Match logic helpers (getTeamSize, MATCH_TYPE_SHORT, etc.)
-├── player-name.ts   # Short player display names outside profile pages
-├── currency.ts      # formatCurrency + LOSS_PENALTY_VND
+├── supabase.ts        # Supabase client initialization
+├── image.ts           # Canvas-based image compression (center-crop → square → JPEG)
+├── avatar.ts          # Multiavatar utilities (SVG generation, URL helpers)
+├── match-helpers.ts   # Match logic helpers (getTeamSize, MATCH_TYPE_SHORT, etc.)
+├── player-name.ts     # Short player display names outside profile pages
+├── currency.ts        # formatCurrency + LOSS_PENALTY_VND
+├── rating.ts          # Elo rating algorithm + SCORING_CONFIG constants
+├── session-format.ts  # formatSessionDuration utility
 ```
 
 ## Player Name Display
@@ -189,9 +218,15 @@ Single-page flow at `/sessions/:id/matches/new` (`CreateMatchPage`):
 CTA is disabled until all player slots are filled and (for Schedule mode) a date/time is set.
 After save: `navigate(-1)` back to session detail.
 
-> **Planned but not yet built:** Session detail page still shows all matches in one list.
-> Phase 4 (Live / Queue / Completed sections) and Phase 5 (Record Result page at
-> `/sessions/:id/matches/:matchId/result`) are pending — see `plans/match-states-and-queue.md`.
+## Match Detail Flow
+
+`MatchDetailPage` at `/sessions/:id/matches/:matchId`:
+
+- **SCHEDULED** matches: Start button → transitions to `LIVE`
+- **LIVE** matches: Record Result → score entry + winner selection → `COMPLETED`
+- **COMPLETED** matches: Reopen → back to `LIVE`; Edit Players → `EditPlayersPage`
+- All states: Delete match (with confirmation)
+- ⋮ menu (bottom sheet) for actions
 
 ## Match Statuses
 

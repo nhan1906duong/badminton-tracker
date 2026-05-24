@@ -41,16 +41,23 @@
 | Path | Component | Auth Required |
 |------|-----------|---------------|
 | /login | LoginPage | No |
-| / | HomePage | Yes |
-| /players | PlayersPage | Yes |
-| /players/:playerId | PlayerDetailPage | Yes |
+| / | → /sessions (redirect) | Yes |
 | /sessions | SessionsListPage | Yes |
 | /sessions/active | ActiveSessionRedirect | Yes |
 | /sessions/new | CreateSessionPage | Yes |
 | /sessions/:id | SessionDetailPage | Yes |
-| /sessions/:id/matches/new | SessionMatchPlayersPage | Yes |
-| /sessions/:id/matches/new/result | SessionMatchResultPage | Yes |
-| /sessions/:id/matches/:matchId/edit | EditMatchPage | Yes |
+| /sessions/:id/stats | SessionStatsPage | Yes |
+| /sessions/:id/donated | SessionDonatedListPage | Yes |
+| /sessions/:id/matches/new | CreateMatchPage | Yes |
+| /sessions/:id/matches/:matchId | MatchDetailPage | Yes |
+| /sessions/:id/matches/:matchId/players/edit | EditPlayersPage | Yes |
+| /sessions/:id/matches/:matchId/edit | LegacyEditMatchRedirect | Yes |
+| /players | PlayersPage | Yes |
+| /players/:playerId | PlayerDetailPage | Yes |
+| /ranking | RankingPage | Yes |
+| /settings | SettingsPage | Yes |
+| /settings/points | PointSystemPage | Yes |
+| /settings/design-system | DesignSystemPage | Yes (dev) |
 | * | → / | Redirect |
 
 ## Data Flow
@@ -94,32 +101,17 @@
 
 ### Tab Routes (no back button)
 
-The back button is hidden on the 4 bottom-tab root pages:
+The back button is hidden on the 3 bottom-tab root pages:
 
 | Route | Tab |
 |-------|-----|
-| `/` | Home |
-| `/players` | Players |
 | `/sessions` | Sessions |
+| `/ranking` | Ranking |
 | `/settings` | Settings |
 
 ### Back Routing Rules
 
-| From | Back Action | Notes |
-|------|-------------|-------|
-| `/sessions/:id/matches/new/result` (Final Result) | → `/sessions/:id/matches/new` (Select Players) | Always, via `replace` |
-| `/sessions/:id/matches/new` (Select Players) | → `/sessions/:id` (Session Detail) | Always, via `replace` |
-| `/sessions/:id` (Session Detail) | → source tab page | Reads `location.state.from` set by caller |
-| Any other page | `navigate(-1)` | Standard browser back |
-
-### Session Detail Return Flow
-
-Pages that navigate **to** Session Detail pass `state: { from: '<route>' }` so the back button knows where to return:
-
-- **Home** → Session Detail: `{ state: { from: '/' } }` → back goes to Home
-- **Sessions List** → Session Detail: `{ state: { from: '/sessions' } }` → back goes to Sessions List
-
-If no `from` state is present (e.g. direct URL access), back falls through to `navigate('/')`.
+All sub-page routes use `navigate(-1)` (browser back) via the `AppBar` component. No custom routing logic in `App.tsx`.
 
 ## PWA Configuration
 

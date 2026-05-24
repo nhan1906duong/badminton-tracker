@@ -23,7 +23,7 @@ Badminton Match Tracker — a PWA for tracking badminton matches, players, and r
 1. **TanStack Query** — server state (matches, players, sessions). Hooks in `src/hooks/use*.ts`. Each hook exports a `useQuery` hook + `useMutation` hooks. Mutations invalidate query keys on success.
 2. **Zustand stores** — ephemeral cross-page state:
    - `src/stores/new-match-store.ts` — match creation flow (type, selected players, scores, winner). Reset after save.
-   - `src/stores/session-store.ts` — per-session active player filter, persisted to localStorage.
+   - `src/stores/session-store.ts` — empty module (active player filter removed).
 3. **React useState** — local UI state only.
 
 ### Auth
@@ -34,28 +34,21 @@ Supabase OTP (magic link) via `src/contexts/AuthContext.tsx`. `RequireAuth` guar
 
 Routes in `src/components/AnimatedRoutes.tsx`. Page transitions are animated (forward/backward) except between tab routes.
 
-**Tab routes** (no AppBar, bottom nav visible): `/`, `/sessions`, `/players`, `/settings`
+**Tab routes** (no AppBar, bottom nav visible): `/sessions`, `/ranking`, `/settings`
 
-**Full-screen routes** (no AppBar, no bottom nav — page owns its own nav bar and bottom CTA): `/sessions/new`. Defined in `FULL_SCREEN_ROUTES` in `src/App.tsx`.
+**Back navigation**: All sub-page routes use `navigate(-1)` via the `AppBar` component. No custom back-routing logic in `App.tsx`.
 
-**Back navigation** is custom in `src/App.tsx` `handleBack()`:
-- Result page → Select Players page (replace)
-- Select Players → Session Detail (replace)
-- Session Detail → `location.state.from` (set by caller) or falls back to `/`
-- Other pages → browser back (`navigate(-1)`)
+### Match Creation Flow (single-page)
 
-Pages navigating **to** Session Detail must pass `state: { from: '<route>' }` so back works correctly.
+At `/sessions/:id/matches/new` (`CreateMatchPage`):
+1. Pick match type (segmented chip selector)
+2. Fill player slots (Team A / Team B) via bottom-sheet player picker
+3. Choose **When**: Now (LIVE), Schedule (SCHEDULED + datetime), or Queue (SCHEDULED + queue_position)
+4. Save → `navigate(-1)` back to session detail
 
-### Match Creation Flow (2-step)
-
-1. **Select Players** (`/sessions/:id/matches/new`)
-   - Pick match type → unified 2-column player grid
-   - Auto-advances to step 2 when enough players selected
-   - Players auto-assign: first N to Team A (blue), rest to Team B (red)
-2. **Final Result** (`/sessions/:id/matches/new/result`)
-   - Enter per-set scores (tap "+ Add Set")
-   - Select winner → Save
-   - After save: `navigate(-2)` to return to session detail
+After a match is created, tap it from session detail to open `MatchDetailPage`:
+- Start (SCHEDULED → LIVE), Record Result (LIVE → COMPLETED), Reopen (COMPLETED → LIVE)
+- Edit Players → `EditPlayersPage` (`/matches/:matchId/players/edit`)
 
 ### Data Model
 
@@ -94,7 +87,7 @@ export function Component({ ... }: Props) {
 - Always include `active:` press states, 44px+ touch targets
 - Refer to `docs/design-guidelines.md` for the full design system
 - The dev-only `/settings/design-system` route renders all tokens for preview
-- **Every new or restyled page must use `<AppBar>` from `design-system/components` for its top navigation — never build a custom nav bar.** Only tab routes (`/`, `/sessions`, `/players`, `/settings`) omit AppBar.
+- **Every new or restyled page must use `<AppBar>` from `design-system/components` for its top navigation — never build a custom nav bar.** Only tab routes (`/sessions`, `/ranking`, `/settings`) omit AppBar.
 
 ### Environment Variables
 ```env
@@ -109,12 +102,14 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/lib/supabase.ts` | Supabase client |
 | `src/contexts/AuthContext.tsx` | Auth state (OTP) |
 | `src/components/AnimatedRoutes.tsx` | All routes + auth guard + page transitions |
-| `src/App.tsx` | AppBar, bottom nav, back button logic |
+| `src/App.tsx` | Bottom nav, app layout |
 | `src/hooks/useMatches.ts` | Match CRUD + optimistic updates |
 | `src/hooks/usePlayers.ts` | Player CRUD |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
+| `src/hooks/useRankings.ts` | Elo-based player rankings + per-session weekly stats |
 | `src/lib/bwf-api.ts` | BWF category constants + priority order |
+| `src/lib/rating.ts` | Elo rating algorithm + SCORING_CONFIG |
 | `src/stores/new-match-store.ts` | Match creation flow state |
 | `src/types/database.ts` | TypeScript types for all DB tables |
 | `docs/design-guidelines.md` | Design system reference |

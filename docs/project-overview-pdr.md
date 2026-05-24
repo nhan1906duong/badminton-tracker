@@ -20,14 +20,14 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 |---------|--------|-------------|
 | OTP Authentication | Implemented | Email magic link via Supabase |
 | Player CRUD | Implemented | Create, list, toggle active status |
-| Match Creation | Implemented | 2-step flow: type+players → scores+save |
+| Match Creation | Implemented | Single-page flow: type + players + mode (Now/Schedule/Queue) |
 | Unified Player Grid | Implemented | 2-column grid showing Team A/B assignment |
 | Auto Team Assignment | Implemented | Players auto-assign to Team A (blue) then Team B (red) |
 | Inline Player Add | Implemented | Add player without leaving match flow |
 | Score Entry | Implemented | Per-set inputs with auto winner detection |
 | Match History | Implemented | List + detail view with all match data |
 | Home Dashboard | Implemented | Stats cards + recent matches + PodiumChart top donate |
-| Bottom Navigation | Implemented | Home, Matches, Players tabs |
+| Bottom Navigation | Implemented | Sessions, Ranking, Settings tabs |
 | Avatar Upload | Implemented | Camera/gallery picker, compress, Supabase Storage |
 | Default Avatars | Implemented | Deterministic multiavatar from name hash + 10 selectable defaults |
 | Avatar Selection Grid | Implemented | 5x2 grid of multiavatar defaults in AvatarPicker bottom sheet |
