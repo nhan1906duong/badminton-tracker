@@ -4,6 +4,7 @@ import { Check, X } from 'lucide-react'
 import type { Player } from '../types/database'
 import { formatShortPlayerName } from '../lib/player-name'
 import Avatar from './Avatar'
+import { useI18n } from '../i18n'
 
 interface ActivePlayersBottomSheetProps {
   players: Player[]
@@ -31,6 +32,7 @@ export default function ActivePlayersBottomSheet({
   onClose,
   onConfirm,
 }: ActivePlayersBottomSheetProps) {
+  const { t } = useI18n()
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const parentRef = useRef<HTMLDivElement>(null)
 
@@ -79,7 +81,7 @@ export default function ActivePlayersBottomSheet({
         <div className="flex items-center px-3 py-2 border-b border-gray-100">
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('activePlayers.close')}
             className="p-2 rounded-full active:bg-gray-100"
           >
             <X className="w-5 h-5 text-gray-600" />
@@ -90,14 +92,14 @@ export default function ActivePlayersBottomSheet({
             disabled={picked.size === 0}
             className="px-4 py-2 rounded-full border border-green-600 text-green-600 text-sm font-semibold active:bg-green-50 disabled:opacity-40 disabled:border-gray-300 disabled:text-gray-400"
           >
-            Add{picked.size > 0 ? ` (${picked.size})` : ''}
+            {t('activePlayers.add')}{picked.size > 0 ? ` (${picked.size})` : ''}
           </button>
         </div>
 
         {/* Virtualized player list */}
         {isEmpty ? (
           <div className="py-12 text-center text-sm text-gray-400">
-            All players are already active.
+            {t('activePlayers.allActive')}
           </div>
         ) : (
           <div ref={parentRef} className="flex-1 overflow-auto">

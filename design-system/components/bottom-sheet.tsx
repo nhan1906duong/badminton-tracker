@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useI18n } from '../../src/i18n'
 
 // ── Base sheet ─────────────────────────────────────────────────────────────
 
@@ -113,7 +114,9 @@ export interface BottomSheetCancelProps {
   label?: string
 }
 
-export function BottomSheetCancel({ onClick, label = 'Cancel' }: BottomSheetCancelProps) {
+export function BottomSheetCancel({ onClick, label }: BottomSheetCancelProps) {
+  const { t } = useI18n()
+
   return (
     <button
       type="button"
@@ -134,7 +137,7 @@ export function BottomSheetCancel({ onClick, label = 'Cancel' }: BottomSheetCanc
         touchAction: 'manipulation',
       }}
     >
-      {label}
+      {label ?? t('common.cancel')}
     </button>
   )
 }

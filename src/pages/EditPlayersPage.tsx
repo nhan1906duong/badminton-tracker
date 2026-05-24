@@ -4,9 +4,10 @@ import { Check, ChevronLeft, ChevronRight, Loader2, Plus, X } from 'lucide-react
 import { AppBar, Avatar, BottomSheet, LoadingState } from '../../design-system/components'
 import { useMatch, useUpdateMatchPlayers } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
-import { getTeamSize, MATCH_TYPE_LABEL } from '../lib/match-helpers'
+import { getTeamSize } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Player } from '../types/database'
+import { matchTypeLabel, useI18n, type TFunction } from '../i18n'
 
 type TeamKey = 'A' | 'B'
 type PlayerSlots = (string | null)[]
@@ -24,8 +25,8 @@ function normalizeSlots(ids: string[], size: number): PlayerSlots {
   return Array.from({ length: size }, (_, i) => ids[i] ?? null)
 }
 
-function slotRole(teamSize: number, index: number) {
-  return teamSize === 1 ? 'Player' : `Player ${index + 1}`
+function slotRole(teamSize: number, index: number, t: TFunction) {
+  return teamSize === 1 ? t('team.player') : t('team.playerIndex', { index: index + 1 })
 }
 
 function PlayerSlot({
@@ -39,6 +40,8 @@ function PlayerSlot({
   onTap: () => void
   onClear: () => void
 }) {
+  const { t } = useI18n()
+
   return (
     <button
       type="button"
@@ -58,14 +61,14 @@ function PlayerSlot({
           {role}
         </p>
         <p className={`mt-0.5 truncate font-[family:var(--font-display)] text-[16px] font-bold ${player ? 'text-[var(--fg)]' : 'text-[var(--muted)]'}`}>
-          {player ? formatShortPlayerName(player.name) : 'Tap to choose'}
+          {player ? formatShortPlayerName(player.name) : t('team.tapToChoose')}
         </p>
       </div>
 
       {player ? (
         <span
           role="button"
-          aria-label={`Remove ${player.name}`}
+          aria-label={t('team.removePlayer', { name: player.name })}
           onClick={(event) => {
             event.stopPropagation()
             onClear()
@@ -94,6 +97,8 @@ function TeamPanel({
   onPick: (index: number) => void
   onClear: (index: number) => void
 }) {
+  const { t } = useI18n()
+
   return (
     <section className="mb-[var(--space-6)]">
       <div className="mb-[var(--space-3)] flex items-baseline justify-between">
@@ -108,7 +113,7 @@ function TeamPanel({
         {slots.map((playerId, index) => (
           <PlayerSlot
             key={index}
-            role={slotRole(slots.length, index)}
+            role={slotRole(slots.length, index, t)}
             player={playerId ? playerMap.get(playerId) : undefined}
             onTap={() => onPick(index)}
             onClear={() => onClear(index)}
@@ -120,6 +125,7 @@ function TeamPanel({
 }
 
 export default function EditPlayersPage() {
+  const { t } = useI18n()
   const { id: sessionId, matchId } = useParams<{ id: string; matchId: string }>()
   const navigate = useNavigate()
   const { data: match, isLoading: matchLoading } = useMatch(matchId ?? '')
@@ -187,11 +193,11 @@ export default function EditPlayersPage() {
     const teamB = teamBIds.filter((id): id is string => Boolean(id))
 
     if (teamA.length !== teamSize || teamB.length !== teamSize) {
-      setError('Fill every player slot before saving.')
+      setError(t('editPlayers.fillEverySlot'))
       return
     }
     if (new Set([...teamA, ...teamB]).size !== teamA.length + teamB.length) {
-      setError('A player can only appear once in this match.')
+      setError(t('editPlayers.playerOnce'))
       return
     }
     if (!match || !sessionId || !matchId) return
@@ -204,15 +210,15 @@ export default function EditPlayersPage() {
       })
       navigate(`/sessions/${sessionId}/matches/${matchId}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update players.')
+      setError(err instanceof Error ? err.message : t('editPlayers.failedUpdate'))
     }
   }
 
   if (matchLoading || playersLoading) {
     return (
       <div className="min-h-[100dvh] bg-[var(--bg)]">
-        <AppBar title="" backLabel="Match" onBack={() => navigate(-1)} />
-        <LoadingState message="Loading match players..." />
+        <AppBar title="" backLabel={t('editPlayers.match')} onBack={() => navigate(-1)} />
+        <LoadingState message={t('editPlayers.loading')} />
       </div>
     )
   }
@@ -220,9 +226,9 @@ export default function EditPlayersPage() {
   if (!match) {
     return (
       <div className="min-h-[100dvh] bg-[var(--bg)]">
-        <AppBar title="" backLabel="Match" onBack={() => navigate(-1)} />
+        <AppBar title="" backLabel={t('editPlayers.match')} onBack={() => navigate(-1)} />
         <div className="px-[var(--space-5)] py-[var(--space-5)] text-[14px] text-[var(--muted)]">
-          Match not found.
+          {t('editPlayers.matchNotFound')}
         </div>
       </div>
     )
@@ -245,10 +251,10 @@ export default function EditPlayersPage() {
       >
         <header className="px-[var(--space-5)] pb-[var(--space-6)] pt-[var(--space-4)]">
           <p className="mb-[var(--space-3)] font-[family:var(--font-mono)] text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--accent)]">
-            {MATCH_TYPE_LABEL[match.match_type]}
+            {matchTypeLabel(match.match_type, t)}
           </p>
           <h1 className="font-[family:var(--font-display)] text-[34px] font-extrabold leading-none text-[var(--fg)]">
-            Edit players
+            {t('editPlayers.title')}
           </h1>
           <p className="mt-[var(--space-2)] font-[family:var(--font-mono)] text-[13px] text-[var(--muted)]">
             {filledCount}/{requiredCount} selected
@@ -257,7 +263,7 @@ export default function EditPlayersPage() {
 
         <main className="px-[var(--space-5)]">
           <TeamPanel
-            label="Team A"
+            label={t('team.teamA')}
             slots={teamAIds}
             playerMap={playerMap}
             onPick={(index) => setPickerTarget({ team: 'A', index })}
@@ -265,7 +271,7 @@ export default function EditPlayersPage() {
           />
 
           <TeamPanel
-            label="Team B"
+            label={t('team.teamB')}
             slots={teamBIds}
             playerMap={playerMap}
             onPick={(index) => setPickerTarget({ team: 'B', index })}
@@ -292,17 +298,17 @@ export default function EditPlayersPage() {
           }`}
         >
           {updatePlayers.isPending && <Loader2 className="h-5 w-5 animate-spin" />}
-          {updatePlayers.isPending ? 'Saving...' : 'Save players'}
+          {updatePlayers.isPending ? t('common.saving') : t('editPlayers.savePlayers')}
         </button>
       </div>
 
       <BottomSheet open={!!pickerTarget} onClose={() => setPickerTarget(null)}>
         <div className="px-[var(--space-2)] pb-[var(--space-2)]">
           <p className="font-[family:var(--font-display)] text-[18px] font-extrabold text-[var(--fg)]">
-            Choose player
+            {t('editPlayers.choosePlayer')}
           </p>
           <p className="mt-1 font-[family:var(--font-mono)] text-[12px] text-[var(--muted)]">
-            {pickerTarget?.team === 'A' ? 'Team A' : 'Team B'} · {pickerTarget ? slotRole(teamSize, pickerTarget.index) : ''}
+            {pickerTarget?.team === 'A' ? t('team.teamA') : t('team.teamB')} · {pickerTarget ? slotRole(teamSize, pickerTarget.index, t) : ''}
           </p>
         </div>
         <div className="max-h-[56dvh] overflow-y-auto overscroll-contain px-[var(--space-1)]">
@@ -326,7 +332,7 @@ export default function EditPlayersPage() {
                     {formatShortPlayerName(player.name)}
                   </p>
                   <p className="font-[family:var(--font-mono)] text-[11px] text-[var(--muted)]">
-                    Rating {player.rating}
+                    {t('editPlayers.rating', { rating: player.rating })}
                   </p>
                 </div>
                 {isCurrent && <Check className="h-5 w-5 shrink-0 text-[var(--accent)]" />}

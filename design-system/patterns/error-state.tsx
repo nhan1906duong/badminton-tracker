@@ -1,4 +1,5 @@
 import { Button } from '../components/button'
+import { useI18n } from '../../src/i18n'
 
 interface ErrorStateProps {
   title?: string
@@ -6,7 +7,9 @@ interface ErrorStateProps {
   onRetry?: () => void
 }
 
-export function ErrorState({ title = 'Something went wrong', message, onRetry }: ErrorStateProps) {
+export function ErrorState({ title, message, onRetry }: ErrorStateProps) {
+  const { t } = useI18n()
+
   return (
     <div
       className="text-center py-12 px-4"
@@ -22,14 +25,14 @@ export function ErrorState({ title = 'Something went wrong', message, onRetry }:
         className="text-[18px] font-bold mb-2"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
       >
-        {title}
+        {title ?? t('common.somethingWentWrong')}
       </h3>
       <p className="text-[13px] mb-4 max-w-[280px] mx-auto" style={{ color: 'var(--muted)' }}>
         {message}
       </p>
       {onRetry && (
         <Button variant="primary" onClick={onRetry}>
-          Try Again
+          {t('common.tryAgain')}
         </Button>
       )}
     </div>

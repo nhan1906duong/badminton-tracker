@@ -15,6 +15,7 @@ import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Session } from '../types/database'
 import { ChevronLeft, ChevronDown, ChevronRight, Pencil, Medal, Swords } from 'lucide-react'
+import { LOCALE_TAG, useI18n, type Locale } from '../i18n'
 
 const MATCH_TYPE_SHORT: Record<string, string> = {
   MEN_SINGLES: 'MS',
@@ -52,10 +53,10 @@ function getMatchRow(match: MatchWithDetails, playerId: string) {
   }
 }
 
-function formatSessionLabel(session: Session): string {
+function formatSessionLabel(session: Session, locale: Locale): string {
   return (
     session.label ??
-    new Date(session.started_at).toLocaleDateString('en-US', {
+    new Date(session.started_at).toLocaleDateString(LOCALE_TAG[locale], {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -64,6 +65,7 @@ function formatSessionLabel(session: Session): string {
 }
 
 export default function PlayerDetailPage() {
+  const { locale, t } = useI18n()
   const { playerId } = useParams<{ playerId: string }>()
   const navigate = useNavigate()
   const id = playerId ?? ''
@@ -124,6 +126,10 @@ export default function PlayerDetailPage() {
     [handleSaveName]
   )
 
+  const handleRefresh = useCallback(async () => {
+    await refetchPlayer()
+  }, [refetchPlayer])
+
   function toggleSession(sessionId: string) {
     setExpandedSessions((prev) => {
       const next = new Set(prev)
@@ -144,14 +150,10 @@ export default function PlayerDetailPage() {
   if (!player) {
     return (
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center">
-        <span className="text-[13px]" style={{ color: 'var(--muted)' }}>Player not found</span>
+      <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.notFound')}</span>
       </div>
     )
   }
-
-  const handleRefresh = useCallback(async () => {
-    await refetchPlayer()
-  }, [refetchPlayer])
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -174,7 +176,7 @@ export default function PlayerDetailPage() {
         {/* Rank number */}
         {rankData && (
           <div
-            aria-label={`Rank ${rankData.rank}`}
+          aria-label={t('common.rank', { rank: rankData.rank })}
             style={{
               fontFamily: 'var(--font-display)',
               fontSize: 80,
@@ -196,7 +198,7 @@ export default function PlayerDetailPage() {
 
         <button
           onClick={() => setShowAvatarPicker(true)}
-          aria-label="Change avatar"
+          aria-label={t('players.changeAvatar')}
           className="active:opacity-70 transition-opacity"
         >
           <Avatar src={player.avatar_url} name={player.name} size={60} />
@@ -232,17 +234,17 @@ export default function PlayerDetailPage() {
         )}
 
         <span className="text-[13px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
-          {player.rating} pts
+          {t('players.ratingPts', { rating: player.rating })}
         </span>
       </div>
 
       <div className="px-4 pt-5 pb-24 space-y-3">
         {/* Stats grid */}
         <div className="grid grid-cols-4 gap-2">
-          <StatCard label="Played" value={total} />
-          <StatCard label="Win %" value={winRateStr} valueColor="var(--accent)" />
-          <StatCard label="Wins" value={wins} valueColor="var(--success)" />
-          <StatCard label="Losses" value={losses} valueColor="var(--danger)" />
+          <StatCard label={t('players.played')} value={total} />
+          <StatCard label={t('players.winPercent')} value={winRateStr} valueColor="var(--accent)" />
+          <StatCard label={t('players.wins')} value={wins} valueColor="var(--success)" />
+          <StatCard label={t('players.losses')} value={losses} valueColor="var(--danger)" />
         </div>
 
         {/* Donation */}
@@ -250,7 +252,7 @@ export default function PlayerDetailPage() {
           className="bg-[var(--surface)] border border-[var(--border)] px-4 py-3 flex items-center justify-between"
           style={{ borderRadius: 'var(--radius-lg)' }}
         >
-          <span className="text-[13px]" style={{ color: 'var(--muted)' }}>Total Donated</span>
+          <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.totalDonated')}</span>
           <span
             className="text-[18px] font-extrabold"
             style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
@@ -270,12 +272,12 @@ export default function PlayerDetailPage() {
             </div>
           ) : !bestPartner ? (
             <div className="p-4">
-              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>No doubles matches yet.</p>
+              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
             </div>
           ) : (
             <>
               <PartnerRow
-                label="Best Partner"
+                label={t('players.bestPartner')}
                 icon={<Medal className="w-4 h-4" style={{ color: 'var(--success)' }} />}
                 entry={bestPartner}
               />
@@ -283,7 +285,7 @@ export default function PlayerDetailPage() {
                 <>
                   <div style={{ height: 1, background: 'var(--border)' }} />
                   <PartnerRow
-                    label="Worst Partner"
+                    label={t('players.worstPartner')}
                     icon={<Medal className="w-4 h-4" style={{ color: 'var(--danger)' }} />}
                     entry={worstPartner}
                   />
@@ -300,20 +302,20 @@ export default function PlayerDetailPage() {
             style={{ borderRadius: 'var(--radius-lg)' }}
           >
             <AppBar
-              title="Head to Head"
+              title={t('players.headToHead')}
               titleAlign="left"
               className="!static !z-auto"
               style={{ background: 'var(--surface)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
               leftAction={{
                 icon: <Swords className="w-[18px] h-[18px]" />,
-                ariaLabel: 'Head to Head',
+                ariaLabel: t('players.headToHead'),
                 onClick: () => setH2HExpanded((v) => !v),
               }}
               rightAction={{
                 icon: h2hExpanded
                   ? <ChevronDown className="w-[18px] h-[18px]" />
                   : <ChevronRight className="w-[18px] h-[18px]" />,
-                ariaLabel: h2hExpanded ? 'Collapse' : 'Expand',
+                ariaLabel: h2hExpanded ? t('players.collapse') : t('players.expand'),
                 onClick: () => setH2HExpanded((v) => !v),
               }}
             />
@@ -368,7 +370,7 @@ export default function PlayerDetailPage() {
                     className="w-full py-2.5 text-[13px] font-semibold active:bg-[var(--bg)]"
                     style={{ color: 'var(--accent)' }}
                   >
-                    {showAllH2H ? 'Show less' : `Show all ${h2hEntries.length}`}
+                    {showAllH2H ? t('players.showLess') : t('players.showAll', { count: h2hEntries.length })}
                   </button>
                 )}
               </div>
@@ -383,7 +385,7 @@ export default function PlayerDetailPage() {
               className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
               style={{ color: 'var(--muted)' }}
             >
-              Sessions ({history.length})
+              {t('players.sessionsCount', { count: history.length })}
             </div>
 
             {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
@@ -404,13 +406,13 @@ export default function PlayerDetailPage() {
                         className="text-[15px] font-semibold truncate"
                         style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
                       >
-                        {formatSessionLabel(session)}
+                        {formatSessionLabel(session, locale)}
                       </p>
                       <p
                         className="text-[11px] mt-0.5"
                         style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
                       >
-                        {completedMatches.length} matches ·{' '}
+                        {t('units.match', { count: completedMatches.length })} ·{' '}
                         <span style={{ color: 'var(--success)' }}>{sWins}W</span>{' '}
                         <span style={{ color: 'var(--danger)' }}>{sLosses}L</span>
                       </p>
@@ -425,7 +427,7 @@ export default function PlayerDetailPage() {
                     <div style={{ borderTop: '1px solid var(--border)' }}>
                       {completedMatches.length === 0 ? (
                         <div className="px-4 py-3">
-                          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>No completed matches</p>
+                          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
                         </div>
                       ) : (
                         completedMatches.map((match) => {
@@ -443,8 +445,8 @@ export default function PlayerDetailPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
                                   {row.teammates
-                                    ? `w/ ${row.teammates} · vs ${row.opponents || '—'}`
-                                    : `vs ${row.opponents || '—'}`}
+                                    ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
+                                    : t('players.vsOpponent', { opponents: row.opponents || '—' })}
                                 </p>
                                 <p
                                   className="text-[11px]"

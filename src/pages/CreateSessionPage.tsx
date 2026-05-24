@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCreateSession, DuplicateTournamentError } from '../hooks/useSessions'
 import { useNearbyBwfTournaments, type BwfTournament } from '../hooks/useBwfTournaments'
 import { AppBar, Dialog } from '../../design-system/components'
+import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -17,21 +18,21 @@ function toTimeInput(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-function friendlyDate(d: Date): string {
+function friendlyDate(d: Date, locale: Locale, t: TFunction): string {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const tom = new Date(today); tom.setDate(tom.getDate() + 1)
   const day0 = new Date(d); day0.setHours(0, 0, 0, 0)
-  if (day0.getTime() === today.getTime()) return 'Today'
-  if (day0.getTime() === tom.getTime()) return 'Tomorrow'
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  if (day0.getTime() === today.getTime()) return t('common.today')
+  if (day0.getTime() === tom.getTime()) return t('common.tomorrow')
+  return d.toLocaleDateString(LOCALE_TAG[locale], { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
-function friendlyTime(d: Date): string {
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+function friendlyTime(d: Date, locale: Locale): string {
+  return d.toLocaleTimeString(LOCALE_TAG[locale], { hour: 'numeric', minute: '2-digit' })
 }
 
-function friendlyFull(d: Date): string {
-  return `${friendlyDate(d)} · ${friendlyTime(d)}`
+function friendlyFull(d: Date, locale: Locale, t: TFunction): string {
+  return `${friendlyDate(d, locale, t)} · ${friendlyTime(d, locale)}`
 }
 
 function roundedSoon(addMin: number): Date {
@@ -42,12 +43,12 @@ function roundedSoon(addMin: number): Date {
   return d
 }
 
-function formatDateRange(startDate: string, endDate: string): string {
+function formatDateRange(startDate: string, endDate: string, locale: Locale): string {
   const start = new Date(startDate)
   const end = new Date(endDate)
   const startDay = start.getDate()
   const endDay = end.getDate()
-  const month = start.toLocaleDateString('en-US', { month: 'short' })
+  const month = start.toLocaleDateString(LOCALE_TAG[locale], { month: 'short' })
   const year = start.getFullYear()
   if (startDate === endDate) return `${month} ${startDay}, ${year}`
   return `${month} ${startDay}–${endDay}, ${year}`
@@ -126,6 +127,7 @@ function SuggestSkeleton() {
 type StartMode = 'now' | 'schedule'
 
 export default function CreateSessionPage() {
+  const { locale, t } = useI18n()
   const navigate = useNavigate()
   const createSession = useCreateSession()
   const { tournaments, isLoading: tournamentsLoading, refetch } = useNearbyBwfTournaments(7)
@@ -252,7 +254,7 @@ export default function CreateSessionPage() {
       } else {
         setDialog({
           kind: 'error',
-          message: err instanceof Error ? err.message : 'Failed to create session',
+          message: err instanceof Error ? err.message : t('createSession.failedCreate'),
         })
       }
     }
@@ -260,10 +262,10 @@ export default function CreateSessionPage() {
 
   // CTA label
   function ctaLabel(): string {
-    if (!resolvedName) return 'Pick a name to continue'
-    if (mode === 'now') return 'Start session now'
-    if (scheduledAt) return `Schedule for ${friendlyFull(scheduledAt)}`
-    return 'Pick a time to continue'
+    if (!resolvedName) return t('createSession.pickName')
+    if (mode === 'now') return t('createSession.startNowCta')
+    if (scheduledAt) return t('createSession.scheduleFor', { datetime: friendlyFull(scheduledAt, locale, t) })
+    return t('createSession.pickTime')
   }
 
   return (
@@ -272,7 +274,7 @@ export default function CreateSessionPage() {
       {/* ── Nav ── */}
       <AppBar
         title=""
-        backLabel="Cancel"
+        backLabel={t('common.cancel')}
         onBack={() => navigate(-1)}
         stuck={navStuck}
         safeArea
@@ -290,10 +292,10 @@ export default function CreateSessionPage() {
             className="font-[family:var(--font-display)] font-black leading-none tracking-[-0.035em] text-[var(--fg)]"
             style={{ fontSize: 48 }}
           >
-            New session
+            {t('createSession.title')}
           </h1>
           <p className="font-[family:var(--font-mono)] text-[var(--muted)] mt-2" style={{ fontSize: 11 }}>
-            Pick a name. Set a time. Start swinging.
+            {t('createSession.subtitle')}
           </p>
         </header>
 
@@ -304,7 +306,7 @@ export default function CreateSessionPage() {
               className="font-[family:var(--font-mono)] font-bold uppercase tracking-[0.1em] text-[var(--muted)]"
               style={{ fontSize: 11 }}
             >
-              Session name
+              {t('createSession.sessionName')}
             </span>
             <button
               type="button"
@@ -320,12 +322,12 @@ export default function CreateSessionPage() {
                 <path d="M21 12a9 9 0 1 1-3-6.7" />
                 <path d="M21 4v5h-5" />
               </svg>
-              {tournamentsLoading ? 'Loading' : 'Refresh'}
+              {tournamentsLoading ? t('common.loading') : t('common.refresh')}
             </button>
           </div>
 
           {/* Suggestion list */}
-          <div className="flex flex-col gap-2 mb-4" role="radiogroup" aria-label="Tournament suggestions">
+          <div className="flex flex-col gap-2 mb-4" role="radiogroup" aria-label={t('createSession.tournamentSuggestions')}>
             {tournamentsLoading ? (
               <>
                 <SuggestSkeleton />
@@ -334,7 +336,7 @@ export default function CreateSessionPage() {
               </>
             ) : tournaments.length === 0 ? (
               <p className="text-[var(--muted)] font-[family:var(--font-mono)]" style={{ fontSize: 13 }}>
-                No tournaments in the next 7 days. Type a custom name below.
+                {t('createSession.noTournaments')}
               </p>
             ) : (
               tournaments.map((t, i) => (
@@ -342,7 +344,7 @@ export default function CreateSessionPage() {
                   key={`${t.categorySlug}-${t.startDate}`}
                   index={i}
                   name={t.name}
-                  tag={`${t.categoryName} · ${formatDateRange(t.startDate, t.endDate)}`}
+                  tag={`${t.categoryName} · ${formatDateRange(t.startDate, t.endDate, locale)}`}
                   isSelected={selectedTournament?.name === t.name && selectedTournament?.startDate === t.startDate}
                   onSelect={() => handleSelectTournament(t)}
                 />
@@ -356,7 +358,7 @@ export default function CreateSessionPage() {
             style={{ fontSize: 11 }}
           >
             <span className="flex-1 h-px bg-[var(--border)]" />
-            Or
+            {t('common.or')}
             <span className="flex-1 h-px bg-[var(--border)]" />
           </div>
 
@@ -367,7 +369,7 @@ export default function CreateSessionPage() {
             value={customName}
             onFocus={handleCustomFocus}
             onChange={handleCustomInput}
-            placeholder="Type your own name…"
+            placeholder={t('createSession.customNamePlaceholder')}
             maxLength={48}
             autoComplete="off"
             autoCapitalize="words"
@@ -384,7 +386,7 @@ export default function CreateSessionPage() {
               className="font-[family:var(--font-mono)] font-bold uppercase tracking-[0.1em] text-[var(--muted)]"
               style={{ fontSize: 11 }}
             >
-              Start time
+              {t('createSession.startTime')}
             </span>
           </div>
 
@@ -392,7 +394,7 @@ export default function CreateSessionPage() {
           <div
             className="grid grid-cols-2 bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[3px] relative mb-4"
             role="tablist"
-            aria-label="Start time mode"
+            aria-label={t('createSession.startTimeMode')}
           >
             {/* Sliding track */}
             <div
@@ -415,7 +417,7 @@ export default function CreateSessionPage() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="13 3 4 14 12 14 11 21 20 10 12 10 13 3" />
               </svg>
-              Start now
+              {t('createSession.startNow')}
             </button>
             <button
               type="button"
@@ -431,7 +433,7 @@ export default function CreateSessionPage() {
                 <line x1="8" y1="2" x2="8" y2="6" />
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
-              Schedule
+              {t('createSession.schedule')}
             </button>
           </div>
 
@@ -457,16 +459,16 @@ export default function CreateSessionPage() {
                       className="font-[family:var(--font-mono)] text-[var(--accent)] font-bold uppercase tracking-[0.08em] mb-0.5"
                       style={{ fontSize: 11 }}
                     >
-                      Starting in a moment
+                      {t('createSession.startingMoment')}
                     </div>
                     <div
                       className="font-[family:var(--font-display)] font-black leading-tight tracking-[-0.02em] text-[var(--fg)]"
                       style={{ fontSize: 24, fontFeatureSettings: '"tnum" 1' }}
                     >
-                      {friendlyTime(nowTime)}
+                      {friendlyTime(nowTime, locale)}
                     </div>
                     <div className="font-[family:var(--font-mono)] text-[var(--muted)] mt-0.5" style={{ fontSize: 11 }}>
-                      Today · {nowTime.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                      {t('common.today')} · {nowTime.toLocaleDateString(LOCALE_TAG[locale], { weekday: 'long', month: 'long', day: 'numeric' })}
                     </div>
                   </div>
                 </div>
@@ -496,10 +498,10 @@ export default function CreateSessionPage() {
                       <line x1="8" y1="2" x2="8" y2="6" />
                       <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    Date
+                    {t('createSession.date')}
                   </span>
                   <span className="flex items-center gap-2 font-[family:var(--font-display)] font-bold text-[var(--accent)]" style={{ fontSize: 15, fontFeatureSettings: '"tnum" 1' }}>
-                    {scheduledAt ? friendlyDate(scheduledAt) : 'Today'}
+                    {scheduledAt ? friendlyDate(scheduledAt, locale, t) : t('common.today')}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
@@ -524,10 +526,10 @@ export default function CreateSessionPage() {
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
-                    Time
+                    {t('createSession.time')}
                   </span>
                   <span className="flex items-center gap-2 font-[family:var(--font-display)] font-bold text-[var(--accent)]" style={{ fontSize: 15, fontFeatureSettings: '"tnum" 1' }}>
-                    {scheduledAt ? friendlyTime(scheduledAt) : '8:00 PM'}
+                    {scheduledAt ? friendlyTime(scheduledAt, locale) : '8:00 PM'}
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
@@ -547,9 +549,9 @@ export default function CreateSessionPage() {
               <div className="flex gap-2 flex-wrap mt-3">
                 {(
                   [
-                    { key: '30' as const, label: 'In 30 min', action: () => quickPick(30) },
-                    { key: '60' as const, label: 'In 1 hr',   action: () => quickPick(60) },
-                    { key: 'tom' as const, label: 'Tomorrow 7:00 PM', action: quickPickTomorrow },
+                    { key: '30' as const, label: t('createSession.in30Min'), action: () => quickPick(30) },
+                    { key: '60' as const, label: t('createSession.in1Hr'),   action: () => quickPick(60) },
+                    { key: 'tom' as const, label: t('createSession.tomorrow7'), action: quickPickTomorrow },
                   ] as const
                 ).map(({ key, label, action }) => (
                   <button
@@ -605,7 +607,7 @@ export default function CreateSessionPage() {
               <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12a9 9 0 1 1-3-6.7" />
               </svg>
-              Creating…
+              {t('common.creatingEllipsis')}
             </>
           ) : (
             <>
@@ -622,10 +624,10 @@ export default function CreateSessionPage() {
         open={dialog !== null}
         onClose={() => setDialog(null)}
         kind={dialog?.kind === 'duplicate' ? 'warning' : 'danger'}
-        title={dialog?.kind === 'duplicate' ? 'Tournament already tracked' : 'Failed to create session'}
+        title={dialog?.kind === 'duplicate' ? t('createSession.duplicateTitle') : t('createSession.failedCreate')}
         description={
           dialog?.kind === 'duplicate'
-            ? 'A session for this tournament already exists. Choose a different tournament or use a custom name.'
+            ? t('createSession.duplicateDescription')
             : (dialog?.message ?? '')
         }
       />

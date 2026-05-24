@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Mail, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 export default function LoginPage() {
   const { signIn, verifyOtp, resetOtp, isSendingOtp, isVerifying, otpSent } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -17,7 +19,7 @@ export default function LoginPage() {
     try {
       await signIn(email)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP')
+      setError(err instanceof Error ? err.message : t('auth.failedSendOtp'))
     }
   }
 
@@ -29,7 +31,7 @@ export default function LoginPage() {
       const from = location.state?.from as { pathname?: string } | undefined
       navigate(from?.pathname || '/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid OTP')
+      setError(err instanceof Error ? err.message : t('auth.invalidOtp'))
     }
   }
 
@@ -40,14 +42,14 @@ export default function LoginPage() {
           <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
             <span className="text-2xl">🏸</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Badminton Tracker</h1>
-          <p className="text-sm text-gray-500 mt-1">Sign in to track matches</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('app.name')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('auth.signInSubtitle')}</p>
         </div>
 
         {!otpSent ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email')}</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -66,7 +68,7 @@ export default function LoginPage() {
               className="w-full py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-              {isSendingOtp ? 'Sending...' : 'Send Magic Link'}
+              {isSendingOtp ? t('auth.sending') : t('auth.sendMagicLink')}
             </button>
           </form>
         ) : (
@@ -77,13 +79,13 @@ export default function LoginPage() {
               className="text-sm text-gray-500 flex items-center gap-1 hover:text-gray-700"
             >
               <ArrowLeft className="w-3 h-3" />
-              Back
+              {t('common.back')}
             </button>
             <p className="text-sm text-gray-600">
-              Enter the code sent to <strong>{email}</strong>
+              {t('auth.enterCode', { email })}
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.verificationCode')}</label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -103,7 +105,7 @@ export default function LoginPage() {
               className="w-full py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-              {isVerifying ? 'Verifying...' : 'Verify'}
+              {isVerifying ? t('auth.verifying') : t('auth.verify')}
             </button>
           </form>
         )}

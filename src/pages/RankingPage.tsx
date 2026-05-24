@@ -5,9 +5,11 @@ import { usePlayerRankings } from '../hooks/useRankings'
 import Avatar from '../components/Avatar'
 import { formatShortPlayerName } from '../lib/player-name'
 import { PullToRefresh } from '../../design-system/components'
+import { useI18n } from '../i18n'
 
 // Ghost rank number — pos 1/2/3 get faded accent, rest get faded border
 function GhostRank({ rank }: { rank: number }) {
+  const { t } = useI18n()
   const color =
     rank === 1 ? 'color-mix(in oklch, var(--accent) 35%, transparent)'
     : rank === 2 ? 'color-mix(in oklch, var(--accent) 20%, transparent)'
@@ -15,7 +17,7 @@ function GhostRank({ rank }: { rank: number }) {
     : 'color-mix(in oklch, var(--border) 80%, transparent)'
   return (
     <div
-      aria-label={`Rank ${rank}`}
+      aria-label={t('common.rank', { rank })}
       style={{
         fontFamily: 'var(--font-display)',
         fontSize: 24,
@@ -37,6 +39,7 @@ function GhostRank({ rank }: { rank: number }) {
 
 // SVG trend arrows matching design/pages/ranking-page.html .rank-trend
 function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
+  const { t } = useI18n()
   const baseStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -61,7 +64,7 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
   if (isNew) {
     return (
       <div style={{ ...baseStyle, color: 'var(--accent)', letterSpacing: '0.05em' }}>
-        NEW
+        {t('ranking.new')}
       </div>
     )
   }
@@ -94,6 +97,7 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
 
 export default function RankingPage() {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
 
   const playerCount = rankings.length
@@ -119,11 +123,11 @@ export default function RankingPage() {
             color: 'var(--fg)',
           }}
         >
-          Rankings
+          {t('ranking.title')}
         </h1>
         {!isLoading && rankings.length > 0 && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-            {playerCount} players · {totalMatches} matches
+            {t('units.player', { count: playerCount })} · {t('units.match', { count: totalMatches })}
           </p>
         )}
       </div>
@@ -131,12 +135,12 @@ export default function RankingPage() {
       {/* Content */}
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
-          Loading...
+          {t('common.loadingEllipsis')}
         </div>
       ) : rankings.length === 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12 }}>
           <Medal style={{ width: 40, height: 40, color: 'var(--muted)' }} />
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>No match data yet.</p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{t('ranking.noData')}</p>
         </div>
       ) : (
         <div style={{ margin: '0 var(--space-5)' }}>
@@ -181,11 +185,11 @@ export default function RankingPage() {
                     {formatShortPlayerName(s.name)}
                   </div>
                   <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
-                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.matchesPlayed}</span> matches</span>
+                    <span>{t('units.match', { count: s.matchesPlayed })}</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
                     <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{s.wins}</span> W</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
-                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{winRate}%</span> rate</span>
+                    <span><span style={{ color: 'var(--fg)', fontWeight: 600 }}>{winRate}%</span> {t('ranking.rate')}</span>
                   </div>
                 </div>
 

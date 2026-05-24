@@ -1,23 +1,23 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import type { Session } from '../types/database'
+import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
 
 // ── Date / duration helpers ────────────────────────────────────────────────
 
-function formatSessionDate(iso: string): string {
+function formatSessionDate(iso: string, locale: Locale, t: TFunction): string {
   const date = new Date(iso)
   const today = new Date()
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
-  if (date.toDateString() === today.toDateString()) return 'Today'
-  if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow'
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (date.toDateString() === today.toDateString()) return t('common.today')
+  if (date.toDateString() === tomorrow.toDateString()) return t('common.tomorrow')
+  return date.toLocaleDateString(LOCALE_TAG[locale], { month: 'short', day: 'numeric' })
 }
 
-function formatSessionTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', {
+function formatSessionTime(iso: string, locale: Locale): string {
+  return new Date(iso).toLocaleTimeString(LOCALE_TAG[locale], {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
   })
 }
 
@@ -30,12 +30,12 @@ function formatDurationMs(ms: number): string {
   return `${h}h ${m}m`
 }
 
-function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'): string {
+function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended', t: TFunction): string {
   const startedAt = new Date(session.started_at).getTime()
-  if (status === 'live') return `${formatDurationMs(Date.now() - startedAt)} elapsed`
-  if (status === 'scheduled') return `Starts in ${formatDurationMs(startedAt - Date.now())}`
+  if (status === 'live') return t('units.elapsed', { duration: formatDurationMs(Date.now() - startedAt) })
+  if (status === 'scheduled') return t('date.startsIn', { duration: formatDurationMs(startedAt - Date.now()) })
   if (status === 'ended' && session.ended_at)
-    return `${formatDurationMs(new Date(session.ended_at).getTime() - startedAt)} total`
+    return t('units.total', { duration: formatDurationMs(new Date(session.ended_at).getTime() - startedAt) })
   return '—'
 }
 import { useMatches } from '../hooks/useMatches'
@@ -54,6 +54,7 @@ import { useState, useCallback } from 'react'
 import { PullToRefresh } from '../../design-system/components'
 
 export default function SessionDetailPage() {
+  const { locale, t } = useI18n()
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -74,7 +75,7 @@ export default function SessionDetailPage() {
   if (!sessionId) {
     return (
       <div className="min-h-svh bg-[var(--bg)] px-4 py-5">
-        <p className="text-sm text-gray-400">Session not found.</p>
+        <p className="text-sm text-gray-400">{t('sessionDetail.notFound')}</p>
       </div>
     )
   }
@@ -93,7 +94,7 @@ export default function SessionDetailPage() {
   const mvpPlayer = sortedByWins.find((s) => s.matchesPlayed > 0)
   const mvpName = mvpPlayer ? formatShortPlayerName(mvpPlayer.name) : undefined
   const mvpLabel = mvpPlayer
-    ? `${sessionStatus === 'ended' ? 'MVP' : 'Leading'} · ${Math.round((mvpPlayer.wins / mvpPlayer.matchesPlayed) * 100)}%`
+    ? `${sessionStatus === 'ended' ? t('sessionDetail.mvp') : t('sessionDetail.leading')} · ${Math.round((mvpPlayer.wins / mvpPlayer.matchesPlayed) * 100)}%`
     : undefined
   const mvpAvatarUrl = mvpPlayer
     ? (players?.find((p) => p.id === mvpPlayer.playerId)?.avatar_url ?? null)
@@ -107,7 +108,7 @@ export default function SessionDetailPage() {
     } catch (err) {
       console.error('Failed to end session:', err)
       setConfirmEndOpen(false)
-      setActionError(err instanceof Error ? err.message : 'Failed to end session')
+      setActionError(err instanceof Error ? err.message : t('sessionDetail.couldntEnd'))
     }
   }
 
@@ -184,9 +185,9 @@ export default function SessionDetailPage() {
                 />
               )}
               <span>
-                {sessionStatus === 'live' ? 'Live · in progress'
-                  : sessionStatus === 'scheduled' ? 'Scheduled'
-                  : 'Completed'}
+                {sessionStatus === 'live' ? t('sessionDetail.statusLive')
+                  : sessionStatus === 'scheduled' ? t('sessionDetail.statusScheduled')
+                  : t('sessionDetail.statusCompleted')}
               </span>
             </div>
 
@@ -202,7 +203,7 @@ export default function SessionDetailPage() {
                 color: 'var(--fg)',
               }}
             >
-              {session.label ?? 'Untitled Session'}
+              {session.label ?? t('common.untitledSession')}
             </h1>
 
             {/* Datetime + duration */}
@@ -212,15 +213,15 @@ export default function SessionDetailPage() {
             >
               <span>
                 <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
-                  {formatSessionDate(session.started_at)}
+                  {formatSessionDate(session.started_at, locale, t)}
                 </strong>
-                {' · '}{formatSessionTime(session.started_at)}
+                {' · '}{formatSessionTime(session.started_at, locale)}
               </span>
               <span
                 className="flex-shrink-0 rounded-full"
                 style={{ width: 3, height: 3, background: 'var(--border)' }}
               />
-              {sessionStatus && <span>{getSessionMeta(session, sessionStatus)}</span>}
+              {sessionStatus && <span>{getSessionMeta(session, sessionStatus, t)}</span>}
             </div>
           </header>
         )}
@@ -253,13 +254,13 @@ export default function SessionDetailPage() {
                     color: 'var(--fg)',
                   }}
                 >
-                  Matches
+                  {t('sessionDetail.matches')}
                 </h2>
                 <span
                   className="text-[11px] font-bold uppercase tracking-[0.08em]"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
                 >
-                  {matchesLoading ? 'Loading…' : matchesError ? '—' : `${matches?.length ?? 0} played`}
+                  {matchesLoading ? t('common.loadingEllipsis') : matchesError ? '—' : t('units.matchesPlayed', { count: matches?.length ?? 0 })}
                 </span>
               </div>
 
@@ -279,7 +280,7 @@ export default function SessionDetailPage() {
         <FloatingActionButton
           onClick={() => navigate(`/sessions/${sid}/matches/new`)}
           icon={<Plus className="w-6 h-6" />}
-          ariaLabel="Add match"
+          ariaLabel={t('sessionDetail.addMatch')}
           bottomOffset="1.5rem"
         />
       )}
@@ -289,21 +290,21 @@ export default function SessionDetailPage() {
         {sessionStatus === 'live' && (
           <BottomSheetItem
             icon={<Plus className="w-5 h-5" />}
-            label="New match"
+            label={t('sessionDetail.newMatch')}
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/matches/new`) }}
           />
         )}
         {sessionStatus === 'scheduled' && (
           <BottomSheetItem
             icon={<Play className="w-5 h-5" />}
-            label="Start session"
+            label={t('sessionDetail.startSession')}
             onClick={() => { closeMenu(); handleStartSession() }}
           />
         )}
         {(matches?.length ?? 0) > 0 && (
           <BottomSheetItem
             icon={<Activity className="w-5 h-5" />}
-            label="View player stats"
+            label={t('sessionDetail.viewPlayerStats')}
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/stats`) }}
           />
         )}
@@ -318,7 +319,7 @@ export default function SessionDetailPage() {
                   <rect x="6" y="6" width="12" height="12" rx="1" />
                 </svg>
               }
-              label="End session"
+              label={t('sessionDetail.endSession')}
               danger
               onClick={() => { closeMenu(); setConfirmEndOpen(true) }}
             />
@@ -326,7 +327,7 @@ export default function SessionDetailPage() {
         )}
         <BottomSheetItem
           icon={<Trash2 className="w-5 h-5" />}
-          label="Delete session"
+          label={t('sessionDetail.deleteSession')}
           danger
           onClick={() => { closeMenu(); setConfirmDeleteSessionOpen(true) }}
         />
@@ -337,12 +338,12 @@ export default function SessionDetailPage() {
       <Dialog
         open={confirmEndOpen}
         onClose={() => setConfirmEndOpen(false)}
-        title="End this session?"
-        description="Match scores will be locked and rankings will be finalised. You can still view matches after ending."
+        title={t('sessionDetail.endTitle')}
+        description={t('sessionDetail.endDescription')}
         kind="warning"
         actions={[
-          { label: 'Cancel', variant: 'secondary', onClick: () => setConfirmEndOpen(false) },
-          { label: endSession.isPending ? 'Ending…' : 'End session', variant: 'primary', onClick: handleEndSession },
+          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmEndOpen(false) },
+          { label: endSession.isPending ? t('common.ending') : t('sessionDetail.endSession'), variant: 'primary', onClick: handleEndSession },
         ]}
       />
 
@@ -350,20 +351,20 @@ export default function SessionDetailPage() {
       <Dialog
         open={confirmDeleteSessionOpen}
         onClose={() => setConfirmDeleteSessionOpen(false)}
-        title="Delete session?"
-        description="This session and all its matches will be permanently deleted. This can't be undone."
+        title={t('sessionDetail.deleteTitle')}
+        description={t('sessionDetail.deleteDescription')}
         kind="danger"
         actions={[
-          { label: 'Cancel', variant: 'secondary', onClick: () => setConfirmDeleteSessionOpen(false) },
-          { label: deleteSession.isPending ? 'Deleting…' : 'Delete', variant: 'danger', onClick: handleDeleteSession },
+          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmDeleteSessionOpen(false) },
+          { label: deleteSession.isPending ? t('common.deleting') : t('common.delete'), variant: 'danger', onClick: handleDeleteSession },
         ]}
       />
 
       <Dialog
         open={actionError !== null}
         onClose={() => setActionError(null)}
-        title="Couldn't end session"
-        description={actionError ?? 'Please try again.'}
+        title={t('sessionDetail.couldntEnd')}
+        description={actionError ?? t('common.failedTryAgain')}
         kind="danger"
       />
 

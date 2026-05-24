@@ -12,8 +12,10 @@ import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { Player } from '../types/database'
+import { useI18n } from '../i18n'
 
 export default function PlayersPage() {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const { data: players, isLoading, refetch: refetchPlayers } = usePlayers()
   const { stats, isLoading: statsLoading } = usePlayerStats()
@@ -46,7 +48,7 @@ export default function PlayersPage() {
       setConfirmDeleteId(null)
     } catch (err) {
       console.error('Failed to delete player:', err)
-      alert('Failed to delete player. Please try again.')
+      alert(t('players.failedDelete'))
     }
   }
 
@@ -55,11 +57,11 @@ export default function PlayersPage() {
     <div className="min-h-svh bg-gray-50">
       <div className="px-4 py-5 space-y-3 pb-32">
         {isLoading || statsLoading ? (
-          <div className="text-center py-12 text-gray-400 text-sm">Loading players...</div>
+          <div className="text-center py-12 text-gray-400 text-sm">{t('players.loading')}</div>
         ) : sortedPlayers.length === 0 ? (
           <div className="text-center py-12">
             <User className="w-10 h-10 mx-auto mb-2 text-gray-300" />
-            <p className="text-sm text-gray-400">No players yet.</p>
+            <p className="text-sm text-gray-400">{t('players.noneYet')}</p>
           </div>
         ) : (
           sortedPlayers.map((player) => {
@@ -77,7 +79,7 @@ export default function PlayersPage() {
                     className="flex flex-col items-center gap-0.5 text-white"
                   >
                     <Trash2 className="w-5 h-5" />
-                    <span className="text-[10px] font-semibold">Delete</span>
+                    <span className="text-[10px] font-semibold">{t('common.delete')}</span>
                   </button>
                 )}
               >
@@ -100,7 +102,7 @@ export default function PlayersPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{formatShortPlayerName(player.name)}</p>
                     <p className="text-xs text-gray-400">
-                      {s?.matchesPlayed ?? 0} matches · {s?.wins ?? 0} wins
+                      {t('players.statLine', { matches: s?.matchesPlayed ?? 0, wins: s?.wins ?? 0 })}
                     </p>
                   </div>
                 </div>
@@ -114,7 +116,7 @@ export default function PlayersPage() {
       <FloatingActionButton
         onClick={() => setShowForm(true)}
         icon={<Plus className="w-6 h-6" />}
-        ariaLabel="Add player"
+        ariaLabel={t('players.addPlayer')}
       />
 
       {/* Add player modal */}
@@ -147,23 +149,23 @@ export default function PlayersPage() {
             className="bg-white rounded-2xl p-5 w-full max-w-xs space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-[15px] font-bold text-gray-900">Delete Player?</p>
+            <p className="text-[15px] font-bold text-gray-900">{t('players.deletePlayer')}</p>
             <p className="text-sm text-gray-500">
-              This will remove the player permanently.
+              {t('players.deleteDescription')}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDeleteId(null)}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-700 active:bg-gray-200"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleDelete(confirmDeleteId)}
                 disabled={deletePlayer.isPending}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold bg-red-600 text-white active:bg-red-700 disabled:opacity-50"
               >
-                {deletePlayer.isPending ? '...' : 'Delete'}
+                {deletePlayer.isPending ? '...' : t('common.delete')}
               </button>
             </div>
           </div>

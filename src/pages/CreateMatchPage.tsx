@@ -11,6 +11,7 @@ import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { Player } from '../types/database'
 import { Plus, X, Zap, Calendar, List, ChevronRight, Loader2 } from 'lucide-react'
+import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,16 +27,16 @@ function toDateInput(d: Date): string {
 function toTimeInput(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
-function friendlyDate(d: Date): string {
+function friendlyDate(d: Date, locale: Locale, t: TFunction): string {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const tom = new Date(today); tom.setDate(tom.getDate() + 1)
   const day0 = new Date(d); day0.setHours(0, 0, 0, 0)
-  if (day0.getTime() === today.getTime()) return 'Today'
-  if (day0.getTime() === tom.getTime()) return 'Tomorrow'
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+  if (day0.getTime() === today.getTime()) return t('common.today')
+  if (day0.getTime() === tom.getTime()) return t('common.tomorrow')
+  return d.toLocaleDateString(LOCALE_TAG[locale], { weekday: 'short', month: 'short', day: 'numeric' })
 }
-function friendlyTime(d: Date): string {
-  return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+function friendlyTime(d: Date, locale: Locale): string {
+  return d.toLocaleTimeString(LOCALE_TAG[locale], { hour: 'numeric', minute: '2-digit' })
 }
 function roundedSoon(addMin: number): Date {
   const d = new Date()
@@ -56,6 +57,7 @@ interface PlayerSlotProps {
 }
 
 function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) {
+  const { t } = useI18n()
   const initials = player ? getInitials(player.name) : null
 
   return (
@@ -122,7 +124,7 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
           letterSpacing: '-0.01em',
           color: player ? 'var(--fg)' : 'var(--muted)',
         }}>
-          {player ? formatShortPlayerName(player.name) : 'Tap to add'}
+          {player ? formatShortPlayerName(player.name) : t('team.tapToAdd')}
         </div>
       </div>
 
@@ -130,7 +132,7 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
       {player ? (
         <span
           role="button"
-          aria-label={`Remove ${player.name}`}
+          aria-label={t('team.removePlayer', { name: player.name })}
           onClick={(e) => { e.stopPropagation(); onClear() }}
           style={{
             width: 28,
@@ -156,6 +158,7 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function CreateMatchPage() {
+  const { locale, t } = useI18n()
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
@@ -215,9 +218,9 @@ export default function CreateMatchPage() {
 
   // Slot role labels
   function slotRole(_team: 'A' | 'B', index: number): string {
-    if (matchType === 'MIXED_DOUBLES') return index === 0 ? 'Male' : 'Female'
-    if (teamSize === 1) return 'Player'
-    return `Player ${index + 1}`
+    if (matchType === 'MIXED_DOUBLES') return index === 0 ? t('team.male') : t('team.female')
+    if (teamSize === 1) return t('team.player')
+    return t('team.playerIndex', { index: index + 1 })
   }
 
   // ── Player picker ────────────────────────────────────────────────────────────
@@ -282,7 +285,7 @@ export default function CreateMatchPage() {
     if (!allFilled) return
 
     if (mode === 'now' && liveMatch) {
-      setError('Finish the current live match before starting a new one.')
+      setError(t('createMatch.finishLiveFirst'))
       return
     }
 
@@ -301,18 +304,20 @@ export default function CreateMatchPage() {
       })
       navigate(-1)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create match')
+      setError(err instanceof Error ? err.message : t('createMatch.failedCreate'))
     }
   }
 
   // ── CTA label ────────────────────────────────────────────────────────────────
 
   function ctaLabel(): string {
-    if (!allFilled) return 'Pick players to continue'
-    if (mode === 'now') return 'Start match now'
-    if (mode === 'schedule' && scheduledAt) return `Schedule · ${friendlyDate(scheduledAt)}, ${friendlyTime(scheduledAt)}`
-    if (mode === 'queue') return `Add to queue · M${matchNumber}`
-    return 'Pick a time to continue'
+    if (!allFilled) return t('createMatch.pickPlayers')
+    if (mode === 'now') return t('createMatch.startNow')
+    if (mode === 'schedule' && scheduledAt) {
+      return t('createMatch.scheduleCta', { date: friendlyDate(scheduledAt, locale, t), time: friendlyTime(scheduledAt, locale) })
+    }
+    if (mode === 'queue') return t('createMatch.addToQueue', { number: matchNumber })
+    return t('createMatch.pickTime')
   }
 
   const ctaEnabled = allFilled && (mode === 'now' || mode === 'queue' || (mode === 'schedule' && !!scheduledAt))
@@ -321,7 +326,7 @@ export default function CreateMatchPage() {
 
   function teamName(arr: (string | null)[], size: number): string {
     const names = arr.slice(0, size).filter(Boolean).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? ''))
-    if (!names.length) return `Pick ${size} player${size > 1 ? 's' : ''}`
+    if (!names.length) return t('team.pickPlayerCount', { count: size })
     return names.join(' + ')
   }
 
@@ -334,7 +339,7 @@ export default function CreateMatchPage() {
       {/* ── Top nav ──────────────────────────────────────────────────────── */}
       <AppBar
         title=""
-        backLabel="Cancel"
+        backLabel={t('common.cancel')}
         onBack={() => navigate(-1)}
         stuck={navStuck}
         safeArea
@@ -363,15 +368,15 @@ export default function CreateMatchPage() {
             marginBottom: 'var(--space-2)',
             color: 'var(--fg)',
           }}>
-            New match
+            {t('createMatch.title')}
           </h1>
           <p style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 'var(--text-sm)',
             color: 'var(--muted)',
           }}>
-            Session · <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
-              {session?.label ?? 'Loading…'}
+            {t('common.session')} · <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+              {session?.label ?? t('common.loadingEllipsis')}
             </span>
           </p>
         </header>
@@ -392,7 +397,7 @@ export default function CreateMatchPage() {
               letterSpacing: '0.1em',
               color: 'var(--muted)',
             }}>
-              Match type
+              {t('createMatch.matchType')}
             </span>
             <span style={{
               fontFamily: 'var(--font-mono)',
@@ -423,7 +428,7 @@ export default function CreateMatchPage() {
               letterSpacing: '0.1em',
               color: 'var(--muted)',
             }}>
-              Players
+              {t('createMatch.players')}
             </span>
             <span style={{
               fontFamily: 'var(--font-mono)',
@@ -433,7 +438,7 @@ export default function CreateMatchPage() {
               letterSpacing: '0.06em',
               fontWeight: filledCount === totalSlots ? 700 : 400,
             }}>
-              {filledCount} of {totalSlots} selected
+              {t('createMatch.selectedCount', { filled: filledCount, total: totalSlots })}
             </span>
           </div>
 
@@ -453,7 +458,7 @@ export default function CreateMatchPage() {
               borderBottom: '1px solid var(--border)',
             }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-                Team A
+                {t('team.teamA')}
               </span>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)' }}>
                 {teamName(teamA, teamSize)}
@@ -484,7 +489,7 @@ export default function CreateMatchPage() {
             }}>
               <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--muted)' }}>
-                VS
+                {t('team.VS')}
               </span>
               <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
             </div>
@@ -499,7 +504,7 @@ export default function CreateMatchPage() {
               borderBottom: '1px solid var(--border)',
             }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-                Team B
+                {t('team.teamB')}
               </span>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)' }}>
                 {teamName(teamB, teamSize)}
@@ -531,14 +536,14 @@ export default function CreateMatchPage() {
               letterSpacing: '0.1em',
               color: 'var(--muted)',
             }}>
-              When
+              {t('createMatch.when')}
             </span>
           </div>
 
           {/* Segmented control */}
           <div
             role="tablist"
-            aria-label="Match start mode"
+            aria-label={t('createMatch.matchStartMode')}
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr',
@@ -568,7 +573,7 @@ export default function CreateMatchPage() {
             {([ 'now', 'schedule', 'queue' ] as const).map((m) => {
               const active = mode === m
               const Icon = m === 'now' ? Zap : m === 'schedule' ? Calendar : List
-              const label = m === 'now' ? 'Now' : m === 'schedule' ? 'Schedule' : 'Queue'
+              const label = m === 'now' ? t('createMatch.now') : m === 'schedule' ? t('createMatch.schedule') : t('createMatch.queue')
               return (
                 <button
                   key={m}
@@ -619,11 +624,11 @@ export default function CreateMatchPage() {
                 />
                 <div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)', fontWeight: 700, marginBottom: 2 }}>
-                    Starts immediately
+                    {t('createMatch.startsImmediately')}
                   </div>
                   {liveMatch && (
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--danger)', marginTop: 4 }}>
-                      A live match is already in progress
+                      {t('createMatch.liveAlreadyProgress')}
                     </div>
                   )}
                 </div>
@@ -653,10 +658,10 @@ export default function CreateMatchPage() {
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--fg)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
                   <Calendar style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }} />
-                  Date
+                  {t('createSession.date')}
                 </span>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  {friendlyDate(scheduledAt)}
+                  {friendlyDate(scheduledAt, locale, t)}
                   <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
                 </span>
                 <input
@@ -680,10 +685,10 @@ export default function CreateMatchPage() {
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--fg)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
                   <Zap style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }} />
-                  Time
+                  {t('createSession.time')}
                 </span>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  {friendlyTime(scheduledAt)}
+                  {friendlyTime(scheduledAt, locale)}
                   <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
                 </span>
                 <input
@@ -715,7 +720,7 @@ export default function CreateMatchPage() {
                       touchAction: 'manipulation',
                     }}
                   >
-                    In {min < 60 ? `${min} min` : '1 hr'}
+                    {min < 60 ? t('createMatch.inMinutes', { minutes: min }) : t('createMatch.in1Hr')}
                   </button>
                 ))}
               </div>
@@ -750,13 +755,13 @@ export default function CreateMatchPage() {
                 </div>
                 <div>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', fontWeight: 700, marginBottom: 2 }}>
-                    Position in queue
+                    {t('createMatch.positionInQueue')}
                   </div>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.02em', color: 'var(--fg)' }}>
-                    {scheduledMatches.length > 0 ? `After ${scheduledMatches.length} queued match${scheduledMatches.length > 1 ? 'es' : ''}` : 'Next to play'}
+                    {scheduledMatches.length > 0 ? t('createMatch.afterQueued', { count: scheduledMatches.length }) : t('createMatch.nextToPlay')}
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--font-mono)', color: 'var(--muted)', marginTop: 3 }}>
-                    Starts when current match ends
+                    {t('createMatch.startsWhenCurrentEnds')}
                   </div>
                 </div>
               </div>
@@ -765,7 +770,7 @@ export default function CreateMatchPage() {
               {liveMatch && (
                 <div style={{ borderTop: '1px solid var(--border)', padding: 'var(--space-3) var(--space-4) var(--space-4)' }}>
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)', marginBottom: 'var(--space-2)' }}>
-                    Up next
+                    {t('createMatch.upNext')}
                   </div>
                   {/* Live match row */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) 0', fontSize: 'var(--text-sm)' }}>
@@ -776,14 +781,14 @@ export default function CreateMatchPage() {
                       {liveMatch.participants
                         .filter(p => p.team_id === liveMatch.teams.find(t => t.team_label === 'TEAM_A')?.id)
                         .map(p => formatShortPlayerName(p.player.name)).join(' + ')}
-                      {' vs '}
+                      {' '}{t('team.vs')}{' '}
                       {liveMatch.participants
                         .filter(p => p.team_id === liveMatch.teams.find(t => t.team_label === 'TEAM_B')?.id)
                         .map(p => formatShortPlayerName(p.player.name)).join(' + ')}
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)' }}>
                       <span className="animate-pulse" style={{ width: 6, height: 6, background: 'var(--accent)', borderRadius: '50%', display: 'inline-block' }} />
-                      Live
+                      {t('common.live')}
                     </span>
                   </div>
                   {/* This match row */}
@@ -793,11 +798,11 @@ export default function CreateMatchPage() {
                     </span>
                     <span style={{ flex: 1, color: 'var(--accent)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}>
                       {allFilled
-                        ? `${teamA.slice(0, teamSize).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? '')).join(' + ')} vs ${teamB.slice(0, teamSize).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? '')).join(' + ')}`
-                        : 'This match'}
+                        ? `${teamA.slice(0, teamSize).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? '')).join(' + ')} ${t('team.vs')} ${teamB.slice(0, teamSize).map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? '')).join(' + ')}`
+                        : t('createMatch.thisMatch')}
                     </span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)' }}>
-                      Next
+                      {t('common.next')}
                     </span>
                   </div>
                 </div>
@@ -864,7 +869,7 @@ export default function CreateMatchPage() {
           }}
         >
           {createMatch.isPending && <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />}
-          {createMatch.isPending ? 'Creating…' : ctaLabel()}
+          {createMatch.isPending ? t('common.creatingEllipsis') : ctaLabel()}
         </button>
       </div>
 
@@ -880,14 +885,14 @@ export default function CreateMatchPage() {
               color: 'var(--fg)',
             }}>
               {pickerTarget
-                ? `Pick ${slotRole(pickerTarget.team, pickerTarget.index).toLowerCase()} · Team ${pickerTarget.team}`
-                : 'Select player'}
+                ? t('createMatch.pickSlot', { role: slotRole(pickerTarget.team, pickerTarget.index).toLowerCase(), team: pickerTarget.team })
+                : t('createMatch.selectPlayer')}
             </span>
           </div>
           {/* Search */}
           <input
             type="text"
-            placeholder="Search players…"
+            placeholder={t('createMatch.searchPlayers')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             autoComplete="off"
@@ -910,7 +915,7 @@ export default function CreateMatchPage() {
         <div style={{ overflowY: 'auto', padding: `0 var(--space-5) max(var(--space-5), calc(env(safe-area-inset-bottom) + var(--space-4)))` }}>
           {filteredPlayers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 'var(--space-7) var(--space-4)', color: 'var(--muted)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)' }}>
-              No players match this filter.
+              {t('createMatch.noPlayerMatches')}
             </div>
           ) : filteredPlayers.map(p => (
             <button

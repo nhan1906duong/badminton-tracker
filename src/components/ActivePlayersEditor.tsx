@@ -4,6 +4,7 @@ import type { Player } from '../types/database'
 import { formatShortPlayerName } from '../lib/player-name'
 import Avatar from './Avatar'
 import ActivePlayersBottomSheet from './ActivePlayersBottomSheet'
+import { useI18n } from '../i18n'
 
 interface ActivePlayersEditorProps {
   players: Player[]
@@ -18,6 +19,7 @@ export default function ActivePlayersEditor({
   onChange,
   isLoading,
 }: ActivePlayersEditorProps) {
+  const { t } = useI18n()
   const [sheetOpen, setSheetOpen] = useState(false)
 
   // Resolve chip data from selectedIds + roster (preserves chip order = selection order)
@@ -81,7 +83,7 @@ export default function ActivePlayersEditor({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-gray-300 text-gray-600 text-sm font-medium active:bg-gray-50 disabled:opacity-40"
         >
           <Plus className="w-4 h-4" />
-          Add active player
+          {t('activePlayers.addActivePlayer')}
         </button>
       </div>
 

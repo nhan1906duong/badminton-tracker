@@ -1,16 +1,17 @@
 import type { Session } from '../types/database'
+import { LOCALE_TAG, translate, type Locale } from '../i18n'
 
-export function formatSessionDuration(startedAt: string, endedAt?: string | null): string {
+export function formatSessionDuration(startedAt: string, endedAt?: string | null, locale: Locale = 'en'): string {
   const start = new Date(startedAt)
   const now = new Date()
   if (!endedAt && start.getTime() > now.getTime()) {
-    return 'Not started'
+    return translate(locale, 'common.notStarted')
   }
 
   const end = endedAt ? new Date(endedAt) : now
   const diffMs = end.getTime() - start.getTime()
   if (diffMs <= 0) {
-    return 'Not started'
+    return translate(locale, 'common.notStarted')
   }
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60))
@@ -19,18 +20,19 @@ export function formatSessionDuration(startedAt: string, endedAt?: string | null
   return `${mins}m`
 }
 
-export function formatSessionDateTime(startedAt: string): string {
+export function formatSessionDateTime(startedAt: string, locale: Locale = 'en'): string {
   const d = new Date(startedAt)
   const now = new Date()
   const isToday = d.toDateString() === now.toDateString()
-  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  if (isToday) return `Today · ${timeStr}`
-  return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${timeStr}`
+  const tag = LOCALE_TAG[locale]
+  const timeStr = d.toLocaleTimeString(tag, { hour: 'numeric', minute: '2-digit' })
+  if (isToday) return `${translate(locale, 'common.today')} · ${timeStr}`
+  return `${d.toLocaleDateString(tag, { month: 'short', day: 'numeric' })} · ${timeStr}`
 }
 
-export function getSessionName(session: Session): string {
+export function getSessionName(session: Session, locale: Locale = 'en'): string {
   if (session.label) return session.label
-  return new Date(session.started_at).toLocaleDateString('en-US', {
+  return new Date(session.started_at).toLocaleDateString(LOCALE_TAG[locale], {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

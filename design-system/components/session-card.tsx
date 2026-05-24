@@ -1,5 +1,6 @@
 import { Badge } from './badge'
 import { Avatar } from './avatar'
+import { useI18n } from '../../src/i18n'
 
 interface SessionCardProps {
   status: 'active' | 'scheduled' | 'completed'
@@ -24,6 +25,7 @@ export function SessionCard({
   topPlayer,
   compact,
 }: SessionCardProps) {
+  const { t } = useI18n()
   const isOpen = status !== 'completed'
   const isActive = status === 'active'
   const isScheduled = status === 'scheduled'
@@ -58,14 +60,14 @@ export function SessionCard({
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ background: 'var(--accent)' }}
             />
-            <Badge variant="accent">Live</Badge>
+            <Badge variant="accent">{t('common.live')}</Badge>
           </div>
         ) : isScheduled ? (
           <Badge variant="default" className="bg-transparent border-[var(--fg)] text-[var(--fg)]">
-            Scheduled
+            {t('common.scheduled')}
           </Badge>
         ) : (
-          <Badge variant="neutral">Completed</Badge>
+          <Badge variant="neutral">{t('common.completed')}</Badge>
         )}
       </div>
 
@@ -80,7 +82,7 @@ export function SessionCard({
               className="w-1.5 h-1.5 rounded-full animate-pulse"
               style={{ background: 'var(--accent)' }}
             />
-            <span>elapsed</span>
+            <span>{t('sessions.elapsed')}</span>
           </>
         ) : (
           <>
@@ -90,7 +92,7 @@ export function SessionCard({
         )}
         <span className="w-1 h-1 rounded-full" style={{ background: 'var(--border)' }} />
         <span>
-          <span className="font-semibold" style={{ color: 'var(--fg)' }}>{matchCount}</span> matches
+          {t('units.match', { count: matchCount })}
         </span>
       </div>
 
@@ -103,7 +105,7 @@ export function SessionCard({
           className="text-[11px] font-bold font-mono uppercase tracking-[0.08em] mb-2"
           style={{ color: 'var(--accent)' }}
         >
-          {isActive ? 'Leading' : isScheduled ? 'Players' : 'Top Player'}
+          {isActive ? t('sessions.leading') : isScheduled ? t('sessions.players') : t('sessions.topPlayer')}
         </div>
         {topPlayer ? (
           <div className="flex items-center gap-3">
@@ -133,13 +135,13 @@ export function SessionCard({
                 className={`font-mono uppercase tracking-[0.06em] ${compact ? 'text-[10px]' : 'text-[11px]'}`}
                 style={{ color: 'var(--muted)' }}
               >
-                Win rate
+                {t('sessions.winRate')}
               </div>
             </div>
           </div>
         ) : (
           <div className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
-            {isScheduled ? 'Session hasn’t started yet' : 'No matches started yet'}
+            {isScheduled ? t('sessions.notStartedYet') : t('sessions.noMatchesStarted')}
           </div>
         )}
       </div>

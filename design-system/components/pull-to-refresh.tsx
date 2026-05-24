@@ -1,45 +1,69 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
-const THRESHOLD = 80     // px of touch delta to trigger refresh
-const MAX_H = 52         // max indicator height in px
+const THRESHOLD = 80
+const MAX_H = 56
+const SPRING_H = MAX_H + 12   // overshoot height — bounces back to MAX_H
 const DAMPING = MAX_H / THRESHOLD
+
+const NUM_TICKS = 12
+// Opacity for each tick by distance-behind-head (0 = head, 11 = tail)
+const TICK_OPACITIES = [1, 0.92, 0.83, 0.74, 0.65, 0.56, 0.47, 0.38, 0.28, 0.20, 0.13, 0.07]
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>
   children: React.ReactNode
 }
 
-// SVG arc spinner: shows pull progress as a partial arc, spins when refreshing
-function PullSpinner({ progress, spinning }: { progress: number; spinning: boolean }) {
-  const size = 22
-  const r = (size - 4) / 2
-  const circumference = 2 * Math.PI * r
+// iOS Cupertino-style radial tick spinner.
+// Tick 0 sits at 12 o'clock and is the "head" (full opacity); the trail
+// fades CCW behind it. During pull, the group rotates with the finger
+// (wind-up). During refresh, CSS animation spins it at 60 fps.
+function CupertinoSpinner({ progress, spinning }: { progress: number; spinning: boolean }) {
+  const size = 28
+  const innerR = 5
+  const outerR = 11
+  const center = size / 2
+
+  const ticks = Array.from({ length: NUM_TICKS }, (_, i) => {
+    const rad = ((i / NUM_TICKS) * 360 - 90) * (Math.PI / 180)
+    return {
+      x1: center + Math.cos(rad) * innerR,
+      y1: center + Math.sin(rad) * innerR,
+      x2: center + Math.cos(rad) * outerR,
+      y2: center + Math.sin(rad) * outerR,
+      // distance behind head going CCW: 0 = head (full), 11 = tail (dim)
+      opacity: TICK_OPACITIES[(NUM_TICKS - i) % NUM_TICKS],
+    }
+  })
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      style={{
-        opacity: Math.min(progress * 1.5, 1),
-        flexShrink: 0,
-        ...(spinning ? { animation: 'spin 0.8s linear infinite' } : {}),
-      }}
-      aria-hidden="true"
-    >
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke="var(--accent)"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        strokeDashoffset={spinning ? circumference * 0.2 : circumference * (1 - progress)}
-        style={{ transform: 'rotate(-90deg)', transformOrigin: 'center' }}
-      />
-    </svg>
+    <>
+      {/* Single keyframe — hoisted by React 19, deduped across renders */}
+      <style>{`@keyframes cupertino-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ opacity: spinning ? 1 : Math.min(progress * 2, 1), color: 'var(--muted)', flexShrink: 0 }}
+        aria-hidden="true"
+      >
+        <g
+          style={{
+            transformBox: 'fill-box',
+            transformOrigin: 'center',
+            ...(spinning
+              ? { animation: 'cupertino-spin 1s linear infinite' }
+              : { transform: `rotate(${progress * 360}deg)` }),
+          }}
+        >
+          {ticks.map(({ x1, y1, x2, y2, opacity }, i) => (
+            <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity={opacity}
+            />
+          ))}
+        </g>
+      </svg>
+    </>
   )
 }
 
@@ -63,15 +87,23 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
   const currentH = useRef(0)
   const isRefreshing = useRef(false)
 
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const triggerRefresh = useCallback(async () => {
     if (isRefreshing.current) return
     isRefreshing.current = true
     setRefreshing(true)
-    setIndicatorH(MAX_H)
-    currentH.current = MAX_H
+    // Overshoot then settle — creates the iOS spring snap feeling
+    setIndicatorH(SPRING_H)
+    currentH.current = SPRING_H
+    settleTimer.current = setTimeout(() => {
+      setIndicatorH(MAX_H)
+      currentH.current = MAX_H
+    }, 220)
     try {
       await onRefresh()
     } finally {
+      if (settleTimer.current) clearTimeout(settleTimer.current)
       isRefreshing.current = false
       setRefreshing(false)
       setIndicatorH(0)
@@ -149,7 +181,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
           willChange: 'height',
         }}
       >
-        <PullSpinner progress={progress} spinning={refreshing} />
+        <CupertinoSpinner progress={progress} spinning={refreshing} />
       </div>
       {children}
     </>
