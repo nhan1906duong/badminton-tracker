@@ -30,6 +30,8 @@ Badminton Match Tracker — a PWA for tracking badminton matches, players, and r
 
 Email + password via `src/contexts/AuthContext.tsx` (`supabase.auth.signInWithPassword`). `RequireAuth` guard in `src/components/AnimatedRoutes.tsx` redirects unauthenticated users to `/login`. After login, user returns to original route via `location.state`.
 
+Password changes use `supabase.auth.updateUser({ password })` after re-authenticating with the current password via `signInWithPassword` (`ChangePasswordPage` at `/settings/change-password`).
+
 ### Role-based Access Control
 
 Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. Admins are the only ones who can delete sessions, matches, or players — enforced at both the app layer and via Supabase RLS policies (see `supabase/migrations/008_role.sql`).
@@ -59,7 +61,7 @@ After a match is created, tap it from session detail to open `MatchDetailPage`:
 
 ### Data Model
 
-Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users, includes `role: 'admin' | 'user'`), `bwf_tournaments`.
+Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users, includes `role: 'admin' | 'user'` and `player_id` FK linking the auth user to a player row), `bwf_tournaments`.
 
 A match has:
 - 2 teams (`match_teams`: TEAM_A / TEAM_B, `is_winner` flag)
@@ -116,6 +118,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + per-session weekly stats |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
+| `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/lib/bwf-api.ts` | BWF category constants + priority order |
 | `src/lib/rating.ts` | Elo rating algorithm + SCORING_CONFIG |
 | `src/stores/new-match-store.ts` | Match creation flow state |

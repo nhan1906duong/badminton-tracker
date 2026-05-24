@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages, User, X } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages, User, X, Lock } from 'lucide-react'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
@@ -217,6 +217,15 @@ export default function SettingsPage() {
                   ? t('settings.tapAgainRecalculate')
                   : t('settings.recalculateAllRatings')}
             </span>
+          </button>
+
+          <button
+            onClick={() => navigate('/settings/change-password')}
+            className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
+          >
+            <Lock className="w-5 h-5 shrink-0" />
+            <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.changePassword')}</span>
+            <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
           </button>
 
           <button
