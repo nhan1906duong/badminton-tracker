@@ -63,11 +63,11 @@ export function SessionCard({
             <Badge variant="accent">{t('common.live')}</Badge>
           </div>
         ) : isScheduled ? (
-          <Badge variant="default" className="bg-transparent border-[var(--fg)] text-[var(--fg)]">
+          <Badge variant="default" className="shrink-0 whitespace-nowrap bg-transparent border-[var(--fg)] text-[var(--fg)]">
             {t('common.scheduled')}
           </Badge>
         ) : (
-          <Badge variant="neutral">{t('common.completed')}</Badge>
+          <Badge variant="neutral" className="shrink-0 whitespace-nowrap">{t('common.completed')}</Badge>
         )}
       </div>
 
