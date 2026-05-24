@@ -11,6 +11,7 @@ import EditPlayersPage from '../pages/EditPlayersPage'
 import MatchDetailPage from '../pages/MatchDetailPage'
 import SettingsPage from '../pages/SettingsPage'
 import PointSystemPage from '../pages/PointSystemPage'
+import ChangePasswordPage from '../pages/ChangePasswordPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
 import SessionDonatedListPage from '../pages/SessionDonatedListPage'
 import PlayerDetailPage from '../pages/PlayerDetailPage'
@@ -110,6 +111,7 @@ const routes = [
   { path: '/ranking', element: <RankingPage />, auth: true },
   { path: '/settings', element: <SettingsPage />, auth: true },
   { path: '/settings/points', element: <PointSystemPage />, auth: true },
+  { path: '/settings/change-password', element: <ChangePasswordPage />, auth: true },
   ...(IS_DEV ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }] : []),
   { path: '*', element: <Navigate to="/" replace />, auth: false },
 ]
