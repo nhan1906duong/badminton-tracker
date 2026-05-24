@@ -27,12 +27,8 @@ function createAuthValue(partial: Partial<AuthContextValue> = {}): AuthContextVa
   return {
     user: null,
     isLoading: false,
-    isSendingOtp: false,
-    isVerifying: false,
-    otpSent: false,
-    signIn: vi.fn(),
-    verifyOtp: vi.fn(),
-    resetOtp: vi.fn(),
+    isSigningIn: false,
+    signInWithPassword: vi.fn(),
     signOut: vi.fn(),
     ...partial,
   }
@@ -44,12 +40,14 @@ const testQueryClient = new QueryClient({
 
 function renderLoginPage(
   authValue: AuthContextValue,
-  initialEntries: string[] = ['/login'],
+  initialEntries: MemoryRouter['props']['initialEntries'] = ['/login'],
 ) {
   return render(
     <QueryClientProvider client={testQueryClient}>
       <AuthContext.Provider value={authValue}>
-        <MemoryRouter initialEntries={initialEntries}>{<LoginPage />}</MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>
+          <LoginPage />
+        </MemoryRouter>
       </AuthContext.Provider>
     </QueryClientProvider>
   )
@@ -64,188 +62,86 @@ describe('LoginPage', () => {
     mockNavigate.mockClear()
   })
 
-  describe('email form', () => {
-    it('submits email and calls signIn', async () => {
-      const signIn = vi.fn().mockResolvedValue(undefined)
-      const authValue = createAuthValue({ signIn, otpSent: false })
+  it('renders email and password fields', () => {
+    renderLoginPage(createAuthValue())
+    expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument()
+  })
 
-      renderLoginPage(authValue)
+  it('calls signInWithPassword with email and password on submit', async () => {
+    const signInWithPassword = vi.fn().mockResolvedValue(undefined)
+    renderLoginPage(createAuthValue({ signInWithPassword }))
 
-      fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-        target: { value: 'test@example.com' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /send magic link/i }))
-
-      await waitFor(() => {
-        expect(signIn).toHaveBeenCalledWith('test@example.com')
-      })
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'test@example.com' },
     })
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+      target: { value: 'secret123' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-    it('displays error when signIn fails', async () => {
-      const signIn = vi.fn().mockRejectedValue(new Error('Network error'))
-      const authValue = createAuthValue({ signIn, otpSent: false })
-
-      renderLoginPage(authValue)
-
-      fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-        target: { value: 'test@example.com' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /send magic link/i }))
-
-      await waitFor(() => {
-        expect(screen.getByText('Network error')).toBeInTheDocument()
-      })
+    await waitFor(() => {
+      expect(signInWithPassword).toHaveBeenCalledWith('test@example.com', 'secret123')
     })
   })
 
-  describe('OTP verification + redirect', () => {
-    it('navigates to original page after successful OTP verification', async () => {
-      const verifyOtp = vi.fn().mockResolvedValue(undefined)
-      const signIn = vi.fn().mockResolvedValue(undefined)
-      const authValue = createAuthValue({ signIn, verifyOtp, otpSent: false })
+  it('navigates to / after successful sign in (no location state)', async () => {
+    const signInWithPassword = vi.fn().mockResolvedValue(undefined)
+    renderLoginPage(createAuthValue({ signInWithPassword }))
 
-      // Start from a protected route that redirected to login
-      const { rerender } = renderLoginPage(authValue, ['/login'])
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'test@example.com' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+      target: { value: 'secret123' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-      // Step 1: enter email and submit
-      fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-        target: { value: 'test@example.com' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /send magic link/i }))
-
-      await waitFor(() => expect(signIn).toHaveBeenCalled())
-
-      // Step 2: simulate auth context updating to otpSent=true
-      rerender(
-        <QueryClientProvider client={testQueryClient}>
-          <AuthContext.Provider
-            value={{ ...authValue, otpSent: true }}
-          >
-            <MemoryRouter
-              initialEntries={['/login']}
-              initialIndex={0}
-            >
-              {<LoginPage />}
-            </MemoryRouter>
-          </AuthContext.Provider>
-        </QueryClientProvider>
-      )
-
-      // Step 3: enter OTP and verify
-      fireEvent.change(screen.getByPlaceholderText('12345678'), {
-        target: { value: '12345678' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /^verify$/i }))
-
-      await waitFor(() => {
-        expect(verifyOtp).toHaveBeenCalledWith('test@example.com', '12345678')
-      })
-
-      // The navigate call happens but since we're using MemoryRouter with mock,
-      // we verify the mock was called with the fallback '/' since no location.state exists
+    await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
     })
+  })
 
-    it('navigates to original page from location.state after successful OTP', async () => {
-      const verifyOtp = vi.fn().mockResolvedValue(undefined)
-      const signIn = vi.fn().mockResolvedValue(undefined)
-      const authValue = createAuthValue({ signIn, verifyOtp, otpSent: false })
+  it('navigates to location.state.from after successful sign in', async () => {
+    const signInWithPassword = vi.fn().mockResolvedValue(undefined)
+    renderLoginPage(createAuthValue({ signInWithPassword }), [
+      { pathname: '/login', state: { from: { pathname: '/sessions/abc-123' } } },
+    ])
 
-      // Render with location state simulating RequireAuth redirect
-      const { rerender } = render(
-        <QueryClientProvider client={testQueryClient}>
-          <AuthContext.Provider value={authValue}>
-            <MemoryRouter
-              initialEntries={[
-                { pathname: '/login', state: { from: { pathname: '/sessions/abc-123' } } },
-              ]}
-            >
-              <LoginPage />
-            </MemoryRouter>
-          </AuthContext.Provider>
-        </QueryClientProvider>
-      )
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'test@example.com' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+      target: { value: 'secret123' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-      // Step 1: enter email
-      fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
-        target: { value: 'test@example.com' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /send magic link/i }))
-
-      await waitFor(() => expect(signIn).toHaveBeenCalled())
-
-      // Step 2: rerender with otpSent=true
-      rerender(
-        <QueryClientProvider client={testQueryClient}>
-          <AuthContext.Provider value={{ ...authValue, otpSent: true }}>
-            <MemoryRouter
-              initialEntries={[
-                { pathname: '/login', state: { from: { pathname: '/sessions/abc-123' } } },
-              ]}
-              initialIndex={0}
-            >
-              <LoginPage />
-            </MemoryRouter>
-          </AuthContext.Provider>
-        </QueryClientProvider>
-      )
-
-      // Step 3: verify OTP
-      fireEvent.change(screen.getByPlaceholderText('12345678'), {
-        target: { value: '12345678' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /^verify$/i }))
-
-      await waitFor(() => {
-        expect(verifyOtp).toHaveBeenCalledWith('test@example.com', '12345678')
-      })
-
+    await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/sessions/abc-123', { replace: true })
     })
+  })
 
-    it('shows error and does not navigate when OTP verification fails', async () => {
-      const verifyOtp = vi.fn().mockRejectedValue(new Error('Invalid code'))
-      const authValue = createAuthValue({ verifyOtp, otpSent: true })
+  it('displays error message when sign in fails', async () => {
+    const signInWithPassword = vi.fn().mockRejectedValue(new Error('Invalid login credentials'))
+    renderLoginPage(createAuthValue({ signInWithPassword }))
 
-      renderLoginPage(authValue)
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
+      target: { value: 'test@example.com' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('••••••••'), {
+      target: { value: 'wrongpassword' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
-      fireEvent.change(screen.getByPlaceholderText('12345678'), {
-        target: { value: '12345678' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /^verify$/i }))
-
-      await waitFor(() => {
-        expect(screen.getByText('Invalid code')).toBeInTheDocument()
-      })
-
-      expect(mockNavigate).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(screen.getByText('Invalid login credentials')).toBeInTheDocument()
     })
 
-    it('disables verify button when OTP is shorter than 8 digits', () => {
-      const authValue = createAuthValue({ otpSent: true })
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
 
-      renderLoginPage(authValue)
-
-      const verifyBtn = screen.getByRole('button', { name: /^verify$/i })
-      expect(verifyBtn).toBeDisabled()
-
-      fireEvent.change(screen.getByPlaceholderText('12345678'), {
-        target: { value: '123' },
-      })
-
-      expect(verifyBtn).toBeDisabled()
-    })
-
-    it('enables verify button when OTP is 8 digits', () => {
-      const authValue = createAuthValue({ otpSent: true })
-
-      renderLoginPage(authValue)
-
-      fireEvent.change(screen.getByPlaceholderText('12345678'), {
-        target: { value: '12345678' },
-      })
-
-      expect(screen.getByRole('button', { name: /^verify$/i })).not.toBeDisabled()
-    })
+  it('disables submit button while signing in', () => {
+    renderLoginPage(createAuthValue({ isSigningIn: true }))
+    expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled()
   })
 })

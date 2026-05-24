@@ -1,118 +1,98 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { Mail, KeyRound, ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useI18n } from '../i18n'
+import { Button, Input } from '../../design-system/components'
 
 export default function LoginPage() {
-  const { signIn, verifyOtp, resetOtp, isSendingOtp, isVerifying, otpSent } = useAuth()
+  const { signInWithPassword, isSigningIn } = useAuth()
   const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  async function handleSendOtp(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     try {
-      await signIn(email)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.failedSendOtp'))
-    }
-  }
-
-  async function handleVerify(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    try {
-      await verifyOtp(email, otp)
+      await signInWithPassword(email, password)
       const from = location.state?.from as { pathname?: string } | undefined
       navigate(from?.pathname || '/', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.invalidOtp'))
+      setError(err instanceof Error ? err.message : t('auth.invalidCredentials'))
     }
   }
 
   return (
-    <div className="min-h-svh flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-lg p-6">
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <span className="text-2xl">🏸</span>
+    <div
+      className="min-h-svh flex items-center justify-center p-[var(--space-5)]"
+      style={{ background: 'var(--bg)' }}
+    >
+      <div
+        className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-5)]"
+      >
+        {/* Logo stamp */}
+        <div className="flex flex-col items-center mb-[var(--space-6)]">
+          <div
+            className="w-14 h-14 flex items-center justify-center mb-[var(--space-3)]"
+            style={{
+              background: 'var(--accent)',
+              borderRadius: 'var(--radius-md)',
+            }}
+          >
+            <span className="text-2xl leading-none select-none">🏸</span>
           </div>
-          <h1 className="text-xl font-bold text-gray-900">{t('app.name')}</h1>
-          <p className="text-sm text-gray-500 mt-1">{t('auth.signInSubtitle')}</p>
+          <h1
+            className="text-[24px] font-extrabold tracking-[-0.02em] text-[var(--fg)]"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {t('app.name')}
+          </h1>
+          <p className="text-[13px] text-[var(--muted)] mt-[var(--space-1)]">
+            {t('auth.signInSubtitle')}
+          </p>
         </div>
 
-        {!otpSent ? (
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email')}</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={isSendingOtp}
-              className="w-full py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isSendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-              {isSendingOtp ? t('auth.sending') : t('auth.sendMagicLink')}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <button
-              type="button"
-              onClick={() => resetOtp()}
-              className="text-sm text-gray-500 flex items-center gap-1 hover:text-gray-700"
-            >
-              <ArrowLeft className="w-3 h-3" />
-              {t('common.back')}
-            </button>
-            <p className="text-sm text-gray-600">
-              {t('auth.enterCode', { email })}
-            </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.verificationCode')}</label>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 8))}
-                  placeholder="12345678"
-                  maxLength={8}
-                  required
-                  className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              disabled={isVerifying || otp.length < 8}
-              className="w-full py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-              {isVerifying ? t('auth.verifying') : t('auth.verify')}
-            </button>
-          </form>
-        )}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-[var(--space-4)]">
+          <Input
+            label={t('auth.email')}
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            autoComplete="email"
+          />
+          <Input
+            label={t('auth.password')}
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+            autoComplete="current-password"
+          />
 
-        {error && (
-          <p className="mt-3 text-sm text-red-600 text-center">{error}</p>
-        )}
+          {error && (
+            <p className="text-[11px] text-[var(--danger)] -mt-[var(--space-1)]">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            variant="accent"
+            size="block"
+            disabled={isSigningIn}
+          >
+            {isSigningIn && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSigningIn ? t('auth.signingIn') : t('auth.signIn')}
+          </Button>
+        </form>
       </div>
     </div>
   )

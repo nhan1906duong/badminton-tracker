@@ -28,7 +28,7 @@ Badminton Match Tracker — a PWA for tracking badminton matches, players, and r
 
 ### Auth
 
-Supabase OTP (magic link) via `src/contexts/AuthContext.tsx`. `RequireAuth` guard in `src/components/AnimatedRoutes.tsx` redirects unauthenticated users to `/login`. After login, user returns to original route via `location.state`.
+Email + password via `src/contexts/AuthContext.tsx` (`supabase.auth.signInWithPassword`). `RequireAuth` guard in `src/components/AnimatedRoutes.tsx` redirects unauthenticated users to `/login`. After login, user returns to original route via `location.state`.
 
 ### Navigation & Back Button
 
@@ -100,7 +100,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | File | Role |
 |------|------|
 | `src/lib/supabase.ts` | Supabase client |
-| `src/contexts/AuthContext.tsx` | Auth state (OTP) |
+| `src/contexts/AuthContext.tsx` | Auth state (email + password) |
 | `src/components/AnimatedRoutes.tsx` | All routes + auth guard + page transitions |
 | `src/App.tsx` | Bottom nav, app layout |
 | `src/hooks/useMatches.ts` | Match CRUD + optimistic updates |
