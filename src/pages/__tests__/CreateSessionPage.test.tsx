@@ -27,11 +27,6 @@ vi.mock('../../hooks/useSessions', async () => {
   }
 })
 
-const mockSetPlayers = vi.fn()
-vi.mock('../../stores/session-store', () => ({
-  useSessionStore: (selector: (s: { setPlayers: typeof mockSetPlayers }) => unknown) =>
-    selector({ setPlayers: mockSetPlayers }),
-}))
 
 const mockRefetch = vi.fn()
 const mockUseNearbyBwfTournaments = vi.fn((dayRange?: number): {
@@ -236,20 +231,6 @@ describe('CreateSessionPage', () => {
 
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith('/sessions/session-1', { replace: true })
-      })
-    })
-
-    it('calls setPlayers with empty array after successful creation', async () => {
-      mockMutateAsync.mockResolvedValue(MOCK_SESSION)
-      renderPage()
-
-      fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
-        target: { value: 'Weekly Badminton' },
-      })
-      fireEvent.click(screen.getByRole('button', { name: /start session now/i }))
-
-      await waitFor(() => {
-        expect(mockSetPlayers).toHaveBeenCalledWith('session-1', [])
       })
     })
 

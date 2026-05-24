@@ -159,10 +159,7 @@ export default function EditPlayersPage() {
     [teamAIds, teamBIds]
   )
 
-  const pickerPlayers = useMemo(() => {
-    const selected = new Set(selectedIds)
-    return players.filter(player => player.is_active || selected.has(player.id))
-  }, [players, selectedIds])
+  const pickerPlayers = players
 
   const filledCount = selectedIds.length
   const requiredCount = teamSize * 2

@@ -239,7 +239,6 @@ export default function CreateMatchPage() {
   }
 
   const filteredPlayers = allPlayers?.filter(p => {
-    if (!p.is_active) return false
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
     // Exclude already-used players except the current slot's player
     const currentSlotId = pickerTarget

@@ -173,11 +173,6 @@ const en = {
   'avatar.chooseGallery': 'Choose from Gallery',
   'avatar.removePhoto': 'Remove Photo',
 
-  'activePlayers.close': 'Close',
-  'activePlayers.add': 'Add',
-  'activePlayers.allActive': 'All players are already active.',
-  'activePlayers.addActivePlayer': 'Add active player',
-
   'sessions.title': 'Sessions',
   'sessions.loading': 'Loading sessions...',
   'sessions.loadError': "Couldn't load sessions. Check your connection and try again.",
@@ -572,11 +567,6 @@ const vi: Record<TranslationKey, string> = {
   'avatar.takePhoto': 'Chụp ảnh',
   'avatar.chooseGallery': 'Chọn từ thư viện',
   'avatar.removePhoto': 'Xóa ảnh',
-
-  'activePlayers.close': 'Đóng',
-  'activePlayers.add': 'Thêm',
-  'activePlayers.allActive': 'Tất cả vđv đều đang hoạt động.',
-  'activePlayers.addActivePlayer': 'Thêm vđv active',
 
   'sessions.title': 'Giải đấu',
   'sessions.loading': 'Đang tải tất cả giải đấu...',

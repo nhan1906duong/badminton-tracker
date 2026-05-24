@@ -34,21 +34,6 @@ export function usePlayer(id: string) {
   })
 }
 
-export function useActivePlayers() {
-  return useQuery({
-    queryKey: [PLAYERS_KEY, 'active'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('is_active', true)
-        .order('name')
-      if (error) throw error
-      return data as Player[]
-    },
-  })
-}
-
 export function useCreatePlayer() {
   const qc = useQueryClient()
   return useMutation({
@@ -82,23 +67,6 @@ export function useUpdatePlayer() {
       qc.invalidateQueries({ queryKey: [PLAYERS_KEY] })
       qc.invalidateQueries({ queryKey: [PLAYERS_KEY, data.id] })
     },
-  })
-}
-
-export function useTogglePlayerActive() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { data, error } = await supabase
-        .from('players')
-        .update({ is_active })
-        .eq('id', id)
-        .select()
-        .single()
-      if (error) throw error
-      return data as Player
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [PLAYERS_KEY] }),
   })
 }
 

@@ -45,8 +45,7 @@ export function usePlayerRankings() {
       ] = await Promise.all([
         supabase
           .from('players')
-          .select('id, name, avatar_url, rating, is_active')
-          .eq('is_active', true),
+          .select('id, name, avatar_url, rating'),
         supabase
           .from('player_match_results')
           .select('player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta'),
@@ -165,7 +164,7 @@ export function useSessionWeeklyRankings(sessionId: string | undefined) {
     queryFn: async () => {
       const [{ data: players, error: playersError }, { data: results, error: resultsError }] =
         await Promise.all([
-          supabase.from('players').select('id, name, avatar_url').eq('is_active', true),
+          supabase.from('players').select('id, name, avatar_url'),
           supabase
             .from('player_match_results')
             .select('player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
