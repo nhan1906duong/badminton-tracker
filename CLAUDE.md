@@ -30,6 +30,13 @@ Badminton Match Tracker — a PWA for tracking badminton matches, players, and r
 
 Email + password via `src/contexts/AuthContext.tsx` (`supabase.auth.signInWithPassword`). `RequireAuth` guard in `src/components/AnimatedRoutes.tsx` redirects unauthenticated users to `/login`. After login, user returns to original route via `location.state`.
 
+### Role-based Access Control
+
+Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. Admins are the only ones who can delete sessions, matches, or players — enforced at both the app layer and via Supabase RLS policies (see `supabase/migrations/008_role.sql`).
+
+- `src/hooks/useIsAdmin.ts` — returns `true` if the current user's profile role is `'admin'`
+- Admin-gated UI: "Delete session" (SessionDetailPage ⋮ menu), "Delete match" (MatchDetailPage ⋮ menu), avatar change and name editing (PlayerDetailPage)
+
 ### Navigation & Back Button
 
 Routes in `src/components/AnimatedRoutes.tsx`. Page transitions are animated (forward/backward) except between tab routes.
@@ -52,7 +59,7 @@ After a match is created, tap it from session detail to open `MatchDetailPage`:
 
 ### Data Model
 
-Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users), `bwf_tournaments`.
+Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users, includes `role: 'admin' | 'user'`), `bwf_tournaments`.
 
 A match has:
 - 2 teams (`match_teams`: TEAM_A / TEAM_B, `is_winner` flag)
@@ -108,6 +115,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useSessions.ts` | Session CRUD + open session query |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + per-session weekly stats |
+| `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/lib/bwf-api.ts` | BWF category constants + priority order |
 | `src/lib/rating.ts` | Elo rating algorithm + SCORING_CONFIG |
 | `src/stores/new-match-store.ts` | Match creation flow state |
