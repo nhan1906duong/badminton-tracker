@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Loader2 } from 'lucide-react'
+import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { AppBar, Button, Input } from '../../design-system/components'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
@@ -17,6 +17,9 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isPending, setIsPending] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -81,30 +84,63 @@ export default function ChangePasswordPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-[var(--space-4)]">
             <Input
               label={t('settings.changePassword.current')}
-              type="password"
+              type={showCurrent ? 'text' : 'password'}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="••••••••"
               required
               autoComplete="current-password"
+              rightAction={
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent((v) => !v)}
+                  className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
+                  tabIndex={-1}
+                  aria-label={showCurrent ? 'Hide password' : 'Show password'}
+                >
+                  {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
             />
             <Input
               label={t('settings.changePassword.new')}
-              type="password"
+              type={showNew ? 'text' : 'password'}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
               required
               autoComplete="new-password"
+              rightAction={
+                <button
+                  type="button"
+                  onClick={() => setShowNew((v) => !v)}
+                  className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
+                  tabIndex={-1}
+                  aria-label={showNew ? 'Hide password' : 'Show password'}
+                >
+                  {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
             />
             <Input
               label={t('settings.changePassword.confirm')}
-              type="password"
+              type={showConfirm ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
               autoComplete="new-password"
+              rightAction={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
+                  tabIndex={-1}
+                  aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
             />
 
             {error && (
