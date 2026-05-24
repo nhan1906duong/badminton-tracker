@@ -44,9 +44,6 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
   const isEnded = !!winnerLabel
   const hasScores = match.scores.length > 0
 
-  const teamANames = teamA.map((p) => formatShortPlayerName(p.player.name))
-  const teamBNames = teamB.map((p) => formatShortPlayerName(p.player.name))
-
   return (
     <div
       className={`relative transition-colors select-none ${!readonly ? 'cursor-pointer active:opacity-80' : ''}`}
@@ -109,9 +106,12 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
       <div className="flex items-center" style={{ gap: 'var(--space-3)' }}>
         {/* Team A — left */}
         <div className="flex-1 min-w-0 text-left flex flex-col" style={{ gap: 2 }}>
-          {teamANames.map((name) => (
-            <div
-              key={name}
+          {teamA.map((p) => (
+            <button
+              key={p.player.id}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); navigate(`/players/${p.player.id}`) }}
+              className="active:opacity-60"
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 'var(--text-base)',
@@ -119,10 +119,17 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
                 lineHeight: 1.2,
                 letterSpacing: '-0.01em',
                 color: teamBWon ? 'var(--muted)' : 'var(--fg)',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                textAlign: 'left',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {name}
-            </div>
+              {formatShortPlayerName(p.player.name)}
+            </button>
           ))}
           <div
             style={{
@@ -185,9 +192,12 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
 
         {/* Team B — right */}
         <div className="flex-1 min-w-0 text-right flex flex-col" style={{ gap: 2 }}>
-          {teamBNames.map((name) => (
-            <div
-              key={name}
+          {teamB.map((p) => (
+            <button
+              key={p.player.id}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); navigate(`/players/${p.player.id}`) }}
+              className="active:opacity-60"
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: 'var(--text-base)',
@@ -195,10 +205,17 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
                 lineHeight: 1.2,
                 letterSpacing: '-0.01em',
                 color: teamAWon ? 'var(--muted)' : 'var(--fg)',
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                textAlign: 'right',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {name}
-            </div>
+              {formatShortPlayerName(p.player.name)}
+            </button>
           ))}
           <div
             style={{

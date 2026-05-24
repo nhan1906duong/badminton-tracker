@@ -227,6 +227,25 @@ export default function SessionStatsPage() {
           >
             {session?.label ?? 'Session'} · {completedMatches.length} completed match{completedMatches.length === 1 ? '' : 'es'}
           </p>
+          {session && !session.ended_at && (
+            <div
+              className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-2)]"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--accent)',
+              }}
+            >
+              <span
+                className="rounded-full animate-pulse flex-shrink-0"
+                style={{ width: 7, height: 7, background: 'var(--accent)' }}
+              />
+              Live · in progress
+            </div>
+          )}
         </header>
 
         <main className="px-[var(--space-5)]">
