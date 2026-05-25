@@ -88,18 +88,44 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'var(--text-base)',
-            fontWeight: 800,
-            lineHeight: 1.2,
-            letterSpacing: 0,
-            color: 'var(--fg)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            minWidth: 0,
           }}
         >
-          {stat.name}
+          <span
+            style={{
+              minWidth: 0,
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-base)',
+              fontWeight: 800,
+              lineHeight: 1.2,
+              letterSpacing: 0,
+              color: 'var(--fg)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {stat.name}
+          </span>
+          {rank === 1 && (
+            <span
+              style={{
+                flexShrink: 0,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                fontWeight: 800,
+                lineHeight: 1,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--accent)',
+              }}
+            >
+              {t('sessionStats.championBadge')}
+            </span>
+          )}
         </div>
         <div
           style={{
@@ -114,19 +140,6 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             color: 'var(--muted)',
           }}
         >
-          {rank === 1 && (
-            <>
-              <span
-                style={{
-                  color: 'var(--accent)',
-                  fontWeight: 800,
-                }}
-              >
-                {t('sessionStats.championBadge')}
-              </span>
-              <span style={{ color: 'var(--border)' }}>·</span>
-            </>
-          )}
           <span>{t('units.match', { count: stat.matchesPlayed })}</span>
           <span style={{ color: 'var(--border)' }}>·</span>
           <span>{stat.wins}W</span>
