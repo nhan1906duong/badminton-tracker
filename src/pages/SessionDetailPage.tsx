@@ -39,8 +39,7 @@ function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'
   return '—'
 }
 import { useMatches } from '../hooks/useMatches'
-import { usePlayerStats } from '../hooks/usePlayerStats'
-import { usePlayers } from '../hooks/usePlayers'
+import { useSessionLeaderboard } from '../hooks/useRankings'
 import { useSession, useStartSession, useEndSession, useDeleteSession } from '../hooks/useSessions'
 import MatchesContent from '../components/MatchesContent'
 import FloatingActionButton from '../components/FloatingActionButton'
@@ -66,13 +65,16 @@ export default function SessionDetailPage() {
   const startSession = useStartSession()
   const deleteSession = useDeleteSession()
   const sid = sessionId ?? ''
-  const { sortedByWins } = usePlayerStats(sid)
-  const { data: players } = usePlayers()
+  const { data: leaderboard, refetch: refetchLeaderboard } = useSessionLeaderboard(sid)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [confirmDeleteSessionOpen, setConfirmDeleteSessionOpen] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchMatches(), refetchLeaderboard()])
+  }, [refetchMatches, refetchLeaderboard])
 
   if (!sessionId) {
     return (
@@ -93,14 +95,12 @@ export default function SessionDetailPage() {
     ? new Set(matches.flatMap((m) => m.participants.map((p) => p.player_id))).size
     : 0
 
-  const mvpPlayer = sortedByWins.find((s) => s.matchesPlayed > 0)
+  const mvpPlayer = leaderboard?.leader
   const mvpName = mvpPlayer ? formatShortPlayerName(mvpPlayer.name) : undefined
   const mvpLabel = mvpPlayer
     ? `${sessionStatus === 'ended' ? t('sessionDetail.mvp') : t('sessionDetail.leading')} · ${Math.round((mvpPlayer.wins / mvpPlayer.matchesPlayed) * 100)}%`
     : undefined
-  const mvpAvatarUrl = mvpPlayer
-    ? (players?.find((p) => p.id === mvpPlayer.playerId)?.avatar_url ?? null)
-    : null
+  const mvpAvatarUrl = mvpPlayer?.avatarUrl ?? null
 
   async function handleEndSession() {
     try {
@@ -136,10 +136,6 @@ export default function SessionDetailPage() {
   function closeMenu() { setMenuOpen(false) }
 
   const backTo = (location.state as { from?: string } | null)?.from ?? '/sessions'
-
-  const handleRefresh = useCallback(async () => {
-    await refetchMatches()
-  }, [refetchMatches])
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

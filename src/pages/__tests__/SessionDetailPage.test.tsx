@@ -50,12 +50,11 @@ vi.mock('../../hooks/useSessions', () => ({
   useDeleteSession: () => mockDeleteSession,
 }))
 
-vi.mock('../../hooks/usePlayerStats', () => ({
-  usePlayerStats: () => ({ sortedByWins: [] }),
-}))
-
-vi.mock('../../hooks/usePlayers', () => ({
-  usePlayers: () => ({ data: [] }),
+vi.mock('../../hooks/useRankings', () => ({
+  useSessionLeaderboard: () => ({
+    data: { rankings: [], leader: undefined },
+    refetch: vi.fn(),
+  }),
 }))
 
 vi.mock('../../hooks/useIsAdmin', () => ({
