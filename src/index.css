@@ -90,3 +90,13 @@ input[type="password"]::-ms-clear {
 .segmented-scroll::-webkit-scrollbar {
   display: none;
 }
+
+/* Firework effect fade-in */
+@keyframes firework-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

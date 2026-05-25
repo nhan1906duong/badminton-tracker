@@ -247,6 +247,8 @@ const en = {
   'sessionStats.weeklyPoints': 'Weekly points',
   'sessionStats.points': 'points',
   'sessionStats.diff': 'diff',
+  'sessionStats.champion': 'You are the champion!',
+  'sessionStats.championBadge': 'Champion',
 
   'createSession.title': 'New session',
   'createSession.subtitle': 'Pick a name. Set a time. Start swinging.',
@@ -674,6 +676,8 @@ const vi: Record<TranslationKey, string> = {
   'sessionStats.weeklyPoints': 'Điểm trong tuần',
   'sessionStats.points': 'Điểm',
   'sessionStats.diff': 'Hiệu số',
+  'sessionStats.champion': 'Bạn là nhà vô địch!',
+  'sessionStats.championBadge': 'Quán quân',
 
   'createSession.title': 'Giải đấu mới',
   'createSession.subtitle': 'Chọn tên. Chọn giờ. Bắt đầu.',

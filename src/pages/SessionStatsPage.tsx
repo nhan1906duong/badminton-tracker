@@ -1,11 +1,14 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Activity, ChevronLeft, Medal } from 'lucide-react'
+import { Activity, ChevronLeft, Medal, Crown } from 'lucide-react'
 import { AppBar, Avatar, EmptyState, LoadingState, StatRow, PullToRefresh } from '../../design-system/components'
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useSessionWeeklyRankings, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useI18n } from '../i18n'
+import { useAuth } from '../hooks/useAuth'
+import { useProfile } from '../hooks/useProfile'
+import { FireworkEffect } from '../components/firework-effect'
 
 function formatSigned(value: number): string {
   if (value > 0) return `+${value}`
@@ -14,8 +17,9 @@ function formatSigned(value: number): string {
 
 function SessionRank({ rank }: { rank: number }) {
   const { t } = useI18n()
+  const isFirst = rank === 1
   const color =
-    rank === 1 ? 'var(--accent)'
+    isFirst ? 'var(--accent)'
     : rank === 2 ? 'color-mix(in oklch, var(--accent) 70%, var(--muted))'
     : rank === 3 ? 'color-mix(in oklch, var(--accent) 45%, var(--muted))'
     : 'var(--muted)'
@@ -26,7 +30,11 @@ function SessionRank({ rank }: { rank: number }) {
       style={{
         width: 36,
         flexShrink: 0,
-        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
         fontFamily: 'var(--font-display)',
         fontSize: 22,
         fontWeight: 900,
@@ -35,7 +43,10 @@ function SessionRank({ rank }: { rank: number }) {
         color,
       }}
     >
-      {rank}
+      {isFirst && (
+        <Crown size={14} fill="var(--accent)" stroke="var(--accent)" />
+      )}
+      <span>{rank}</span>
     </div>
   )
 }
@@ -103,6 +114,19 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             color: 'var(--muted)',
           }}
         >
+          {rank === 1 && (
+            <>
+              <span
+                style={{
+                  color: 'var(--accent)',
+                  fontWeight: 800,
+                }}
+              >
+                {t('sessionStats.championBadge')}
+              </span>
+              <span style={{ color: 'var(--border)' }}>·</span>
+            </>
+          )}
           <span>{t('units.match', { count: stat.matchesPlayed })}</span>
           <span style={{ color: 'var(--border)' }}>·</span>
           <span>{stat.wins}W</span>
@@ -161,6 +185,8 @@ export default function SessionStatsPage() {
   const { data: session } = useSession(sessionId)
   const { data: matches, isLoading: matchesLoading, refetch: refetchMatches } = useMatches(sessionId)
   const { data: rankings = [], isLoading: rankingsLoading, refetch: refetchRankings } = useSessionWeeklyRankings(sessionId)
+  const { user } = useAuth()
+  const { data: profile } = useProfile(user?.id)
 
   const completedMatches = useMemo(
     () => matches?.filter((m) => m.status === 'COMPLETED') ?? [],
@@ -169,6 +195,44 @@ export default function SessionStatsPage() {
   const totalPoints = rankings.reduce((sum, s) => sum + s.weeklyPoints, 0)
   const averagePoints = rankings.length > 0 ? Math.round(totalPoints / rankings.length) : 0
   const isLoading = matchesLoading || rankingsLoading
+
+  // Champion detection: rank #1 in an ended session, matching current user's linked player
+  const isChampion = useMemo(() => {
+    if (!session?.ended_at || rankings.length === 0) return false
+    if (!profile?.player_id) return false
+    return rankings[0]?.playerId === profile.player_id
+  }, [session?.ended_at, rankings, profile?.player_id])
+
+  // Show firework once per session+player via localStorage
+  const storageKey = sessionId && profile?.player_id
+    ? `champion-firework:${sessionId}:${profile.player_id}`
+    : ''
+
+  const [dismissedFireworkKey, setDismissedFireworkKey] = useState<string | null>(null)
+
+  const hasShownFirework = useMemo(() => {
+    if (!storageKey || dismissedFireworkKey === storageKey) return true
+    try {
+      return localStorage.getItem(storageKey) === '1'
+    } catch {
+      return true
+    }
+  }, [dismissedFireworkKey, storageKey])
+
+  const shouldShowFirework = isChampion && !hasShownFirework
+
+  useEffect(() => {
+    if (!shouldShowFirework) return
+    const timer = setTimeout(() => {
+      try {
+        if (storageKey) localStorage.setItem(storageKey, '1')
+      } catch {
+        // ignore
+      }
+      setDismissedFireworkKey(storageKey)
+    }, 4000)
+    return () => clearTimeout(timer)
+  }, [shouldShowFirework, storageKey])
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refetchMatches(), refetchRankings()])
@@ -185,6 +249,8 @@ export default function SessionStatsPage() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
+      {shouldShowFirework && <FireworkEffect />}
+
       <AppBar
         title=""
         leftAction={{
@@ -235,6 +301,29 @@ export default function SessionStatsPage() {
           >
             {session?.label ?? t('common.session')} · {t('units.completedMatches', { count: completedMatches.length })}
           </p>
+          {isChampion && (
+            <div
+              className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-3)]"
+              style={{
+                padding: 'var(--space-2) var(--space-3)',
+                background: 'color-mix(in oklch, var(--accent) 12%, transparent)',
+                border: '1px solid color-mix(in oklch, var(--accent) 30%, transparent)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              <Crown size={16} fill="var(--accent)" stroke="var(--accent)" />
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 800,
+                  color: 'var(--accent)',
+                }}
+              >
+                {t('sessionStats.champion')}
+              </span>
+            </div>
+          )}
           {session && !session.ended_at && (
             <div
               className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-2)]"

@@ -55,6 +55,10 @@ vi.mock('../../hooks/useSessions', () => ({
   }),
 }))
 
+vi.mock('../../hooks/useIsAdmin', () => ({
+  useIsAdmin: () => true,
+}))
+
 // ─── Design system mocks ──────────────────────────────────────────────────────
 
 vi.mock('../../../design-system/components', () => ({
@@ -62,6 +66,15 @@ vi.mock('../../../design-system/components', () => ({
     <header>
       {onBack && <button onClick={onBack}>{backLabel ?? 'Back'}</button>}
     </header>
+  ),
+  SegmentedControl: ({ value, tabs, onChange }: { value: string; tabs: Array<{ id: string; label: string }>; onChange: (v: string) => void }) => (
+    <div role="tablist">
+      {tabs.map(tab => (
+        <button key={tab.id} role="tab" aria-selected={value === tab.id} onClick={() => onChange(tab.id)}>
+          {tab.label}
+        </button>
+      ))}
+    </div>
   ),
 }))
 
