@@ -18,7 +18,7 @@ import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge } from
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Session } from '../types/database'
-import { ChevronLeft, ChevronDown, ChevronRight, Pencil, Swords, Users, History, Activity } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronDown, ChevronRight, Pencil, Swords, Users, History, Activity } from 'lucide-react'
 import { LOCALE_TAG, useI18n, type Locale } from '../i18n'
 
 const MATCH_TYPE_SHORT: Record<string, string> = {
@@ -226,10 +226,13 @@ export default function PlayerDetailPage() {
         <button
           onClick={() => setShowAvatarPicker(true)}
           aria-label={t('players.changeAvatar')}
-          className="active:opacity-70 transition-opacity"
+          className="relative active:opacity-70 transition-opacity"
           style={{ marginBottom: 'var(--space-3)' }}
         >
           <Avatar src={player.avatar_url} name={player.name} size={52} />
+          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center border-2 border-[var(--bg)]">
+            <Camera className="w-3 h-3 text-[var(--surface)]" />
+          </div>
         </button>
 
         {/* 3. Name + edit */}
