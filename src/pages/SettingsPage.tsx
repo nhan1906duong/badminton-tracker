@@ -2,12 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, Camera, RefreshCw, Info, Languages, User, X, Lock, Download } from 'lucide-react'
+import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, RefreshCw, Info, Languages, User, X, Lock, Download } from 'lucide-react'
 import { useBackupData } from '../hooks/useBackup'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
-import AvatarPicker from '../components/AvatarPicker'
-import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useProfile, useUpdatePlayerLink } from '../hooks/useProfile'
 import { usePlayers } from '../hooks/usePlayers'
 import { useI18n, type Locale } from '../i18n'
@@ -25,12 +23,8 @@ export default function SettingsPage() {
   const isAdmin = useIsAdmin()
   const [confirming, setConfirming] = useState(false)
   const [confirmRecalc, setConfirmRecalc] = useState(false)
-  const [showPicker, setShowPicker] = useState(false)
 
   const { data: profile } = useProfile(user?.id)
-  const upload = useAvatarUpload()
-  const remove = useAvatarDelete()
-  const setDefault = useSetDefaultAvatar()
   const updatePlayerLink = useUpdatePlayerLink()
   const { data: players = [] } = usePlayers()
   const [showPlayerPicker, setShowPlayerPicker] = useState(false)
@@ -67,20 +61,13 @@ export default function SettingsPage() {
       >
         {/* User profile */}
         <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)] flex items-center gap-3">
-          <button
-            onClick={() => setShowPicker(true)}
-            className="relative shrink-0"
-            disabled={upload.isPending}
-          >
+          <div className="shrink-0">
             <Avatar
               src={userAvatarUrl}
               name={user?.email || t('common.user')}
               size={48}
             />
-            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center border-2 border-[var(--surface)]">
-              <Camera className="w-3 h-3 text-[var(--surface)]" />
-            </div>
-          </button>
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-[15px] font-bold text-[var(--fg)] truncate">
               {user?.email || t('common.user')}
@@ -88,17 +75,6 @@ export default function SettingsPage() {
             <p className="text-[13px] text-[var(--muted)]">{t('auth.signedIn')}</p>
           </div>
         </section>
-
-        {/* Avatar Picker */}
-        {showPicker && user && (
-          <AvatarPicker
-            currentAvatarUrl={userAvatarUrl}
-            onSelect={(file) => upload.mutate({ file, entity: 'users', id: user.id })}
-            onSelectDefault={(url) => setDefault.mutate({ url, entity: 'users', id: user.id, oldAvatarUrl: userAvatarUrl })}
-            onRemove={() => remove.mutate({ entity: 'users', id: user.id, oldAvatarUrl: userAvatarUrl })}
-            onClose={() => setShowPicker(false)}
-          />
-        )}
 
         {/* Your Player Profile */}
         <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
