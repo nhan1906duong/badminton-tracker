@@ -9,6 +9,13 @@
   --color-border: var(--border);
 }
 
+html {
+  /* smooth scroll only for in-page anchors, not programmatic scrollTo */
+  scroll-behavior: auto;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+}
+
 body {
   font-family: var(--font-body);
   font-size: var(--text-base);
@@ -20,6 +27,18 @@ body {
   touch-action: manipulation;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--bg);
+  z-index: 60;
+  pointer-events: none;
+}
+
 /* Prevent text selection on interactive elements for native app feel */
 button, [role="button"] {
   user-select: none;
@@ -29,12 +48,6 @@ button, [role="button"] {
 /* Disable double-tap zoom on buttons */
 button, input, select, textarea {
   touch-action: manipulation;
-}
-
-html {
-  /* smooth scroll only for in-page anchors, not programmatic scrollTo */
-  scroll-behavior: auto;
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* Ripple animation for press feedback */
