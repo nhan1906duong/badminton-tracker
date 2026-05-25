@@ -91,8 +91,10 @@ export default function SessionDetailPage() {
     return 'live'
   })()
 
-  const uniquePlayerCount = matches
-    ? new Set(matches.flatMap((m) => m.participants.map((p) => p.player_id))).size
+  const recordedMatches = matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? []
+
+  const uniquePlayerCount = recordedMatches.length > 0
+    ? new Set(recordedMatches.flatMap((m) => m.participants.map((p) => p.player_id))).size
     : 0
 
   const mvpPlayer = leaderboard?.leader
@@ -236,9 +238,9 @@ export default function SessionDetailPage() {
 
         <div className="px-[var(--space-5)] space-y-6">
           {/* Stats panel */}
-          {(matches?.length ?? 0) > 0 && (
+          {recordedMatches.length > 0 && (
             <SessionStatsPanel
-              matchCount={matches?.length ?? 0}
+              matchCount={recordedMatches.length}
               playerCount={uniquePlayerCount}
               mvpName={mvpName}
               mvpLabel={mvpLabel}

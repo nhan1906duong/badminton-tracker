@@ -25,6 +25,7 @@ let mockMatchLoading = false
 
 const mockStartMatch = { mutateAsync: vi.fn(), isPending: false }
 const mockRecordResult = { mutateAsync: vi.fn(), isPending: false }
+const mockEndMatchNoWinner = { mutateAsync: vi.fn(), isPending: false }
 const mockDeleteMatch = { mutateAsync: vi.fn(), isPending: false }
 const mockReopenMatch = { mutateAsync: vi.fn(), isPending: false }
 
@@ -33,6 +34,7 @@ vi.mock('../../hooks/useMatches', () => ({
   useMatches: () => ({ data: mockAllMatchesData }),
   useStartMatch: () => mockStartMatch,
   useRecordResult: () => mockRecordResult,
+  useEndMatchNoWinner: () => mockEndMatchNoWinner,
   useDeleteMatch: () => mockDeleteMatch,
   useReopenMatch: () => mockReopenMatch,
 }))
@@ -306,6 +308,23 @@ describe('MatchDetailPage', () => {
           })
         )
       })
+    })
+
+    it('ends a match without recording a winner', async () => {
+      mockEndMatchNoWinner.mutateAsync.mockResolvedValue(undefined)
+      renderPage()
+      fireEvent.click(screen.getByRole('button', { name: /^end match$/i }))
+
+      const dialog = screen.getByRole('dialog')
+      fireEvent.click(within(dialog).getByRole('button', { name: /^end match$/i }))
+
+      await waitFor(() => {
+        expect(mockEndMatchNoWinner.mutateAsync).toHaveBeenCalledWith({
+          id: 'match-1',
+          scores: [{ set_number: 1, team_a_score: 0, team_b_score: 0 }],
+        })
+      })
+      expect(mockRecordResult.mutateAsync).not.toHaveBeenCalled()
     })
 
     it('auto-shows finalize button when score reaches winning threshold', () => {

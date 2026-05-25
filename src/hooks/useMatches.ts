@@ -555,6 +555,56 @@ export function useRecordResult() {
   })
 }
 
+export function useEndMatchNoWinner() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { id: string; scores: SetScore[] }) => {
+      const { error: matchError } = await supabase
+        .from('matches')
+        .update({ status: 'COMPLETED', ended_at: new Date().toISOString() })
+        .eq('id', input.id)
+      if (matchError) throw matchError
+
+      const { error: teamsError } = await supabase
+        .from('match_teams')
+        .update({ is_winner: false })
+        .eq('match_id', input.id)
+      if (teamsError) throw teamsError
+
+      const { error: deleteResultsError } = await supabase
+        .from('player_match_results')
+        .delete()
+        .eq('match_id', input.id)
+      if (deleteResultsError) throw deleteResultsError
+
+      const { error: delError } = await supabase
+        .from('match_scores')
+        .delete()
+        .eq('match_id', input.id)
+      if (delError) throw delError
+
+      const scoresToInsert = input.scores.filter(s => s.team_a_score > 0 || s.team_b_score > 0)
+      if (scoresToInsert.length > 0) {
+        const { error: scoreError } = await supabase.from('match_scores').insert(
+          scoresToInsert.map(s => ({
+            match_id: input.id,
+            set_number: s.set_number,
+            team_a_score: s.team_a_score,
+            team_b_score: s.team_b_score,
+          }))
+        )
+        if (scoreError) throw scoreError
+      }
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
+      qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: ['player-rankings'] })
+    },
+  })
+}
+
 export function useReopenMatch() {
   const qc = useQueryClient()
   return useMutation({

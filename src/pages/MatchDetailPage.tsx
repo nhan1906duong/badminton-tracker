@@ -4,6 +4,7 @@ import {
   useMatch,
   useStartMatch,
   useRecordResult,
+  useEndMatchNoWinner,
   useDeleteMatch,
   useReopenMatch,
   useMatches,
@@ -199,6 +200,7 @@ export default function MatchDetailPage() {
   const { data: allMatches } = useMatches(sessionId)
   const startMatch = useStartMatch()
   const recordResult = useRecordResult()
+  const endMatchNoWinner = useEndMatchNoWinner()
   const deleteMatch = useDeleteMatch()
   const reopenMatch = useReopenMatch()
 
@@ -364,10 +366,8 @@ export default function MatchDetailPage() {
 
   async function handleEndNoWinner() {
     setSheet(null)
-    const winnerTeam: 'TEAM_A' | 'TEAM_B' = liveScore.a >= liveScore.b ? 'TEAM_A' : 'TEAM_B'
-    await recordResult.mutateAsync({
+    await endMatchNoWinner.mutateAsync({
       id: matchId!,
-      winner_team: winnerTeam,
       scores: [{ set_number: 1, team_a_score: liveScore.a, team_b_score: liveScore.b }],
     })
   }

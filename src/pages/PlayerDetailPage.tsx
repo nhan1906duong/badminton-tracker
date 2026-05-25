@@ -34,6 +34,7 @@ function getMatchRow(match: MatchWithDetails, playerId: string) {
   if (!pp) return null
   const playerTeam = match.teams.find((t) => t.id === pp.team_id)
   if (!playerTeam) return null
+  if (!match.teams.some((t) => t.is_winner)) return null
   const isTeamA = playerTeam.team_label === 'TEAM_A'
   const teammates = match.participants
     .filter((p) => p.team_id === pp.team_id && p.player_id !== playerId)
@@ -479,7 +480,7 @@ export default function PlayerDetailPage() {
 
                 {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
                   const isExpanded = expandedSessions.has(session.id)
-                  const completedMatches = matches.filter((m) => m.status === 'COMPLETED')
+                  const completedMatches = matches.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner))
                   return (
                     <div
                       key={session.id}

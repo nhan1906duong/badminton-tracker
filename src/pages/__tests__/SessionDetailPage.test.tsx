@@ -155,6 +155,16 @@ function makeMatch(id: string): MatchWithDetails {
   }
 }
 
+function makeRecordedMatch(id: string): MatchWithDetails {
+  return {
+    ...makeMatch(id),
+    teams: [
+      { id: `${id}-team-a`, match_id: id, team_label: 'TEAM_A', is_winner: true },
+      { id: `${id}-team-b`, match_id: id, team_label: 'TEAM_B', is_winner: false },
+    ],
+  }
+}
+
 // ─── Render helper ────────────────────────────────────────────────────────────
 
 function renderPage() {
@@ -264,10 +274,16 @@ describe('SessionDetailPage', () => {
   // ── Stats panel ───────────────────────────────────────────────────────────
 
   describe('stats panel', () => {
-    it('is shown when matches exist', () => {
-      mockMatchesData = [makeMatch('m1')]
+    it('is shown when recorded results exist', () => {
+      mockMatchesData = [makeRecordedMatch('m1')]
       renderPage()
       expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+    })
+
+    it('is hidden when a completed match has no winner', () => {
+      mockMatchesData = [makeMatch('m1')]
+      renderPage()
+      expect(screen.queryByTestId('stats-panel')).not.toBeInTheDocument()
     })
 
     it('is hidden when there are no matches', () => {

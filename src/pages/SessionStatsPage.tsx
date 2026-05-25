@@ -203,7 +203,7 @@ export default function SessionStatsPage() {
   const rankings = useMemo(() => leaderboard?.rankings ?? [], [leaderboard])
 
   const completedMatches = useMemo(
-    () => matches?.filter((m) => m.status === 'COMPLETED') ?? [],
+    () => matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? [],
     [matches]
   )
   const totalPoints = rankings.reduce((sum, s) => sum + s.weeklyPoints, 0)

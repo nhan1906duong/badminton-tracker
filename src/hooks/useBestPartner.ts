@@ -30,6 +30,8 @@ export function useBestPartner(playerId: string) {
     }
 
     const playerMatches = matches.filter((m) => {
+      if (m.status !== 'COMPLETED') return false
+      if (!m.teams.some((t) => t.is_winner)) return false
       if (!DOUBLES_TYPES.includes(m.match_type)) return false
       return m.participants.some((p) => p.player_id === playerId)
     })
