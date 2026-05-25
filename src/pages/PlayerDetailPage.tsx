@@ -10,7 +10,6 @@ import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
 import type { PartnerEntry } from '../hooks/useBestPartner'
 import type { PlayerAchievement } from '../hooks/usePlayerAchievements'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
-import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import Avatar from '../components/Avatar'
@@ -98,7 +97,6 @@ export default function PlayerDetailPage() {
   const { data: myProfile } = useProfile(user?.id)
   const isMe = !!myProfile?.player_id && myProfile.player_id === id
 
-  const isAdmin = useIsAdmin()
   const updatePlayer = useUpdatePlayer()
   const uploadAvatar = useAvatarUpload()
   const removeAvatar = useAvatarDelete()
@@ -122,14 +120,14 @@ export default function PlayerDetailPage() {
       setEditName(player.name)
       setIsEditingName(true)
     }
-  }, [player])
+  }, [player, setEditName, setIsEditingName])
 
   const handleSaveName = useCallback(() => {
     if (player && editName.trim() && editName.trim() !== player.name) {
       updatePlayer.mutate({ id: player.id, name: editName.trim() })
     }
     setIsEditingName(false)
-  }, [player, editName, updatePlayer])
+  }, [player, editName, updatePlayer, setIsEditingName])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -225,23 +223,17 @@ export default function PlayerDetailPage() {
         </div>
 
         {/* 2. Avatar */}
-        {isAdmin || isMe ? (
-          <button
-            onClick={() => setShowAvatarPicker(true)}
-            aria-label={t('players.changeAvatar')}
-            className="active:opacity-70 transition-opacity"
-            style={{ marginBottom: 'var(--space-3)' }}
-          >
-            <Avatar src={player.avatar_url} name={player.name} size={52} />
-          </button>
-        ) : (
-          <div style={{ marginBottom: 'var(--space-3)' }}>
-            <Avatar src={player.avatar_url} name={player.name} size={52} />
-          </div>
-        )}
+        <button
+          onClick={() => setShowAvatarPicker(true)}
+          aria-label={t('players.changeAvatar')}
+          className="active:opacity-70 transition-opacity"
+          style={{ marginBottom: 'var(--space-3)' }}
+        >
+          <Avatar src={player.avatar_url} name={player.name} size={52} />
+        </button>
 
         {/* 3. Name + edit */}
-        {(isAdmin || isMe) && isEditingName ? (
+        {isEditingName ? (
           <input
             value={editName}
             onChange={(e) => setEditName(e.target.value)}
@@ -265,7 +257,7 @@ export default function PlayerDetailPage() {
               marginBottom: 'var(--space-2)',
             }}
           />
-        ) : isAdmin || isMe ? (
+        ) : (
           <button
             onClick={handleStartEditName}
             className="flex items-center gap-2 active:opacity-70 text-left"
@@ -285,20 +277,6 @@ export default function PlayerDetailPage() {
             </h1>
             <Pencil className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
           </button>
-        ) : (
-          <h1
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-3xl)',
-              fontWeight: 800,
-              lineHeight: 1.02,
-              letterSpacing: '-0.035em',
-              color: 'var(--fg)',
-              marginBottom: 'var(--space-2)',
-            }}
-          >
-            {player.name}
-          </h1>
         )}
 
         {/* 4. Rating */}
@@ -628,7 +606,7 @@ export default function PlayerDetailPage() {
         )}
       </div>
 
-      {(isAdmin || isMe) && showAvatarPicker && (
+      {showAvatarPicker && (
         <AvatarPicker
           currentAvatarUrl={player.avatar_url}
           onSelect={(file) => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}
