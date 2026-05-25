@@ -24,7 +24,9 @@ interface UploadParams {
 
 function getPublicUrl(path: string): string {
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-  return data.publicUrl
+  // Append cache-busting timestamp so the browser fetches the new image
+  // after an overwrite at the same path.
+  return `${data.publicUrl}?t=${Date.now()}`
 }
 
 export function useAvatarUpload() {

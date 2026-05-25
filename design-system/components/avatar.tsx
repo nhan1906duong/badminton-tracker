@@ -32,9 +32,9 @@ export function Avatar({
   bgColor = 'var(--accent)',
   textColor = 'var(--surface)',
 }: AvatarProps) {
-  const [error, setError] = useState(false)
+  const [errorForSrc, setErrorForSrc] = useState<string | null>(null)
   const imageUrl = src ? resolveAvatarUrl(src) : null
-  const hasError = error || !imageUrl
+  const hasError = !imageUrl || errorForSrc === src
 
   return (
     <div
@@ -59,7 +59,7 @@ export function Avatar({
           src={imageUrl}
           alt={name}
           className="w-full h-full object-cover"
-          onError={() => setError(true)}
+          onError={() => setErrorForSrc(src ?? null)}
           draggable={false}
         />
       )}
