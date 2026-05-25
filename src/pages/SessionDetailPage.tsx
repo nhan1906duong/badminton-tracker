@@ -92,6 +92,9 @@ export default function SessionDetailPage() {
   })()
 
   const recordedMatches = matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? []
+  const liveMatchCount = matches?.filter((m) => m.status === 'LIVE').length ?? 0
+  const matchCount = matches?.length ?? 0
+  const isDeletingCompletedSessionWithMatches = sessionStatus === 'ended' && matchCount > 0
 
   const uniquePlayerCount = recordedMatches.length > 0
     ? new Set(recordedMatches.flatMap((m) => m.participants.map((p) => p.player_id))).size
@@ -357,8 +360,8 @@ export default function SessionDetailPage() {
       <Dialog
         open={confirmEndOpen}
         onClose={() => setConfirmEndOpen(false)}
-        title={t('sessionDetail.endTitle')}
-        description={t('sessionDetail.endDescription')}
+        title={liveMatchCount > 0 ? t('sessionDetail.endWithLiveTitle') : t('sessionDetail.endTitle')}
+        description={liveMatchCount > 0 ? t('sessionDetail.endWithLiveDescription', { count: liveMatchCount }) : t('sessionDetail.endDescription')}
         kind="warning"
         actions={[
           { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmEndOpen(false) },
@@ -370,8 +373,12 @@ export default function SessionDetailPage() {
       <Dialog
         open={confirmDeleteSessionOpen}
         onClose={() => setConfirmDeleteSessionOpen(false)}
-        title={t('sessionDetail.deleteTitle')}
-        description={t('sessionDetail.deleteDescription')}
+        title={isDeletingCompletedSessionWithMatches ? t('sessionDetail.deleteCompletedWithMatchesTitle') : t('sessionDetail.deleteTitle')}
+        description={
+          isDeletingCompletedSessionWithMatches
+            ? t('sessionDetail.deleteCompletedWithMatchesDescription', { count: matchCount })
+            : t('sessionDetail.deleteDescription')
+        }
         kind="danger"
         actions={[
           { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmDeleteSessionOpen(false) },

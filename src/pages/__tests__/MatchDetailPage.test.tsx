@@ -431,6 +431,18 @@ describe('MatchDetailPage', () => {
       })
     })
 
+    it('warns before deleting a live match', () => {
+      mockMatchData = makeMatch({ status: 'LIVE' })
+      mockAllMatchesData = [mockMatchData]
+      renderPage()
+
+      fireEvent.click(screen.getByRole('button', { name: /more options/i }))
+      fireEvent.click(screen.getByText('Delete match'))
+
+      expect(screen.getByText('Delete recorded match?')).toBeInTheDocument()
+      expect(screen.getByText(/live or completed/)).toBeInTheDocument()
+    })
+
     it('shows live-only actions (Undo, Swap serve) in menu for LIVE match', () => {
       mockMatchData = makeMatch({ status: 'LIVE' })
       mockAllMatchesData = [mockMatchData]

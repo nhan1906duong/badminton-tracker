@@ -92,15 +92,18 @@ vi.mock('../../../design-system/components/dialog', () => ({
   Dialog: ({
     open,
     title,
+    description,
     actions,
   }: {
     open: boolean
     title: string
+    description: string
     actions: Array<{ label: string; onClick: () => void }>
   }) =>
     open ? (
       <div role="dialog">
         <p>{title}</p>
+        <p>{description}</p>
         {actions.map((a) => (
           <button key={a.label} onClick={a.onClick}>{a.label}</button>
         ))}
@@ -138,7 +141,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
   }
 }
 
-function makeMatch(id: string): MatchWithDetails {
+function makeMatch(id: string, overrides: Partial<MatchWithDetails> = {}): MatchWithDetails {
   return {
     id,
     session_id: 'sess-1',
@@ -152,6 +155,7 @@ function makeMatch(id: string): MatchWithDetails {
     teams: [],
     participants: [],
     scores: [],
+    ...overrides,
   }
 }
 
@@ -477,6 +481,14 @@ describe('SessionDetailPage', () => {
       })
     })
 
+    it('warns when ending while a match is still live', () => {
+      mockMatchesData = [makeMatch('m1', { status: 'LIVE' })]
+      renderPage()
+      openEndDialog()
+      expect(screen.getByText('End session with live matches?')).toBeInTheDocument()
+      expect(screen.getByText(/1 live match is still in progress/)).toBeInTheDocument()
+    })
+
     it('closes dialog after successful end', async () => {
       mockEndSession.mutateAsync.mockResolvedValue(undefined)
       renderPage()
@@ -511,6 +523,15 @@ describe('SessionDetailPage', () => {
       await waitFor(() => {
         expect(mockDeleteSession.mutateAsync).toHaveBeenCalledWith('sess-1')
       })
+    })
+
+    it('warns when deleting a completed session with matches', () => {
+      mockSessionData = makeSession({ ended_at: PAST })
+      mockMatchesData = [makeMatch('m1')]
+      renderPage()
+      openDeleteDialog()
+      expect(screen.getByText('Delete completed session?')).toBeInTheDocument()
+      expect(screen.getByText(/This completed session has 1 match/)).toBeInTheDocument()
     })
 
     it('navigates to /sessions after successful delete', async () => {

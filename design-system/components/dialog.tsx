@@ -97,6 +97,10 @@ export function Dialog({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="app-dialog-title"
+        aria-describedby="app-dialog-description"
         className="w-full max-w-sm bg-[var(--surface)] overflow-hidden"
         style={{
           borderRadius: 'var(--radius-xl)',
@@ -115,12 +119,13 @@ export function Dialog({
 
           <div className="flex-1 min-w-0 pt-0.5">
             <p
+              id="app-dialog-title"
               className="font-[family:var(--font-display)] font-bold text-[var(--fg)] leading-tight"
               style={{ fontSize: 16 }}
             >
               {title}
             </p>
-            <p className="text-[var(--muted)] mt-1 leading-snug" style={{ fontSize: 14 }}>
+            <p id="app-dialog-description" className="text-[var(--muted)] mt-1 leading-snug" style={{ fontSize: 14 }}>
               {description}
             </p>
           </div>
