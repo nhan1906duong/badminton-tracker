@@ -50,12 +50,11 @@ vi.mock('../../hooks/useSessions', () => ({
   useDeleteSession: () => mockDeleteSession,
 }))
 
-vi.mock('../../hooks/usePlayerStats', () => ({
-  usePlayerStats: () => ({ sortedByWins: [] }),
-}))
-
-vi.mock('../../hooks/usePlayers', () => ({
-  usePlayers: () => ({ data: [] }),
+vi.mock('../../hooks/useRankings', () => ({
+  useSessionLeaderboard: () => ({
+    data: { rankings: [], leader: undefined },
+    refetch: vi.fn(),
+  }),
 }))
 
 vi.mock('../../hooks/useIsAdmin', () => ({
@@ -93,15 +92,18 @@ vi.mock('../../../design-system/components/dialog', () => ({
   Dialog: ({
     open,
     title,
+    description,
     actions,
   }: {
     open: boolean
     title: string
+    description: string
     actions: Array<{ label: string; onClick: () => void }>
   }) =>
     open ? (
       <div role="dialog">
         <p>{title}</p>
+        <p>{description}</p>
         {actions.map((a) => (
           <button key={a.label} onClick={a.onClick}>{a.label}</button>
         ))}
@@ -139,7 +141,7 @@ function makeSession(overrides: Partial<Session> = {}): Session {
   }
 }
 
-function makeMatch(id: string): MatchWithDetails {
+function makeMatch(id: string, overrides: Partial<MatchWithDetails> = {}): MatchWithDetails {
   return {
     id,
     session_id: 'sess-1',
@@ -153,6 +155,17 @@ function makeMatch(id: string): MatchWithDetails {
     teams: [],
     participants: [],
     scores: [],
+    ...overrides,
+  }
+}
+
+function makeRecordedMatch(id: string): MatchWithDetails {
+  return {
+    ...makeMatch(id),
+    teams: [
+      { id: `${id}-team-a`, match_id: id, team_label: 'TEAM_A', is_winner: true },
+      { id: `${id}-team-b`, match_id: id, team_label: 'TEAM_B', is_winner: false },
+    ],
   }
 }
 
@@ -265,10 +278,16 @@ describe('SessionDetailPage', () => {
   // ── Stats panel ───────────────────────────────────────────────────────────
 
   describe('stats panel', () => {
-    it('is shown when matches exist', () => {
-      mockMatchesData = [makeMatch('m1')]
+    it('is shown when recorded results exist', () => {
+      mockMatchesData = [makeRecordedMatch('m1')]
       renderPage()
       expect(screen.getByTestId('stats-panel')).toBeInTheDocument()
+    })
+
+    it('is hidden when a completed match has no winner', () => {
+      mockMatchesData = [makeMatch('m1')]
+      renderPage()
+      expect(screen.queryByTestId('stats-panel')).not.toBeInTheDocument()
     })
 
     it('is hidden when there are no matches', () => {
@@ -462,6 +481,14 @@ describe('SessionDetailPage', () => {
       })
     })
 
+    it('warns when ending while a match is still live', () => {
+      mockMatchesData = [makeMatch('m1', { status: 'LIVE' })]
+      renderPage()
+      openEndDialog()
+      expect(screen.getByText('End session with live matches?')).toBeInTheDocument()
+      expect(screen.getByText(/1 live match is still in progress/)).toBeInTheDocument()
+    })
+
     it('closes dialog after successful end', async () => {
       mockEndSession.mutateAsync.mockResolvedValue(undefined)
       renderPage()
@@ -496,6 +523,15 @@ describe('SessionDetailPage', () => {
       await waitFor(() => {
         expect(mockDeleteSession.mutateAsync).toHaveBeenCalledWith('sess-1')
       })
+    })
+
+    it('warns when deleting a completed session with matches', () => {
+      mockSessionData = makeSession({ ended_at: PAST })
+      mockMatchesData = [makeMatch('m1')]
+      renderPage()
+      openDeleteDialog()
+      expect(screen.getByText('Delete completed session?')).toBeInTheDocument()
+      expect(screen.getByText(/This completed session has 1 match/)).toBeInTheDocument()
     })
 
     it('navigates to /sessions after successful delete', async () => {

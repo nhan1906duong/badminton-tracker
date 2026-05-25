@@ -4,11 +4,13 @@ import {
   useMatch,
   useStartMatch,
   useRecordResult,
+  useEndMatchNoWinner,
   useDeleteMatch,
   useReopenMatch,
   useMatches,
 } from '../hooks/useMatches'
 import { AppBar } from '../../design-system/components'
+import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Player } from '../types/database'
@@ -23,7 +25,7 @@ import {
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface LogEntry { team: 'A' | 'B'; a: number; b: number }
-type SheetKind = 'menu' | 'confirm-end' | 'award' | 'score-edit' | 'confirm-delete' | null
+type SheetKind = 'menu' | 'award' | 'score-edit' | null
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -199,6 +201,7 @@ export default function MatchDetailPage() {
   const { data: allMatches } = useMatches(sessionId)
   const startMatch = useStartMatch()
   const recordResult = useRecordResult()
+  const endMatchNoWinner = useEndMatchNoWinner()
   const deleteMatch = useDeleteMatch()
   const reopenMatch = useReopenMatch()
 
@@ -210,6 +213,8 @@ export default function MatchDetailPage() {
 
   // Sheet state
   const [sheet, setSheet] = useState<SheetKind>(null)
+  const [confirmEndNoWinnerOpen, setConfirmEndNoWinnerOpen] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const [kpValue, setKpValue] = useState('')
   const [kpTeam, setKpTeam] = useState<'A' | 'B'>('A')
 
@@ -364,12 +369,11 @@ export default function MatchDetailPage() {
 
   async function handleEndNoWinner() {
     setSheet(null)
-    const winnerTeam: 'TEAM_A' | 'TEAM_B' = liveScore.a >= liveScore.b ? 'TEAM_A' : 'TEAM_B'
-    await recordResult.mutateAsync({
+    await endMatchNoWinner.mutateAsync({
       id: matchId!,
-      winner_team: winnerTeam,
       scores: [{ set_number: 1, team_a_score: liveScore.a, team_b_score: liveScore.b }],
     })
+    setConfirmEndNoWinnerOpen(false)
   }
 
   async function handleReopenMatch() {
@@ -389,6 +393,7 @@ export default function MatchDetailPage() {
   async function handleDeleteMatch() {
     setSheet(null)
     await deleteMatch.mutateAsync(matchId!)
+    setConfirmDeleteOpen(false)
     navigate(-1)
   }
 
@@ -514,48 +519,6 @@ export default function MatchDetailPage() {
     )
   }
 
-  function renderConfirmEndSheet() {
-    return (
-      <div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)' }}>
-          {t('matchDetail.endNoWinnerTitle')}
-        </div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '0 var(--space-4)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
-          {t('matchDetail.endNoWinnerDescription', { score: `${liveScore.a}–${liveScore.b}` })}
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '0 var(--space-2)' }}>
-          <button type="button" onClick={() => setSheet(null)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
-            {t('common.cancel')}
-          </button>
-          <button type="button" onClick={handleEndNoWinner} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: 'none', background: 'var(--fg)', color: 'var(--surface)', touchAction: 'manipulation' }}>
-            {t('matchDetail.endMatch')}
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  function renderConfirmDeleteSheet() {
-    return (
-      <div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', padding: '0 var(--space-4)', marginBottom: 'var(--space-2)' }}>
-          {t('matchDetail.deleteTitle')}
-        </div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '0 var(--space-4)', marginBottom: 'var(--space-4)', lineHeight: 1.5 }}>
-          {t('matchDetail.deleteDescription', { number: matchNumber, teamA: teamAName, teamB: teamBName })}
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)', padding: '0 var(--space-2)' }}>
-          <button type="button" onClick={() => setSheet('menu')} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
-            {t('common.cancel')}
-          </button>
-          <button type="button" onClick={handleDeleteMatch} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: 'none', background: 'var(--danger)', color: 'var(--surface)', touchAction: 'manipulation' }}>
-            {t('common.delete')}
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   function renderMenuSheet() {
     return (
       <>
@@ -576,10 +539,10 @@ export default function MatchDetailPage() {
         <BottomSheetItem icon={<Pencil size={20} />} label={t('matchDetail.editPlayers')} onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/players/edit`)} />
         <BottomSheetDivider />
         {isLive && (
-          <BottomSheetItem icon={<Square size={20} />} label={t('matchDetail.endMatch')} onClick={() => setSheet('confirm-end')} danger />
+          <BottomSheetItem icon={<Square size={20} />} label={t('matchDetail.endMatch')} onClick={() => { setSheet(null); setConfirmEndNoWinnerOpen(true) }} danger />
         )}
         {isAdmin && (
-          <BottomSheetItem icon={<Trash2 size={20} />} label={t('matchDetail.deleteMatch')} onClick={() => setSheet('confirm-delete')} danger />
+          <BottomSheetItem icon={<Trash2 size={20} />} label={t('matchDetail.deleteMatch')} onClick={() => { setSheet(null); setConfirmDeleteOpen(true) }} danger />
         )}
         <BottomSheetCancel onClick={() => setSheet(null)} />
       </>
@@ -876,7 +839,7 @@ export default function MatchDetailPage() {
                 <CheckCircle style={{ width: 18, height: 18 }} />
                 {t('matchDetail.recordTeamWin')}
               </button>
-              <button type="button" onClick={() => setSheet('confirm-end')}
+              <button type="button" onClick={() => setConfirmEndNoWinnerOpen(true)}
                 style={{ width: '100%', padding: 'var(--space-4)', background: 'var(--surface)', color: 'var(--danger)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 700, border: '1px solid var(--danger)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', minHeight: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', touchAction: 'manipulation' }}>
                 <Square style={{ width: 18, height: 18 }} />
                 {t('matchDetail.endMatch')}
@@ -897,10 +860,44 @@ export default function MatchDetailPage() {
       <BottomSheet open={sheet !== null} onClose={() => setSheet(null)}>
         {sheet === 'menu' && renderMenuSheet()}
         {sheet === 'award' && renderAwardSheet()}
-        {sheet === 'confirm-end' && renderConfirmEndSheet()}
-        {sheet === 'confirm-delete' && renderConfirmDeleteSheet()}
         {sheet === 'score-edit' && renderScoreKeypad()}
       </BottomSheet>
+
+      <Dialog
+        open={confirmEndNoWinnerOpen}
+        onClose={() => setConfirmEndNoWinnerOpen(false)}
+        title={t('matchDetail.endNoWinnerTitle')}
+        description={t('matchDetail.endNoWinnerDescription', { score: `${liveScore.a}–${liveScore.b}` })}
+        kind="warning"
+        actions={[
+          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmEndNoWinnerOpen(false) },
+          {
+            label: endMatchNoWinner.isPending ? t('common.ending') : t('matchDetail.endMatch'),
+            variant: 'primary',
+            onClick: handleEndNoWinner,
+          },
+        ]}
+      />
+
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        title={isLive || isCompleted ? t('matchDetail.deleteRecordedTitle') : t('matchDetail.deleteTitle')}
+        description={
+          isLive || isCompleted
+            ? t('matchDetail.deleteRecordedDescription', { number: matchNumber, teamA: teamAName, teamB: teamBName })
+            : t('matchDetail.deleteDescription', { number: matchNumber, teamA: teamAName, teamB: teamBName })
+        }
+        kind="danger"
+        actions={[
+          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmDeleteOpen(false) },
+          {
+            label: deleteMatch.isPending ? t('common.deleting') : t('common.delete'),
+            variant: 'danger',
+            onClick: handleDeleteMatch,
+          },
+        ]}
+      />
 
     </div>
   )

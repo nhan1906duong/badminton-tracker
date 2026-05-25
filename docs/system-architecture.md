@@ -78,14 +78,29 @@
          ↓
 3. Add Match → Select Type + Players (filtered by active list)
          ↓
-4. Enter Set Scores (optional, tap to add)
+4. Live scoring happens in page state until finalization
          ↓
-5. Select Winner → Save to Supabase (scoped to session)
+5. Select Winner → save scores + `player_match_results`
+   OR End Match → save score with no winner and no ranking rows
          ↓
 6. Edit Match later (players, scores, winner, match type)
          ↓
 7. End Session when done
 ```
+
+## Ranking & Session Leaderboards
+
+`player_match_results` is the canonical source for weekly/session rankings. `useRecordResult()` creates or updates those rows when a winner is recorded. `useEndMatchNoWinner()` completes a match, clears team winners, deletes any result rows for that match, and saves non-empty score rows so invalid/stopped matches do not affect standings.
+
+`useRankings.ts` exposes shared session leaderboard hooks:
+
+| Hook | Purpose |
+|------|---------|
+| `useSessionWeeklyRankings(sessionId)` | Rankings array for a single session |
+| `useSessionLeaderboard(sessionId)` | Rankings plus `leader` for session detail/stats pages |
+| `useSessionLeaderboards()` | Map of session id → leaderboard for session cards |
+
+Only `COMPLETED` matches with a winning team count toward session stat panels, player history, head-to-head stats, best-partner stats, donations, and Elo recalculation.
 
 ## Authentication Flow
 
@@ -121,6 +136,8 @@ All sub-page routes use `navigate(-1)` (browser back) via the `AppBar` component
 ## Role-based Access Control
 
 Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. RLS policies restrict destructive deletes to admins (`is_admin()` SQL function defined in `supabase/migrations/008_role.sql`). Authenticated users can start/end sessions and edit match lifecycle/details through `011_authenticated_update_sessions.sql` and `012_authenticated_match_edits.sql`. Player avatar/name editing is available from `PlayerDetailPage`; delete UI remains admin-gated through `useIsAdmin`.
+
+Risky lifecycle actions use shared confirmation dialogs before mutation. Ending a session warns when live matches remain, deleting an ended session with matches warns about removing history/ranking data, and deleting live/completed matches warns about score and win/loss removal.
 
 ## Key Files
 

@@ -25,8 +25,10 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Auto Team Assignment | Implemented | Players auto-assign to Team A (blue) then Team B (red) |
 | Inline Player Add | Implemented | Add player without leaving match flow |
 | Score Entry | Implemented | Per-set inputs with auto winner detection |
+| End Match Without Winner | Implemented | Live matches can be completed without standings impact |
 | Match History | Implemented | List + detail view with all match data |
 | Home Dashboard | Implemented | Stats cards + recent matches + PodiumChart top donate |
+| Ranking-Synced Session Summaries | Implemented | Session list/detail leaders use the same `player_match_results` source as session stats |
 | Bottom Navigation | Implemented | Sessions, Ranking, Settings tabs |
 | Avatar Upload | Implemented | Camera/gallery picker, compress, Supabase Storage |
 | Default Avatars | Implemented | Deterministic multiavatar from name hash + 10 selectable defaults |
@@ -48,10 +50,11 @@ profiles (1:1 with auth.users) ── avatar_url, role, player_id
 
 ## Match Flow
 
-1. Select match type (singles/doubles) via dropdown
-2. Pick players from unified 2-column grid (auto Team A/B assignment)
-3. Enter set scores (optional)
-4. Select winner → Save to Supabase
+1. Select match type (singles/doubles) via segmented control
+2. Pick Team A/B slots from the player bottom sheet
+3. Choose Now, Schedule, or Queue
+4. In match detail, record a winner → save scores and ranking rows to Supabase
+5. Or end without winner → save score only, excluded from ranking/history aggregates
 
 ## Tech Stack
 

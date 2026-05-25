@@ -23,6 +23,7 @@ export function useHeadToHead(playerId: string) {
       if (!pp) continue
       const playerTeam = match.teams.find((t) => t.id === pp.team_id)
       if (!playerTeam) continue
+      if (!match.teams.some((t) => t.is_winner)) continue
       const isWin = playerTeam.is_winner
 
       for (const opp of match.participants.filter((p) => p.team_id !== pp.team_id)) {

@@ -39,8 +39,7 @@ function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'
   return '—'
 }
 import { useMatches } from '../hooks/useMatches'
-import { usePlayerStats } from '../hooks/usePlayerStats'
-import { usePlayers } from '../hooks/usePlayers'
+import { useSessionLeaderboard } from '../hooks/useRankings'
 import { useSession, useStartSession, useEndSession, useDeleteSession } from '../hooks/useSessions'
 import MatchesContent from '../components/MatchesContent'
 import FloatingActionButton from '../components/FloatingActionButton'
@@ -66,13 +65,16 @@ export default function SessionDetailPage() {
   const startSession = useStartSession()
   const deleteSession = useDeleteSession()
   const sid = sessionId ?? ''
-  const { sortedByWins } = usePlayerStats(sid)
-  const { data: players } = usePlayers()
+  const { data: leaderboard, refetch: refetchLeaderboard } = useSessionLeaderboard(sid)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [confirmDeleteSessionOpen, setConfirmDeleteSessionOpen] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([refetchMatches(), refetchLeaderboard()])
+  }, [refetchMatches, refetchLeaderboard])
 
   if (!sessionId) {
     return (
@@ -89,18 +91,21 @@ export default function SessionDetailPage() {
     return 'live'
   })()
 
-  const uniquePlayerCount = matches
-    ? new Set(matches.flatMap((m) => m.participants.map((p) => p.player_id))).size
+  const recordedMatches = matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? []
+  const liveMatchCount = matches?.filter((m) => m.status === 'LIVE').length ?? 0
+  const matchCount = matches?.length ?? 0
+  const isDeletingCompletedSessionWithMatches = sessionStatus === 'ended' && matchCount > 0
+
+  const uniquePlayerCount = recordedMatches.length > 0
+    ? new Set(recordedMatches.flatMap((m) => m.participants.map((p) => p.player_id))).size
     : 0
 
-  const mvpPlayer = sortedByWins.find((s) => s.matchesPlayed > 0)
+  const mvpPlayer = leaderboard?.leader
   const mvpName = mvpPlayer ? formatShortPlayerName(mvpPlayer.name) : undefined
   const mvpLabel = mvpPlayer
     ? `${sessionStatus === 'ended' ? t('sessionDetail.mvp') : t('sessionDetail.leading')} · ${Math.round((mvpPlayer.wins / mvpPlayer.matchesPlayed) * 100)}%`
     : undefined
-  const mvpAvatarUrl = mvpPlayer
-    ? (players?.find((p) => p.id === mvpPlayer.playerId)?.avatar_url ?? null)
-    : null
+  const mvpAvatarUrl = mvpPlayer?.avatarUrl ?? null
 
   async function handleEndSession() {
     try {
@@ -136,10 +141,6 @@ export default function SessionDetailPage() {
   function closeMenu() { setMenuOpen(false) }
 
   const backTo = (location.state as { from?: string } | null)?.from ?? '/sessions'
-
-  const handleRefresh = useCallback(async () => {
-    await refetchMatches()
-  }, [refetchMatches])
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -240,9 +241,9 @@ export default function SessionDetailPage() {
 
         <div className="px-[var(--space-5)] space-y-6">
           {/* Stats panel */}
-          {(matches?.length ?? 0) > 0 && (
+          {recordedMatches.length > 0 && (
             <SessionStatsPanel
-              matchCount={matches?.length ?? 0}
+              matchCount={recordedMatches.length}
               playerCount={uniquePlayerCount}
               mvpName={mvpName}
               mvpLabel={mvpLabel}
@@ -359,8 +360,8 @@ export default function SessionDetailPage() {
       <Dialog
         open={confirmEndOpen}
         onClose={() => setConfirmEndOpen(false)}
-        title={t('sessionDetail.endTitle')}
-        description={t('sessionDetail.endDescription')}
+        title={liveMatchCount > 0 ? t('sessionDetail.endWithLiveTitle') : t('sessionDetail.endTitle')}
+        description={liveMatchCount > 0 ? t('sessionDetail.endWithLiveDescription', { count: liveMatchCount }) : t('sessionDetail.endDescription')}
         kind="warning"
         actions={[
           { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmEndOpen(false) },
@@ -372,8 +373,12 @@ export default function SessionDetailPage() {
       <Dialog
         open={confirmDeleteSessionOpen}
         onClose={() => setConfirmDeleteSessionOpen(false)}
-        title={t('sessionDetail.deleteTitle')}
-        description={t('sessionDetail.deleteDescription')}
+        title={isDeletingCompletedSessionWithMatches ? t('sessionDetail.deleteCompletedWithMatchesTitle') : t('sessionDetail.deleteTitle')}
+        description={
+          isDeletingCompletedSessionWithMatches
+            ? t('sessionDetail.deleteCompletedWithMatchesDescription', { count: matchCount })
+            : t('sessionDetail.deleteDescription')
+        }
         kind="danger"
         actions={[
           { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmDeleteSessionOpen(false) },

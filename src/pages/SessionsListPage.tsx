@@ -13,6 +13,7 @@ import {
 } from '../lib/session-format'
 import type { MatchWithDetails } from '../types/database'
 import { useI18n } from '../i18n'
+import { useSessionLeaderboards } from '../hooks/useRankings'
 
 interface SessionStat {
   matchCount: number
@@ -39,6 +40,12 @@ export default function SessionsListPage() {
     isError: matchesError,
     refetch: refetchMatches,
   } = useMatches()
+  const {
+    data: sessionLeaderboards,
+    isLoading: leaderboardsLoading,
+    isError: leaderboardsError,
+    refetch: refetchLeaderboards,
+  } = useSessionLeaderboards()
 
   const sessionStats = useMemo(() => {
     if (!allMatches) return new Map<string, SessionStat>()
@@ -53,45 +60,15 @@ export default function SessionsListPage() {
     }
 
     for (const [sessionId, matches] of matchesBySession) {
-      const playerMap = new Map<string, { name: string; avatarUrl?: string | null; wins: number; played: number }>()
-
-      for (const match of matches) {
-        const winnerTeam = match.teams.find((t) => t.is_winner)
-        if (!winnerTeam) continue
-
-        for (const p of match.participants) {
-          const team = match.teams.find((t) => t.id === p.team_id)
-          if (!team) continue
-
-          const existing = playerMap.get(p.player_id)
-          if (existing) {
-            existing.played++
-            if (team.id === winnerTeam.id) existing.wins++
-          } else {
-            playerMap.set(p.player_id, {
-              name: p.player.name,
-              avatarUrl: p.player.avatar_url,
-              wins: team.id === winnerTeam.id ? 1 : 0,
-              played: 1,
-            })
-          }
-        }
-      }
-
-      let best: { name: string; avatarUrl?: string | null; wins: number; played: number } | null = null
-      for (const [, p] of playerMap) {
-        if (!best || p.wins > best.wins || (p.wins === best.wins && p.played < best.played)) {
-          best = p
-        }
-      }
+      const leader = sessionLeaderboards?.get(sessionId)?.leader
 
       const topPlayer =
-        best && best.played > 0
+        leader && leader.matchesPlayed > 0
           ? {
-              name: best.name,
-              avatarUrl: best.avatarUrl,
-              record: t('units.winLossPlayed', { wins: best.wins, losses: best.played - best.wins, played: best.played }),
-              winRate: Math.round((best.wins / best.played) * 100),
+              name: leader.name,
+              avatarUrl: leader.avatarUrl,
+              record: t('units.winLossPlayed', { wins: leader.wins, losses: leader.losses, played: leader.matchesPlayed }),
+              winRate: Math.round((leader.wins / leader.matchesPlayed) * 100),
             }
           : undefined
 
@@ -99,10 +76,10 @@ export default function SessionsListPage() {
     }
 
     return stats
-  }, [allMatches, t])
+  }, [allMatches, sessionLeaderboards, t])
 
-  const isLoading = sessionsLoading || matchesLoading
-  const isError = sessionsError || matchesError
+  const isLoading = sessionsLoading || matchesLoading || leaderboardsLoading
+  const isError = sessionsError || matchesError || leaderboardsError
 
   const activeCount = sessions?.filter((s) => getSessionStatus(s) === 'active').length ?? 0
   const scheduledCount = sessions?.filter((s) => getSessionStatus(s) === 'scheduled').length ?? 0
@@ -117,8 +94,8 @@ export default function SessionsListPage() {
     : null
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refetchSessions(), refetchMatches()])
-  }, [refetchSessions, refetchMatches])
+    await Promise.all([refetchSessions(), refetchMatches(), refetchLeaderboards()])
+  }, [refetchSessions, refetchMatches, refetchLeaderboards])
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

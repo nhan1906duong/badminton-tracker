@@ -11,6 +11,8 @@ The app uses two independent scoring systems that serve different purposes:
 
 Keeping them separate prevents highly active players from always dominating the all-time leaderboard, while still rewarding performance within a single session.
 
+Only matches with a declared winner are counted in weekly points, Elo, session leaderboards, player history, head-to-head stats, and best-partner stats. A match can be ended without a winner; that stores its score and marks it `COMPLETED`, but deletes any `player_match_results` rows for the match and leaves it out of ranking/history aggregates.
+
 ---
 
 ## 1. Weekly Points System
@@ -167,9 +169,13 @@ Team A loses:
 
 `useRecordResult()` fetches current player ratings, calculates the weekly point breakdown for each participant, and upserts rows into `player_match_results`. Rating columns (`rating_before`, `rating_after`, `rating_delta`) are left `null` at this stage.
 
+### No-winner completion — on match end
+
+`useEndMatchNoWinner()` marks the match `COMPLETED`, clears `match_teams.is_winner`, deletes any existing `player_match_results` rows, and saves non-empty score rows. Use this when a live match is stopped or invalid and should not affect standings, donations, Elo, match history, head-to-head records, or best-partner calculations.
+
 ### Elo ratings — on session end
 
-`useEndSession()` processes all completed matches in the session in **played_at ascending** order. It runs Elo calculations match-by-match (running updates, not a single batch), fills in the rating columns in `player_match_results`, and writes the final ratings back to `players.rating`.
+`useEndSession()` processes all completed matches with a winning team in the session in **played_at ascending** order. It runs Elo calculations match-by-match (running updates, not a single batch), fills in the rating columns in `player_match_results`, and writes the final ratings back to `players.rating`.
 
 Using running updates within a session means each match uses the rating state after all previous matches in the same session, which more accurately reflects player strength throughout the session.
 
@@ -193,6 +199,9 @@ Filtered to the currently open session, sorted by:
 1. `weeklyPoints` DESC
 2. `wins` DESC
 3. `pointDifference` DESC
+4. `name` ASC
+
+The same `player_match_results`-based ordering is shared by `useSessionWeeklyRankings()`, `useSessionLeaderboard(sessionId)`, and `useSessionLeaderboards()`. Session cards and session detail MVP/leader panels use these hooks so their leader matches the session stats page.
 
 ---
 
@@ -251,7 +260,7 @@ All functions are pure with no side effects. `SCORING_CONFIG` holds all numeric 
 1. Resets all `players.rating` to 1000.
 2. Deletes all `player_match_results`.
 3. Iterates sessions in `started_at ASC` order.
-4. Within each session, iterates completed matches in `played_at ASC` order.
+4. Within each session, iterates completed matches with a winning team in `played_at ASC` order.
 5. **Ended sessions**: calculates weekly points + Elo, writes all fields, advances the running rating map.
 6. **Open sessions**: calculates weekly points only using current running ratings; rating columns stay `null` (filled when that session later ends).
 7. Persists final ratings to `players`.

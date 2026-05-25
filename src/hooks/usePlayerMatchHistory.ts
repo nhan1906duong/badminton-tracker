@@ -37,6 +37,7 @@ export function usePlayerMatchHistory(playerId: string) {
       let losses = 0
       for (const match of matches) {
         if (match.status !== 'COMPLETED') continue
+        if (!match.teams.some((t) => t.is_winner)) continue
         const pp = match.participants.find((p) => p.player_id === playerId)
         if (!pp) continue
         const team = match.teams.find((t) => t.id === pp.team_id)
@@ -45,7 +46,12 @@ export function usePlayerMatchHistory(playerId: string) {
         else losses++
       }
 
-      result.push({ session, matches, wins, losses })
+      const countedMatches = matches.filter(
+        (m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)
+      )
+      if (countedMatches.length === 0) continue
+
+      result.push({ session, matches: countedMatches, wins, losses })
     }
 
     return result.sort(

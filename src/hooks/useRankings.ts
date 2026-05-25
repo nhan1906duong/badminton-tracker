@@ -33,6 +33,76 @@ export interface SessionWeeklyStats {
   ratingDelta: number
 }
 
+interface PlayerRow {
+  id: string
+  name: string
+  avatar_url: string | null
+}
+
+interface SessionResultRow {
+  session_id: string
+  player_id: string
+  is_winner: boolean
+  team_score: number
+  opponent_score: number
+  total_weekly_points: number
+  rating_delta: number | null
+}
+
+export interface SessionLeaderboard {
+  rankings: SessionWeeklyStats[]
+  leader: SessionWeeklyStats | undefined
+}
+
+function buildSessionWeeklyRankings(
+  players: PlayerRow[] | null | undefined,
+  results: SessionResultRow[] | null | undefined
+): SessionWeeklyStats[] {
+  const playerMap = new Map((players ?? []).map(p => [p.id, p]))
+
+  const statsMap = new Map<string, {
+    weeklyPoints: number; wins: number; losses: number
+    matchesPlayed: number; pointsFor: number; pointsAgainst: number; ratingDelta: number
+  }>()
+
+  for (const r of results ?? []) {
+    const s = statsMap.get(r.player_id) ?? {
+      weeklyPoints: 0, wins: 0, losses: 0,
+      matchesPlayed: 0, pointsFor: 0, pointsAgainst: 0, ratingDelta: 0,
+    }
+    s.matchesPlayed += 1
+    s.wins += r.is_winner ? 1 : 0
+    s.losses += r.is_winner ? 0 : 1
+    s.weeklyPoints += r.total_weekly_points
+    s.pointsFor += r.team_score
+    s.pointsAgainst += r.opponent_score
+    s.ratingDelta += r.rating_delta ?? 0
+    statsMap.set(r.player_id, s)
+  }
+
+  return Array.from(statsMap.entries())
+    .map(([playerId, s]) => {
+      const p = playerMap.get(playerId)
+      return {
+        playerId,
+        name: p?.name ?? 'Unknown',
+        avatarUrl: p?.avatar_url ?? null,
+        weeklyPoints: s.weeklyPoints,
+        wins: s.wins,
+        losses: s.losses,
+        matchesPlayed: s.matchesPlayed,
+        pointDifference: s.pointsFor - s.pointsAgainst,
+        ratingDelta: s.ratingDelta,
+      }
+    })
+    .sort((a, b) => {
+      if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
+      if (b.wins !== a.wins) return b.wins - a.wins
+      if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference
+      return a.name.localeCompare(b.name)
+    })
+}
+
 export function usePlayerRankings() {
   return useQuery({
     queryKey: ['player-rankings'],
@@ -174,59 +244,66 @@ export function useSessionWeeklyRankings(sessionId: string | undefined) {
       if (playersError) throw playersError
       if (resultsError) throw resultsError
 
-      type ResultRow = {
-        player_id: string
-        is_winner: boolean
-        team_score: number
-        opponent_score: number
-        total_weekly_points: number
-        rating_delta: number | null
+      return buildSessionWeeklyRankings(
+        players as PlayerRow[] | null,
+        (results ?? []).map(r => ({ ...(r as Omit<SessionResultRow, 'session_id'>), session_id: sessionId! }))
+      )
+    },
+  })
+}
+
+export function useSessionLeaderboard(sessionId: string | undefined) {
+  return useQuery({
+    queryKey: ['player-rankings', 'session-leaderboard', sessionId],
+    enabled: !!sessionId,
+    queryFn: async () => {
+      const [{ data: players, error: playersError }, { data: results, error: resultsError }] =
+        await Promise.all([
+          supabase.from('players').select('id, name, avatar_url'),
+          supabase
+            .from('player_match_results')
+            .select('session_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
+            .eq('session_id', sessionId!),
+        ])
+
+      if (playersError) throw playersError
+      if (resultsError) throw resultsError
+
+      const rankings = buildSessionWeeklyRankings(players as PlayerRow[] | null, results as SessionResultRow[] | null)
+      return { rankings, leader: rankings[0] } satisfies SessionLeaderboard
+    },
+  })
+}
+
+export function useSessionLeaderboards() {
+  return useQuery({
+    queryKey: ['player-rankings', 'session-leaderboards'],
+    queryFn: async () => {
+      const [{ data: players, error: playersError }, { data: results, error: resultsError }] =
+        await Promise.all([
+          supabase.from('players').select('id, name, avatar_url'),
+          supabase
+            .from('player_match_results')
+            .select('session_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta'),
+        ])
+
+      if (playersError) throw playersError
+      if (resultsError) throw resultsError
+
+      const resultsBySession = new Map<string, SessionResultRow[]>()
+      for (const result of (results ?? []) as SessionResultRow[]) {
+        const sessionResults = resultsBySession.get(result.session_id) ?? []
+        sessionResults.push(result)
+        resultsBySession.set(result.session_id, sessionResults)
       }
 
-      const playerMap = new Map((players ?? []).map(p => [p.id, p]))
-
-      const statsMap = new Map<string, {
-        weeklyPoints: number; wins: number; losses: number
-        matchesPlayed: number; pointsFor: number; pointsAgainst: number; ratingDelta: number
-      }>()
-
-      for (const r of (results ?? []) as ResultRow[]) {
-        const s = statsMap.get(r.player_id) ?? {
-          weeklyPoints: 0, wins: 0, losses: 0,
-          matchesPlayed: 0, pointsFor: 0, pointsAgainst: 0, ratingDelta: 0,
-        }
-        s.matchesPlayed += 1
-        s.wins += r.is_winner ? 1 : 0
-        s.losses += r.is_winner ? 0 : 1
-        s.weeklyPoints += r.total_weekly_points
-        s.pointsFor += r.team_score
-        s.pointsAgainst += r.opponent_score
-        s.ratingDelta += r.rating_delta ?? 0
-        statsMap.set(r.player_id, s)
+      const leaderboards = new Map<string, SessionLeaderboard>()
+      for (const [sessionId, sessionResults] of resultsBySession) {
+        const rankings = buildSessionWeeklyRankings(players as PlayerRow[] | null, sessionResults)
+        leaderboards.set(sessionId, { rankings, leader: rankings[0] })
       }
 
-      const weekly: SessionWeeklyStats[] = Array.from(statsMap.entries())
-        .map(([playerId, s]) => {
-          const p = playerMap.get(playerId)
-          return {
-            playerId,
-            name: p?.name ?? 'Unknown',
-            avatarUrl: p?.avatar_url ?? null,
-            weeklyPoints: s.weeklyPoints,
-            wins: s.wins,
-            losses: s.losses,
-            matchesPlayed: s.matchesPlayed,
-            pointDifference: s.pointsFor - s.pointsAgainst,
-            ratingDelta: s.ratingDelta,
-          }
-        })
-        .sort((a, b) => {
-          if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
-          if (b.wins !== a.wins) return b.wins - a.wins
-          return b.pointDifference - a.pointDifference
-        })
-
-      return weekly
+      return leaderboards
     },
   })
 }

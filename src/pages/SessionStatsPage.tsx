@@ -4,7 +4,7 @@ import { Activity, ChevronLeft, Medal, Crown } from 'lucide-react'
 import { AppBar, Avatar, EmptyState, LoadingState, StatRow, PullToRefresh } from '../../design-system/components'
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
-import { useSessionWeeklyRankings, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useI18n } from '../i18n'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -197,12 +197,13 @@ export default function SessionStatsPage() {
   const navigate = useNavigate()
   const { data: session } = useSession(sessionId)
   const { data: matches, isLoading: matchesLoading, refetch: refetchMatches } = useMatches(sessionId)
-  const { data: rankings = [], isLoading: rankingsLoading, refetch: refetchRankings } = useSessionWeeklyRankings(sessionId)
+  const { data: leaderboard, isLoading: rankingsLoading, refetch: refetchRankings } = useSessionLeaderboard(sessionId)
   const { user } = useAuth()
   const { data: profile } = useProfile(user?.id)
+  const rankings = useMemo(() => leaderboard?.rankings ?? [], [leaderboard])
 
   const completedMatches = useMemo(
-    () => matches?.filter((m) => m.status === 'COMPLETED') ?? [],
+    () => matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? [],
     [matches]
   )
   const totalPoints = rankings.reduce((sum, s) => sum + s.weeklyPoints, 0)
