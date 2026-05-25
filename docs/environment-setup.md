@@ -19,18 +19,21 @@ Guide for creating a new environment (e.g., production, staging) from scratch.
 
 In Supabase Dashboard → SQL Editor → New query:
 
-**Run `001_initial_schema.sql`:**
+Run every migration in numeric order:
 
-```sql
--- copy contents of supabase/migrations/001_initial_schema.sql
--- and paste into SQL Editor, then Run
 ```
-
-**Run `002_sessions.sql`:**
-
-```sql
--- copy contents of supabase/migrations/002_sessions.sql
--- and paste into SQL Editor, then Run
+001_initial_schema.sql
+002_sessions.sql
+003_sessions_tournament.sql
+004_bwf_tournaments.sql
+005_sessions_bwf_tournament_id.sql
+006_ranking_system.sql
+007_match_lifecycle_columns.sql
+008_role.sql
+009_user_player_link.sql
+010_auto_create_profile.sql
+011_authenticated_update_sessions.sql
+012_authenticated_match_edits.sql
 ```
 
 ---
@@ -131,7 +134,7 @@ Settings → Deployment Protection → **Disable** Vercel Authentication.
 | Check | How |
 |-------|-----|
 | Site loads | Open production URL |
-| Login works | Send OTP, check email |
+| Login works | Sign in with email + password |
 | Create player | Add a player in the app |
 | Upload avatar | Pick a photo for a player |
 | Create session | Start a new session |
@@ -142,7 +145,7 @@ Settings → Deployment Protection → **Disable** Vercel Authentication.
 ## Environment Checklist
 
 - [ ] Supabase project created
-- [ ] Migrations 001 and 002 run
+- [ ] All migrations run in numeric order
 - [ ] Storage bucket `avatars` created (public)
 - [ ] Storage policies applied
 - [ ] Auth Site URL configured

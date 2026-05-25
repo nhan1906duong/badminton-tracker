@@ -36,10 +36,7 @@ Project Settings → API:
 
 ### 3. Run Migrations
 
-In Supabase Dashboard → SQL Editor, run in order:
-
-1. `supabase/migrations/001_initial_schema.sql`
-2. `supabase/migrations/002_sessions.sql`
+In Supabase Dashboard → SQL Editor, run every file in `supabase/migrations/` in numeric order (`001_...` through `012_...`). The later migrations add BWF tournament metadata, ranking fields, match lifecycle state, roles, user-player linking, profile auto-creation, and authenticated session/match edit policies.
 
 ### 4. Create Storage Bucket (Avatars)
 
@@ -84,9 +81,9 @@ CREATE POLICY "avatars_delete_auth"
   USING (bucket_id = 'avatars');
 ```
 
-### 6. Auth Settings (OTP / Magic Link)
+### 6. Auth Settings
 
-The app uses Supabase OTP (email magic link).
+The app uses Supabase email + password sign-in.
 
 1. Authentication → Providers → Email
 2. Ensure **Confirm email** is enabled
@@ -200,6 +197,6 @@ Requires HTTPS and a valid manifest (handled by `vite-plugin-pwa`).
 | 404 on page refresh | Ensure `vercel.json` has SPA rewrite rules |
 | "Log in to Vercel" screen | Disable Deployment Protection in Vercel settings |
 | Supabase connection failed | Verify env vars are correct in Vercel |
-| OTP not received | Check spam folder; verify Auth Site URL matches your domain |
+| Login fails | Verify the user exists, email confirmation settings, and Auth Site URL match your domain |
 | Build failed | Run `npm run lint` to check errors |
 | CORS errors on storage | Ensure bucket is public and policies allow authenticated access |

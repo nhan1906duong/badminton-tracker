@@ -5,15 +5,16 @@
 | Phase | Name | Status | Notes |
 |-------|------|--------|-------|
 | 1 | Project Setup | ✅ Done | Vite, React, Tailwind, Supabase |
-| 2 | Authentication | ✅ Done | OTP email login |
+| 2 | Authentication | ✅ Done | Email + password login |
 | 3 | Player Management | ✅ Done | CRUD + active toggle |
-| 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit |
+| 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit, authenticated start/end |
 | 5 | Home Dashboard | ✅ Done | Stats + recent matches + PodiumChart |
 | 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate |
 | 7 | Match History | ✅ Done | List + detail view |
 | 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
 | 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history, achievements |
 | 9a | BWF Category Badges | ✅ Done | Tiered color badges (S1000/S750/S500/S300/S100/Finals) on sessions |
+| 9b | Champion Celebration | ✅ Done | One-time firework effect for linked champion on ended session stats |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
 
@@ -27,7 +28,7 @@
 - [x] Bottom navigation
 
 ### Phase 2: Authentication ✅
-- [x] Supabase OTP email login
+- [x] Supabase email + password login
 - [x] Auth context
 - [x] Protected routes
 - [x] Loading states
@@ -53,6 +54,7 @@
 - [x] Save match to database (with session_id)
 - [x] Edit match (scores, winner, match type)
 - [x] Delete match from session
+- [x] Any authenticated user can start/end sessions and edit match lifecycle/details
 
 ### Phase 5: Home Dashboard ✅
 - [x] Stats cards (total matches, players)
@@ -77,7 +79,7 @@
 - [x] cleanupOldAvatar helper that removes old uploaded photos from Supabase Storage
 - [x] Client-side image compression (200x200 JPEG)
 - [x] Supabase Storage upload/delete hooks
-- [x] User avatar on Settings page
+- [x] User avatar display on Settings page
 - [x] Player avatar on Players page
 - [x] Avatar in PlayerSelector grid
 - [x] Avatar in PodiumChart
@@ -87,6 +89,7 @@
 - [x] Player detail page at `/players/:playerId`
 - [x] Editable avatar (tap to open AvatarPicker)
 - [x] Editable name (inline edit, blur/Enter to save)
+- [x] Player avatar/name editing available directly from Player Detail page
 - [x] Stats row: total matches, wins, losses, donated amount
 - [x] Best partner card (doubles-only, highest win rate)
 - [x] Match history list with infinite scroll (~10 per batch)
@@ -100,6 +103,12 @@
 - [x] Join bwf_tournaments in useSessions / useSession / useOpenSession
 - [x] Display badge on session cards (SessionsListPage)
 - [x] Display badge on session detail (SessionDetailPage)
+
+### Phase 9b: Champion Celebration ✅
+- [x] Canvas firework overlay component
+- [x] Show celebration on ended session stats when the linked player is rank #1
+- [x] Persist one-time playback per session/player in localStorage
+- [x] Show champion badge on the rank #1 stats row
 
 ### Phase 10: PWA Enhancement ✅
 - [x] Service worker + manifest
