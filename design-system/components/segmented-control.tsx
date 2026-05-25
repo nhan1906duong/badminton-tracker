@@ -19,37 +19,22 @@ export function SegmentedControl<T extends string = string>({
   onChange,
   ariaLabel,
 }: SegmentedControlProps<T>) {
-  const activeIndex = tabs.findIndex((t) => t.id === value)
-
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
+      className="segmented-scroll"
       style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${tabs.length}, 1fr)`,
+        display: 'flex',
         background: 'var(--bg)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
         padding: 3,
-        position: 'relative',
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
       }}
     >
-      {/* Sliding track */}
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: 3,
-          bottom: 3,
-          width: `calc((100% - 6px) / ${tabs.length})`,
-          left: 3,
-          background: 'var(--fg)',
-          borderRadius: 6,
-          transition: 'transform 280ms cubic-bezier(0.32, 0, 0.15, 1)',
-          transform: `translateX(${activeIndex * 100}%)`,
-        }}
-      />
       {tabs.map((tab) => {
         const active = tab.id === value
         return (
@@ -59,12 +44,13 @@ export function SegmentedControl<T extends string = string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(tab.id)}
+            className="shrink-0"
             style={{
               position: 'relative',
               zIndex: 1,
-              background: 'transparent',
+              background: active ? 'var(--fg)' : 'transparent',
               border: 'none',
-              padding: 'var(--space-3) var(--space-2)',
+              padding: 'var(--space-3) var(--space-3)',
               fontFamily: 'var(--font-body)',
               fontSize: 'var(--text-sm)',
               fontWeight: 600,
@@ -75,9 +61,11 @@ export function SegmentedControl<T extends string = string>({
               alignItems: 'center',
               justifyContent: 'center',
               gap: 'var(--space-1)',
-              transition: 'color 0.2s',
+              transition: 'color 0.2s, background 0.2s',
               letterSpacing: '-0.005em',
               touchAction: 'manipulation',
+              whiteSpace: 'nowrap',
+              borderRadius: 6,
             }}
           >
             {tab.icon && (

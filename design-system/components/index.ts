@@ -35,6 +35,9 @@ export type { BottomSheetProps, BottomSheetItemProps, BottomSheetCancelProps } f
 export { SessionStatsPanel } from './session-stats-panel'
 export type { SessionStatsPanelProps } from './session-stats-panel'
 
+export { BwfCategoryBadge } from './bwf-category-badge'
+export type { BwfCategoryBadgeProps } from './bwf-category-badge'
+
 export { MatchTypeChips } from './match-type-chips'
 export type { MatchTypeChipsProps } from './match-type-chips'
 

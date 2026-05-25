@@ -12,8 +12,9 @@
 | 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate |
 | 7 | Match History | ✅ Done | List + detail view |
 | 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
-| 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history |
-| 10 | PWA Enhancement | ⏳ Pending | Offline support, push notifications |
+| 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history, achievements |
+| 9a | BWF Category Badges | ✅ Done | Tiered color badges (S1000/S750/S500/S300/S100/Finals) on sessions |
+| 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
 
 ## Phase Details
@@ -89,14 +90,21 @@
 - [x] Stats row: total matches, wins, losses, donated amount
 - [x] Best partner card (doubles-only, highest win rate)
 - [x] Match history list with infinite scroll (~10 per batch)
+- [x] Achievements tab: sessions where player ranked #1 (champion) or #2 (runner-up)
+- [x] Scrollable tab bar (SegmentedControl) for 4 tabs on mobile
 - [x] Navigation tests updated for new route
 - [x] Build passes, 19/19 tests pass
 
-### Phase 10: PWA Enhancement ⏳
-- [ ] Offline mode
-- [ ] Background sync
-- [ ] Push notifications
-- [ ] App icons
+### Phase 9a: BWF Category Badges ✅
+- [x] BwfCategoryBadge component with tiered colors per category
+- [x] Join bwf_tournaments in useSessions / useSession / useOpenSession
+- [x] Display badge on session cards (SessionsListPage)
+- [x] Display badge on session detail (SessionDetailPage)
+
+### Phase 10: PWA Enhancement ✅
+- [x] Service worker + manifest
+- [x] App icons and splash screens
+- [x] Offline cache for static assets
 
 ### Phase 11: Testing ⏳
 - [ ] Unit tests (Vitest)
@@ -112,4 +120,4 @@
 | Core Features (Phases 5-7) | ✅ Done | Dashboard + match history |
 | Avatar & Rankings (Phase 8) | ✅ Done | Avatar upload + leaderboard |
 | Player Detail Page (Phase 9) | ✅ Done | Avatar/name edit + stats + best partner |
-| Release (Phase 10-11) | Q3 2026 | Pending |
+| Release (Phase 10-11) | Q3 2026 | Ready |

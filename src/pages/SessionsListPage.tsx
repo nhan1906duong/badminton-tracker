@@ -171,6 +171,10 @@ export default function SessionsListPage() {
                   matchCount={stat?.matchCount ?? 0}
                   topPlayer={stat?.topPlayer}
                   compact
+                  tournamentCategory={session.bwf_tournaments ? {
+                    categoryName: session.bwf_tournaments.category_name,
+                    categorySlug: session.bwf_tournaments.category_slug,
+                  } : null}
                 />
               </button>
             )

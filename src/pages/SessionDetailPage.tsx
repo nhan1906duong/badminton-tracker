@@ -52,7 +52,7 @@ import { formatShortPlayerName } from '../lib/player-name'
 import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useState, useCallback } from 'react'
-import { PullToRefresh } from '../../design-system/components'
+import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 
 export default function SessionDetailPage() {
   const { locale, t } = useI18n()
@@ -207,6 +207,16 @@ export default function SessionDetailPage() {
             >
               {session.label ?? t('common.untitledSession')}
             </h1>
+
+            {/* Tournament category */}
+            {session.bwf_tournaments && (
+              <div className="mb-[var(--space-3)]">
+                <BwfCategoryBadge
+                  categoryName={session.bwf_tournaments.category_name}
+                  categorySlug={session.bwf_tournaments.category_slug}
+                />
+              </div>
+            )}
 
             {/* Datetime + duration */}
             <div

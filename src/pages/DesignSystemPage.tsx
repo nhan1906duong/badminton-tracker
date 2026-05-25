@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components'
+import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel, BwfCategoryBadge } from '../../design-system/components'
 import { Plus, Activity, Share2, Pencil, Trash2 } from 'lucide-react'
 
 const IS_DEV = import.meta.env.DEV
@@ -28,6 +28,7 @@ export default function DesignSystemPage() {
         <FABSection />
         <InputSection />
         <BadgeSection />
+        <BwfCategoryBadgeSection />
         <CardSection />
         <TabsSection />
         <MatchCardSection />
@@ -573,6 +574,26 @@ function BadgeSection() {
   )
 }
 
+function BwfCategoryBadgeSection() {
+  return (
+    <Section title="BWF Category Badge">
+      <DSCard>
+        <p className="text-[13px] mb-3" style={{ color: 'var(--muted)' }}>
+          Tournament level badges with tiered colors.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <BwfCategoryBadge categoryName="BWF World Tour Finals" categorySlug="grade-2-level-1" />
+          <BwfCategoryBadge categoryName="BWF World Tour Super 1000" categorySlug="grade-2-level-2" />
+          <BwfCategoryBadge categoryName="BWF World Tour Super 750" categorySlug="grade-2-level-3" />
+          <BwfCategoryBadge categoryName="BWF World Tour Super 500" categorySlug="grade-2-level-4" />
+          <BwfCategoryBadge categoryName="BWF World Tour Super 300" categorySlug="grade-2-level-5" />
+          <BwfCategoryBadge categoryName="BWF Tour Super 100" categorySlug="grade-2-level-6" />
+        </div>
+      </DSCard>
+    </Section>
+  )
+}
+
 /* ---------- Card Components ---------- */
 
 function CardSection() {
@@ -686,7 +707,17 @@ function MatchCardSection() {
 function SessionCardSection() {
   return (
     <Section title="Session Card">
-      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Active</p>
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Active — with BWF tournament</p>
+      <SessionCard
+        status="active"
+        name="Singapore Open 2025"
+        dateTime="Today · 7:30 PM"
+        duration="1h 42m"
+        matchCount={5}
+        topPlayer={{ name: 'Tuan', record: '3W – 1L · played 4', winRate: 75 }}
+        tournamentCategory={{ categoryName: 'BWF World Tour Super 750', categorySlug: 'grade-2-level-3' }}
+      />
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Active</p>
       <SessionCard
         status="active"
         name="Friday Night Session"

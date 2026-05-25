@@ -6,14 +6,16 @@ import { useBestPartner } from '../hooks/useBestPartner'
 import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
 import { useHeadToHead } from '../hooks/useHeadToHead'
 import { usePlayerRankings } from '../hooks/useRankings'
+import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
 import type { PartnerEntry } from '../hooks/useBestPartner'
+import type { PlayerAchievement } from '../hooks/usePlayerAchievements'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
-import { AppBar, Badge, PullToRefresh, SegmentedControl } from '../../design-system/components'
+import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Session } from '../types/database'
@@ -67,7 +69,7 @@ function formatSessionLabel(session: Session, locale: Locale): string {
   )
 }
 
-type PlayerTab = 'partners' | 'h2h' | 'history'
+type PlayerTab = 'partners' | 'h2h' | 'history' | 'achievements'
 
 export default function PlayerDetailPage() {
   const { locale, t } = useI18n()
@@ -81,6 +83,7 @@ export default function PlayerDetailPage() {
   const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
   const { entries: h2hEntries, isLoading: h2hLoading } = useHeadToHead(id)
   const { data: rankings } = usePlayerRankings()
+  const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
   const rankData = rankings?.find((r) => r.playerId === id)
 
   const [activeTab, setActiveTab] = useState<PlayerTab>('partners')
@@ -169,6 +172,7 @@ export default function PlayerDetailPage() {
     { id: 'partners' as const, label: t('players.tabPartners'), icon: <Users style={{ width: 13, height: 13 }} /> },
     { id: 'h2h' as const, label: t('players.tabH2H'), icon: <Swords style={{ width: 13, height: 13 }} /> },
     { id: 'history' as const, label: t('players.tabHistory'), icon: <History style={{ width: 13, height: 13 }} /> },
+    { id: 'achievements' as const, label: t('players.tabAchievements'), icon: <MedalIcon size={13} /> },
   ]
 
   return (
@@ -578,6 +582,50 @@ export default function PlayerDetailPage() {
             )}
           </div>
         )}
+
+        {/* ── Achievements tab ── */}
+        {activeTab === 'achievements' && (
+          <div className="space-y-2">
+            {achievementsLoading ? (
+              <div className="p-4">
+                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
+              </div>
+            ) : achievements.length === 0 ? (
+              <div
+                className="bg-[var(--surface)] border border-[var(--border)] p-4"
+                style={{ borderRadius: 'var(--radius-lg)' }}
+              >
+                <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noAchievements')}</p>
+              </div>
+            ) : (
+              <>
+                <div
+                  className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  {(() => {
+                    const titles = achievements.filter((a) => a.type === 'win').length
+                    const runnerUps = achievements.filter((a) => a.type === 'runner_up').length
+                    return t('players.achievementsSummary', { titles, runnerUps })
+                  })()}
+                </div>
+                <div
+                  className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+                  style={{ borderRadius: 'var(--radius-lg)' }}
+                >
+                  {achievements.map((a, i) => (
+                    <AchievementRow
+                      key={a.session.id}
+                      achievement={a}
+                      locale={locale}
+                      isLast={i === achievements.length - 1}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {(isAdmin || isMe) && showAvatarPicker && (
@@ -676,5 +724,92 @@ function PartnerRow({ label, entry }: { label: string; entry: PartnerEntry }) {
         </p>
       </div>
     </div>
+  )
+}
+
+function AchievementRow({
+  achievement,
+  locale,
+  isLast,
+}: {
+  achievement: PlayerAchievement
+  locale: Locale
+  isLast: boolean
+}) {
+  const isWin = achievement.type === 'win'
+
+  return (
+    <div
+      className="flex items-start gap-3 px-4 py-3"
+      style={{ borderBottom: isLast ? undefined : '1px solid var(--border)' }}
+    >
+      {/* Rank badge */}
+      <div className="shrink-0 pt-0.5">
+        <RankBadge rank={isWin ? 1 : 2} />
+      </div>
+
+      {/* Content: name + badge on row 1, stats on row 2 */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p
+            className="text-[15px] font-semibold truncate"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+          >
+            {formatSessionLabel(achievement.session, locale)}
+          </p>
+          {achievement.session.bwf_tournaments && (
+            <BwfCategoryBadge
+              categoryName={achievement.session.bwf_tournaments.category_name}
+              categorySlug={achievement.session.bwf_tournaments.category_slug}
+            />
+          )}
+        </div>
+        <p
+          className="text-[11px] mt-0.5"
+          style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+        >
+          {achievement.matchesPlayed}M ·{' '}
+          <span style={{ color: 'var(--success)' }}>{achievement.wins}W</span>{' '}
+          <span style={{ color: 'var(--danger)' }}>{achievement.matchesPlayed - achievement.wins}L</span>{' '}
+          · {Math.round((achievement.wins / achievement.matchesPlayed) * 100)}%
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function RankBadge({ rank }: { rank: 1 | 2 }) {
+  const isGold = rank === 1
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <circle
+        cx="11"
+        cy="11"
+        r="10"
+        fill={isGold ? '#F5E6A3' : '#E8E8E8'}
+        stroke={isGold ? '#D4A843' : '#B0B0B0'}
+        strokeWidth="1.5"
+      />
+      <text
+        x="11"
+        y="15"
+        textAnchor="middle"
+        fill={isGold ? '#8B6914' : '#666666'}
+        fontSize="12"
+        fontWeight="700"
+        fontFamily="var(--font-mono)"
+      >
+        {rank}
+      </text>
+    </svg>
+  )
+}
+
+function MedalIcon({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="9" r="5" />
+      <path d="M8.5 13.5L6 21l6-3 6 3-2.5-7.5" />
+    </svg>
   )
 }

@@ -85,3 +85,8 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none;
 }
+
+/* Hide scrollbar on scrollable segmented control */
+.segmented-scroll::-webkit-scrollbar {
+  display: none;
+}

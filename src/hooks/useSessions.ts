@@ -17,7 +17,7 @@ export function useSessions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('*')
+        .select('*, bwf_tournaments(category_name, category_slug)')
         .order('started_at', { ascending: false })
       if (error) throw error
       return data as Session[]
@@ -34,7 +34,7 @@ export function useOpenSession() {
 
       const { data, error } = await supabase
         .from('sessions')
-        .select('*')
+        .select('*, bwf_tournaments(category_name, category_slug)')
         .is('ended_at', null)
         .eq('created_by', user.id)
         .order('started_at', { ascending: false })
@@ -104,7 +104,7 @@ export function useSession(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('*')
+        .select('*, bwf_tournaments(category_name, category_slug)')
         .eq('id', id!)
         .single()
       if (error) throw error

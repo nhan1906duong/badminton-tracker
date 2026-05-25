@@ -1,5 +1,6 @@
 import { Badge } from './badge'
 import { Avatar } from './avatar'
+import { BwfCategoryBadge } from './bwf-category-badge'
 import { useI18n } from '../../src/i18n'
 
 interface SessionCardProps {
@@ -15,6 +16,10 @@ interface SessionCardProps {
     winRate: number
   }
   compact?: boolean
+  tournamentCategory?: {
+    categoryName: string
+    categorySlug: string
+  } | null
 }
 
 export function SessionCard({
@@ -25,6 +30,7 @@ export function SessionCard({
   matchCount,
   topPlayer,
   compact,
+  tournamentCategory,
 }: SessionCardProps) {
   const { t } = useI18n()
   const isOpen = status !== 'completed'
@@ -54,6 +60,14 @@ export function SessionCard({
           >
             {dateTime}
           </div>
+          {tournamentCategory && (
+            <div className="mt-1.5">
+              <BwfCategoryBadge
+                categoryName={tournamentCategory.categoryName}
+                categorySlug={tournamentCategory.categorySlug}
+              />
+            </div>
+          )}
         </div>
         {isActive ? (
           <div className="flex items-center gap-2 shrink-0">

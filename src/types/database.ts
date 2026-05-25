@@ -35,6 +35,10 @@ export interface Session {
   bwf_tournament_id?: string | null
   created_by: string
   created_at: string
+  bwf_tournaments?: {
+    category_name: string
+    category_slug: string
+  } | null
 }
 
 export type MatchStatus = 'SCHEDULED' | 'LIVE' | 'COMPLETED'
