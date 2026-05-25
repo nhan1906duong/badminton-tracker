@@ -118,13 +118,20 @@ export function useStartSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('sessions')
         .update({ started_at: new Date().toISOString() })
         .eq('id', id)
+        .select('*, bwf_tournaments(category_name, category_slug)')
+        .single()
       if (error) throw error
+      return data as Session
     },
-    onSuccess: () => {
+    onSuccess: (session) => {
+      qc.setQueryData([SESSIONS_KEY, session.id], session)
+      qc.setQueryData<Session[] | undefined>([SESSIONS_KEY], (sessions) =>
+        sessions?.map((s) => (s.id === session.id ? session : s))
+      )
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
     },
   })
@@ -242,13 +249,23 @@ export function useEndSession() {
       }
 
       // 7. Mark session as ended
-      const { error } = await supabase
+      const { data: endedSession, error } = await supabase
         .from('sessions')
         .update({ ended_at: new Date().toISOString() })
         .eq('id', id)
+        .select('*, bwf_tournaments(category_name, category_slug)')
+        .single()
       if (error) throw error
+      return endedSession as Session
     },
-    onSuccess: () => {
+    onSuccess: (session) => {
+      qc.setQueryData([SESSIONS_KEY, session.id], session)
+      qc.setQueryData<Session[] | undefined>([SESSIONS_KEY], (sessions) =>
+        sessions?.map((s) => (s.id === session.id ? session : s))
+      )
+      qc.setQueryData<Session | null | undefined>([SESSIONS_KEY, 'open'], (openSession) =>
+        openSession?.id === session.id ? null : openSession
+      )
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
       qc.invalidateQueries({ queryKey: ['players'] })
       qc.invalidateQueries({ queryKey: ['player-rankings'] })
