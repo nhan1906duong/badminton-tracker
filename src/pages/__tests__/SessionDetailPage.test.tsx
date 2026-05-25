@@ -58,6 +58,10 @@ vi.mock('../../hooks/usePlayers', () => ({
   usePlayers: () => ({ data: [] }),
 }))
 
+vi.mock('../../hooks/useIsAdmin', () => ({
+  useIsAdmin: () => true,
+}))
+
 // ─── Component mocks ──────────────────────────────────────────────────────────
 
 vi.mock('../../components/MatchesContent', () => ({

@@ -148,6 +148,10 @@ const en = {
   'settings.unlinkPlayer': 'Unlink',
   'settings.notLinked': 'Not linked',
   'settings.selectPlayer': 'Select your player',
+  'settings.unlinkConfirmTitle': 'Unlink player?',
+  'settings.unlinkConfirmDescription': 'Your account will no longer be connected to this player profile.',
+  'settings.linkFailedTitle': 'Could not link player',
+  'settings.linkFailedDescription': 'Player has been linked to another account.',
 
   'players.loading': 'Loading players...',
   'players.noneYet': 'No players yet.',
@@ -247,6 +251,8 @@ const en = {
   'sessionStats.weeklyPoints': 'Weekly points',
   'sessionStats.points': 'points',
   'sessionStats.diff': 'diff',
+  'sessionStats.champion': 'You are the champion!',
+  'sessionStats.championBadge': 'Champion',
 
   'createSession.title': 'New session',
   'createSession.subtitle': 'Pick a name. Set a time. Start swinging.',
@@ -575,6 +581,10 @@ const vi: Record<TranslationKey, string> = {
   'settings.unlinkPlayer': 'Hủy liên kết',
   'settings.notLinked': 'Chưa liên kết',
   'settings.selectPlayer': 'Chọn người chơi của bạn',
+  'settings.unlinkConfirmTitle': 'Hủy liên kết người chơi?',
+  'settings.unlinkConfirmDescription': 'Tài khoản của bạn sẽ không còn liên kết với hồ sơ người chơi này.',
+  'settings.linkFailedTitle': 'Không thể liên kết người chơi',
+  'settings.linkFailedDescription': 'Người chơi này đã được liên kết với tài khoản khác.',
 
   'players.loading': 'Đang tải vđv...',
   'players.noneYet': 'Chưa có vđv.',
@@ -674,6 +684,8 @@ const vi: Record<TranslationKey, string> = {
   'sessionStats.weeklyPoints': 'Điểm trong tuần',
   'sessionStats.points': 'Điểm',
   'sessionStats.diff': 'Hiệu số',
+  'sessionStats.champion': 'Bạn là nhà vô địch!',
+  'sessionStats.championBadge': 'Quán quân',
 
   'createSession.title': 'Giải đấu mới',
   'createSession.subtitle': 'Chọn tên. Chọn giờ. Bắt đầu.',

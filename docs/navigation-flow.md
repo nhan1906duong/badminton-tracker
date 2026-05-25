@@ -49,7 +49,7 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
                                     LOGIN
                                    /login
                                       │
-                                      │ OTP verified
+                                      │ Password verified
                                       ▼
 ┌────────────────────────────────────────────────────┐
 │                TAB SCREENS (3)                     │
@@ -58,7 +58,7 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
 │   SESSIONS     │   RANKING     │   SETTINGS        │
 │   /sessions    │   /ranking    │   /settings       │
 │                │               │                   │
-│ Session card   │ Player list   │ Profile avatar    │
+│ Session card   │ Player list   │ Profile summary   │
 │   ─────►       │ by Elo rating │ Link Player       │
 │   /:id         │               │ Point System ──►  │
 │ + FAB          │               │ /settings/points  │
@@ -139,7 +139,10 @@ Protected routes redirect to `/login` if unauthenticated. After login, user retu
 
 | Modal | Triggered from |
 |-------|---------------|
-| `AvatarPicker` | Player Detail page (admin only), Settings page (avatar tap) |
+| `AvatarPicker` | Player Detail page avatar tap |
 | Delete confirmation | Session detail (⋮ menu, admin only), Match Detail (⋮ menu, admin only) |
 | Bottom sheet (match actions) | Match Detail page (⋮ menu) |
 | Score entry sheet | Match Detail page (record result) |
+| Player picker bottom sheet | Settings page ("Link to a player") |
+| Unlink confirmation | Settings page ("Unlink") |
+| Link failure dialog | Settings page when selected player is already linked |

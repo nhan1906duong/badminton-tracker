@@ -18,7 +18,7 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| OTP Authentication | Implemented | Email magic link via Supabase |
+| Authentication | Implemented | Email + password via Supabase |
 | Player CRUD | Implemented | Create, list, toggle active status |
 | Match Creation | Implemented | Single-page flow: type + players + mode (Now/Schedule/Queue) |
 | Unified Player Grid | Implemented | 2-column grid showing Team A/B assignment |
@@ -33,6 +33,7 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Avatar Selection Grid | Implemented | 5x2 grid of multiavatar defaults in AvatarPicker bottom sheet |
 | Storage Cleanup | Implemented | Automatic deletion of old uploaded photos from Supabase Storage |
 | Player Detail Page | Implemented | Route `/players/:playerId` with editable avatar/name, stats, best partner, infinite scroll match history |
+| Authenticated Match Operations | Implemented | Signed-in users can start/end sessions and edit match lifecycle/details; deletes remain admin-only |
 
 ## Database Schema
 
@@ -42,7 +43,7 @@ matches ────────────┼── match_teams ──┬─ m
                     │                 │
                     └─ match_scores ──┘
 
-profiles (1:1 with auth.users) ── avatar_url
+profiles (1:1 with auth.users) ── avatar_url, role, player_id
 ```
 
 ## Match Flow

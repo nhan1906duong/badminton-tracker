@@ -37,6 +37,10 @@ vi.mock('../../hooks/useMatches', () => ({
   useReopenMatch: () => mockReopenMatch,
 }))
 
+vi.mock('../../hooks/useIsAdmin', () => ({
+  useIsAdmin: () => true,
+}))
+
 // ─── Design system mocks ──────────────────────────────────────────────────────
 
 vi.mock('../../../design-system/components', () => ({
@@ -48,12 +52,14 @@ vi.mock('../../../design-system/components', () => ({
   }: {
     title: string
     titleVisible?: boolean
-    leftAction?: { label: string; onClick: () => void }
+    leftAction?: { icon?: React.ReactNode; onClick: () => void }
     rightAction?: { ariaLabel?: string; onClick: () => void }
   }) => (
     <header>
       {titleVisible && <h1>{title}</h1>}
-      {leftAction && <button onClick={leftAction.onClick}>{leftAction.label}</button>}
+      {leftAction && (
+        <button onClick={leftAction.onClick}>Session</button>
+      )}
       {rightAction && (
         <button aria-label={rightAction.ariaLabel ?? 'More'} onClick={rightAction.onClick} />
       )}

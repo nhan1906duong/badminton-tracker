@@ -23,17 +23,18 @@ src/
 | 917 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue) |
 | 906 | pages/MatchDetailPage.tsx | Match detail: start, record result, edit players, reopen, delete |
 | 636 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
-| 635 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
+| 796 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
 | 589 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
-| 551 | hooks/useSessions.ts | Session CRUD + useOpenSession() |
+| 568 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end updates |
 | 374 | pages/SessionDetailPage.tsx | Session detail: stats panel, match list, session menu, BWF category badge |
 | 343 | pages/EditPlayersPage.tsx | Edit match players: reassign slots for an existing match |
-| 332 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player |
+| 433 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
 | 232 | hooks/useRankings.ts | usePlayerRankings (Elo) + useSessionWeeklyRankings |
 | 217 | pages/RankingPage.tsx | Player rankings by Elo rating (`/ranking`) |
+| 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
-| 208 | pages/SettingsPage.tsx | Profile, avatar upload, link player, change password, logout, dev tools |
+| 338 | pages/SettingsPage.tsx | Profile, player link/unlink, change password, logout, dev tools |
 | 203 | components/AnimatedRoutes.tsx | All routes, auth guard, page transition animations |
 | 192 | pages/SessionsListPage.tsx | List all sessions with BWF category badges |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
@@ -41,7 +42,7 @@ src/
 | 135 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
 | 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states) |
-| 119 | pages/LoginPage.tsx | OTP email login flow |
+| 111 | pages/LoginPage.tsx | Email + password login flow |
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
 | 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
 | 104 | types/database.ts | TypeScript types for all entities including MatchStatus |
@@ -78,6 +79,7 @@ components/
 ├── Avatar.tsx               # Re-export shim → design-system/components/avatar.tsx
 ├── AvatarPicker.tsx         # Bottom sheet: 2x5 default grid + camera / gallery / remove
 ├── DonorListItem.tsx        # Row for SessionDonatedListPage
+├── firework-effect.tsx      # Canvas firework overlay for champion celebration
 ├── FloatingActionButton.tsx # Reusable FAB anchored to mobile container
 ├── MatchCard.tsx            # Match list card
 ├── MatchesContent.tsx       # Match list renderer (loading / error / empty states)
@@ -98,8 +100,8 @@ design-system/components/
 
 ```
 pages/
-├── LoginPage.tsx                # /login - email+password auth
-├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit (admin), stats, best partner, match history, achievements
+├── LoginPage.tsx                # /login - email + password auth
+├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit, stats, best partner, match history, achievements
 ├── SessionsListPage.tsx         # /sessions - Session history with BWF category badges
 ├── CreateSessionPage.tsx        # /sessions/new - Create session
 ├── SessionDetailPage.tsx        # /sessions/:id - Session detail (stats panel + matches)
@@ -109,7 +111,7 @@ pages/
 ├── MatchDetailPage.tsx          # /sessions/:id/matches/:matchId - Match detail + actions
 ├── EditPlayersPage.tsx          # /sessions/:id/matches/:matchId/players/edit - Reassign match players
 ├── RankingPage.tsx              # /ranking - Player rankings by Elo
-├── SettingsPage.tsx             # /settings - Profile, avatar, link player, change password, logout, dev tools
+├── SettingsPage.tsx             # /settings - Profile, player link/unlink, change password, logout, dev tools
 ├── PointSystemPage.tsx          # /settings/points - Point system explanation
 ├── ChangePasswordPage.tsx       # /settings/change-password - Re-auth then update password
 ├── DesignSystemPage.tsx         # /settings/design-system - Dev-only design catalogue
@@ -160,7 +162,7 @@ hooks/
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
 ├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
 ├── useRankings.ts          # usePlayerRankings (Elo) + useSessionWeeklyRankings
-├── useSessions.ts          # Session CRUD + useOpenSession()
+├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end mutations
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
 
@@ -191,11 +193,11 @@ Canonical formatter: `src/lib/player-name.ts`.
 ## Avatar Upload Flow
 
 ```
-1. Tap avatar → AvatarPicker opens (2x5 default avatar grid / camera / gallery / remove)
+1. Tap a player avatar on PlayerDetailPage → AvatarPicker opens (2x5 default avatar grid / camera / gallery / remove)
 2. Select default avatar → useSetDefaultAvatar() → cleanupOldAvatar() → update DB
    OR Select image → compressImage(file, 200) → center-crop to 200x200 JPEG
 3. Upload to Supabase Storage: avatars/{entity}/{id}.jpg
-4. Update DB: profiles.avatar_url (users) or players.avatar_url (players)
+4. Update DB: players.avatar_url
 5. Invalidate queries → UI refreshes with new avatar
 ```
 
@@ -236,6 +238,7 @@ After save: `navigate(-1)` back to session detail.
 - **COMPLETED** matches: Reopen → back to `LIVE`; Edit Players → `EditPlayersPage`
 - All states: Delete match (with confirmation)
 - ⋮ menu (bottom sheet) for actions
+- Start, record, reopen, and edit-player actions are available to any authenticated user; match delete remains admin-only.
 
 ## Match Statuses
 
@@ -284,13 +287,27 @@ The Achievements tab on `PlayerDetailPage` shows sessions where the player ranke
 - Rank badge: custom SVG component inline in `PlayerDetailPage.tsx`
 - Tab bar: `SegmentedControl` with horizontal scroll (`flex` + `shrink-0` + `overflow-x: auto`)
 
+## Champion Celebration
+
+`SessionStatsPage` shows a champion badge beside the rank #1 player. If the current auth profile is linked to that player and the session has ended, it renders `FireworkEffect` once per `{sessionId, playerId}` using localStorage key `champion-firework:{sessionId}:{playerId}`.
+
+- Component: `src/components/firework-effect.tsx`
+- Trigger page: `/sessions/:id/stats`
+- Persistence: localStorage suppresses repeat playback for the same linked player/session pair
+
 ## Auth Flow
 
 1. Enter email + password → 2. `supabase.auth.signInWithPassword` → 3. Session created → 4. Redirected to original route
 
 ## Link Account (Player ↔ User)
 
-Users can link their auth account to a player row via Settings → "Link to a player". This sets `profiles.player_id` (FK → `players.id`). Managed by `useUpdatePlayerLink` in `useProfile.ts`. Displayed in `SettingsPage` as a bottom-sheet player picker; unlinking sets `player_id` to `null`.
+Users can link their auth account to a player row via Settings → "Link to a player". This sets `profiles.player_id` (FK → `players.id`). Managed by `useUpdatePlayerLink` in `useProfile.ts`. Displayed in `SettingsPage` as a bottom-sheet player picker. Unlinking opens a confirmation dialog and sets `player_id` to `null`; failed links show an error dialog when the selected player is already linked to another account.
+
+## Permissions
+
+- Any authenticated user can start/end sessions and edit match lifecycle/detail rows (`matches`, `match_teams`, `match_participants`, `match_scores`).
+- Any authenticated user can edit player avatars and names from `PlayerDetailPage`.
+- Delete actions remain admin-only through RLS and admin-gated UI.
 
 ## Change Password Flow
 

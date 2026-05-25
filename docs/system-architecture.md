@@ -20,7 +20,7 @@
          │                │                │
     ┌────▼────┐    ┌──────▼──────┐   ┌─────▼─────┐
     │  Auth   │    │  Database   │   │  Realtime  │
-    │  (OTP)  │    │ PostgreSQL  │   │  (Future) │
+    │Password │    │ PostgreSQL  │   │  (Future) │
     └─────────┘    └─────────────┘   └───────────┘
 ```
 
@@ -82,7 +82,7 @@
          ↓
 5. Select Winner → Save to Supabase (scoped to session)
          ↓
-6. Edit Match later (scores, winner, match type)
+6. Edit Match later (players, scores, winner, match type)
          ↓
 7. End Session when done
 ```
@@ -120,7 +120,7 @@ All sub-page routes use `navigate(-1)` (browser back) via the `AppBar` component
 
 ## Role-based Access Control
 
-Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. RLS policies on `sessions`, `matches`, and `players` restrict DELETE to admins only (`is_admin()` SQL function defined in `supabase/migrations/008_role.sql`). The `useIsAdmin` hook drives admin-gated UI (delete actions, avatar/name editing).
+Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. RLS policies restrict destructive deletes to admins (`is_admin()` SQL function defined in `supabase/migrations/008_role.sql`). Authenticated users can start/end sessions and edit match lifecycle/details through `011_authenticated_update_sessions.sql` and `012_authenticated_match_edits.sql`. Player avatar/name editing is available from `PlayerDetailPage`; delete UI remains admin-gated through `useIsAdmin`.
 
 ## Key Files
 
