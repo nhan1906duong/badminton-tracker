@@ -9,7 +9,7 @@ import Avatar from '../components/Avatar'
 import { useProfile, useUpdatePlayerLink } from '../hooks/useProfile'
 import { usePlayers } from '../hooks/usePlayers'
 import { useI18n, type Locale } from '../i18n'
-import { BottomSheet } from '../../design-system/components'
+import { BottomSheet, Dialog } from '../../design-system/components'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -28,6 +28,8 @@ export default function SettingsPage() {
   const updatePlayerLink = useUpdatePlayerLink()
   const { data: players = [] } = usePlayers()
   const [showPlayerPicker, setShowPlayerPicker] = useState(false)
+  const [confirmUnlinkOpen, setConfirmUnlinkOpen] = useState(false)
+  const [linkErrorOpen, setLinkErrorOpen] = useState(false)
 
   const userAvatarUrl = profile?.avatar_url
   const linkedPlayer = profile?.player_id ? players.find((p) => p.id === profile.player_id) : null
@@ -51,6 +53,30 @@ export default function SettingsPage() {
       onSuccess: () => setConfirmRecalc(false),
       onError: () => setConfirmRecalc(false),
     })
+  }
+
+  const handleUnlinkPlayer = () => {
+    if (!user) return
+    updatePlayerLink.mutate(
+      { userId: user.id, playerId: null },
+      {
+        onSuccess: () => setConfirmUnlinkOpen(false),
+      },
+    )
+  }
+
+  const handleLinkPlayer = (playerId: string) => {
+    if (!user) return
+    updatePlayerLink.mutate(
+      { userId: user.id, playerId },
+      {
+        onSuccess: () => setShowPlayerPicker(false),
+        onError: () => {
+          setShowPlayerPicker(false)
+          setLinkErrorOpen(true)
+        },
+      },
+    )
   }
 
   return (
@@ -90,7 +116,7 @@ export default function SettingsPage() {
                 {linkedPlayer.name}
               </span>
               <button
-                onClick={() => user && updatePlayerLink.mutate({ userId: user.id, playerId: null })}
+                onClick={() => setConfirmUnlinkOpen(true)}
                 disabled={updatePlayerLink.isPending}
                 className="text-[13px] font-semibold text-[var(--danger)] active:opacity-60 transition-opacity flex items-center gap-1"
               >
@@ -125,11 +151,8 @@ export default function SettingsPage() {
             {players.map((player) => (
               <button
                 key={player.id}
-                onClick={() => {
-                  if (!user) return
-                  updatePlayerLink.mutate({ userId: user.id, playerId: player.id })
-                  setShowPlayerPicker(false)
-                }}
+                onClick={() => handleLinkPlayer(player.id)}
+                disabled={updatePlayerLink.isPending}
                 className="w-full flex items-center gap-3 px-[var(--space-4)] py-3 active:bg-[var(--bg)] transition-colors"
               >
                 <Avatar src={player.avatar_url} name={player.name} size={36} />
@@ -140,6 +163,26 @@ export default function SettingsPage() {
             ))}
           </div>
         </BottomSheet>
+
+        <Dialog
+          open={confirmUnlinkOpen}
+          onClose={() => setConfirmUnlinkOpen(false)}
+          title={t('settings.unlinkConfirmTitle')}
+          description={t('settings.unlinkConfirmDescription')}
+          kind="warning"
+          actions={[
+            { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmUnlinkOpen(false) },
+            { label: updatePlayerLink.isPending ? t('common.saving') : t('settings.unlinkPlayer'), variant: 'danger', onClick: handleUnlinkPlayer },
+          ]}
+        />
+
+        <Dialog
+          open={linkErrorOpen}
+          onClose={() => setLinkErrorOpen(false)}
+          title={t('settings.linkFailedTitle')}
+          description={t('settings.linkFailedDescription')}
+          kind="danger"
+        />
 
         {/* Actions */}
         <section className="space-y-[var(--space-2)]">
