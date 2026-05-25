@@ -15,6 +15,7 @@
 | 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history, achievements |
 | 9a | BWF Category Badges | ✅ Done | Tiered color badges (S1000/S750/S500/S300/S100/Finals) on sessions |
 | 9b | Champion Celebration | ✅ Done | One-time firework effect for linked champion on ended session stats |
+| 9c | Ranking Sync & No-Winner Handling | ✅ Done | Session MVP/top-player panels use shared leaderboard data; no-winner matches are excluded from aggregates |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
 
@@ -46,7 +47,7 @@
 - [x] Active-player filter (local-only, per session)
 - [x] Create-session active player picker w/ top-5 default (chip + virtualized bottom sheet)
 - [x] Match creation scoped to session
-- [x] Match type selector (dropdown)
+- [x] Match type selector (segmented chips)
 - [x] Player selection (filtered by active list)
 - [x] Auto team assignment (Team A/B by selection order)
 - [x] Score entry per set
@@ -96,7 +97,7 @@
 - [x] Achievements tab: sessions where player ranked #1 (champion) or #2 (runner-up)
 - [x] Scrollable tab bar (SegmentedControl) for 4 tabs on mobile
 - [x] Navigation tests updated for new route
-- [x] Build passes, 19/19 tests pass
+- [x] Build passes, 154/154 tests pass
 
 ### Phase 9a: BWF Category Badges ✅
 - [x] BwfCategoryBadge component with tiered colors per category
@@ -109,6 +110,15 @@
 - [x] Show celebration on ended session stats when the linked player is rank #1
 - [x] Persist one-time playback per session/player in localStorage
 - [x] Show champion badge on the rank #1 stats row
+
+### Phase 9c: Ranking Sync & No-Winner Handling ✅
+- [x] Extract shared session leaderboard builder in `useRankings.ts`
+- [x] Add `useSessionLeaderboard(sessionId)` and `useSessionLeaderboards()` for session detail/list summaries
+- [x] Sync session card top player, session detail MVP, and session stats ranking to `player_match_results`
+- [x] Add `useEndMatchNoWinner()` to complete a match while clearing winner/ranking rows
+- [x] Exclude no-winner completed matches from session stats, player match history, head-to-head stats, and best-partner stats
+- [x] Add stronger confirmation dialogs for ending sessions with live matches and deleting recorded data
+- [x] Add ARIA dialog semantics to the shared `Dialog` component
 
 ### Phase 10: PWA Enhancement ✅
 - [x] Service worker + manifest

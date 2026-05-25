@@ -22,7 +22,7 @@ Badminton Match Tracker — a PWA for tracking badminton matches, players, and r
 
 1. **TanStack Query** — server state (matches, players, sessions). Hooks in `src/hooks/use*.ts`. Each hook exports a `useQuery` hook + `useMutation` hooks. Mutations invalidate query keys on success.
 2. **Zustand stores** — ephemeral cross-page state:
-   - `src/stores/new-match-store.ts` — match creation flow (type, selected players, scores, winner). Reset after save.
+   - `src/stores/new-match-store.ts` — match creation flow (type, selected players, mode, scheduled time). Reset after save.
    - `src/stores/session-store.ts` — empty module (active player filter removed).
 3. **React useState** — local UI state only.
 
@@ -37,7 +37,8 @@ Password changes use `supabase.auth.updateUser({ password })` after re-authentic
 Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. Admins are the only ones who can delete sessions, matches, or players — enforced at both the app layer and via Supabase RLS policies (see `supabase/migrations/008_role.sql`).
 
 - `src/hooks/useIsAdmin.ts` — returns `true` if the current user's profile role is `'admin'`
-- Admin-gated UI: "Delete session" (SessionDetailPage ⋮ menu), "Delete match" (MatchDetailPage ⋮ menu), avatar change and name editing (PlayerDetailPage), "Add player" FAB (RankingPage)
+- Admin-gated UI: "Delete session" (SessionDetailPage ⋮ menu), "Delete match" (MatchDetailPage ⋮ menu), "Add player" FAB (RankingPage)
+- Authenticated-user UI: player avatar/name editing from PlayerDetailPage
 
 ### Navigation & Back Button
 
@@ -56,7 +57,7 @@ At `/sessions/:id/matches/new` (`CreateMatchPage`):
 4. Save → `navigate(-1)` back to session detail
 
 After a match is created, tap it from session detail to open `MatchDetailPage`:
-- Start (SCHEDULED → LIVE), Record Result (LIVE → COMPLETED), Reopen (COMPLETED → LIVE)
+- Start (SCHEDULED → LIVE), Record Result (LIVE → COMPLETED with winner), End Match (LIVE → COMPLETED without winner), Reopen (COMPLETED → LIVE)
 - Edit Players → `EditPlayersPage` (`/matches/:matchId/players/edit`)
 
 ### Data Model
@@ -67,6 +68,8 @@ A match has:
 - 2 teams (`match_teams`: TEAM_A / TEAM_B, `is_winner` flag)
 - N participants (`match_participants` linking players to teams)
 - M scores (`match_scores` per set)
+
+Only completed matches with a winning team count toward rankings, donations, player history, head-to-head stats, and best-partner stats. Completed no-winner matches keep their saved score but clear `player_match_results`.
 
 A session has `label`, `started_at`, `ended_at`, and `bwf_tournament_id` (FK to `bwf_tournaments`). Multiple sessions with different tournaments (or no tournament) can be open simultaneously. Creating a session with a `bwf_tournament_id` that already has a session is blocked at both the app layer (`DuplicateTournamentError`) and the DB layer (partial unique index).
 
@@ -112,13 +115,13 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/contexts/AuthContext.tsx` | Auth state (email + password) |
 | `src/components/AnimatedRoutes.tsx` | All routes + auth guard + page transitions |
 | `src/App.tsx` | Bottom nav, app layout |
-| `src/hooks/useMatches.ts` | Match CRUD + optimistic updates |
+| `src/hooks/useMatches.ts` | Match CRUD + lifecycle mutations including no-winner completion |
 | `src/hooks/usePlayers.ts` | Player CRUD |
 | `src/components/PlayerForm.tsx` | Bottom-sheet modal for adding a player (design-system styled) |
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
-| `src/hooks/useRankings.ts` | Elo-based player rankings + per-session weekly stats |
+| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/lib/bwf-api.ts` | BWF category constants + priority order |

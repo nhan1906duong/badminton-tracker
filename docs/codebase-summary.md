@@ -21,22 +21,22 @@ src/
 |-----|------|---------|
 | 1060 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
 | 917 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue) |
-| 906 | pages/MatchDetailPage.tsx | Match detail: start, record result, edit players, reopen, delete |
+| 904 | pages/MatchDetailPage.tsx | Match detail: start, record result, end with no winner, edit players, reopen, delete |
 | 636 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
 | 796 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
-| 589 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
+| 639 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useEndMatchNoWinner + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
 | 568 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end updates |
-| 374 | pages/SessionDetailPage.tsx | Session detail: stats panel, match list, session menu, BWF category badge |
+| 400 | pages/SessionDetailPage.tsx | Session detail: recorded-result stats panel, leaderboard MVP, match list, session menu, BWF category badge |
 | 343 | pages/EditPlayersPage.tsx | Edit match players: reassign slots for an existing match |
 | 433 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
-| 232 | hooks/useRankings.ts | usePlayerRankings (Elo) + useSessionWeeklyRankings |
+| 309 | hooks/useRankings.ts | usePlayerRankings (Elo) + per-session leaderboard hooks |
 | 217 | pages/RankingPage.tsx | Player rankings by Elo rating (`/ranking`) |
 | 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
 | 338 | pages/SettingsPage.tsx | Profile, player link/unlink, change password, logout, dev tools |
 | 203 | components/AnimatedRoutes.tsx | All routes, auth guard, page transition animations |
-| 192 | pages/SessionsListPage.tsx | List all sessions with BWF category badges |
+| 176 | pages/SessionsListPage.tsx | List all sessions with BWF category badges and leaderboard-synced top player |
 | 149 | components/ScoreEntry.tsx | Per-set score inputs + winner picker |
 | 138 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
 | 135 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
@@ -152,8 +152,8 @@ hooks/
 ├── useHeadToHead.ts        # Head-to-head stats between two players
 ├── useMatches.ts           # Match CRUD: useMatches, useMatch, useCreateMatch,
 │                           #   useUpdateMatch, useDeleteMatch, useStartMatch,
-│                           #   useRecordResult, useReorderQueue, useReopenMatch,
-│                           #   useUpdateMatchPlayers
+│                           #   useRecordResult, useEndMatchNoWinner,
+│                           #   useReorderQueue, useReopenMatch, useUpdateMatchPlayers
 ├── usePlayerMatchHistory.ts # Cursor-based paginated match history for a player
 ├── usePlayerMatches.ts     # Infinite-scroll paginated match history for a player
 ├── usePlayers.ts           # Player CRUD operations
@@ -161,7 +161,7 @@ hooks/
 ├── usePlayerAchievements.ts # Compute player achievements per session (champion/runner-up)
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
 ├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
-├── useRankings.ts          # usePlayerRankings (Elo) + useSessionWeeklyRankings
+├── useRankings.ts          # Overall Elo rankings + session weekly rankings/leaderboards
 ├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end mutations
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
@@ -235,8 +235,9 @@ After save: `navigate(-1)` back to session detail.
 
 - **SCHEDULED** matches: Start button → transitions to `LIVE`
 - **LIVE** matches: Record Result → score entry + winner selection → `COMPLETED`
+- **LIVE** matches: End Match → confirmation dialog → `COMPLETED` with no winner; saves current score but clears ranking rows
 - **COMPLETED** matches: Reopen → back to `LIVE`; Edit Players → `EditPlayersPage`
-- All states: Delete match (with confirmation)
+- All states: Delete match (with confirmation; live/completed matches show a stronger recorded-data warning)
 - ⋮ menu (bottom sheet) for actions
 - Start, record, reopen, and edit-player actions are available to any authenticated user; match delete remains admin-only.
 
@@ -246,7 +247,26 @@ After save: `navigate(-1)` back to session detail.
 |---|---|
 | `LIVE` | In progress — at most 1 per session (enforced by DB unique partial index) |
 | `SCHEDULED` | Queued; ordered by `queue_position` |
-| `COMPLETED` | Finished; has scores and a winning team |
+| `COMPLETED` | Finished; may have a winning team or may be a no-winner completion that is excluded from ranking/history aggregates |
+
+## Ranking-Synced Session Stats
+
+Session summaries now read the same `player_match_results` source as the session stats page:
+
+- `useSessionLeaderboard(sessionId)` returns `{ rankings, leader }` for one session.
+- `useSessionLeaderboards()` returns a `Map<sessionId, { rankings, leader }>` for all sessions, used by `SessionsListPage`.
+- `SessionDetailPage` and `SessionsListPage` use the leaderboard leader for MVP/top-player display instead of recomputing wins from raw matches.
+- Recorded-result counts only include `COMPLETED` matches with at least one `match_teams.is_winner = true`; no-winner completed matches are hidden from stats panels, donations, player history, best partner, and head-to-head aggregates.
+- Pull-to-refresh on session list/detail refreshes both matches and leaderboard data.
+
+## Safety Confirmations
+
+Shared `Dialog` confirmations are used for risky actions:
+
+- Ending a session while live matches exist shows a warning that those matches should be finished or recorded first if they should count.
+- Deleting an ended session with matches warns that match history, scores, and ranking results are permanently removed.
+- Ending a live match without a winner explains that the saved score will not declare a winner.
+- Deleting a live or completed match warns that scores and win/loss records are permanently removed.
 
 ## Session Donations
 

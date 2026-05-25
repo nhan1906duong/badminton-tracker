@@ -500,6 +500,7 @@ Bottom-sheet overlay for errors, warnings, and confirmations.
 - Icon container: `w-10 h-10 rounded-[var(--radius-lg)]` with 10% alpha tint of the kind's color
 - Backdrop: `oklch(0% 0 0 / 0.40)` + `blur(4px)` — tap backdrop to dismiss
 - Clicking backdrop calls `onClose`; clicking inside the sheet stops propagation
+- Dialog surface uses `role="dialog"`, `aria-modal="true"`, and labels/describes itself with the title and description IDs
 - `actions` defaults to `[{ label: 'Got it', variant: 'primary' }]`; pass two actions for confirm/cancel pairs
 - Two actions render side-by-side; single action renders full-width
 
@@ -605,7 +606,7 @@ Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match
 |-------|-------------|
 | `SCHEDULED` | Pre-match huddle: player roster + serve-first picker. CTA disabled until serve side is chosen. |
 | `LIVE` | Live scoreboard with tap-to-score panels, serve indicator, score tools (−1, direct edit), set meter, action row (swap serve / undo), point log. CTA auto-promotes to "Award match to Team X" when winner condition is met. |
-| `COMPLETED` | Read-only scoreboard with winner stamp. "Re-open for editing" action row. CTA: "Back to session". |
+| `COMPLETED` | Read-only scoreboard. Winner stamp appears only when a team winner exists; no-winner completions are treated as recorded scores with no standings impact. "Re-open for editing" action row. CTA: "Back to session". |
 
 **Key primitives (page-local, not in design-system):**
 - **Scoreboard panel** — 2-column grid with 88px score numerals, `score-bump` keyframe on increment, dotted underline on editable scores.
@@ -613,10 +614,12 @@ Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match
 - **Point log** — last 8 entries, newest first; latest row highlighted with 5% accent tint.
 - **Score keypad sheet** — numeric pad (0–9 + backspace + clear) with quick-chip row (+1, −1, +5, target), delta display.
 - **Award-winner sheet** — two team cards side by side.
+- **End-without-winner dialog** — warning dialog that confirms the current score will be saved without creating win/loss or ranking records.
+- **Delete-recorded-match dialog** — danger dialog for live/completed matches, warning that scores and win/loss records are removed.
 
 **Score bump animation** — `@keyframes score-bump` in `tokens.css`; applied inline via `animation: score-bump 0.32s …` on the score numeral element.
 
-**Live score is ephemeral** — individual points are tracked in React state only. The DB score (`match_scores`) is written only when the match is finalized via `useRecordResult`. Stored as a single set: `{ set_number: 1, team_a_score, team_b_score }`.
+**Live score is ephemeral** — individual points are tracked in React state only. The DB score (`match_scores`) is written when the match is finalized via `useRecordResult` or completed without a winner via `useEndMatchNoWinner`. Stored as a single set: `{ set_number: 1, team_a_score, team_b_score }`.
 
 ---
 
