@@ -751,13 +751,22 @@ export default function MatchDetailPage() {
             </div>
 
             {/* Action row */}
-            <div style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-6)', display: 'grid', gridTemplateColumns: isCompleted ? '1fr' : '1fr 1fr', gap: 'var(--space-2)' }}>
+            <div style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-6)', display: 'grid', gridTemplateColumns: isCompleted ? (completedWinnerLabel ? '1fr 1fr' : '1fr') : '1fr 1fr', gap: 'var(--space-2)' }}>
               {isCompleted ? (
-                <button type="button" onClick={handleReopenMatch} disabled={reopenMatch.isPending}
-                  style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
-                  {reopenMatch.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <RefreshCw style={{ width: 16, height: 16, color: 'var(--muted)' }} />}
-                  {t('matchDetail.reopenEditing')}
-                </button>
+                <>
+                  <button type="button" onClick={handleReopenMatch} disabled={reopenMatch.isPending}
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
+                    {reopenMatch.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <RefreshCw style={{ width: 16, height: 16, color: 'var(--muted)' }} />}
+                    {t('matchDetail.reopenEditing')}
+                  </button>
+                  {completedWinnerLabel && (
+                    <button type="button" onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/points`)}
+                      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--muted)' }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                      {t('matchDetail.viewPoints')}
+                    </button>
+                  )}
+                </>
               ) : (
                 <>
                   <button type="button" onClick={swapServe} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
