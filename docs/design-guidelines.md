@@ -240,6 +240,31 @@ import Avatar from '../components/Avatar'
 
 ---
 
+### BwfCategoryBadge
+See [design-system/components/bwf-category-badge.tsx](../design-system/components/bwf-category-badge.tsx).
+
+Color-coded label badge for BWF tournament grade/level. Used inside `SessionCard` when the session is linked to a BWF tournament.
+
+- Shape: `rounded-[var(--radius-sm)]` (sharp, 0px)
+- Font: 10px bold uppercase, `tracking-[0.06em]`, `leading-none`
+- Padding: `px-1.5 py-0.5`
+- Colors are hard-coded per `categorySlug` — do not add new slugs without also adding to `CATEGORY_META` in the component
+
+| Slug | Label | Color hue |
+|------|-------|-----------|
+| `grade-2-level-1` | Finals | purple |
+| `grade-2-level-2` | S1000 | amber |
+| `grade-2-level-3` | S750 | red-orange |
+| `grade-2-level-4` | S500 | blue |
+| `grade-2-level-5` | S300 | green |
+| `grade-2-level-6` | S100 | grey |
+
+Returns `null` for unknown slugs — safe to always render.
+
+```tsx
+<BwfCategoryBadge categoryName="BWF World Tour Finals" categorySlug="grade-2-level-1" />
+```
+
 ### SessionCard
 See [design-system/components/session-card.tsx](../design-system/components/session-card.tsx).
 
@@ -248,6 +273,7 @@ See [design-system/components/session-card.tsx](../design-system/components/sess
 - Completed: neutral badge and default card border
 - Session name: 24px extrabold display font (`--font-display`), `--fg`
 - DateTime: 13px mono, `--muted`
+- Tournament badge: optional `<BwfCategoryBadge>` rendered below the datetime when `tournamentCategory` prop is provided
 - Meta row: 13px mono (`--muted`) with match count and duration
 - Active sessions with no matches: show placeholder text `No matches started yet` in the bottom panel
 - Scheduled sessions: use section label `Players` and placeholder text `Session hasn’t started yet`
@@ -357,13 +383,14 @@ Radio-group chip selector for the five badminton match types (MS / WS / MD / WD 
 
 ### SegmentedControl
 
-Two-segment mode switcher with a sliding filled track. Used for binary choices (e.g. "Start now / Schedule").
+Scrollable tab-strip for selecting among two or more options. Supports any number of tabs (not just binary). No sliding track — each tab carries its own active background.
 
-- Outer container: `grid grid-cols-2 bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[3px]`
-- Sliding track: `absolute bg-[var(--fg)] rounded-[6px]`, width `calc(50% - 3px)`, animated with `translateX(100%)` for right segment
-- Transition: `transform 280ms cubic-bezier(0.32, 0, 0.15, 1)`
-- Active segment text: `text-[var(--surface)]`; inactive: `text-[var(--muted)]`
-- Segment button: `min-h-[40px]`, `font-semibold`, `text-[13px]`
+- Outer container: `flex bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[3px] overflow-x-auto scrollbar-none` (uses `.segmented-scroll` class to hide the native scrollbar)
+- Each tab button: `shrink-0 whitespace-nowrap min-h-[40px] font-semibold text-[13px] rounded-[6px] px-[var(--space-3)]`
+- Active: `background: var(--fg)`, `color: var(--surface)`
+- Inactive: `background: transparent`, `color: var(--muted)`
+- Transition: `color 0.2s, background 0.2s`
+- Optional icon slot: `13×13px` inline-flex before the label text
 - Use `role="tablist"` on the container and `role="tab" aria-selected` on buttons
 
 ### SuggestCard
@@ -413,7 +440,6 @@ import { AppBar } from '../../design-system/components'
 - AppBar is required on all sub-pages and detail views (e.g. `/players/:playerId`, `/sessions/:id`, `/sessions/:id/matches/:matchId`)
 - AppBar is hidden on tab routes (`/sessions`, `/ranking`, `/settings`) — the bottom nav replaces it
 - Full-screen flow pages (e.g. `/sessions/new`) own their own nav bar but should still use `<AppBar>` for consistency
-- Pass `safeArea` prop on pages that are the first thing below the status bar
 - Pass `stuck` when the page is scrolled (bind to a scroll listener on the content container)
 
 Props reference (see [design-system/components/app-bar.tsx](../design-system/components/app-bar.tsx)):
@@ -427,14 +453,17 @@ Props reference (see [design-system/components/app-bar.tsx](../design-system/com
 | `onBack` | `() => void` | Use `navigate(-1)` or a specific route |
 | `leftAction` / `rightAction` | `AppBarAction` | Custom icon/text buttons |
 | `stuck` | `boolean` | Adds `border-b border-[var(--border)]` when scrolled |
-| `safeArea` | `boolean` | Adds `env(safe-area-inset-top)` top padding |
+
+`safeArea` prop is **gone** — the bar always positions itself at `top: env(safe-area-inset-top)` via inline style. The status-bar notch area is covered globally by a `body::before` pseudo-element filled with `var(--bg)` (see Global CSS).
 
 Underlying styles (for reference only — use the component, not raw CSS):
 
-- Container: `sticky top-0 z-40 bg-[color-mix(in oklch, var(--bg) 88%, transparent)] backdrop-blur-xl border-b border-transparent`
-- Layout: `grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3`
-- Left action: icon button with `text-[var(--accent)]`, `font-[family:var(--font-body)]`, `font-medium`, and `active:opacity-70`
-- Title: centered, `font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em]`
+- Container: `sticky z-40 bg-[color-mix(in oklch, var(--bg) 88%, transparent)] backdrop-blur-xl`; `top: env(safe-area-inset-top)` applied inline
+- Layout: `grid grid-cols-[auto_1fr_auto]` (left-aligned title) or `grid-cols-[1fr_auto_1fr]` (centered title); `items-center gap-3 px-4 py-3`
+- Left action: `min-w-[44px] min-h-[44px] -ml-2 pl-2 pr-3 rounded-xl text-[var(--accent)] active:opacity-50 active:scale-[0.96]`
+- Right action (icon-only): `rounded-full active:bg-[color-mix(in_oklch,var(--fg)_12%,transparent)] active:scale-[0.88]`
+- Right action (with label): `rounded-xl active:opacity-50 active:scale-[0.96]`
+- Title: `pointer-events-none font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em]`
 
 ### Full-screen Page Layout
 
@@ -500,7 +529,7 @@ Bottom-sheet overlay for errors, warnings, and confirmations.
 - Icon container: `w-10 h-10 rounded-[var(--radius-lg)]` with 10% alpha tint of the kind's color
 - Backdrop: `oklch(0% 0 0 / 0.40)` + `blur(4px)` — tap backdrop to dismiss
 - Clicking backdrop calls `onClose`; clicking inside the sheet stops propagation
-- Dialog surface uses `role="dialog"`, `aria-modal="true"`, and labels/describes itself with the title and description IDs
+- Dialog surface uses `role="dialog"`, `aria-modal="true"`, `aria-labelledby="app-dialog-title"`, `aria-describedby="app-dialog-description"` — title and description `<p>` elements carry matching `id` attributes
 - `actions` defaults to `[{ label: 'Got it', variant: 'primary' }]`; pass two actions for confirm/cancel pairs
 - Two actions render side-by-side; single action renders full-width
 
@@ -566,6 +595,38 @@ See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading
 - Sizes: sm (24px), md (32px), lg (48px)
 - Optional message below in `--muted`
 
+### FireworkEffect
+See [src/components/firework-effect.tsx](../src/components/firework-effect.tsx).
+
+Canvas-based firework celebration overlay. Renders rockets with trails that explode into particles. Used in `MatchDetailPage` when a player achieves a champion milestone.
+
+- Positioned `fixed inset-0` with `pointer-events: none` and `z-index: 9999`
+- Duration: ~3.5 seconds total (rockets spawn for 3.5 s, then canvas clears as particles fade)
+- Rocket interval: 280 ms; each rocket explodes into 24–40 particles
+- Colors: gold, orange, red-orange, hot pink, green-yellow, turquoise, deep pink (not tied to design tokens)
+- Fade-in: `@keyframes firework-fade-in` (0 → 1 opacity in 250 ms)
+- `aria-hidden="true"` — purely decorative
+- Cleans up `requestAnimationFrame` and `resize` listener on unmount
+
+```tsx
+// Mount it for one flash; unmount when done (or after a timeout)
+{showFirework && <FireworkEffect />}
+```
+
+---
+
+## Global CSS
+
+Key rules in [src/index.css](../src/index.css):
+
+| Rule | Purpose |
+|------|---------|
+| `html { scroll-behavior: auto; }` | Prevents browser smooth-scroll on programmatic scrollTo |
+| `body::before { height: env(safe-area-inset-top); background: var(--bg); position: fixed; z-index: 60 }` | Fills the notch/status-bar area with the page background so the AppBar's blur doesn't leak |
+| `.segmented-scroll::-webkit-scrollbar { display: none }` | Hides the scrollbar on `SegmentedControl` while keeping it scrollable |
+| `@keyframes firework-fade-in` | Fade-in animation used by `FireworkEffect` |
+| `@keyframes score-bump` | Score numeral bump animation used in `MatchDetailPage` |
+
 ---
 
 ## Motion
@@ -606,7 +667,7 @@ Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match
 |-------|-------------|
 | `SCHEDULED` | Pre-match huddle: player roster + serve-first picker. CTA disabled until serve side is chosen. |
 | `LIVE` | Live scoreboard with tap-to-score panels, serve indicator, score tools (−1, direct edit), set meter, action row (swap serve / undo), point log. CTA auto-promotes to "Award match to Team X" when winner condition is met. |
-| `COMPLETED` | Read-only scoreboard. Winner stamp appears only when a team winner exists; no-winner completions are treated as recorded scores with no standings impact. "Re-open for editing" action row. CTA: "Back to session". |
+| `COMPLETED` | Read-only scoreboard. Winner stamp appears only when a team winner exists; no-winner completions are treated as recorded scores with no standings impact. Action row shows "Re-open for editing" always + "View Points" when a winner exists (navigates to `MatchPointsPage`). CTA: "Back to session". |
 
 **Key primitives (page-local, not in design-system):**
 - **Scoreboard panel** — 2-column grid with 88px score numerals, `score-bump` keyframe on increment, dotted underline on editable scores.
@@ -614,12 +675,39 @@ Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match
 - **Point log** — last 8 entries, newest first; latest row highlighted with 5% accent tint.
 - **Score keypad sheet** — numeric pad (0–9 + backspace + clear) with quick-chip row (+1, −1, +5, target), delta display.
 - **Award-winner sheet** — two team cards side by side.
-- **End-without-winner dialog** — warning dialog that confirms the current score will be saved without creating win/loss or ranking records.
-- **Delete-recorded-match dialog** — danger dialog for live/completed matches, warning that scores and win/loss records are removed.
+- **End-without-winner dialog** — `<Dialog kind="warning">` confirming the current score will be saved without creating win/loss or ranking records.
+- **Delete-recorded-match dialog** — `<Dialog kind="danger">` for live/completed matches, warning that scores and win/loss records are removed.
 
 **Score bump animation** — `@keyframes score-bump` in `tokens.css`; applied inline via `animation: score-bump 0.32s …` on the score numeral element.
 
 **Live score is ephemeral** — individual points are tracked in React state only. The DB score (`match_scores`) is written when the match is finalized via `useRecordResult` or completed without a winner via `useEndMatchNoWinner`. Stored as a single set: `{ set_number: 1, team_a_score, team_b_score }`.
+
+### MatchPointsPage
+
+Full-screen sub-page (`/sessions/:id/matches/:matchId/points`) accessible from the COMPLETED state of `MatchDetailPage` when a winner exists. Shows a detailed breakdown of points awarded to every player.
+
+Structure:
+```
+AppBar (back only)
+Header: eyebrow "Match Points" · h1 "Points" · subtitle formula hint
+MatchContextCard (team ratings, strength gap, score margin + bonuses)
+TeamSection × 2 (winner first, then loser)
+  └─ PlayerPointRow × N
+```
+
+**MatchContextCard:**
+- `3-column grid` — Team A rating | VS | Team B rating; winner's rating in `--accent`
+- Strength row: gap label (`"Team B was stronger by 45"`) + winner bonus / loser penalty
+- Score row: final score + margin + winner score bonus / loser participation score
+
+**TeamSection:**
+- Header: team label + winner pill (`bg-[var(--accent-soft)] border-[var(--accent)]`) + score `X : Y`
+- Player rows in a `var(--surface)` card with `var(--radius-lg)`
+
+**PlayerPointRow:**
+- Avatar + name + breakdown sub-label (base / attendance / score / strength breakdown in mono)
+- Right: total points in `--text-xl` (`--accent` for winners, `--fg` for losers)
+- Far right: signed Elo delta with `TrendingUp` icon in `--accent` (positive) or `--muted` (negative); hidden when delta is 0 or null
 
 ---
 
