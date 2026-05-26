@@ -432,6 +432,9 @@ const en = {
   'ranking.noData': 'No match data yet.',
   'ranking.rate': 'rate',
   'ranking.wins': 'W',
+  'ranking.tabAll': 'All time',
+  'ranking.tabSession': 'Last session',
+  'ranking.noSession': 'No completed session yet.',
 
   'donations.totalDonated': 'Total Donated',
   'donations.loading': 'Loading donations...',
@@ -913,6 +916,9 @@ const vi: Record<TranslationKey, string> = {
   'ranking.noData': 'Chưa có dữ liệu nào.',
   'ranking.rate': 'tỷ lệ thắng',
   'ranking.wins': 'Thắng',
+  'ranking.tabAll': 'Tổng',
+  'ranking.tabSession': 'Giải mới nhất',
+  'ranking.noSession': 'Chưa có giải nào kết thúc.',
 
   'donations.totalDonated': 'Tổng đã đóng góp',
   'donations.loading': 'Đang tải đóng góp...',
