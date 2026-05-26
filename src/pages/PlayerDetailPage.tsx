@@ -87,7 +87,7 @@ export default function PlayerDetailPage() {
   const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
   const rankData = rankings?.find((r) => r.playerId === id)
 
-  const [activeTab, setActiveTab] = useState<PlayerTab>('partners')
+  const [activeTab, setActiveTab] = useState<PlayerTab>('achievements')
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
@@ -171,10 +171,10 @@ export default function PlayerDetailPage() {
   }
 
   const tabs = [
-    { id: 'partners' as const, label: t('players.tabPartners'), icon: <Users style={{ width: 13, height: 13 }} /> },
-    { id: 'h2h' as const, label: t('players.tabH2H'), icon: <Swords style={{ width: 13, height: 13 }} /> },
-    { id: 'history' as const, label: t('players.tabHistory'), icon: <History style={{ width: 13, height: 13 }} /> },
     { id: 'achievements' as const, label: t('players.tabAchievements'), icon: <MedalIcon size={13} /> },
+    { id: 'history' as const, label: t('players.tabHistory'), icon: <History style={{ width: 13, height: 13 }} /> },
+    { id: 'h2h' as const, label: t('players.tabH2H'), icon: <Swords style={{ width: 13, height: 13 }} /> },
+    { id: 'partners' as const, label: t('players.tabPartners'), icon: <Users style={{ width: 13, height: 13 }} /> },
   ]
 
   return (
