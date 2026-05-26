@@ -95,6 +95,10 @@ function makeStorageBucket(uploadError: unknown = null) {
   }
 }
 
+function expectErrorCode(error: unknown, code: string) {
+  expect(error).toMatchObject({ code })
+}
+
 // ─── useUpdatePlayer (name rename) ───────────────────────────────────────────
 
 describe('useUpdatePlayer – RLS: players_update_linked_or_admin', () => {
@@ -136,7 +140,7 @@ describe('useUpdatePlayer – RLS: players_update_linked_or_admin', () => {
     result.current.mutate({ id: PLAYER_ID, name: 'Hacker' })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as { code: string }).code).toBe('42501')
+    expectErrorCode(result.current.error, '42501')
   })
 })
 
@@ -184,7 +188,7 @@ describe('useAvatarUpload – RLS: players_update_linked_or_admin', () => {
     result.current.mutate({ file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }), entity: 'players', id: PLAYER_ID })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as { code: string }).code).toBe('42501')
+    expectErrorCode(result.current.error, '42501')
     // Storage upload still happened — the RLS block is at the DB layer.
     expect(bucket.upload).toHaveBeenCalledOnce()
   })
@@ -234,7 +238,7 @@ describe('useSetDefaultAvatar – RLS: players_update_linked_or_admin', () => {
     result.current.mutate({ url: DEFAULT_URL, entity: 'players', id: PLAYER_ID })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as { code: string }).code).toBe('42501')
+    expectErrorCode(result.current.error, '42501')
   })
 
   it('old custom avatar is cleaned up from storage before DB update', async () => {
@@ -301,7 +305,7 @@ describe('useAvatarDelete – RLS: players_update_linked_or_admin', () => {
     result.current.mutate({ entity: 'players', id: PLAYER_ID })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as { code: string }).code).toBe('42501')
+    expectErrorCode(result.current.error, '42501')
   })
 
   it('custom old avatar is removed from storage before DB update', async () => {
