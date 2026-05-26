@@ -56,13 +56,13 @@ export function AppBar({
       }}
     >
       {/* Left action */}
-      <div className="flex items-center justify-start min-h-[44px] shrink-0">
+      <div className="flex items-center justify-start shrink-0">
         {resolvedLeftAction && (
           <button
             type="button"
             onClick={resolvedLeftAction.onClick}
             aria-label={resolvedLeftAction.ariaLabel ?? resolvedLeftAction.label ?? t('common.back')}
-            className="inline-flex items-center gap-2 text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium active:opacity-70 transition-opacity"
+            className="inline-flex items-center gap-1.5 min-w-[44px] min-h-[44px] -ml-2 pl-2 pr-3 rounded-xl text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium select-none active:opacity-50 active:scale-[0.96] transition-[opacity,transform] duration-75"
           >
             {resolvedLeftAction.icon ?? null}
             {resolvedLeftAction.label ? <span>{resolvedLeftAction.label}</span> : null}
@@ -71,7 +71,7 @@ export function AppBar({
       </div>
 
       {/* Title */}
-      <div className={`flex items-center min-h-[44px] min-w-0 ${isLeft ? 'justify-start' : 'justify-center'}`}>
+      <div className={`flex items-center min-h-[44px] min-w-0 pointer-events-none ${isLeft ? 'justify-start' : 'justify-center'}`}>
         <span
           className={`font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em] text-[var(--fg)] truncate transition-[opacity,transform] duration-200 ${
             isLeft ? 'text-left' : 'text-center max-w-[200px]'
@@ -82,13 +82,17 @@ export function AppBar({
       </div>
 
       {/* Right action */}
-      <div className="flex items-center justify-end min-h-[44px] shrink-0">
+      <div className="flex items-center justify-end shrink-0">
         {rightAction && (
           <button
             type="button"
             onClick={rightAction.onClick}
             aria-label={rightAction.ariaLabel ?? rightAction.label ?? t('common.action')}
-            className="inline-flex items-center justify-end gap-2 text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium active:opacity-70 transition-opacity"
+            className={`inline-flex items-center justify-center gap-1.5 min-w-[44px] min-h-[44px] -mr-2 select-none text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium transition-[opacity,background-color,transform] duration-75 ${
+              !rightAction.label
+                ? 'rounded-full active:bg-[color-mix(in_oklch,var(--fg)_12%,transparent)] active:scale-[0.88]'
+                : 'pl-3 pr-2 rounded-xl active:opacity-50 active:scale-[0.96]'
+            }`}
           >
             {rightAction.icon}
             {rightAction.label ? <span>{rightAction.label}</span> : null}
