@@ -12,6 +12,7 @@ import type { PlayerAchievement } from '../hooks/usePlayerAchievements'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge } from '../../design-system/components'
@@ -86,7 +87,7 @@ export default function PlayerDetailPage() {
   const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
   const rankData = rankings?.find((r) => r.playerId === id)
 
-  const [activeTab, setActiveTab] = useState<PlayerTab>('partners')
+  const [activeTab, setActiveTab] = useState<PlayerTab>('achievements')
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
@@ -96,7 +97,9 @@ export default function PlayerDetailPage() {
 
   const { user } = useAuth()
   const { data: myProfile } = useProfile(user?.id)
+  const isAdmin = useIsAdmin()
   const isMe = !!myProfile?.player_id && myProfile.player_id === id
+  const canEdit = isMe || isAdmin
 
   const updatePlayer = useUpdatePlayer()
   const uploadAvatar = useAvatarUpload()
@@ -168,10 +171,10 @@ export default function PlayerDetailPage() {
   }
 
   const tabs = [
-    { id: 'partners' as const, label: t('players.tabPartners'), icon: <Users style={{ width: 13, height: 13 }} /> },
-    { id: 'h2h' as const, label: t('players.tabH2H'), icon: <Swords style={{ width: 13, height: 13 }} /> },
-    { id: 'history' as const, label: t('players.tabHistory'), icon: <History style={{ width: 13, height: 13 }} /> },
     { id: 'achievements' as const, label: t('players.tabAchievements'), icon: <MedalIcon size={13} /> },
+    { id: 'history' as const, label: t('players.tabHistory'), icon: <History style={{ width: 13, height: 13 }} /> },
+    { id: 'h2h' as const, label: t('players.tabH2H'), icon: <Swords style={{ width: 13, height: 13 }} /> },
+    { id: 'partners' as const, label: t('players.tabPartners'), icon: <Users style={{ width: 13, height: 13 }} /> },
   ]
 
   return (
@@ -224,17 +227,23 @@ export default function PlayerDetailPage() {
         </div>
 
         {/* 2. Avatar */}
-        <button
-          onClick={() => setShowAvatarPicker(true)}
-          aria-label={t('players.changeAvatar')}
-          className="relative active:opacity-70 transition-opacity"
-          style={{ marginBottom: 'var(--space-3)' }}
-        >
-          <Avatar src={player.avatar_url} name={player.name} size={52} />
-          <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center border-2 border-[var(--bg)]">
-            <Camera className="w-3 h-3 text-[var(--surface)]" />
+        {canEdit ? (
+          <button
+            onClick={() => setShowAvatarPicker(true)}
+            aria-label={t('players.changeAvatar')}
+            className="relative active:opacity-70 transition-opacity"
+            style={{ marginBottom: 'var(--space-3)' }}
+          >
+            <Avatar src={player.avatar_url} name={player.name} size={52} />
+            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[var(--accent)] rounded-full flex items-center justify-center border-2 border-[var(--bg)]">
+              <Camera className="w-3 h-3 text-[var(--surface)]" />
+            </div>
+          </button>
+        ) : (
+          <div style={{ marginBottom: 'var(--space-3)' }}>
+            <Avatar src={player.avatar_url} name={player.name} size={52} />
           </div>
-        </button>
+        )}
 
         {/* 3. Name + edit */}
         {isEditingName ? (
@@ -261,7 +270,7 @@ export default function PlayerDetailPage() {
               marginBottom: 'var(--space-2)',
             }}
           />
-        ) : (
+        ) : canEdit ? (
           <button
             onClick={handleStartEditName}
             className="flex items-center gap-2 active:opacity-70 text-left"
@@ -281,6 +290,20 @@ export default function PlayerDetailPage() {
             </h1>
             <Pencil className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
           </button>
+        ) : (
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 800,
+              lineHeight: 1.02,
+              letterSpacing: '-0.035em',
+              color: 'var(--fg)',
+              marginBottom: 'var(--space-2)',
+            }}
+          >
+            {player.name}
+          </h1>
         )}
 
         {/* 4. Rating */}

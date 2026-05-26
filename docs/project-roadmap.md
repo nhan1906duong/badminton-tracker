@@ -50,6 +50,7 @@
 - [x] Match type selector (segmented chips)
 - [x] Player selection (filtered by active list)
 - [x] Auto team assignment (Team A/B by selection order)
+- [x] Fair shuffle for doubles — priority-based player rotation + lowest-score team split seeded from session history (`src/lib/fair-shuffle.ts`)
 - [x] Score entry per set
 - [x] Manual winner selection
 - [x] Save match to database (with session_id)

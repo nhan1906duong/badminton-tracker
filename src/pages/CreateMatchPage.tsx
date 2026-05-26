@@ -9,11 +9,73 @@ import { MatchTypeChips } from '../../design-system/components/match-type-chips'
 import { BottomSheet } from '../../design-system/components/bottom-sheet'
 import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
-import type { Player } from '../types/database'
-import { Plus, X, Zap, Calendar, List, ChevronRight, Loader2 } from 'lucide-react'
+import type { Player, MatchWithDetails } from '../types/database'
+import { generateNextMatch } from '../lib/fair-shuffle'
+import type { ShufflePlayer, PlayerStats } from '../lib/fair-shuffle'
+import { Plus, X, Zap, Calendar, List, ChevronRight, Loader2, Shuffle } from 'lucide-react'
 import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+function buildSessionHistory(
+  sessionMatches: MatchWithDetails[],
+  pool: ShufflePlayer[]
+): {
+  stats: Map<string, PlayerStats>
+  partnerCount: Map<string, number>
+  opponentCount: Map<string, number>
+} {
+  const stats = new Map<string, PlayerStats>()
+  const partnerCount = new Map<string, number>()
+  const opponentCount = new Map<string, number>()
+
+  const sorted = [...sessionMatches].sort(
+    (a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime()
+  )
+
+  for (const match of sorted) {
+    const teamADef = match.teams.find(t => t.team_label === 'TEAM_A')
+    const teamBDef = match.teams.find(t => t.team_label === 'TEAM_B')
+    if (!teamADef || !teamBDef) continue
+
+    const teamAIds = match.participants.filter(p => p.team_id === teamADef.id).map(p => p.player_id)
+    const teamBIds = match.participants.filter(p => p.team_id === teamBDef.id).map(p => p.player_id)
+    const playingIds = new Set([...teamAIds, ...teamBIds])
+
+    for (const player of pool) {
+      const s = stats.get(player.id) ?? { played: 0, rested: 0, consecutivePlayed: 0 }
+      if (playingIds.has(player.id)) {
+        s.played += 1
+        s.consecutivePlayed += 1
+      } else {
+        s.rested += 1
+        s.consecutivePlayed = 0
+      }
+      stats.set(player.id, s)
+    }
+
+    for (let i = 0; i < teamAIds.length; i++) {
+      for (let j = i + 1; j < teamAIds.length; j++) {
+        const key = [teamAIds[i], teamAIds[j]].sort().join('-')
+        partnerCount.set(key, (partnerCount.get(key) ?? 0) + 1)
+      }
+    }
+    for (let i = 0; i < teamBIds.length; i++) {
+      for (let j = i + 1; j < teamBIds.length; j++) {
+        const key = [teamBIds[i], teamBIds[j]].sort().join('-')
+        partnerCount.set(key, (partnerCount.get(key) ?? 0) + 1)
+      }
+    }
+    for (const aId of teamAIds) {
+      for (const bId of teamBIds) {
+        const key = [aId, bId].sort().join('-')
+        opponentCount.set(key, (opponentCount.get(key) ?? 0) + 1)
+      }
+    }
+  }
+
+  return { stats, partnerCount, opponentCount }
+}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
@@ -183,6 +245,8 @@ export default function CreateMatchPage() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
   const [navStuck, setNavStuck] = useState(false)
+  const [shuffleOpen, setShuffleOpen] = useState(false)
+  const [shuffleSelectedIds, setShuffleSelectedIds] = useState<Set<string>>(new Set())
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -221,6 +285,59 @@ export default function CreateMatchPage() {
     if (matchType === 'MIXED_DOUBLES') return index === 0 ? t('team.male') : t('team.female')
     if (teamSize === 1) return t('team.player')
     return t('team.playerIndex', { index: index + 1 })
+  }
+
+  // ── Shuffle picker ───────────────────────────────────────────────────────────
+
+  function openShufflePicker() {
+    // Pre-select players already placed in the current match slots
+    const current = new Set([
+      ...teamA.slice(0, teamSize).filter(Boolean) as string[],
+      ...teamB.slice(0, teamSize).filter(Boolean) as string[],
+    ])
+    setShuffleSelectedIds(current)
+    setShuffleOpen(true)
+  }
+
+  function toggleShufflePlayer(id: string) {
+    setShuffleSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function performShuffle(rawPool: Player[]) {
+    const pool: ShufflePlayer[] = rawPool.map(p => ({ id: p.id, name: p.name }))
+    if (pool.length < teamSize * 2) return
+    if (teamSize === 2) {
+      const { stats, partnerCount, opponentCount } = buildSessionHistory(matches ?? [], pool)
+      const result = generateNextMatch({ selectedPlayers: pool, stats, partnerCount, opponentCount })
+      setSlot('A', 0, result.team1[0].id)
+      setSlot('A', 1, result.team1[1].id)
+      setSlot('B', 0, result.team2[0].id)
+      setSlot('B', 1, result.team2[1].id)
+    } else {
+      const shuffled = [...pool]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      setSlot('A', 0, shuffled[0].id)
+      setSlot('B', 0, shuffled[1].id)
+    }
+    setShuffleOpen(false)
+  }
+
+  function handleShuffleAll() {
+    if (!allPlayers) return
+    performShuffle(allPlayers)
+  }
+
+  function handleShuffleSelected() {
+    if (!allPlayers) return
+    performShuffle(allPlayers.filter(p => shuffleSelectedIds.has(p.id)))
   }
 
   // ── Player picker ────────────────────────────────────────────────────────────
@@ -428,16 +545,43 @@ export default function CreateMatchPage() {
             }}>
               {t('createMatch.players')}
             </span>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              color: filledCount === totalSlots ? 'var(--accent)' : 'var(--muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              fontWeight: filledCount === totalSlots ? 700 : 400,
-            }}>
-              {t('createMatch.selectedCount', { filled: filledCount, total: totalSlots })}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: filledCount === totalSlots ? 'var(--accent)' : 'var(--muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                fontWeight: filledCount === totalSlots ? 700 : 400,
+              }}>
+                {t('createMatch.selectedCount', { filled: filledCount, total: totalSlots })}
+              </span>
+              {teamSize === 2 && (
+                <button
+                  type="button"
+                  onClick={openShufflePicker}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    color: 'var(--accent)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 'var(--text-xs)',
+                    fontWeight: 700,
+                    padding: '4px 6px',
+                    minHeight: 32,
+                    touchAction: 'manipulation',
+                  }}
+                  aria-label={t('shuffle.ariaLabel')}
+                >
+                  <Shuffle style={{ width: 13, height: 13 }} />
+                  {t('shuffle.button')}
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{
@@ -815,6 +959,154 @@ export default function CreateMatchPage() {
           {createMatch.isPending ? t('common.creatingEllipsis') : ctaLabel()}
         </button>
       </div>
+
+      {/* ── Shuffle picker bottom sheet ──────────────────────────────────── */}
+      <BottomSheet open={shuffleOpen} onClose={() => setShuffleOpen(false)}>
+        {/* Header */}
+        <div style={{ padding: '0 var(--space-5) var(--space-3)' }}>
+          <div style={{ marginBottom: 'var(--space-1)' }}>
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-lg)',
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              color: 'var(--fg)',
+            }}>
+              {t('shuffle.title')}
+            </span>
+          </div>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+            {shuffleSelectedIds.size === 0
+              ? t('shuffle.noFilter')
+              : t('shuffle.selectedCount', { count: shuffleSelectedIds.size })}
+          </p>
+        </div>
+
+        {/* Player list */}
+        <div style={{ overflowY: 'auto', maxHeight: '45vh', padding: '0 var(--space-5)' }}>
+          {allPlayers?.map(p => {
+            const isSel = shuffleSelectedIds.has(p.id)
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggleShufflePlayer(p.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                  padding: 'var(--space-3) 0',
+                  borderBottom: '1px solid var(--border)',
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottomColor: 'var(--border)',
+                  borderBottomWidth: 1,
+                  borderBottomStyle: 'solid',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  touchAction: 'manipulation',
+                }}
+              >
+                <div style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  border: `2px solid ${isSel ? 'var(--accent)' : 'var(--muted)'}`,
+                  background: isSel ? 'var(--accent)' : 'transparent',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flexShrink: 0,
+                  transition: 'background 0.12s, border-color 0.12s',
+                }}>
+                  {isSel && (
+                    <svg width="12" height="12" fill="none" viewBox="0 0 12 12" stroke="white" strokeWidth={2.5}>
+                      <path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <span style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  color: 'var(--fg)',
+                }}>
+                  {formatShortPlayerName(p.name)}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Shuffle CTAs */}
+        <div style={{ padding: 'var(--space-4) var(--space-5) 0', display: 'flex', gap: 'var(--space-3)' }}>
+          {/* Shuffle All */}
+          <button
+            type="button"
+            onClick={handleShuffleAll}
+            style={{
+              flex: 1,
+              padding: 'var(--space-3) var(--space-2)',
+              background: 'transparent',
+              color: 'var(--fg)',
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 700,
+              border: '2px solid var(--fg)',
+              borderRadius: 'var(--radius-sm)',
+              cursor: 'pointer',
+              minHeight: 52,
+              touchAction: 'manipulation',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'var(--space-2)',
+            }}
+          >
+            <Shuffle style={{ width: 15, height: 15 }} />
+            {t('shuffle.allPlayers')}
+          </button>
+
+          {/* Shuffle Selected */}
+          {(() => {
+            const selCount = shuffleSelectedIds.size
+            const needed = teamSize * 2
+            const disabled = selCount < needed
+            return (
+              <button
+                type="button"
+                onClick={handleShuffleSelected}
+                disabled={disabled}
+                style={{
+                  flex: 1,
+                  padding: 'var(--space-3) var(--space-2)',
+                  background: 'var(--accent)',
+                  color: 'var(--surface)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 700,
+                  border: '2px solid var(--accent)',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                  minHeight: 52,
+                  touchAction: 'manipulation',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 'var(--space-2)',
+                  opacity: disabled ? 0.35 : 1,
+                }}
+              >
+                <Shuffle style={{ width: 15, height: 15 }} />
+                {selCount >= needed
+                  ? t('shuffle.selectedButton', { count: selCount })
+                  : t('shuffle.needMore', { count: needed - selCount })}
+              </button>
+            )
+          })()}
+        </div>
+      </BottomSheet>
 
       {/* ── Player picker bottom sheet ────────────────────────────────────── */}
       <BottomSheet open={pickerOpen} onClose={() => setPickerOpen(false)}>

@@ -39,7 +39,11 @@ export function useHeadToHead(playerId: string) {
 
     return Array.from(map.values())
       .map((s) => ({ opponent: s.player, wins: s.wins, losses: s.losses, totalMatches: s.wins + s.losses }))
-      .sort((a, b) => b.totalMatches - a.totalMatches || b.wins - a.wins)
+      .sort((a, b) => {
+        const rateA = a.totalMatches > 0 ? a.wins / a.totalMatches : 0
+        const rateB = b.totalMatches > 0 ? b.wins / b.totalMatches : 0
+        return rateB - rateA || b.totalMatches - a.totalMatches
+      })
   }, [allMatches, playerId])
 
   return { entries, isLoading }

@@ -16,6 +16,7 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 | `/sessions/:id/donated` | `SessionDonatedListPage` | Yes | No |
 | `/sessions/:id/matches/new` | `CreateMatchPage` | Yes | No |
 | `/sessions/:id/matches/:matchId` | `MatchDetailPage` | Yes | No |
+| `/sessions/:id/matches/:matchId/points` | `MatchPointsPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/players/edit` | `EditPlayersPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/edit` | `LegacyEditMatchRedirect` | Yes | No |
 | `/players/:playerId` | `PlayerDetailPage` | Yes | No |
@@ -58,9 +59,9 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
 │   SESSIONS     │   RANKING     │   SETTINGS        │
 │   /sessions    │   /ranking    │   /settings       │
 │                │               │                   │
-│ Session card   │ Player list   │ Profile summary   │
-│   ─────►       │ by Elo rating │ Link Player       │
-│   /:id         │               │ Point System ──►  │
+│ Session card   │ All tab: Elo  │ Profile summary   │
+│   ─────►       │ Session tab:  │ Link Player       │
+│   /:id         │ latest session│ Point System ──►  │
 │ + FAB          │               │ /settings/points  │
 │   ───►         │               │ Change Pwd ──►    │
 │ /sessions/new  │               │ /change-password  │
@@ -108,6 +109,8 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
            │  View/start/record result   │
            │  Edit players ──► /players/edit │
            │  Reopen / Delete match      │
+           │  View Points ──► /points    │
+           │    (COMPLETED + winner only)│
            └─────────────────────────────┘
 ```
 
