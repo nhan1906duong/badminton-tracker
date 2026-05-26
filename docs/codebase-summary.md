@@ -41,6 +41,7 @@ src/
 | 138 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
 | 135 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
+| 171 | lib/fair-shuffle.ts | Fair shuffle algorithm: priority-based player selection + lowest-score team split |
 | 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states) |
 | 111 | pages/LoginPage.tsx | Email + password login flow |
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
@@ -220,7 +221,7 @@ Default bg: var(--accent) · Default text: var(--surface)
 Single-page flow at `/sessions/:id/matches/new` (`CreateMatchPage`):
 
 1. **Match type** — segmented chip selector (Men's Singles / Women's Singles / Men's Doubles / Women's Doubles / Mixed Doubles)
-2. **Players** — slot-based card (Team A slots / VS / Team B slots); tap a slot → bottom sheet player picker with search
+2. **Players** — slot-based card (Team A slots / VS / Team B slots); tap a slot → bottom sheet player picker with search. A **Shuffle** button (doubles only) opens a bottom sheet to pick a player pool, then calls `generateNextMatch` from `src/lib/fair-shuffle.ts` to fill all four slots fairly based on session history.
 3. **When** — 3-way segmented control:
    - **Now** — match inserted as `LIVE`; blocks if a live match already exists (inline error)
    - **Schedule** — match inserted as `SCHEDULED` with a custom date/time; quick-pick buttons (15 min / 30 min / 1 hr)
@@ -228,6 +229,38 @@ Single-page flow at `/sessions/:id/matches/new` (`CreateMatchPage`):
 
 CTA is disabled until all player slots are filled and (for Schedule mode) a date/time is set.
 After save: `navigate(-1)` back to session detail.
+
+## Fair Shuffle (`src/lib/fair-shuffle.ts`)
+
+Available for doubles match types only. The Shuffle button in `CreateMatchPage` opens a player pool picker, then runs two steps:
+
+**Step 1 — Who plays (priority ranking)**
+
+Each player in the pool gets a priority score:
+```
+priority = rested×3 − played×2 − consecutivePlayed×2 + random()
+```
+The top 4 by priority are selected to play; the rest sit out. With exactly 4 players everyone always plays.
+
+**Step 2 — Best team split**
+
+Given the 4 playing players `[a, b, c, d]`, all 3 possible 2v2 splits are scored:
+```
+score = partnerRepeatCount(team1)×5 + partnerRepeatCount(team2)×5
+      + opponentRepeatCount(all 4 cross-pairs)
+      + random(0..2)   ← tiebreaker
+```
+The split with the lowest score wins. The `×5` weight strongly penalises repeating the same partner over repeating the same opponent matchup.
+
+**History (`buildSessionHistory` in `CreateMatchPage`)**
+
+Before shuffling, all completed + live matches in the session are replayed in chronological order to reconstruct `stats`, `partnerCount`, and `opponentCount`. This means the shuffle is always informed by the real match history of the current session.
+
+**Key exports**
+- `generateNextMatch` — picks 4 players and best split for one match
+- `applyMatchResult` — updates stats/partner/opponent counts after a match
+- `generateMatchSchedule` — generates N matches in sequence (used for previews/tests)
+- `computeSessionStats` — replays a list of matches to rebuild stats maps
 
 ## Match Detail Flow
 

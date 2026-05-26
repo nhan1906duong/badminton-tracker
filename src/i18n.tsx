@@ -313,6 +313,15 @@ const en = {
   'createMatch.searchPlayers': 'Search players...',
   'createMatch.noPlayerMatches': 'No players match this filter.',
 
+  'shuffle.button': 'Shuffle',
+  'shuffle.ariaLabel': 'Shuffle players',
+  'shuffle.title': 'Shuffle Players',
+  'shuffle.noFilter': 'No filter — picks from all players',
+  'shuffle.selectedCount': '{count} selected',
+  'shuffle.allPlayers': 'All Players',
+  'shuffle.selectedButton': '{count} Selected',
+  'shuffle.needMore': 'Need {count} more',
+
   'editPlayers.title': 'Edit players',
   'editPlayers.fillEverySlot': 'Fill every player slot before saving.',
   'editPlayers.playerOnce': 'A player can only appear once in this match.',
@@ -751,6 +760,15 @@ const vi: Record<TranslationKey, string> = {
   'createMatch.selectPlayer': 'Chọn người chơi',
   'createMatch.searchPlayers': 'Tìm người chơi...',
   'createMatch.noPlayerMatches': 'Không có người chơi phù hợp.',
+
+  'shuffle.button': 'Xáo',
+  'shuffle.ariaLabel': 'Xáo ngẫu nhiên người chơi',
+  'shuffle.title': 'Xáo Người Chơi',
+  'shuffle.noFilter': 'Không lọc — chọn từ tất cả người chơi',
+  'shuffle.selectedCount': '{count} đã chọn',
+  'shuffle.allPlayers': 'Tất Cả',
+  'shuffle.selectedButton': '{count} Đã Chọn',
+  'shuffle.needMore': 'Cần thêm {count}',
 
   'editPlayers.title': 'Sửa thông tin vđv',
   'editPlayers.fillEverySlot': 'Hãy điền đầy đủ tất cả vị trí trước khi lưu.',
