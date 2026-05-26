@@ -11,32 +11,34 @@ import FloatingActionButton from '../components/FloatingActionButton'
 import PlayerForm from '../components/PlayerForm'
 import { useI18n } from '../i18n'
 
-// Ghost rank number — pos 1/2/3 get faded accent, rest get faded border
 function GhostRank({ rank }: { rank: number }) {
   const { t } = useI18n()
   const color =
-    rank === 1 ? 'color-mix(in oklch, var(--accent) 35%, transparent)'
-    : rank === 2 ? 'color-mix(in oklch, var(--accent) 20%, transparent)'
-    : rank === 3 ? 'color-mix(in oklch, var(--accent) 10%, transparent)'
-    : 'color-mix(in oklch, var(--border) 80%, transparent)'
+    rank === 1 ? 'var(--accent)'
+    : rank === 2 ? 'color-mix(in oklch, var(--accent) 70%, var(--muted))'
+    : rank === 3 ? 'color-mix(in oklch, var(--accent) 45%, var(--muted))'
+    : 'var(--muted)'
+
   return (
     <div
       aria-label={t('common.rank', { rank })}
       style={{
+        width: 36,
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
         fontFamily: 'var(--font-display)',
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 900,
         lineHeight: 1,
-        width: 44,
-        textAlign: 'center',
-        flexShrink: 0,
-        letterSpacing: '-0.04em',
-        color,
-        userSelect: 'none',
         fontVariantNumeric: 'tabular-nums',
+        color,
       }}
     >
-      {rank}
+      <span>{rank}</span>
     </div>
   )
 }
@@ -215,10 +217,10 @@ export default function RankingPage() {
                       </span>
                     )}
                   </div>
-                  <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, fontVariantNumeric: 'tabular-nums' }}>
+                  <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontVariantNumeric: 'tabular-nums' }}>
                     <span>{t('units.match', { count: s.matchesPlayed })}</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
-                    <span>{s.wins} {t('ranking.wins')}</span>
+                    <span>{s.wins}W</span>
                     <span style={{ color: 'var(--border)' }}>·</span>
                     <span>{winRate}% {t('ranking.rate')}</span>
                   </div>
