@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel, BwfCategoryBadge } from '../../design-system/components'
+import { ShuttleLoading } from '../components/ShuttleLoading'
 import { Plus, Activity, Share2, Pencil, Trash2 } from 'lucide-react'
 
 const IS_DEV = import.meta.env.DEV
@@ -832,6 +833,17 @@ function PatternSection() {
       />
       <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Loading State</p>
       <DSCard><LoadingState message="Loading sessions..." /></DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Shuttle Loading — compact</p>
+      <DSCard><ShuttleLoading compact /></DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Shuttle Loading — small (MatchCard LIVE score center)</p>
+      <DSCard className="flex justify-center py-4"><ShuttleLoading small /></DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Shuttle Loading — tiny (inline use)</p>
+      <DSCard className="flex items-center gap-3 px-4 py-3">
+        <ShuttleLoading tiny />
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+          Inline tiny example
+        </span>
+      </DSCard>
       <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Error State</p>
       <ErrorState
         message="Failed to load player data. Please check your connection."

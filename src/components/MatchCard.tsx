@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import type { MatchWithDetails } from '../types/database'
 import { formatShortPlayerName } from '../lib/player-name'
 import { LOCALE_TAG, matchTypeLabel, useI18n, type Locale } from '../i18n'
+import { ShuttleLoading } from './ShuttleLoading'
 
 function formatDuration(playedAt: string, endedAt: string | null | undefined, isEnded: boolean): string {
   const start = new Date(playedAt).getTime()
@@ -136,33 +137,39 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
 
         {/* Score center */}
         <div className="flex flex-col items-center justify-center shrink-0" style={{ minWidth: 80 }}>
-          <div className="flex items-center leading-none" style={{ gap: 'var(--space-2)' }}>
-            <span
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
-                fontWeight: hasScores ? 800 : 400,
-                letterSpacing: '-0.03em',
-                color: teamAWon ? 'var(--accent)' : teamBWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
-              }}
-            >
-              {hasScores ? match.scores[0].team_a_score : '—'}
-            </span>
-            <span style={{ color: 'var(--border)', fontWeight: 400, fontSize: 'var(--text-xl)' }}>
-              :
-            </span>
-            <span
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
-                fontWeight: hasScores ? 800 : 400,
-                letterSpacing: '-0.03em',
-                color: teamBWon ? 'var(--accent)' : teamAWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
-              }}
-            >
-              {hasScores ? match.scores[0].team_b_score : '—'}
-            </span>
-          </div>
+          {match.status === 'LIVE' ? (
+            <div style={{ transform: 'translateY(-18px)' }}>
+              <ShuttleLoading small />
+            </div>
+          ) : (
+            <div className="flex items-center leading-none" style={{ gap: 'var(--space-2)' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
+                  fontWeight: hasScores ? 800 : 400,
+                  letterSpacing: '-0.03em',
+                  color: teamAWon ? 'var(--accent)' : teamBWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
+                }}
+              >
+                {hasScores ? match.scores[0].team_a_score : '—'}
+              </span>
+              <span style={{ color: 'var(--border)', fontWeight: 400, fontSize: 'var(--text-xl)' }}>
+                :
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
+                  fontWeight: hasScores ? 800 : 400,
+                  letterSpacing: '-0.03em',
+                  color: teamBWon ? 'var(--accent)' : teamAWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
+                }}
+              >
+                {hasScores ? match.scores[0].team_b_score : '—'}
+              </span>
+            </div>
+          )}
 
           {isEnded && (
             <div

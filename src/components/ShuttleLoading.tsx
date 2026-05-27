@@ -34,9 +34,33 @@ function ShuttleAnimation() {
 
 interface Props {
   compact?: boolean
+  small?: boolean
+  tiny?: boolean
 }
 
-export function ShuttleLoading({ compact = false }: Props) {
+export function ShuttleLoading({ compact = false, small = false, tiny = false }: Props) {
+  if (tiny) {
+    return (
+      // 352×172 animation scaled to 22% → 77×38 visual footprint
+      <div style={{ width: 77, height: 38, overflow: 'hidden' }}>
+        <div style={{ transform: 'scale(0.22)', transformOrigin: 'top left' }}>
+          <ShuttleAnimation />
+        </div>
+      </div>
+    )
+  }
+
+  if (small) {
+    return (
+      // 352×172 animation scaled to 33% — extra width prevents right-edge clipping from rotation + shadow
+      <div style={{ width: 130, height: 57, overflow: 'hidden' }}>
+        <div style={{ transform: 'scale(0.33)', transformOrigin: 'top left' }}>
+          <ShuttleAnimation />
+        </div>
+      </div>
+    )
+  }
+
   if (compact) {
     return (
       <div className="flex justify-center py-8">
