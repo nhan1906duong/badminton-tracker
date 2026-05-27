@@ -781,34 +781,6 @@ export default function MatchDetailPage() {
               )}
             </div>
 
-            {/* Point log */}
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '0 var(--space-5)', marginBottom: 'var(--space-3)', gap: 'var(--space-3)' }}>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--fg)' }}>{t('matchDetail.pointLog')}</h2>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--muted)' }}>
-                {t('units.point', { count: pointLog.length })}
-              </span>
-            </div>
-
-            <div style={{ margin: '0 var(--space-5)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-              {pointLog.length === 0 ? (
-                <div style={{ padding: 'var(--space-5) var(--space-4)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                  {t('matchDetail.noPointsYet')}
-                </div>
-              ) : (
-                pointLog.slice(-8).reverse().map((entry, i) => {
-                  const num = pointLog.length - i
-                  const isLatest = i === 0 && isLive
-                  return (
-                    <div key={num} style={{ display: 'grid', gridTemplateColumns: '28px 1fr auto 1fr', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-2) var(--space-4)', borderBottom: i < Math.min(pointLog.length, 8) - 1 ? '1px solid var(--border)' : 'none', minHeight: 38, background: isLatest ? 'color-mix(in oklch, var(--accent) 5%, var(--surface))' : 'transparent' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.06em' }}>#{num}</span>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textAlign: 'left', color: entry.team === 'A' ? 'var(--fg)' : 'var(--muted)', fontWeight: entry.team === 'A' ? 700 : 500 }}>{entry.a}</span>
-                      <span style={{ color: 'var(--border)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>:</span>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textAlign: 'right', color: entry.team === 'B' ? 'var(--fg)' : 'var(--muted)', fontWeight: entry.team === 'B' ? 700 : 500 }}>{entry.b}</span>
-                    </div>
-                  )
-                })
-              )}
-            </div>
           </>
         )}
       </div>

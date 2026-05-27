@@ -1,9 +1,10 @@
 import { useCallback, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Medal, UserPlus, Crown } from 'lucide-react'
-import { usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useSessions } from '../hooks/useSessions'
 import Avatar from '../components/Avatar'
+import PlayerRecordLine from '../components/PlayerRecordLine'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { useIsAdmin } from '../hooks/useIsAdmin'
@@ -103,11 +104,35 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
   )
 }
 
-function SessionPlayerRow({ stat, rank, isLast, onClick }: {
+function TopOneWeekStreakText({ count }: { count: number }) {
+  const { t } = useI18n()
+  if (count <= 1) return null
+
+  return (
+    <div
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        fontWeight: 700,
+        color: 'var(--muted)',
+        fontVariantNumeric: 'tabular-nums',
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+        minWidth: 0,
+      }}
+    >
+      <span className="hidden min-[390px]:inline">{t('ranking.topOneWeekStreak', { count })}</span>
+      <span className="inline min-[390px]:hidden">{t('ranking.topOneWeekStreakShort', { count })}</span>
+    </div>
+  )
+}
+
+function SessionPlayerRow({ stat, rank, isLast, onClick, isMe }: {
   stat: SessionWeeklyStats
   rank: number
   isLast: boolean
   onClick: () => void
+  isMe?: boolean
 }) {
   const { t } = useI18n()
   const winRate = stat.matchesPlayed > 0 ? Math.round((stat.wins / stat.matchesPlayed) * 100) : 0
@@ -168,26 +193,31 @@ function SessionPlayerRow({ stat, rank, isLast, onClick }: {
               {t('sessionStats.championBadge')}
             </span>
           )}
+          {isMe && (
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--accent)',
+                background: 'var(--accent-soft)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 6px',
+                flexShrink: 0,
+              }}
+            >
+              {t('common.you')}
+            </span>
+          )}
         </div>
-        <div
-          className="font-mono text-[11px]"
-          style={{
-            color: 'var(--muted)',
-            marginTop: 4,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            flexWrap: 'wrap',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          <span>{t('units.match', { count: stat.matchesPlayed })}</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{stat.wins}W</span>
-          <span>{stat.losses}L</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{winRate}%</span>
-        </div>
+        <PlayerRecordLine
+          matchesPlayed={stat.matchesPlayed}
+          wins={stat.wins}
+          losses={stat.losses}
+          winRate={winRate}
+        />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 64 }}>
@@ -227,6 +257,7 @@ export default function RankingPage() {
   const { data: myProfile } = useProfile(user?.id)
   const myPlayerId = myProfile?.player_id
   const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
+  const { data: completedMatchCount = 0, refetch: refetchCompletedMatchCount } = useCompletedMatchCount()
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()
   const [showAddPlayer, setShowAddPlayer] = useState(false)
@@ -243,11 +274,10 @@ export default function RankingPage() {
   const sessionRankings = sessionLeaderboard?.rankings ?? []
 
   const playerCount = rankings.length
-  const totalMatches = (rankings.reduce((s, r) => s + r.matchesPlayed, 0) / 2) | 0
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refetch(), refetchSession()])
-  }, [refetch, refetchSession])
+    await Promise.all([refetch(), refetchSession(), refetchCompletedMatchCount()])
+  }, [refetch, refetchCompletedMatchCount, refetchSession])
 
   const TAB_ALL = t('ranking.tabAll')
 
@@ -273,7 +303,7 @@ export default function RankingPage() {
         </h1>
         {!isLoading && rankings.length > 0 && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-            {t('units.player', { count: playerCount })} · {t('units.match', { count: totalMatches })}
+            {t('units.player', { count: playerCount })} · {t('units.match', { count: completedMatchCount })}
           </p>
         )}
       </div>
@@ -288,12 +318,6 @@ export default function RankingPage() {
           { key: 'session', label: (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               {latestSession?.label ?? t('ranking.tabSession')}
-              {latestSession?.bwf_tournaments && (
-                <BwfCategoryBadge
-                  categoryName={latestSession.bwf_tournaments.category_name}
-                  categorySlug={latestSession.bwf_tournaments.category_slug}
-                />
-              )}
             </span>
           )},
         ] as const).map(({ key, label }) => (
@@ -335,7 +359,7 @@ export default function RankingPage() {
         ) : (
           <div style={{ margin: '0 var(--space-5)' }}>
             {rankings.map((s, i) => {
-              const winRate = Math.round(s.winRate * 100)
+              const winRate = s.matchesPlayed > 0 ? Math.round((s.wins / s.matchesPlayed) * 100) : 0
               const isLast = i === rankings.length - 1
               const isNew = s.matchesPlayed === 0
               return (
@@ -394,14 +418,14 @@ export default function RankingPage() {
                           {t('common.you')}
                         </span>
                       )}
+                      <TopOneWeekStreakText count={s.topOneWeekStreak} />
                     </div>
-                    <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontVariantNumeric: 'tabular-nums' }}>
-                      <span>{t('units.match', { count: s.matchesPlayed })}</span>
-                      <span style={{ color: 'var(--border)' }}>·</span>
-                      <span>{s.wins}W</span>
-                      <span style={{ color: 'var(--border)' }}>·</span>
-                      <span>{winRate}% {t('ranking.rate')}</span>
-                    </div>
+                    <PlayerRecordLine
+                      matchesPlayed={s.matchesPlayed}
+                      wins={s.wins}
+                      losses={s.losses}
+                      winRate={winRate}
+                    />
                   </div>
 
                   {/* Rating on top, trend indicator below */}
@@ -471,6 +495,7 @@ export default function RankingPage() {
                 rank={i + 1}
                 isLast={i === sessionRankings.length - 1}
                 onClick={() => navigate(`/players/${stat.playerId}`)}
+                isMe={myPlayerId === stat.playerId}
               />
             ))}
           </div>

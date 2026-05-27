@@ -9,7 +9,7 @@
 | 3 | Player Management | ✅ Done | CRUD + active toggle |
 | 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit, authenticated start/end |
 | 5 | Home Dashboard | ✅ Done | Stats + recent matches + PodiumChart |
-| 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate |
+| 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate, current weekly Top 1 streak |
 | 7 | Match History | ✅ Done | List + detail view |
 | 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
 | 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history, achievements |
@@ -18,6 +18,7 @@
 | 9c | Ranking Sync & No-Winner Handling | ✅ Done | Session MVP/top-player panels use shared leaderboard data; no-winner matches are excluded from aggregates |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
+| 12 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
 
 ## Phase Details
 
@@ -67,6 +68,7 @@
 - [x] Leaderboard UI (PodiumChart top 5)
 - [x] Sort by wins, losses (donations)
 - [x] Avatar display on leaderboard
+- [x] Current calendar-week Top 1 streak on all-time ranking rows
 
 ### Phase 7: Match History ✅
 - [x] Match list page (/matches)
@@ -131,6 +133,12 @@
 - [ ] Component tests
 - [ ] E2E tests (Playwright)
 - [ ] CI/CD pipeline
+
+### Phase 12: Persistent Point Log ⏳
+- [ ] Add a database table for point-by-point match events
+- [ ] Persist point increments, decrements, direct score edits, and undo actions for live matches
+- [ ] Restore point history when reopening or viewing a match
+- [ ] Re-enable the Match Detail point log UI after point events are stored durably
 
 ## Milestones
 

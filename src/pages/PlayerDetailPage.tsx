@@ -15,6 +15,7 @@ import { useProfile } from '../hooks/useProfile'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
+import PlayerRecordLine from '../components/PlayerRecordLine'
 import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
@@ -504,6 +505,7 @@ export default function PlayerDetailPage() {
                 {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
                   const isExpanded = expandedSessions.has(session.id)
                   const completedMatches = matches.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner))
+                  const sessionWinRate = completedMatches.length > 0 ? Math.round((sWins / completedMatches.length) * 100) : 0
                   return (
                     <div
                       key={session.id}
@@ -521,14 +523,13 @@ export default function PlayerDetailPage() {
                           >
                             {formatSessionLabel(session, locale)}
                           </p>
-                          <p
-                            className="text-[11px] mt-0.5"
-                            style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                          >
-                            {t('units.match', { count: completedMatches.length })} ·{' '}
-                            <span style={{ color: 'var(--success)' }}>{sWins}W</span>{' '}
-                            <span style={{ color: 'var(--danger)' }}>{sLosses}L</span>
-                          </p>
+                          <PlayerRecordLine
+                            matchesPlayed={completedMatches.length}
+                            wins={sWins}
+                            losses={sLosses}
+                            winRate={sessionWinRate}
+                            marginTop={2}
+                          />
                         </div>
                         {isExpanded
                           ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
@@ -710,7 +711,6 @@ function PlayerStatCell({
 }
 
 function PartnerRow({ label, entry }: { label: string; entry: PartnerEntry }) {
-  const { t } = useI18n()
   return (
     <div className="px-4 py-3">
       <p
@@ -719,14 +719,24 @@ function PartnerRow({ label, entry }: { label: string; entry: PartnerEntry }) {
       >
         {label}
       </p>
-      <div className="flex items-center gap-2">
-        <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={20} />
-        <p className="text-[15px] font-semibold truncate" style={{ color: 'var(--fg)' }}>
-          {entry.partner.name}
-          <span className="text-[13px] font-normal" style={{ color: 'var(--muted)' }}>
-            {' · '}{entry.wins} {t('players.wins')}/{entry.totalMatches - entry.wins} {t('players.losses')} · {Math.round(entry.winRate * 100)}%
-          </span>
-        </p>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={20} />
+          <p className="text-[15px] font-semibold truncate min-w-0" style={{ color: 'var(--fg)' }}>
+            {entry.partner.name}
+          </p>
+        </div>
+        <div style={{ paddingLeft: 28 }}>
+          <PlayerRecordLine
+            matchesPlayed={entry.totalMatches}
+            wins={entry.wins}
+            losses={entry.totalMatches - entry.wins}
+            winRate={Math.round(entry.winRate * 100)}
+            fontSize={13}
+            marginTop={1}
+            showMatches={false}
+          />
+        </div>
       </div>
     </div>
   )
@@ -742,6 +752,8 @@ function AchievementRow({
   isLast: boolean
 }) {
   const isWin = achievement.type === 'win'
+  const losses = achievement.matchesPlayed - achievement.wins
+  const winRate = achievement.matchesPlayed > 0 ? Math.round((achievement.wins / achievement.matchesPlayed) * 100) : 0
 
   return (
     <div
@@ -769,15 +781,13 @@ function AchievementRow({
             />
           )}
         </div>
-        <p
-          className="text-[11px] mt-0.5"
-          style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-        >
-          {achievement.matchesPlayed}M ·{' '}
-          <span style={{ color: 'var(--success)' }}>{achievement.wins}W</span>{' '}
-          <span style={{ color: 'var(--danger)' }}>{achievement.matchesPlayed - achievement.wins}L</span>{' '}
-          · {Math.round((achievement.wins / achievement.matchesPlayed) * 100)}%
-        </p>
+        <PlayerRecordLine
+          matchesPlayed={achievement.matchesPlayed}
+          wins={achievement.wins}
+          losses={losses}
+          winRate={winRate}
+          marginTop={2}
+        />
       </div>
     </div>
   )

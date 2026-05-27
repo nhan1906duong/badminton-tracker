@@ -666,13 +666,13 @@ Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match
 | State | Description |
 |-------|-------------|
 | `SCHEDULED` | Pre-match huddle: player roster + serve-first picker. CTA disabled until serve side is chosen. |
-| `LIVE` | Live scoreboard with tap-to-score panels, serve indicator, score tools (−1, direct edit), set meter, action row (swap serve / undo), point log. CTA auto-promotes to "Award match to Team X" when winner condition is met. |
+| `LIVE` | Live scoreboard with tap-to-score panels, serve indicator, score tools (−1, direct edit), set meter, action row (swap serve / undo). CTA auto-promotes to "Award match to Team X" when winner condition is met. |
 | `COMPLETED` | Read-only scoreboard. Winner stamp appears only when a team winner exists; no-winner completions are treated as recorded scores with no standings impact. Action row shows "Re-open for editing" always + "View Points" when a winner exists (navigates to `MatchPointsPage`). CTA: "Back to session". |
 
 **Key primitives (page-local, not in design-system):**
 - **Scoreboard panel** — 2-column grid with 88px score numerals, `score-bump` keyframe on increment, dotted underline on editable scores.
 - **Set meter** — progress bar to `POINTS_TARGET` (21), transitions on width.
-- **Point log** — last 8 entries, newest first; latest row highlighted with 5% accent tint.
+- **Point log** — planned feature. Hidden until point-by-point scoring events are persisted in the database.
 - **Score keypad sheet** — numeric pad (0–9 + backspace + clear) with quick-chip row (+1, −1, +5, target), delta display.
 - **Award-winner sheet** — two team cards side by side.
 - **End-without-winner dialog** — `<Dialog kind="warning">` confirming the current score will be saved without creating win/loss or ranking records.
