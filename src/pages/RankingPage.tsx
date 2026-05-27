@@ -168,7 +168,7 @@ function SessionPlayerRow({ stat, rank, isLast, onClick, isMe }: {
               fontFamily: 'var(--font-display)',
               fontSize: 18,
               fontWeight: 800,
-              lineHeight: 1.15,
+              lineHeight: 1.4,
               color: 'var(--fg)',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -387,7 +387,7 @@ export default function RankingPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <div
-                        className="text-[18px] font-extrabold leading-[1.15] tracking-[-0.01em]"
+                        className="text-[18px] font-extrabold leading-[1.4] tracking-[-0.01em]"
                         style={{
                           fontFamily: 'var(--font-display)',
                           color: 'var(--fg)',

@@ -102,7 +102,7 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
               fontFamily: 'var(--font-display)',
               fontSize: 'var(--text-base)',
               fontWeight: 800,
-              lineHeight: 1.2,
+              lineHeight: 1.4,
               letterSpacing: 0,
               color: 'var(--fg)',
               overflow: 'hidden',
