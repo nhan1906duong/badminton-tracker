@@ -18,6 +18,7 @@
 | 9c | Ranking Sync & No-Winner Handling | ✅ Done | Session MVP/top-player panels use shared leaderboard data; no-winner matches are excluded from aggregates |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
+| 12 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
 
 ## Phase Details
 
@@ -131,6 +132,12 @@
 - [ ] Component tests
 - [ ] E2E tests (Playwright)
 - [ ] CI/CD pipeline
+
+### Phase 12: Persistent Point Log ⏳
+- [ ] Add a database table for point-by-point match events
+- [ ] Persist point increments, decrements, direct score edits, and undo actions for live matches
+- [ ] Restore point history when reopening or viewing a match
+- [ ] Re-enable the Match Detail point log UI after point events are stored durably
 
 ## Milestones
 
