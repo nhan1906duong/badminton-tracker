@@ -435,6 +435,8 @@ const en = {
   'ranking.tabAll': 'All time',
   'ranking.tabSession': 'Last session',
   'ranking.noSession': 'No completed session yet.',
+  'ranking.topOneWeekStreak': '{count} consecutive {count, plural, one {week} other {weeks}}',
+  'ranking.topOneWeekStreakShort': '{count}W',
 
   'donations.totalDonated': 'Total Donated',
   'donations.loading': 'Loading donations...',
@@ -919,6 +921,8 @@ const vi: Record<TranslationKey, string> = {
   'ranking.tabAll': 'Tổng',
   'ranking.tabSession': 'Giải mới nhất',
   'ranking.noSession': 'Chưa có giải nào kết thúc.',
+  'ranking.topOneWeekStreak': '{count} tuần liên tiếp',
+  'ranking.topOneWeekStreakShort': '{count}W',
 
   'donations.totalDonated': 'Tổng đã đóng góp',
   'donations.loading': 'Đang tải đóng góp...',

@@ -261,16 +261,15 @@ describe('MatchDetailPage', () => {
 
     it('increments Team A score when Team A side is tapped', () => {
       renderPage()
-      expect(screen.queryByText('#1')).not.toBeInTheDocument()
-      fireEvent.click(screen.getByRole('button', { name: /score point for team a/i }))
-      // Point log entry #1 appears after scoring the first point
-      expect(screen.getByText('#1')).toBeInTheDocument()
+      const teamAButton = screen.getByRole('button', { name: /score point for team a/i })
+      fireEvent.click(teamAButton)
+      expect(within(teamAButton).getByText('1')).toBeInTheDocument()
     })
 
-    it('shows point log entry after scoring', () => {
+    it('keeps point log hidden after scoring', () => {
       renderPage()
       fireEvent.click(screen.getByRole('button', { name: /score point for team a/i }))
-      expect(screen.getByText('#1')).toBeInTheDocument()
+      expect(screen.queryByText('#1')).not.toBeInTheDocument()
     })
 
     it('shows "Record team win" and "End match" buttons', () => {

@@ -9,7 +9,7 @@
 | 3 | Player Management | ✅ Done | CRUD + active toggle |
 | 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit, authenticated start/end |
 | 5 | Home Dashboard | ✅ Done | Stats + recent matches + PodiumChart |
-| 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate |
+| 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate, current weekly Top 1 streak |
 | 7 | Match History | ✅ Done | List + detail view |
 | 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
 | 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history, achievements |
@@ -68,6 +68,7 @@
 - [x] Leaderboard UI (PodiumChart top 5)
 - [x] Sort by wins, losses (donations)
 - [x] Avatar display on leaderboard
+- [x] Current calendar-week Top 1 streak on all-time ranking rows
 
 ### Phase 7: Match History ✅
 - [x] Match list page (/matches)

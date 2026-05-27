@@ -30,8 +30,8 @@ src/
 | 343 | pages/EditPlayersPage.tsx | Edit match players: reassign slots for an existing match |
 | 433 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
-| 309 | hooks/useRankings.ts | usePlayerRankings (Elo) + per-session leaderboard hooks |
-| 217 | pages/RankingPage.tsx | Player rankings by Elo rating (`/ranking`) |
+| 309 | hooks/useRankings.ts | usePlayerRankings (Elo + weekly Top 1 streak) + per-session leaderboard hooks |
+| 217 | pages/RankingPage.tsx | Player rankings by Elo rating and current weekly Top 1 streak (`/ranking`) |
 | 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
 | 338 | pages/SettingsPage.tsx | Profile, player link/unlink, change password, logout, dev tools |
@@ -162,7 +162,7 @@ hooks/
 ├── usePlayerAchievements.ts # Compute player achievements per session (champion/runner-up)
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
 ├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
-├── useRankings.ts          # Overall Elo rankings + session weekly rankings/leaderboards
+├── useRankings.ts          # Overall Elo rankings + weekly Top 1 streak + session weekly rankings/leaderboards
 ├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end mutations
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
@@ -291,6 +291,7 @@ Session summaries now read the same `player_match_results` source as the session
 - `SessionDetailPage` and `SessionsListPage` use the leaderboard leader for MVP/top-player display instead of recomputing wins from raw matches.
 - Recorded-result counts only include `COMPLETED` matches with at least one `match_teams.is_winner = true`; no-winner completed matches are hidden from stats panels, donations, player history, best partner, and head-to-head aggregates.
 - Pull-to-refresh on session list/detail refreshes both matches and leaderboard data.
+- `RankingPage` shows current weekly Top 1 streak text beside player names on the all-time tab only when the streak is greater than one active calendar week. The streak is derived from ended sessions grouped by local calendar week and aggregated by `total_weekly_points`.
 
 ## Safety Confirmations
 

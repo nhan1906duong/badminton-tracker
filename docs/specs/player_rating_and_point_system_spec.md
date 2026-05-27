@@ -192,6 +192,16 @@ Sorted by, in priority order:
 3. `winRate` DESC
 4. `pointDifference` DESC
 
+Overall rows show a current weekly Top 1 streak beside the player name only when the streak is greater than 1 active week. The label is plain text, not a badge; it uses full copy when space allows and a compact `{count}W` label on narrow screens.
+
+Weekly Top 1 streaks are derived from ended sessions and `player_match_results`:
+
+1. Group ended sessions by local calendar week using `sessions.started_at`.
+2. Sum `total_weekly_points` for each player across all sessions in that week.
+3. Pick the weekly leader by `total_weekly_points` DESC, then wins DESC, point difference DESC, then name ASC.
+4. Count the current leader's consecutive active weeks backward from the latest active week.
+5. Ignore empty calendar weeks and de-duplicate duplicate result rows by `player_id + match_id`.
+
 ### Weekly ranking (Ranking → This Session tab)
 
 Filtered to the currently open session, sorted by:

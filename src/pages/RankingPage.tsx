@@ -104,6 +104,29 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
   )
 }
 
+function TopOneWeekStreakText({ count }: { count: number }) {
+  const { t } = useI18n()
+  if (count <= 1) return null
+
+  return (
+    <div
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        fontWeight: 700,
+        color: 'var(--muted)',
+        fontVariantNumeric: 'tabular-nums',
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+        minWidth: 0,
+      }}
+    >
+      <span className="hidden min-[390px]:inline">{t('ranking.topOneWeekStreak', { count })}</span>
+      <span className="inline min-[390px]:hidden">{t('ranking.topOneWeekStreakShort', { count })}</span>
+    </div>
+  )
+}
+
 function SessionPlayerRow({ stat, rank, isLast, onClick, isMe }: {
   stat: SessionWeeklyStats
   rank: number
@@ -395,6 +418,7 @@ export default function RankingPage() {
                           {t('common.you')}
                         </span>
                       )}
+                      <TopOneWeekStreakText count={s.topOneWeekStreak} />
                     </div>
                     <PlayerRecordLine
                       matchesPlayed={s.matchesPlayed}
