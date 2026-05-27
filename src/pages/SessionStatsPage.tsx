@@ -1,7 +1,8 @@
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Activity, ChevronLeft, Medal, Crown } from 'lucide-react'
-import { AppBar, Avatar, EmptyState, LoadingState, StatRow, PullToRefresh } from '../../design-system/components'
+import { AppBar, Avatar, EmptyState, StatRow, PullToRefresh } from '../../design-system/components'
+import { ShuttleLoading } from '../components/ShuttleLoading'
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
@@ -101,7 +102,7 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
               fontFamily: 'var(--font-display)',
               fontSize: 'var(--text-base)',
               fontWeight: 800,
-              lineHeight: 1.2,
+              lineHeight: 1.4,
               letterSpacing: 0,
               color: 'var(--fg)',
               overflow: 'hidden',
@@ -349,7 +350,7 @@ export default function SessionStatsPage() {
 
         <main className="px-[var(--space-5)]">
           {isLoading ? (
-            <LoadingState message={t('sessionStats.loading')} />
+            <ShuttleLoading compact />
           ) : rankings.length === 0 ? (
             <EmptyState
               icon={<Medal className="w-10 h-10 mx-auto" />}

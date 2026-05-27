@@ -41,7 +41,7 @@ function PlayerPointRow({ player, result, isLast }: PlayerPointRowProps) {
             fontSize: 'var(--text-base)',
             fontWeight: 700,
             color: 'var(--fg)',
-            lineHeight: 1.2,
+            lineHeight: 1.4,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',

@@ -2,7 +2,8 @@ import { useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
-import { SessionCard, LoadingState, EmptyState, ErrorState, PullToRefresh } from '../../design-system/components'
+import { SessionCard, EmptyState, ErrorState, PullToRefresh } from '../../design-system/components'
+import { ShuttleLoading } from '../components/ShuttleLoading'
 import { Plus, Trophy } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
 import {
@@ -121,7 +122,7 @@ export default function SessionsListPage() {
       {/* List */}
       <div className="px-[var(--space-5)] space-y-[var(--space-3)] pb-32">
         {isLoading ? (
-          <LoadingState message={t('sessions.loading')} />
+          <ShuttleLoading compact />
         ) : isError ? (
           <ErrorState
             message={t('sessions.loadError')}

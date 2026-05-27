@@ -16,6 +16,8 @@
 | 9a | BWF Category Badges | ✅ Done | Tiered color badges (S1000/S750/S500/S300/S100/Finals) on sessions |
 | 9b | Champion Celebration | ✅ Done | One-time firework effect for linked champion on ended session stats |
 | 9c | Ranking Sync & No-Winner Handling | ✅ Done | Session MVP/top-player panels use shared leaderboard data; no-winner matches are excluded from aggregates |
+| 9d | Match Points Breakdown | ✅ Done | Match-level point breakdown page sourced from `player_match_results` |
+| 9e | Locale, Backup, and Player RLS | ✅ Done | English/Vietnamese switch, admin JSON backup, and linked-player/admin update policy |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
 | 12 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
@@ -100,7 +102,7 @@
 - [x] Achievements tab: sessions where player ranked #1 (champion) or #2 (runner-up)
 - [x] Scrollable tab bar (SegmentedControl) for 4 tabs on mobile
 - [x] Navigation tests updated for new route
-- [x] Build passes, 154/154 tests pass
+- [x] Build passes
 
 ### Phase 9a: BWF Category Badges ✅
 - [x] BwfCategoryBadge component with tiered colors per category
@@ -123,14 +125,26 @@
 - [x] Add stronger confirmation dialogs for ending sessions with live matches and deleting recorded data
 - [x] Add ARIA dialog semantics to the shared `Dialog` component
 
+### Phase 9d: Match Points Breakdown ✅
+- [x] Add `/sessions/:id/matches/:matchId/points` route
+- [x] Show team rating context, score margin, strength bonus, and per-player weekly points
+- [x] Expose `useMatchPlayerResults(matchId)` for match-level point rows
+- [x] Add `usePlayerPointsHistory(playerId)` as a reusable grouping hook for future player-level point history UI
+
+### Phase 9e: Locale, Backup, and Player RLS ✅
+- [x] Add English/Vietnamese translation dictionary and `LocaleProvider`
+- [x] Add Settings language switch
+- [x] Add admin-only JSON backup mutation
+- [x] Restrict player updates to admins or the linked profile via `013_player_update_rls.sql`
+
 ### Phase 10: PWA Enhancement ✅
 - [x] Service worker + manifest
 - [x] App icons and splash screens
 - [x] Offline cache for static assets
 
-### Phase 11: Testing ⏳
-- [ ] Unit tests (Vitest)
-- [ ] Component tests
+### Phase 11: Testing 🚧
+- [x] Unit tests (Vitest)
+- [x] Component tests
 - [ ] E2E tests (Playwright)
 - [ ] CI/CD pipeline
 
@@ -148,4 +162,4 @@
 | Core Features (Phases 5-7) | ✅ Done | Dashboard + match history |
 | Avatar & Rankings (Phase 8) | ✅ Done | Avatar upload + leaderboard |
 | Player Detail Page (Phase 9) | ✅ Done | Avatar/name edit + stats + best partner |
-| Release (Phase 10-11) | Q3 2026 | Ready |
+| Release (Phase 10-11) | Q3 2026 | In progress |

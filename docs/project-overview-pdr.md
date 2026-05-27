@@ -26,6 +26,7 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Inline Player Add | Implemented | Add player without leaving match flow |
 | Score Entry | Implemented | Per-set inputs with auto winner detection |
 | End Match Without Winner | Implemented | Live matches can be completed without standings impact |
+| Match Points Breakdown | Implemented | Completed matches with a winner expose per-player weekly points, score/strength bonuses, and Elo delta |
 | Match History | Implemented | List + detail view with all match data |
 | Home Dashboard | Implemented | Stats cards + recent matches + PodiumChart top donate |
 | Ranking-Synced Session Summaries | Implemented | Session list/detail leaders use the same `player_match_results` source as session stats |
@@ -36,6 +37,9 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Storage Cleanup | Implemented | Automatic deletion of old uploaded photos from Supabase Storage |
 | Player Detail Page | Implemented | Route `/players/:playerId` with editable avatar/name, stats, best partner, infinite scroll match history |
 | Authenticated Match Operations | Implemented | Signed-in users can start/end sessions and edit match lifecycle/details; deletes remain admin-only |
+| Linked Player RLS | Implemented | Player row updates are limited to admins or the linked auth profile |
+| Localization | Implemented | English and Vietnamese copy via `LocaleProvider` and Settings language switch |
+| Admin Backup | Implemented | Admin-only JSON export of players, sessions, matches, scores, and player result rows |
 
 ## Database Schema
 
@@ -46,6 +50,7 @@ matches ────────────┼── match_teams ──┬─ m
                     └─ match_scores ──┘
 
 profiles (1:1 with auth.users) ── avatar_url, role, player_id
+player_match_results ── per-player match points + Elo deltas
 ```
 
 ## Match Flow
@@ -55,6 +60,7 @@ profiles (1:1 with auth.users) ── avatar_url, role, player_id
 3. Choose Now, Schedule, or Queue
 4. In match detail, record a winner → save scores and ranking rows to Supabase
 5. Or end without winner → save score only, excluded from ranking/history aggregates
+6. For completed matches with a winner, open Match Points to inspect the point breakdown
 
 ## Tech Stack
 

@@ -34,6 +34,7 @@ Run every migration in numeric order:
 010_auto_create_profile.sql
 011_authenticated_update_sessions.sql
 012_authenticated_match_edits.sql
+013_player_update_rls.sql
 ```
 
 ---
