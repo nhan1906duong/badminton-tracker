@@ -297,7 +297,8 @@ Three states driven by `match.status: 'SCHEDULED' | 'LIVE' | 'COMPLETED'`.
 - Each player rendered on its own row (13px display font).
 - `Team A` / `Team B` label in 11px mono muted below the player names.
 - Winner side: `font-weight: 800`, `color: --fg`. Loser side: `font-weight: 500`, `color: --muted`.
-- Score center anchor: 32px extrabold display. Winner score `--accent`, loser score `--muted`, no-result `--fg`. Divider `:` in `--border` at 24px.
+- **Score center anchor (LIVE):** `<ShuttleLoading small />` replaces the numeric score — the animated shuttlecock signals an in-progress match. No W/L indicator shown.
+- **Score center anchor (SCHEDULED / COMPLETED):** 32px extrabold display. Winner score `--accent`, loser score `--muted`, no-result `--fg`. Divider `:` in `--border` at 24px.
 - `W` / `L` indicator: 11px bold mono uppercase below the score, shown only for `COMPLETED`. `W` in `--accent`, `L` in `--muted` — always from Team A's perspective.
 
 **Footer (bottom row, separated by top border):**
@@ -595,6 +596,40 @@ See [design-system/patterns/loading-state.tsx](../design-system/patterns/loading
 - Sizes: sm (24px), md (32px), lg (48px)
 - Optional message below in `--muted`
 
+### ShuttleLoading
+See [src/components/ShuttleLoading.tsx](../src/components/ShuttleLoading.tsx).
+
+Animated shuttlecock following a parabolic arc. Used as the app's primary loading indicator and as the live-match score placeholder in `MatchCard`.
+
+The base animation canvas is **352×172px**. Scale variants clip it to a smaller visible footprint via `overflow: hidden` + `transform: scale()`:
+
+| Prop | Scale | Visual size | Usage |
+|------|-------|-------------|-------|
+| *(none)* | 100% | Full-screen `min-h-screen` centered | Full-page loading (e.g. initial data fetch) |
+| `compact` | 45% | 158×77px, centered with `py-8` | Section-level loading inside a page |
+| `small` | 33% | 130×57px | MatchCard LIVE score center |
+| `tiny` | 22% | 77×38px | Inline loading next to text |
+
+Animation is driven by `.shuttle-flight` / `.shuttle-shadow` CSS classes (keyframes in `src/index.css`). Respects `prefers-reduced-motion` — both animations are disabled when reduced motion is preferred.
+
+The shuttlecock SVG has two parts:
+- **Feathers** — white fill
+- **Cork** — `var(--accent)` fill (vermilion), so it automatically adapts to theme
+
+```tsx
+// Full-page
+<ShuttleLoading />
+
+// Section-level
+<ShuttleLoading compact />
+
+// Inline (MatchCard LIVE)
+<ShuttleLoading small />
+
+// Inline tiny
+<ShuttleLoading tiny />
+```
+
 ### FireworkEffect
 See [src/components/firework-effect.tsx](../src/components/firework-effect.tsx).
 
@@ -624,6 +659,12 @@ Key rules in [src/index.css](../src/index.css):
 | `html { scroll-behavior: auto; }` | Prevents browser smooth-scroll on programmatic scrollTo |
 | `body::before { height: env(safe-area-inset-top); background: var(--bg); position: fixed; z-index: 60 }` | Fills the notch/status-bar area with the page background so the AppBar's blur doesn't leak |
 | `.segmented-scroll::-webkit-scrollbar { display: none }` | Hides the scrollbar on `SegmentedControl` while keeping it scrollable |
+| `@keyframes shuttleFlight` | Parabolic arc animation for the shuttlecock icon. Positions are pre-calculated from `y = 108 - 280·t·(1-t)` so linear timing produces genuine curve motion. Uses `scaleX(-1)` at the 50% midpoint to flip the icon for the return leg. |
+| `@keyframes shuttleShadow` | Ground shadow that tracks the shuttle X position; opacity and scale vary with altitude. |
+| `.shuttle-flight` | `animation: shuttleFlight 2.4s linear infinite; will-change: transform` |
+| `.shuttle-icon` | `filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.20))` |
+| `.shuttle-shadow` | `animation: shuttleShadow 2.4s linear infinite; will-change: transform, opacity` |
+| `@media (prefers-reduced-motion)` | Disables `.shuttle-flight` and `.shuttle-shadow` animations |
 | `@keyframes firework-fade-in` | Fade-in animation used by `FireworkEffect` |
 | `@keyframes score-bump` | Score numeral bump animation used in `MatchDetailPage` |
 
