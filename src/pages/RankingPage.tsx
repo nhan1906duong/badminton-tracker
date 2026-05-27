@@ -4,6 +4,7 @@ import { Medal, UserPlus, Crown } from 'lucide-react'
 import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useSessions } from '../hooks/useSessions'
 import Avatar from '../components/Avatar'
+import PlayerRecordLine from '../components/PlayerRecordLine'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { useIsAdmin } from '../hooks/useIsAdmin'
@@ -188,25 +189,12 @@ function SessionPlayerRow({ stat, rank, isLast, onClick, isMe }: {
             </span>
           )}
         </div>
-        <div
-          className="font-mono text-[11px]"
-          style={{
-            color: 'var(--muted)',
-            marginTop: 4,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            flexWrap: 'wrap',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          <span>{t('units.match', { count: stat.matchesPlayed })}</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{stat.wins}W</span>
-          <span>{stat.losses}L</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{winRate}%</span>
-        </div>
+        <PlayerRecordLine
+          matchesPlayed={stat.matchesPlayed}
+          wins={stat.wins}
+          losses={stat.losses}
+          winRate={winRate}
+        />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 64 }}>
@@ -348,7 +336,7 @@ export default function RankingPage() {
         ) : (
           <div style={{ margin: '0 var(--space-5)' }}>
             {rankings.map((s, i) => {
-              const winRate = Math.round(s.winRate * 100)
+              const winRate = s.matchesPlayed > 0 ? Math.round((s.wins / s.matchesPlayed) * 100) : 0
               const isLast = i === rankings.length - 1
               const isNew = s.matchesPlayed === 0
               return (
@@ -408,13 +396,12 @@ export default function RankingPage() {
                         </span>
                       )}
                     </div>
-                    <div className="font-mono text-[11px]" style={{ color: 'var(--muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', fontVariantNumeric: 'tabular-nums' }}>
-                      <span>{t('units.match', { count: s.matchesPlayed })}</span>
-                      <span style={{ color: 'var(--border)' }}>·</span>
-                      <span>{s.wins}W</span>
-                      <span style={{ color: 'var(--border)' }}>·</span>
-                      <span>{winRate}% {t('ranking.rate')}</span>
-                    </div>
+                    <PlayerRecordLine
+                      matchesPlayed={s.matchesPlayed}
+                      wins={s.wins}
+                      losses={s.losses}
+                      winRate={winRate}
+                    />
                   </div>
 
                   {/* Rating on top, trend indicator below */}

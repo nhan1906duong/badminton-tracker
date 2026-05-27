@@ -9,6 +9,7 @@ import { useI18n } from '../i18n'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { FireworkEffect } from '../components/firework-effect'
+import PlayerRecordLine from '../components/PlayerRecordLine'
 
 function formatSigned(value: number): string {
   if (value > 0) return `+${value}`
@@ -127,28 +128,15 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             </span>
           )}
         </div>
-        <div
-          style={{
-            marginTop: 3,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            flexWrap: 'wrap',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--text-xs)',
-            fontVariantNumeric: 'tabular-nums',
-            color: 'var(--muted)',
-          }}
-        >
-          <span>{t('units.match', { count: stat.matchesPlayed })}</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{stat.wins}W</span>
-          <span>{stat.losses}L</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{winRate}%</span>
-          <span style={{ color: 'var(--border)' }}>·</span>
-          <span>{formatSigned(stat.pointDifference)} {t('sessionStats.diff')}</span>
-        </div>
+        <PlayerRecordLine
+          matchesPlayed={stat.matchesPlayed}
+          wins={stat.wins}
+          losses={stat.losses}
+          winRate={winRate}
+          fontSize="var(--text-xs)"
+          marginTop={3}
+          extra={`${formatSigned(stat.pointDifference)} ${t('sessionStats.diff')}`}
+        />
       </div>
 
       <div
