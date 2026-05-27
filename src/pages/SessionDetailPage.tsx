@@ -40,7 +40,7 @@ function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'
 }
 import { useMatches } from '../hooks/useMatches'
 import { useSessionLeaderboard } from '../hooks/useRankings'
-import { useSession, useStartSession, useEndSession, useDeleteSession } from '../hooks/useSessions'
+import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime } from '../hooks/useSessions'
 import MatchesContent from '../components/MatchesContent'
 import FloatingActionButton from '../components/FloatingActionButton'
 import { AppBar } from '../../design-system/components/app-bar'
@@ -48,7 +48,7 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useState, useCallback } from 'react'
 import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
@@ -67,10 +67,26 @@ export default function SessionDetailPage() {
   const sid = sessionId ?? ''
   const { data: leaderboard, refetch: refetchLeaderboard } = useSessionLeaderboard(sid)
 
+  const updateSessionStartTime = useUpdateSessionStartTime()
+
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [confirmDeleteSessionOpen, setConfirmDeleteSessionOpen] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [editTimeOpen, setEditTimeOpen] = useState(false)
+  const [editTimeValue, setEditTimeValue] = useState('')
+
+  function toDatetimeLocal(iso: string): string {
+    const d = new Date(iso)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+
+  async function handleSaveScheduledTime() {
+    if (!editTimeValue) return
+    await updateSessionStartTime.mutateAsync({ id: sid, started_at: new Date(editTimeValue).toISOString() })
+    setEditTimeOpen(false)
+  }
 
   const handleRefresh = useCallback(async () => {
     await Promise.all([refetchMatches(), refetchLeaderboard()])
@@ -308,11 +324,18 @@ export default function SessionDetailPage() {
           />
         )}
         {sessionStatus === 'scheduled' && (
-          <BottomSheetItem
-            icon={<Play className="w-5 h-5" />}
-            label={t('sessionDetail.startSession')}
-            onClick={() => { closeMenu(); handleStartSession() }}
-          />
+          <>
+            <BottomSheetItem
+              icon={<Play className="w-5 h-5" />}
+              label={t('sessionDetail.startSession')}
+              onClick={() => { closeMenu(); handleStartSession() }}
+            />
+            <BottomSheetItem
+              icon={<Pencil className="w-5 h-5" />}
+              label={t('sessionDetail.editScheduledTime')}
+              onClick={() => { closeMenu(); setEditTimeValue(toDatetimeLocal(session!.started_at)); setEditTimeOpen(true) }}
+            />
+          </>
         )}
         {(matches?.length ?? 0) > 0 && (
           <BottomSheetItem
@@ -385,6 +408,29 @@ export default function SessionDetailPage() {
           { label: deleteSession.isPending ? t('common.deleting') : t('common.delete'), variant: 'danger', onClick: handleDeleteSession },
         ]}
       />
+
+      <BottomSheet open={editTimeOpen} onClose={() => setEditTimeOpen(false)}>
+        <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 'var(--space-4)' }}>
+            {t('sessionDetail.editScheduledTime')}
+          </div>
+          <input
+            type="datetime-local"
+            value={editTimeValue}
+            onChange={e => setEditTimeValue(e.target.value)}
+            style={{ width: '100%', padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)', color: 'var(--fg)', marginBottom: 'var(--space-4)', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <button type="button" onClick={() => setEditTimeOpen(false)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
+              {t('common.cancel')}
+            </button>
+            <button type="button" onClick={handleSaveScheduledTime} disabled={!editTimeValue || updateSessionStartTime.isPending}
+              style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: editTimeValue ? 'pointer' : 'not-allowed', minHeight: 48, border: 'none', background: editTimeValue ? 'var(--accent)' : 'var(--border)', color: editTimeValue ? 'var(--surface)' : 'var(--muted)', opacity: editTimeValue ? 1 : 0.6, touchAction: 'manipulation' }}>
+              {t('sessionDetail.saveTime')}
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
 
       <Dialog
         open={actionError !== null}

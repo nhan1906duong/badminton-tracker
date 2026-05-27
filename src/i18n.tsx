@@ -248,6 +248,8 @@ const en = {
   'sessionDetail.deleteCompletedWithMatchesTitle': 'Delete completed session?',
   'sessionDetail.deleteCompletedWithMatchesDescription': 'This completed session has {count} {count, plural, one {match} other {matches}}. Deleting it permanently removes the session, match history, scores, and ranking results.',
   'sessionDetail.couldntEnd': "Couldn't end session",
+  'sessionDetail.editScheduledTime': 'Edit scheduled time',
+  'sessionDetail.saveTime': 'Save time',
 
   'sessionStats.eyebrow': 'Session ranking',
   'sessionStats.title': 'Player stats',
@@ -734,6 +736,8 @@ const vi: Record<TranslationKey, string> = {
   'sessionDetail.deleteCompletedWithMatchesTitle': 'Xóa giải đấu đã hoàn tất?',
   'sessionDetail.deleteCompletedWithMatchesDescription': 'Giải đấu đã hoàn tất này có {count} trận. Xóa sẽ xóa vĩnh viễn giải đấu, lịch sử trận, điểm số và kết quả xếp hạng.',
   'sessionDetail.couldntEnd': 'Không thể kết thúc giải đấu',
+  'sessionDetail.editScheduledTime': 'Sửa giờ đã đặt',
+  'sessionDetail.saveTime': 'Lưu giờ',
 
   'sessionStats.eyebrow': 'Xếp hạng giải đấu',
   'sessionStats.title': 'Thống kê',

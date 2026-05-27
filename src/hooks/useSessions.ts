@@ -137,6 +137,23 @@ export function useStartSession() {
   })
 }
 
+export function useUpdateSessionStartTime() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, started_at }: { id: string; started_at: string }) => {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ started_at })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY, vars.id] })
+    },
+  })
+}
+
 export function useEndSession() {
   const qc = useQueryClient()
   return useMutation({
