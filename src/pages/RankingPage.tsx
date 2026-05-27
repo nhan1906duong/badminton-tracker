@@ -12,6 +12,7 @@ import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 import FloatingActionButton from '../components/FloatingActionButton'
 import PlayerForm from '../components/PlayerForm'
 import { LOCALE_TAG, useI18n } from '../i18n'
+import { ShuttleLoading } from '../components/ShuttleLoading'
 
 function GhostRank({ rank, showCrown }: { rank: number; showCrown?: boolean }) {
   const { t } = useI18n()
@@ -348,9 +349,7 @@ export default function RankingPage() {
       {/* Content */}
       {activeTab === 'all' ? (
         isLoading ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
-            {t('common.loadingEllipsis')}
-          </div>
+          <ShuttleLoading compact />
         ) : rankings.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12 }}>
             <Medal style={{ width: 40, height: 40, color: 'var(--muted)' }} />

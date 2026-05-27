@@ -19,12 +19,8 @@
 | 9d | Match Points Breakdown | ✅ Done | Match-level point breakdown page sourced from `player_match_results` |
 | 9e | Locale, Backup, and Player RLS | ✅ Done | English/Vietnamese switch, admin JSON backup, and linked-player/admin update policy |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
-<<<<<<< HEAD
 | 11 | Testing | ⏳ Pending | Unit tests, E2E tests |
 | 12 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
-=======
-| 11 | Testing | 🚧 In Progress | Unit and component tests exist; E2E/CI remain open |
->>>>>>> b1a1c00 (update docs)
 
 ## Phase Details
 

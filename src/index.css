@@ -104,6 +104,67 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
+/*
+  Shuttle loading — parabolic arc.
+  Keyframe positions are calculated from the parabola y = 108 - 280·t·(1-t)
+  so linear timing produces genuinely smooth curved motion (no ease distortion).
+  x is linear: 32 + 256·t  (t ∈ [0,1] for each one-way leg)
+  Rotation follows the arc tangent, scaled for visual comfort.
+*/
+@keyframes shuttleFlight {
+  /* ── outbound (left → right, scaleX 1) ── */
+  0%    { transform: translate(32px,  108px) rotate(-25deg) scaleX(1);  }
+  6.25% { transform: translate(48px,   91px) rotate(-20deg) scaleX(1);  }
+  12.5% { transform: translate(64px,   76px) rotate(-14deg) scaleX(1);  }
+  18.75%{ transform: translate(80px,   63px) rotate(-9deg)  scaleX(1);  }
+  25%   { transform: translate(96px,   55px) rotate(-4deg)  scaleX(1);  }
+  31.25%{ transform: translate(128px,  44px) rotate(2deg)   scaleX(1);  }
+  37.5% { transform: translate(160px,  38px) rotate(0deg)   scaleX(1);  }
+  43.75%{ transform: translate(224px,  44px) rotate(9deg)   scaleX(1);  }
+  50%   { transform: translate(288px, 108px) rotate(25deg)  scaleX(1);  }
+  /* instant flip — scaleX -1 mirrors the icon so cork leads on return leg */
+  50.01%{ transform: translate(288px, 108px) rotate(-25deg) scaleX(-1); }
+  /* ── return (right → left, scaleX -1) ── */
+  56.25%{ transform: translate(224px,  44px) rotate(-9deg)  scaleX(-1); }
+  62.5% { transform: translate(160px,  38px) rotate(0deg)   scaleX(-1); }
+  68.75%{ transform: translate(128px,  44px) rotate(-2deg)  scaleX(-1); }
+  75%   { transform: translate(96px,   55px) rotate(4deg)   scaleX(-1); }
+  81.25%{ transform: translate(80px,   63px) rotate(9deg)   scaleX(-1); }
+  87.5% { transform: translate(64px,   76px) rotate(14deg)  scaleX(-1); }
+  93.75%{ transform: translate(48px,   91px) rotate(20deg)  scaleX(-1); }
+  100%  { transform: translate(32px,  108px) rotate(25deg)  scaleX(-1); }
+}
+
+@keyframes shuttleShadow {
+  /* shadow X tracks the shuttle; opacity/scale reflect altitude */
+  0%, 100% { transform: translateX(32px)  scaleX(0.8);  opacity: 0.18; }
+  37.5%    { transform: translateX(160px) scaleX(0.45); opacity: 0.07; }
+  50%      { transform: translateX(288px) scaleX(0.8);  opacity: 0.18; }
+  62.5%    { transform: translateX(160px) scaleX(0.45); opacity: 0.07; }
+}
+
+.shuttle-flight {
+  /* linear so the pre-calculated parabola positions interpolate without distortion */
+  animation: shuttleFlight 2.4s linear infinite;
+  will-change: transform;
+}
+
+.shuttle-icon {
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.20));
+}
+
+.shuttle-shadow {
+  animation: shuttleShadow 2.4s linear infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shuttle-flight,
+  .shuttle-shadow {
+    animation: none;
+  }
+}
+
 /* Firework effect fade-in */
 @keyframes firework-fade-in {
   from {

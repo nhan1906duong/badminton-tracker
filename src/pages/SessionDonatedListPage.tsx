@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, Wallet } from 'lucide-react'
-import { AppBar, Avatar, EmptyState, LoadingState, PullToRefresh } from '../../design-system/components'
+import { AppBar, Avatar, EmptyState, PullToRefresh } from '../../design-system/components'
+import { ShuttleLoading } from '../components/ShuttleLoading'
 import { useSessionDonationStats } from '../hooks/usePlayerStats'
 import { useSession } from '../hooks/useSessions'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
@@ -170,7 +171,7 @@ export default function SessionDonatedListPage() {
 
           <main className="px-[var(--space-5)]">
             {isLoading ? (
-              <LoadingState message={t('donations.loading')} />
+              <ShuttleLoading compact />
             ) : donors.length === 0 ? (
               <EmptyState
                 icon={<Wallet className="w-10 h-10 mx-auto" />}
