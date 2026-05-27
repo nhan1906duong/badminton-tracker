@@ -103,11 +103,12 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
   )
 }
 
-function SessionPlayerRow({ stat, rank, isLast, onClick }: {
+function SessionPlayerRow({ stat, rank, isLast, onClick, isMe }: {
   stat: SessionWeeklyStats
   rank: number
   isLast: boolean
   onClick: () => void
+  isMe?: boolean
 }) {
   const { t } = useI18n()
   const winRate = stat.matchesPlayed > 0 ? Math.round((stat.wins / stat.matchesPlayed) * 100) : 0
@@ -166,6 +167,24 @@ function SessionPlayerRow({ stat, rank, isLast, onClick }: {
               }}
             >
               {t('sessionStats.championBadge')}
+            </span>
+          )}
+          {isMe && (
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'var(--accent)',
+                background: 'var(--accent-soft)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 6px',
+                flexShrink: 0,
+              }}
+            >
+              {t('common.you')}
             </span>
           )}
         </div>
@@ -465,6 +484,7 @@ export default function RankingPage() {
                 rank={i + 1}
                 isLast={i === sessionRankings.length - 1}
                 onClick={() => navigate(`/players/${stat.playerId}`)}
+                isMe={myPlayerId === stat.playerId}
               />
             ))}
           </div>
