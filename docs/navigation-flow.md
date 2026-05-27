@@ -65,6 +65,8 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
 │ + FAB          │               │ /settings/points  │
 │   ───►         │               │ Change Pwd ──►    │
 │ /sessions/new  │               │ /change-password  │
+│                │               │ Language switch   │
+│                │               │ Backup (admin)    │
 │                │               │ Design Sys (dev)  │
 │                │               │ Log Out ──► /login│
 │                │               │                   │
@@ -151,3 +153,12 @@ Protected routes redirect to `/login` if unauthenticated. After login, user retu
 | Player picker bottom sheet | Settings page ("Link to a player") |
 | Unlink confirmation | Settings page ("Unlink") |
 | Link failure dialog | Settings page when selected player is already linked |
+
+## Settings-Only Actions
+
+| Action | Visibility | Notes |
+|--------|------------|-------|
+| Language switch | All authenticated users | English/Vietnamese, backed by `LocaleProvider` |
+| Recalculate all ratings | All authenticated users | Rebuilds rating/result rows through `useRecalculateAllRatings` |
+| Backup Data | Admin only | Downloads core Supabase tables as JSON via `useBackupData` |
+| Clear all data | Dev only | Hidden outside local/dev builds |

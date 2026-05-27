@@ -50,6 +50,7 @@
 | /sessions/:id/donated | SessionDonatedListPage | Yes |
 | /sessions/:id/matches/new | CreateMatchPage | Yes |
 | /sessions/:id/matches/:matchId | MatchDetailPage | Yes |
+| /sessions/:id/matches/:matchId/points | MatchPointsPage | Yes |
 | /sessions/:id/matches/:matchId/players/edit | EditPlayersPage | Yes |
 | /sessions/:id/matches/:matchId/edit | LegacyEditMatchRedirect | Yes |
 | /players/:playerId | PlayerDetailPage | Yes |
@@ -135,9 +136,15 @@ All sub-page routes use `navigate(-1)` (browser back) via the `AppBar` component
 - Web app manifest for install prompt
 - App icon placeholders in `/public`
 
+## Locale & Settings
+
+`LocaleProvider` in `src/i18n.tsx` supplies English/Vietnamese copy through `useI18n()`. The Settings page lets users switch locale, link/unlink their auth profile to one player row, view point-system rules, change password, and run rating recalculation. Admin users also see a JSON backup action powered by `useBackupData()`.
+
 ## Role-based Access Control
 
 Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. RLS policies restrict destructive deletes to admins (`is_admin()` SQL function defined in `supabase/migrations/008_role.sql`). Authenticated users can start/end sessions and edit match lifecycle/details through `011_authenticated_update_sessions.sql` and `012_authenticated_match_edits.sql`. Player avatar/name editing is available from `PlayerDetailPage`; delete UI remains admin-gated through `useIsAdmin`.
+
+Player updates are further restricted by `013_player_update_rls.sql`: only admins or the user linked to that player through `profiles.player_id` can update a player row.
 
 Risky lifecycle actions use shared confirmation dialogs before mutation. Ending a session warns when live matches remain, deleting an ended session with matches warns about removing history/ranking data, and deleting live/completed matches warns about score and win/loss removal.
 
@@ -149,5 +156,7 @@ Risky lifecycle actions use shared confirmation dialogs before mutation. Ending 
 | src/contexts/AuthContext.tsx | Auth state management |
 | src/hooks/useMatches.ts | Match CRUD with optimistic updates |
 | src/hooks/usePlayers.ts | Player CRUD |
+| src/hooks/useBackup.ts | Admin JSON export of core app tables |
 | src/hooks/useIsAdmin.ts | Admin role check from current user's profile |
+| src/i18n.tsx | Locale provider, copy dictionary, and translation helper |
 | vite.config.ts | PWA + React plugin configuration |

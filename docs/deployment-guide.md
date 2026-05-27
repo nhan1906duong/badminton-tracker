@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20.19+ or 22.12+
 - npm
 - Supabase account
 - Vercel account (for hosting)
@@ -36,7 +36,7 @@ Project Settings → API:
 
 ### 3. Run Migrations
 
-In Supabase Dashboard → SQL Editor, run every file in `supabase/migrations/` in numeric order (`001_...` through `012_...`). The later migrations add BWF tournament metadata, ranking fields, match lifecycle state, roles, user-player linking, profile auto-creation, and authenticated session/match edit policies.
+In Supabase Dashboard → SQL Editor, run every file in `supabase/migrations/` in numeric order (`001_...` through `013_...`). The later migrations add BWF tournament metadata, ranking fields, match lifecycle state, roles, user-player linking, profile auto-creation, authenticated session/match edit policies, and linked-player/admin-only player update RLS.
 
 ### 4. Create Storage Bucket (Avatars)
 

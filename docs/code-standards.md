@@ -2,7 +2,10 @@
 
 ## File Naming
 
-- Use kebab-case for all files: `player-selector.tsx`, `use-matches.ts`
+- Follow the existing convention for the area you are editing:
+  - React page/component files use PascalCase: `PlayerSelector.tsx`, `MatchDetailPage.tsx`
+  - Hooks use camelCase with the `use` prefix: `useMatches.ts`, `usePlayerStats.ts`
+  - Pure utilities and design-system foundations use kebab-case where already established: `fair-shuffle.ts`, `player-name.ts`, `colors.md`
 - Descriptive names even if long: `badminton-match-tracker` is fine
 
 ## Component Structure
@@ -70,7 +73,8 @@ export function useCreateMatch() {
 ## Styling
 
 - Tailwind CSS utility classes
-- No inline styles except dynamic values
+- Prefer design-system tokens through Tailwind arbitrary values (`bg-[var(--surface)]`, `text-[var(--fg)]`) for normal layout/styling
+- Inline styles are acceptable when a component already uses token-driven inline styles or needs dynamic values that are awkward in class names
 - Mobile-first design (max-w-lg centered)
 
 ## Player Name Display
