@@ -1,7 +1,7 @@
 import { useCallback, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Medal, UserPlus, Crown } from 'lucide-react'
-import { usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useSessions } from '../hooks/useSessions'
 import Avatar from '../components/Avatar'
 import { useAuth } from '../hooks/useAuth'
@@ -227,6 +227,7 @@ export default function RankingPage() {
   const { data: myProfile } = useProfile(user?.id)
   const myPlayerId = myProfile?.player_id
   const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
+  const { data: completedMatchCount = 0, refetch: refetchCompletedMatchCount } = useCompletedMatchCount()
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()
   const [showAddPlayer, setShowAddPlayer] = useState(false)
@@ -243,11 +244,10 @@ export default function RankingPage() {
   const sessionRankings = sessionLeaderboard?.rankings ?? []
 
   const playerCount = rankings.length
-  const totalMatches = (rankings.reduce((s, r) => s + r.matchesPlayed, 0) / 2) | 0
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refetch(), refetchSession()])
-  }, [refetch, refetchSession])
+    await Promise.all([refetch(), refetchSession(), refetchCompletedMatchCount()])
+  }, [refetch, refetchCompletedMatchCount, refetchSession])
 
   const TAB_ALL = t('ranking.tabAll')
 
@@ -273,7 +273,7 @@ export default function RankingPage() {
         </h1>
         {!isLoading && rankings.length > 0 && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-            {t('units.player', { count: playerCount })} · {t('units.match', { count: totalMatches })}
+            {t('units.player', { count: playerCount })} · {t('units.match', { count: completedMatchCount })}
           </p>
         )}
       </div>

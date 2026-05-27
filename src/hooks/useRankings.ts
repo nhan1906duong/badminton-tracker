@@ -227,6 +227,21 @@ export function usePlayerRankings() {
   })
 }
 
+export function useCompletedMatchCount() {
+  return useQuery({
+    queryKey: ['completed-match-count'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_match_results')
+        .select('match_id')
+
+      if (error) throw error
+
+      return new Set((data ?? []).map(r => r.match_id)).size
+    },
+  })
+}
+
 export function useSessionWeeklyRankings(sessionId: string | undefined) {
   return useQuery({
     queryKey: ['player-rankings', 'session', sessionId],
