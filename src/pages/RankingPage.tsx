@@ -288,12 +288,6 @@ export default function RankingPage() {
           { key: 'session', label: (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               {latestSession?.label ?? t('ranking.tabSession')}
-              {latestSession?.bwf_tournaments && (
-                <BwfCategoryBadge
-                  categoryName={latestSession.bwf_tournaments.category_name}
-                  categorySlug={latestSession.bwf_tournaments.category_slug}
-                />
-              )}
             </span>
           )},
         ] as const).map(({ key, label }) => (
