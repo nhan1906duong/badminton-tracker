@@ -32,10 +32,38 @@ const C = {
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
 
+// Date-pill fallback palette (amber, same as S1000)
+const DATE_BADGE_COLOR = '#926B10'
+const DATE_BADGE_BG    = 'rgba(146, 107, 16, 0.12)'
+
+// BWF category badge colours — mirrors bwf-category-badge.tsx (oklch → hex approx)
+const CATEGORY_META: Record<string, { label: string; color: string; bg: string }> = {
+  'grade-2-level-1': { label: 'Finals', color: '#6A3EC0', bg: 'rgba(106, 62, 192, 0.12)' },
+  'grade-2-level-2': { label: 'S1000',  color: '#926B10', bg: 'rgba(146, 107, 16, 0.12)' },
+  'grade-2-level-3': { label: 'S750',   color: '#C03820', bg: 'rgba(192, 56, 32, 0.12)'  },
+  'grade-2-level-4': { label: 'S500',   color: '#3050B8', bg: 'rgba(48, 80, 184, 0.12)'  },
+  'grade-2-level-5': { label: 'S300',   color: '#22763A', bg: 'rgba(34, 118, 58, 0.12)'  },
+  'grade-2-level-6': { label: 'S100',   color: '#706858', bg: 'rgba(112, 104, 88, 0.12)' },
+}
+
 // Column right-edges
 const COL_AMT_R  = W - PAD
 const COL_LOSS_R = COL_AMT_R - 115
 const COL_NAME_MAX_W = COL_LOSS_R - PAD - 16
+
+function pill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.arcTo(x + w, y, x + w, y + r, r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+  ctx.lineTo(x + r, y + h)
+  ctx.arcTo(x, y + h, x, y + h - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
+}
 
 function clamp(ctx: CanvasRenderingContext2D, text: string, maxW: number): string {
   if (ctx.measureText(text).width <= maxW) return text
@@ -48,7 +76,7 @@ function computeHeight(playerCount: number): number {
   let H = PAD         // top padding
   H += 14 + 16       // eyebrow + gap
   H += 30 + 6        // title + gap
-  H += 16 + 24       // date line + gap-to-divider
+  H += 22 + 24       // date badge + gap-to-divider
   H += 1 + 20        // divider + gap
   H += 12 + 10       // column headers + gap
   H += 1 + 6         // header separator + gap
@@ -83,9 +111,9 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
 
   ctx.fillStyle = C.accent
   ctx.textAlign = 'left'
-  ctx.fillText('DONATION SUMMARY', PAD, y)
+  ctx.fillText('TỔNG KẾT ĐÓNG GÓP', PAD, y)
 
-  const dateLabel = new Date(session.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const dateLabel = new Date(session.started_at).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' })
   ctx.fillStyle = C.muted
   ctx.textAlign = 'right'
   ctx.fillText(dateLabel, W - PAD, y)
@@ -96,25 +124,48 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
   ctx.fillStyle = C.fg
   ctx.font = `800 24px ${FONT}`
   ctx.textAlign = 'left'
-  ctx.fillText(clamp(ctx, session.label ?? 'Badminton Session', W - PAD * 2), PAD, y)
+  ctx.fillText(clamp(ctx, session.label ?? 'Buổi Tập Cầu Lông', W - PAD * 2), PAD, y)
 
   y += 30 + 6
 
   // ── Session date + duration ───────────────────────────────────
-  let dateStr = new Date(session.started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  let dateStr = new Date(session.started_at).toLocaleDateString('vi-VN', { month: 'long', day: 'numeric', year: 'numeric' })
   if (session.ended_at) {
     const totalMin = Math.floor(
       (new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 60000,
     )
     const h = Math.floor(totalMin / 60)
     const m = totalMin % 60
-    dateStr += ` · ${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}m` : ''} total`
+    dateStr += ` · ${h > 0 ? `${h} giờ ` : ''}${m > 0 ? `${m} phút` : ''}`
   }
-  ctx.fillStyle = C.muted
-  ctx.font = `400 13px ${FONT}`
-  ctx.fillText(dateStr, PAD, y)
+  // BWF category badge if available, otherwise date pill
+  const bwfMeta = session.bwf_tournaments
+    ? (CATEGORY_META[session.bwf_tournaments.category_slug] ?? null)
+    : null
+  const badgeLabel = bwfMeta ? bwfMeta.label : dateStr
+  const badgeColor = bwfMeta ? bwfMeta.color : DATE_BADGE_COLOR
+  const badgeBg    = bwfMeta ? bwfMeta.bg    : DATE_BADGE_BG
 
-  y += 16 + 24
+  ctx.font = `700 10px ${FONT}`
+  ctx.textBaseline = 'middle'
+  const pillTextW = ctx.measureText(badgeLabel).width
+  const pillH = 22, pillPadX = 8, pillR = 5
+  const pillW = pillTextW + pillPadX * 2
+
+  ctx.fillStyle = badgeBg
+  pill(ctx, PAD, y, pillW, pillH, pillR)
+  ctx.fill()
+
+  ctx.strokeStyle = badgeColor
+  ctx.lineWidth = 1
+  pill(ctx, PAD, y, pillW, pillH, pillR)
+  ctx.stroke()
+
+  ctx.fillStyle = badgeColor
+  ctx.textAlign = 'left'
+  ctx.fillText(badgeLabel, PAD + pillPadX, y + pillH / 2)
+
+  y += 22 + 24
 
   // ── Top divider ───────────────────────────────────────────────
   ctx.strokeStyle = C.border
@@ -132,11 +183,11 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
 
   ctx.fillStyle = C.muted
   ctx.textAlign = 'left'
-  ctx.fillText('PLAYER', PAD, y)
+  ctx.fillText('TÊN', PAD, y)
 
   ctx.textAlign = 'right'
-  ctx.fillText('LOST', COL_LOSS_R, y)
-  ctx.fillText('AMOUNT', COL_AMT_R, y)
+  ctx.fillText('THUA', COL_LOSS_R, y)
+  ctx.fillText('ĐÓNG GÓP', COL_AMT_R, y)
 
   y += 12 + 10
 
@@ -158,7 +209,7 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
     ctx.fillStyle = C.fg
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    ctx.fillText(clamp(ctx, player.name, COL_NAME_MAX_W), PAD, rowCy)
+    ctx.fillText(player.name, PAD, rowCy)
 
     const lossesStr = String(player.losses)
     ctx.font = `600 14px ${FONT}`
@@ -192,7 +243,7 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
   ctx.fillStyle = C.fg
   ctx.textAlign = 'left'
   ctx.textBaseline = 'middle'
-  ctx.fillText('TOTAL', PAD, totalCy)
+  ctx.fillText('TỔNG CỘNG', PAD, totalCy)
 
   ctx.textAlign = 'right'
   ctx.fillText(String(totalLosses), COL_LOSS_R, totalCy)
@@ -218,14 +269,9 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
   // ── Footer ────────────────────────────────────────────────────
   ctx.textBaseline = 'top'
   ctx.textAlign = 'left'
-  ctx.font = `600 12px ${FONT}`
-  ctx.fillStyle = C.fg
-  ctx.fillText(`${matchCount}`, PAD, y)
-  const w1 = ctx.measureText(`${matchCount}`).width
-
-  ctx.font = `400 12px ${FONT}`
-  ctx.fillStyle = C.muted
-  ctx.fillText(' matches', PAD + w1, y)
+  ctx.font = `700 12px ${FONT}`
+  ctx.fillStyle = '#000000'
+  ctx.fillText(`${matchCount} trận`, PAD, y)
 
   ctx.font = `400 11px ${FONT}`
   ctx.textAlign = 'right'
