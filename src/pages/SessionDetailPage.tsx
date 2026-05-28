@@ -48,12 +48,12 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2 } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
-import { usePlayerStats } from '../hooks/usePlayerStats'
-import { useSessionDonationStats } from '../hooks/usePlayerStats'
+import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats'
 import { generateSessionShareCard } from '../lib/share-card'
-import { useState, useCallback } from 'react'
+import { Button } from '../../design-system/components/button'
+import { useState, useCallback, useMemo } from 'react'
 import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 
 export default function SessionDetailPage() {
@@ -72,9 +72,15 @@ export default function SessionDetailPage() {
 
   const updateSessionStartTime = useUpdateSessionStartTime()
 
-  const { sortedByMatches } = usePlayerStats(sessionId)
+  const { stats } = usePlayerStats(sessionId)
   const { totalDonatedVnd } = useSessionDonationStats(sessionId ?? '')
 
+  const sharePlayers = useMemo(
+    () => [...stats].filter((p) => p.matchesPlayed > 0).sort((a, b) => b.losses - a.losses),
+    [stats],
+  )
+
+  const [sharePreview, setSharePreview] = useState<{ dataUrl: string; blob: Blob } | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
   const [confirmDeleteSessionOpen, setConfirmDeleteSessionOpen] = useState(false)
@@ -162,42 +168,46 @@ export default function SessionDetailPage() {
   function openMenu() { setMenuOpen(true) }
   function closeMenu() { setMenuOpen(false) }
 
-  function handleShare() {
+  function handleSharePreview() {
     if (!session) return
     closeMenu()
     try {
-      const blob = generateSessionShareCard({
+      const result = generateSessionShareCard({
         session,
-        leader: leaderboard?.leader,
-        mostActive: sortedByMatches[0],
+        players: sharePlayers,
         totalDonatedVnd,
         matchCount: recordedMatches.length,
-        playerCount: uniquePlayerCount,
       })
-      const file = new File([blob], 'session-summary.png', { type: 'image/png' })
-      const title = session.label ?? 'Session Summary'
-      if (navigator.canShare?.({ files: [file] })) {
-        navigator.share({ files: [file], title }).catch((err) => {
-          if (err instanceof Error && err.name !== 'AbortError') console.error('Share failed:', err)
-        })
-      } else {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'session-summary.png'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        URL.revokeObjectURL(url)
-      }
+      setSharePreview(result)
     } catch (err) {
       console.error('Failed to generate share card:', err)
+    }
+  }
+
+  function handleActualShare() {
+    if (!sharePreview) return
+    const { blob, dataUrl } = sharePreview
+    setSharePreview(null)
+    const file = new File([blob], 'session-summary.png', { type: 'image/png' })
+    const title = session?.label ?? 'Session Summary'
+    if (navigator.canShare?.({ files: [file] })) {
+      navigator.share({ files: [file], title }).catch((err) => {
+        if (err instanceof Error && err.name !== 'AbortError') console.error('Share failed:', err)
+      })
+    } else {
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = 'session-summary.png'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
     }
   }
 
   const backTo = (location.state as { from?: string } | null)?.from ?? '/sessions'
 
   return (
+    <>
     <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
@@ -390,7 +400,13 @@ export default function SessionDetailPage() {
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/donated`) }}
           />
         )}
-        {/* Share session — available via handleShare() when ready to surface */}
+        {sessionStatus === 'ended' && recordedMatches.length > 0 && (
+          <BottomSheetItem
+            icon={<Share2 className="w-5 h-5" />}
+            label={t('sessionDetail.shareSession')}
+            onClick={handleSharePreview}
+          />
+        )}
         {sessionStatus === 'live' && (
           <>
             <BottomSheetDivider />
@@ -480,5 +496,44 @@ export default function SessionDetailPage() {
 
     </div>
     </PullToRefresh>
+
+    {/* Share preview modal */}
+    {sharePreview && (
+      <div
+        className="fixed inset-0 z-50 flex flex-col items-center justify-end px-4 pb-8"
+        style={{ background: 'oklch(0% 0 0 / 0.60)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+        onClick={() => setSharePreview(null)}
+      >
+        <div
+          className="w-full max-w-sm overflow-hidden"
+          style={{
+            borderRadius: 'var(--radius-xl)',
+            background: 'var(--surface)',
+            boxShadow: '0 8px 32px oklch(0% 0 0 / 0.24)',
+            maxHeight: '85dvh',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ overflowY: 'auto', padding: '16px 16px 8px' }}>
+            <img
+              src={sharePreview.dataUrl}
+              alt="Session summary"
+              style={{ width: '100%', display: 'block', borderRadius: 12 }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 12, padding: '8px 16px 16px' }}>
+            <Button variant="secondary" size="block" onClick={() => setSharePreview(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="accent" size="block" onClick={handleActualShare}>
+              {t('common.share')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

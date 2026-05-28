@@ -1,14 +1,21 @@
 import { formatCurrency } from './currency'
-import type { SessionWeeklyStats } from '../hooks/useRankings'
 import type { Session } from '../types/database'
+
+export interface ShareCardPlayer {
+  name: string
+  losses: number
+}
 
 export interface ShareCardData {
   session: Session
-  leader: SessionWeeklyStats | undefined
-  mostActive: { name: string; matchesPlayed: number } | undefined
+  players: ShareCardPlayer[]   // sorted by losses desc, all who played
   totalDonatedVnd: number
   matchCount: number
-  playerCount: number
+}
+
+export interface ShareCardResult {
+  blob: Blob
+  dataUrl: string
 }
 
 const W = 390
@@ -16,89 +23,57 @@ const PAD = 28
 const SCALE = 2
 
 const C = {
-  bg: '#111111',
-  surface: '#1E1E1E',
+  bg: '#FFFFFF',
+  fg: '#111111',
+  muted: '#888888',
+  border: '#E5E5E5',
   accent: '#F97316',
-  fg: '#F0F0F0',
-  muted: '#6B6B6B',
-  border: '#2D2D2D',
 }
 
 const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map((w) => w[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}
+// Column right-edges
+const COL_AMT_R  = W - PAD
+const COL_LOSS_R = COL_AMT_R - 115
+const COL_NAME_MAX_W = COL_LOSS_R - PAD - 16
 
-function clampText(ctx: CanvasRenderingContext2D, text: string, maxW: number): string {
+function clamp(ctx: CanvasRenderingContext2D, text: string, maxW: number): string {
   if (ctx.measureText(text).width <= maxW) return text
   let s = text
   while (s.length > 0 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1)
   return s + '…'
 }
 
-function computeHeight(data: ShareCardData): number {
-  const hasMvp = !!data.leader
-  const hasMostActive = !!data.mostActive && data.mostActive.matchesPlayed > 0
-  const hasDonation = data.totalDonatedVnd > 0
-
+function computeHeight(playerCount: number): number {
   let H = PAD         // top padding
-  H += 14 + 20       // eyebrow line + gap
+  H += 14 + 16       // eyebrow + gap
   H += 30 + 6        // title + gap
-  H += 16 + 24       // date line + gap before divider
-  H += 1 + 24        // divider + gap
-
-  let first = true
-  if (hasMvp) {
-    H += 12 + 10 + 40  // label + gap + row
-    first = false
-  }
-  if (hasMostActive) {
-    H += (first ? 0 : 20) + 12 + 10 + 40
-    first = false
-  }
-  if (hasDonation) {
-    H += (first ? 0 : 20) + 12 + 10 + 30
-  }
-
-  H += 24             // gap before footer divider
+  H += 16 + 24       // date line + gap-to-divider
   H += 1 + 20        // divider + gap
-  H += 16             // footer text
-  H += PAD            // bottom padding
+  H += 12 + 10       // column headers + gap
+  H += 1 + 6         // header separator + gap
+  H += playerCount * 36  // player rows
+  H += 1 + 6         // footer separator + gap
+  H += 36            // total row
+  H += 20 + 1 + 16   // gap + divider + gap
+  H += 14            // footer text
+  H += PAD           // bottom padding
   return H
 }
 
-export function generateSessionShareCard(data: ShareCardData): Blob {
-  const { session, leader, mostActive, totalDonatedVnd, matchCount, playerCount } = data
-  const H = computeHeight(data)
+export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
+  const { session, players, totalDonatedVnd, matchCount } = data
+  const H = computeHeight(players.length)
 
   const canvas = document.createElement('canvas')
-  canvas.width = W * SCALE
+  canvas.width  = W * SCALE
   canvas.height = H * SCALE
   const ctx = canvas.getContext('2d')!
   ctx.scale(SCALE, SCALE)
 
   // ── Background ────────────────────────────────────────────────
   ctx.fillStyle = C.bg
-  ctx.beginPath()
-  const r = 20
-  ctx.moveTo(r, 0)
-  ctx.lineTo(W - r, 0)
-  ctx.arcTo(W, 0, W, r, r)
-  ctx.lineTo(W, H - r)
-  ctx.arcTo(W, H, W - r, H, r)
-  ctx.lineTo(r, H)
-  ctx.arcTo(0, H, 0, H - r, r)
-  ctx.lineTo(0, r)
-  ctx.arcTo(0, 0, r, 0, r)
-  ctx.closePath()
-  ctx.fill()
+  ctx.fillRect(0, 0, W, H)
 
   let y = PAD
 
@@ -108,37 +83,32 @@ export function generateSessionShareCard(data: ShareCardData): Blob {
 
   ctx.fillStyle = C.accent
   ctx.textAlign = 'left'
-  ctx.fillText('SESSION SUMMARY', PAD, y)
+  ctx.fillText('DONATION SUMMARY', PAD, y)
 
+  const dateLabel = new Date(session.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   ctx.fillStyle = C.muted
   ctx.textAlign = 'right'
-  ctx.fillText('COMPLETED', W - PAD, y)
+  ctx.fillText(dateLabel, W - PAD, y)
 
-  y += 14 + 20
+  y += 14 + 16
 
   // ── Session title ─────────────────────────────────────────────
   ctx.fillStyle = C.fg
   ctx.font = `800 24px ${FONT}`
   ctx.textAlign = 'left'
-  ctx.fillText(clampText(ctx, session.label ?? 'Badminton Session', W - PAD * 2), PAD, y)
+  ctx.fillText(clamp(ctx, session.label ?? 'Badminton Session', W - PAD * 2), PAD, y)
 
   y += 30 + 6
 
-  // ── Date + duration ───────────────────────────────────────────
-  const sessionDate = new Date(session.started_at).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-  let dateStr = sessionDate
+  // ── Session date + duration ───────────────────────────────────
+  let dateStr = new Date(session.started_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   if (session.ended_at) {
     const totalMin = Math.floor(
       (new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 60000,
     )
     const h = Math.floor(totalMin / 60)
     const m = totalMin % 60
-    const dur = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`
-    dateStr += ` · ${dur} total`
+    dateStr += ` · ${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}m` : ''} total`
   }
   ctx.fillStyle = C.muted
   ctx.font = `400 13px ${FONT}`
@@ -146,99 +116,7 @@ export function generateSessionShareCard(data: ShareCardData): Blob {
 
   y += 16 + 24
 
-  // ── Divider ───────────────────────────────────────────────────
-  ctx.strokeStyle = C.border
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(PAD, y + 0.5)
-  ctx.lineTo(W - PAD, y + 0.5)
-  ctx.stroke()
-
-  y += 1 + 24
-
-  // ── Stat sections ─────────────────────────────────────────────
-  const hasMvp = !!leader
-  const hasMostActive = !!mostActive && mostActive.matchesPlayed > 0
-  const hasDonation = totalDonatedVnd > 0
-
-  function drawSectionLabel(text: string, accentColor: boolean) {
-    ctx.fillStyle = accentColor ? C.accent : C.muted
-    ctx.font = `700 10px ${FONT}`
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
-    ctx.fillText(text, PAD, y)
-    y += 12 + 10
-  }
-
-  function drawAvatar(cx: number, cy: number, name: string) {
-    ctx.fillStyle = C.surface
-    ctx.strokeStyle = C.border
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.arc(cx, cy, 18, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-
-    ctx.fillStyle = C.accent
-    ctx.font = `700 11px ${FONT}`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(getInitials(name), cx, cy)
-  }
-
-  function drawPlayerRow(label: string, name: string, detail: string, accentLabel: boolean) {
-    drawSectionLabel(label, accentLabel)
-    const rowCy = y + 20
-    drawAvatar(PAD + 18, rowCy, name)
-
-    const nameX = PAD + 36 + 12
-    const nameMaxW = W - nameX - PAD - 100
-    ctx.fillStyle = C.fg
-    ctx.font = `600 15px ${FONT}`
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(clampText(ctx, name, nameMaxW), nameX, rowCy)
-
-    ctx.fillStyle = C.muted
-    ctx.font = `400 13px ${FONT}`
-    ctx.textAlign = 'right'
-    ctx.fillText(detail, W - PAD, rowCy)
-
-    y += 40
-  }
-
-  let firstSection = true
-
-  if (hasMvp) {
-    drawPlayerRow(
-      'MVP',
-      leader!.name,
-      `${leader!.wins}W · ${Math.round((leader!.wins / leader!.matchesPlayed) * 100)}%`,
-      true,
-    )
-    firstSection = false
-  }
-
-  if (hasMostActive) {
-    if (!firstSection) y += 20
-    drawPlayerRow('Most Active', mostActive!.name, `${mostActive!.matchesPlayed} matches`, false)
-    firstSection = false
-  }
-
-  if (hasDonation) {
-    if (!firstSection) y += 20
-    drawSectionLabel('Donations', false)
-    ctx.fillStyle = C.fg
-    ctx.font = `700 20px ${FONT}`
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
-    ctx.fillText(formatCurrency(totalDonatedVnd), PAD, y)
-    y += 30
-  }
-
-  y += 24
-
-  // ── Footer divider ────────────────────────────────────────────
+  // ── Top divider ───────────────────────────────────────────────
   ctx.strokeStyle = C.border
   ctx.lineWidth = 1
   ctx.beginPath()
@@ -248,10 +126,98 @@ export function generateSessionShareCard(data: ShareCardData): Blob {
 
   y += 1 + 20
 
+  // ── Column headers ────────────────────────────────────────────
+  ctx.font = `700 10px ${FONT}`
+  ctx.textBaseline = 'top'
+
+  ctx.fillStyle = C.muted
+  ctx.textAlign = 'left'
+  ctx.fillText('PLAYER', PAD, y)
+
+  ctx.textAlign = 'right'
+  ctx.fillText('LOST', COL_LOSS_R, y)
+  ctx.fillText('AMOUNT', COL_AMT_R, y)
+
+  y += 12 + 10
+
+  // ── Header separator ──────────────────────────────────────────
+  ctx.strokeStyle = C.border
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(PAD, y + 0.5)
+  ctx.lineTo(W - PAD, y + 0.5)
+  ctx.stroke()
+
+  y += 1 + 6
+
+  // ── Player rows ───────────────────────────────────────────────
+  for (const player of players) {
+    const rowCy = y + 18  // vertical center of 36px row
+
+    ctx.font = `500 14px ${FONT}`
+    ctx.fillStyle = C.fg
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(clamp(ctx, player.name, COL_NAME_MAX_W), PAD, rowCy)
+
+    const lossesStr = String(player.losses)
+    ctx.font = `600 14px ${FONT}`
+    ctx.fillStyle = player.losses > 0 ? C.fg : C.muted
+    ctx.textAlign = 'right'
+    ctx.fillText(lossesStr, COL_LOSS_R, rowCy)
+
+    const amtStr = player.losses > 0 ? formatCurrency(player.losses * 5000) : '—'
+    ctx.font = `500 13px ${FONT}`
+    ctx.fillStyle = player.losses > 0 ? C.fg : C.muted
+    ctx.fillText(amtStr, COL_AMT_R, rowCy)
+
+    y += 36
+  }
+
+  // ── Total separator ───────────────────────────────────────────
+  ctx.strokeStyle = C.border
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(PAD, y + 0.5)
+  ctx.lineTo(W - PAD, y + 0.5)
+  ctx.stroke()
+
+  y += 1 + 6
+
+  // ── Total row ─────────────────────────────────────────────────
+  const totalCy = y + 18
+  const totalLosses = players.reduce((s, p) => s + p.losses, 0)
+
+  ctx.font = `700 14px ${FONT}`
+  ctx.fillStyle = C.fg
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('TOTAL', PAD, totalCy)
+
+  ctx.textAlign = 'right'
+  ctx.fillText(String(totalLosses), COL_LOSS_R, totalCy)
+
+  ctx.fillStyle = C.accent
+  ctx.font = `700 14px ${FONT}`
+  ctx.fillText(formatCurrency(totalDonatedVnd), COL_AMT_R, totalCy)
+
+  y += 36
+
+  y += 20
+
+  // ── Footer divider ────────────────────────────────────────────
+  ctx.strokeStyle = C.border
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(PAD, y + 0.5)
+  ctx.lineTo(W - PAD, y + 0.5)
+  ctx.stroke()
+
+  y += 1 + 16
+
   // ── Footer ────────────────────────────────────────────────────
   ctx.textBaseline = 'top'
   ctx.textAlign = 'left'
-
   ctx.font = `600 12px ${FONT}`
   ctx.fillStyle = C.fg
   ctx.fillText(`${matchCount}`, PAD, y)
@@ -259,22 +225,11 @@ export function generateSessionShareCard(data: ShareCardData): Blob {
 
   ctx.font = `400 12px ${FONT}`
   ctx.fillStyle = C.muted
-  ctx.fillText(' matches · ', PAD + w1, y)
-  const w2 = ctx.measureText(' matches · ').width
-
-  ctx.font = `600 12px ${FONT}`
-  ctx.fillStyle = C.fg
-  ctx.fillText(`${playerCount}`, PAD + w1 + w2, y)
-  const w3 = ctx.measureText(`${playerCount}`).width
-
-  ctx.font = `400 12px ${FONT}`
-  ctx.fillStyle = C.muted
-  ctx.fillText(' players', PAD + w1 + w2 + w3, y)
+  ctx.fillText(' matches', PAD + w1, y)
 
   ctx.font = `400 11px ${FONT}`
-  ctx.fillStyle = C.muted
   ctx.textAlign = 'right'
-  ctx.fillText('badminton tracker', W - PAD, y)
+  ctx.fillText('Liên Quân Cầu Lông (BDF)', W - PAD, y)
 
   // ── Encode ────────────────────────────────────────────────────
   const dataUrl = canvas.toDataURL('image/png')
@@ -282,5 +237,7 @@ export function generateSessionShareCard(data: ShareCardData): Blob {
   const bytes = atob(base64)
   const arr = new Uint8Array(bytes.length)
   for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
-  return new Blob([arr], { type: 'image/png' })
+  const blob = new Blob([arr], { type: 'image/png' })
+
+  return { blob, dataUrl }
 }
