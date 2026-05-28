@@ -253,6 +253,7 @@ const en = {
   'sessionDetail.couldntEnd': "Couldn't end session",
   'sessionDetail.editScheduledTime': 'Edit scheduled time',
   'sessionDetail.saveTime': 'Save time',
+  'sessionDetail.shareSession': 'Share summary',
 
   'sessionStats.eyebrow': 'Session ranking',
   'sessionStats.title': 'Player stats',
@@ -504,11 +505,11 @@ const en = {
   'points.pointsWinsDiff': 'Points, wins, diff',
   'points.ratingAvgWinRateDiff': 'Rating, avg points, win rate, diff',
 
-  'badges.mostPlayed': 'most played',
-  'badges.mostStreak': 'hot streak',
-  'badges.dynasty': 'dynasty',
-  'badges.mostTitles': 'world titles',
-  'badges.mostDonated': 'top donor',
+  'badges.mostPlayed': 'Most played: {count} matches',
+  'badges.mostStreak': 'Longest win streak: {count} matches',
+  'badges.dynasty': 'Dynasty: {count} consecutive seasons',
+  'badges.mostTitles': '{count} world titles',
+  'badges.mostDonated': 'Top donor: {count} VND',
 } as const
 
 type TranslationKey = keyof typeof en
@@ -750,6 +751,7 @@ const vi: Record<TranslationKey, string> = {
   'sessionDetail.couldntEnd': 'Không thể kết thúc giải đấu',
   'sessionDetail.editScheduledTime': 'Sửa giờ đã đặt',
   'sessionDetail.saveTime': 'Lưu giờ',
+  'sessionDetail.shareSession': 'Chia sẻ tóm tắt',
 
   'sessionStats.eyebrow': 'Xếp hạng giải đấu',
   'sessionStats.title': 'Thống kê',
@@ -1001,11 +1003,11 @@ const vi: Record<TranslationKey, string> = {
   'points.pointsWinsDiff': 'Điểm, thắng, hiệu số',
   'points.ratingAvgWinRateDiff': 'Rating, điểm TB, tỉ lệ thắng, hiệu số',
 
-  'badges.mostPlayed': 'nhiều trận nhất',
-  'badges.mostStreak': 'chuỗi thắng liên tiếp',
-  'badges.dynasty': 'thống trị dài hạn',
-  'badges.mostTitles': 'danh hiệu thế giới',
-  'badges.mostDonated': 'đóng góp nhiều nhất',
+  'badges.mostPlayed': 'Tham gia nhiều trận nhất: {count} trận',
+  'badges.mostStreak': 'Chuỗi thắng dài nhất: {count} trận',
+  'badges.dynasty': 'Thống trị liên tiếp {count} mùa giải',
+  'badges.mostTitles': '{count} danh hiệu thế giới',
+  'badges.mostDonated': 'Nhà hoạt động xã hội: {count} VNĐ',
 }
 
 const messages: Record<Locale, Record<TranslationKey, string>> = {

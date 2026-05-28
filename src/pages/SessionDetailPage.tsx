@@ -48,8 +48,11 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2 } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { usePlayerStats } from '../hooks/usePlayerStats'
+import { useSessionDonationStats } from '../hooks/usePlayerStats'
+import { generateSessionShareCard } from '../lib/share-card'
 import { useState, useCallback } from 'react'
 import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 
@@ -68,6 +71,9 @@ export default function SessionDetailPage() {
   const { data: leaderboard, refetch: refetchLeaderboard } = useSessionLeaderboard(sid)
 
   const updateSessionStartTime = useUpdateSessionStartTime()
+
+  const { sortedByMatches } = usePlayerStats(sessionId)
+  const { totalDonatedVnd } = useSessionDonationStats(sessionId ?? '')
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
@@ -155,6 +161,39 @@ export default function SessionDetailPage() {
 
   function openMenu() { setMenuOpen(true) }
   function closeMenu() { setMenuOpen(false) }
+
+  function handleShare() {
+    if (!session) return
+    closeMenu()
+    try {
+      const blob = generateSessionShareCard({
+        session,
+        leader: leaderboard?.leader,
+        mostActive: sortedByMatches[0],
+        totalDonatedVnd,
+        matchCount: recordedMatches.length,
+        playerCount: uniquePlayerCount,
+      })
+      const file = new File([blob], 'session-summary.png', { type: 'image/png' })
+      const title = session.label ?? 'Session Summary'
+      if (navigator.canShare?.({ files: [file] })) {
+        navigator.share({ files: [file], title }).catch((err) => {
+          if (err instanceof Error && err.name !== 'AbortError') console.error('Share failed:', err)
+        })
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'session-summary.png'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+      }
+    } catch (err) {
+      console.error('Failed to generate share card:', err)
+    }
+  }
 
   const backTo = (location.state as { from?: string } | null)?.from ?? '/sessions'
 
@@ -351,8 +390,13 @@ export default function SessionDetailPage() {
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/donated`) }}
           />
         )}
-        {/* Share session — planned */}
-        {/* Rename — planned */}
+        {sessionStatus === 'ended' && recordedMatches.length > 0 && (
+          <BottomSheetItem
+            icon={<Share2 className="w-5 h-5" />}
+            label={t('sessionDetail.shareSession')}
+            onClick={handleShare}
+          />
+        )}
         {sessionStatus === 'live' && (
           <>
             <BottomSheetDivider />

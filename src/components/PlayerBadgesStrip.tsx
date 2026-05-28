@@ -59,7 +59,7 @@ export function PlayerBadgesStrip({ badges, isLoading }: Props) {
                 color: 'var(--fg)',
               }}
             >
-              {badge.count} {t(badge.labelKey)}
+              {t(badge.labelKey, { count: badge.count })}
             </span>
           </div>
         )

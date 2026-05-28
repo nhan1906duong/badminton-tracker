@@ -172,7 +172,7 @@ export function usePlayerBadges(playerId: string) {
     if (dynastyLeaders.has(playerId))
       result.push({ id: 'dynasty', labelKey: 'badges.dynasty', category: 'dynasty', count: dynastyMap.get(playerId) ?? 0 })
     if (mostDonatedLeaders.has(playerId))
-      result.push({ id: 'most_donated', labelKey: 'badges.mostDonated', category: 'donated', count: lossMap.get(playerId) ?? 0 })
+      result.push({ id: 'most_donated', labelKey: 'badges.mostDonated', category: 'donated', count: (lossMap.get(playerId) ?? 0) * 5000 })
 
     return result
   }, [allMatches, allSessions, playerId])
