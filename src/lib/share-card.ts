@@ -209,7 +209,7 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
     ctx.fillStyle = C.fg
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    ctx.fillText(player.name, PAD, rowCy)
+    ctx.fillText(clamp(ctx, player.name, COL_NAME_MAX_W), PAD, rowCy)
 
     const lossesStr = String(player.losses)
     ctx.font = `600 14px ${FONT}`
