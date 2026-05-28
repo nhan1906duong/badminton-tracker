@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { Trash2, AlertTriangle, Palette, ChevronRight, RefreshCw, Info, Languages, User, Download } from 'lucide-react'
+import { Trash2, AlertTriangle, Palette, ChevronRight, RefreshCw, Info, User, Download } from 'lucide-react'
 import { useBackupData } from '../hooks/useBackup'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
@@ -31,6 +31,9 @@ export default function SettingsPage() {
   const [linkErrorOpen, setLinkErrorOpen] = useState(false)
 
   const linkedPlayer = profile?.player_id ? players.find((p) => p.id === profile.player_id) : null
+  const nextLocale: Locale = locale === 'en' ? 'vi' : 'en'
+  const localeFlag = locale === 'en' ? '🇬🇧' : '🇻🇳'
+  const localeLabel = locale.toUpperCase()
 
   const handleClear = () => {
     if (!confirming) {
@@ -83,17 +86,33 @@ export default function SettingsPage() {
         className="px-[var(--space-5)] pb-32 space-y-[var(--space-3)]"
         style={{ paddingTop: 'var(--space-6)' }}
       >
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setLocale(nextLocale)}
+            aria-label={t('settings.language')}
+            className="inline-flex h-7 items-center gap-1 rounded-full border border-[color-mix(in_oklch,var(--danger)_18%,transparent)] bg-[color-mix(in_oklch,var(--danger)_12%,var(--surface))] px-2 text-[var(--danger)] active:bg-[color-mix(in_oklch,var(--danger)_18%,var(--surface))] transition-colors"
+          >
+            <span className="text-[12px] leading-none">
+              {localeFlag}
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--danger)]">
+              {localeLabel}
+            </span>
+          </button>
+        </div>
+
         {/* Actions */}
         <section className="space-y-[var(--space-2)]">
-          <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
-            <div className="px-[var(--space-4)] pt-[var(--space-4)] pb-[var(--space-2)]">
+          <section className="px-[var(--space-1)] pt-[var(--space-2)] pb-[var(--space-5)]">
+            <div className="pb-[var(--space-2)]">
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
                 {t('settings.linkedPlayer')}
               </p>
             </div>
 
             {linkedPlayer ? (
-              <div className="flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)]">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => navigate(`/players/${linkedPlayer.id}`)}
@@ -118,7 +137,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setShowPlayerPicker(true)}
-                className="w-full flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)] active:opacity-60 transition-opacity"
+                className="w-full flex items-center gap-3 active:opacity-60 transition-opacity"
               >
                 <div className="w-9 h-9 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">
                   <User className="w-4 h-4 text-[var(--muted)]" />
@@ -141,64 +160,47 @@ export default function SettingsPage() {
             <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
           </button>
 
-          <button
-            onClick={() => navigate('/settings/points')}
-            className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
-          >
-            <Info className="w-5 h-5 shrink-0" />
-            <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.howPointsWork')}</span>
-            <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
-          </button>
-
-          <button
-            onClick={handleRecalculate}
-            disabled={recalculate.isPending}
-            className={`w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border rounded-[var(--radius-lg)] transition-colors active:bg-[var(--bg)] ${
-              confirmRecalc
-                ? 'border-[var(--warn)] text-[var(--warn)]'
-                : 'border-[var(--border)] text-[var(--fg)]'
-            }`}
-          >
-            {confirmRecalc ? (
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-            ) : (
-              <RefreshCw className={`w-5 h-5 shrink-0 ${recalculate.isPending ? 'animate-spin' : ''}`} />
-            )}
-            <span className="text-[15px] font-semibold">
-              {recalculate.isPending
-                ? t('settings.recalculating')
-                : confirmRecalc
-                  ? t('settings.tapAgainRecalculate')
-                  : t('settings.recalculateAllRatings')}
-            </span>
-          </button>
-
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)]">
-            <div className="flex items-center gap-3 mb-3">
-              <Languages className="w-5 h-5 shrink-0 text-[var(--fg)]" />
-              <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)]">{t('settings.language')}</span>
+          <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
+            <div className="px-[var(--space-4)] pt-[var(--space-4)] pb-[var(--space-2)]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                {t('settings.bdfRules')}
+              </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {(['en', 'vi'] as Locale[]).map((option) => {
-                const active = locale === option
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setLocale(option)}
-                    className={`min-h-[42px] rounded-[var(--radius-md)] border text-[14px] font-semibold transition-colors ${
-                      active
-                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                        : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]'
-                    }`}
-                  >
-                    {option === 'en' ? t('settings.languageEnglish') : t('settings.languageVietnamese')}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/settings/points')}
+              className="w-full flex items-center gap-3 px-[var(--space-4)] py-3 text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
+            >
+              <Info className="w-5 h-5 shrink-0" />
+              <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.howPointsWork')}</span>
+              <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
+            </button>
+
+            <div className="mx-[var(--space-4)] border-t border-[var(--border)]" />
+
+            <button
+              type="button"
+              onClick={handleRecalculate}
+              disabled={recalculate.isPending}
+              className={`w-full flex items-center gap-3 px-[var(--space-4)] py-3 transition-colors active:bg-[var(--bg)] ${
+                confirmRecalc ? 'text-[var(--warn)]' : 'text-[var(--fg)]'
+              }`}
+            >
+              {confirmRecalc ? (
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+              ) : (
+                <RefreshCw className={`w-5 h-5 shrink-0 ${recalculate.isPending ? 'animate-spin' : ''}`} />
+              )}
+              <span className="flex-1 text-left text-[15px] font-semibold">
+                {recalculate.isPending
+                  ? t('settings.recalculating')
+                  : confirmRecalc
+                    ? t('settings.tapAgainRecalculate')
+                    : t('settings.recalculateAllRatings')}
+              </span>
+            </button>
+          </section>
 
         </section>
 

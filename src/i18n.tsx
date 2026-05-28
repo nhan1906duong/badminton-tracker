@@ -136,6 +136,7 @@ const en = {
   'settings.backupDescription': 'Download all data as JSON',
 
   'settings.howPointsWork': 'How Points Work',
+  'settings.bdfRules': 'BDF Rules',
   'settings.recalculateAllRatings': 'Recalculate All Ratings',
   'settings.recalculating': 'Recalculating...',
   'settings.tapAgainRecalculate': 'Tap again to recalculate all ratings',
@@ -626,6 +627,7 @@ const vi: Record<TranslationKey, string> = {
   'settings.backupDescription': 'Tải tất cả dữ liệu dưới dạng JSON',
 
   'settings.howPointsWork': 'Cách tính điểm',
+  'settings.bdfRules': 'Luật BDF',
   'settings.recalculateAllRatings': 'Tính lại tất cả xếp hạng',
   'settings.recalculating': 'Đang tính lại...',
   'settings.tapAgainRecalculate': 'Chạm lần nữa để tính lại tất cả xếp hạng',
