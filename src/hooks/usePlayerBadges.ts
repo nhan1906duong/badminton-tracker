@@ -128,9 +128,16 @@ export function usePlayerBadges(playerId: string) {
 
       const winnerId = tied ? null : ranked[0][0]
       sessionWinnerMap.set(session.id, winnerId)
-      // Only count world tour sessions (BWF tournament linked) for titles
-      if (winnerId && session.bwf_tournament_id)
-        titlesMap.set(winnerId, (titlesMap.get(winnerId) ?? 0) + 1)
+      // Award titles to ALL co-leaders (including ties) for BWF sessions
+      if (session.bwf_tournament_id) {
+        for (const [pid, w] of ranked) {
+          if (w === topWins && (played.get(pid) ?? 0) === topPlayed) {
+            titlesMap.set(pid, (titlesMap.get(pid) ?? 0) + 1)
+          } else {
+            break
+          }
+        }
+      }
     }
 
     // Per-player: best dynasty streak (longest consecutive session championships)
