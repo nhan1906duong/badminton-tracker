@@ -509,7 +509,7 @@ const en = {
   'badges.mostPlayed': 'Most played: {count} matches',
   'badges.mostStreak': 'Longest win streak: {count} matches',
   'badges.dynasty': 'Dynasty: {count} consecutive seasons',
-  'badges.mostTitles': '{count} world titles',
+  'badges.mostTitles': 'Most world titles: {count} titles',
   'badges.mostDonated': 'Top donor: {count} VND',
 } as const
 
@@ -1008,7 +1008,7 @@ const vi: Record<TranslationKey, string> = {
   'badges.mostPlayed': 'Tham gia nhiều trận nhất: {count} trận',
   'badges.mostStreak': 'Chuỗi thắng dài nhất: {count} trận',
   'badges.dynasty': 'Thống trị liên tiếp {count} mùa giải',
-  'badges.mostTitles': '{count} danh hiệu thế giới',
+  'badges.mostTitles': 'Nhiều danh hiệu thế giới nhất: {count} danh hiệu',
   'badges.mostDonated': 'Nhà hoạt động xã hội: {count} VNĐ',
 }
 
