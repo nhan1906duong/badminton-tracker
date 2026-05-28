@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { AppBar, Button, Input } from '../../design-system/components'
+import { Button, Input } from '../../design-system/components'
+import { AppBar } from '../../design-system/components/app-bar'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useI18n } from '../i18n'
@@ -26,11 +27,11 @@ export default function ChangePasswordPage() {
     setError('')
 
     if (newPassword !== confirmPassword) {
-      setError(t('settings.changePassword.mismatch'))
+      setError(t('account.changePassword.mismatch'))
       return
     }
     if (newPassword.length < 6) {
-      setError(t('settings.changePassword.tooShort'))
+      setError(t('account.changePassword.tooShort'))
       return
     }
 
@@ -42,7 +43,7 @@ export default function ChangePasswordPage() {
         password: currentPassword,
       })
       if (signInError) {
-        setError(t('settings.changePassword.wrongCurrent'))
+        setError(t('account.changePassword.wrongCurrent'))
         return
       }
 
@@ -63,10 +64,10 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
       <AppBar
-        title={t('settings.changePassword.title')}
+        title={t('account.changePassword.title')}
         leftAction={{
           icon: <ChevronLeft className="h-5 w-5 -ml-1" />,
-          onClick: () => navigate(-1),
+          onClick: () => navigate('/settings/account'),
         }}
       />
 
@@ -74,16 +75,16 @@ export default function ChangePasswordPage() {
         {success ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-5)] text-center space-y-3">
             <p className="text-[15px] font-semibold text-[var(--fg)]">
-              {t('settings.changePassword.success')}
+              {t('account.changePassword.success')}
             </p>
-            <Button variant="accent" size="block" onClick={() => navigate(-1)}>
+            <Button variant="accent" size="block" onClick={() => navigate('/settings/account')}>
               {t('common.done')}
             </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-[var(--space-4)]">
             <Input
-              label={t('settings.changePassword.current')}
+              label={t('account.changePassword.current')}
               type={showCurrent ? 'text' : 'password'}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
@@ -103,7 +104,7 @@ export default function ChangePasswordPage() {
               }
             />
             <Input
-              label={t('settings.changePassword.new')}
+              label={t('account.changePassword.new')}
               type={showNew ? 'text' : 'password'}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -123,7 +124,7 @@ export default function ChangePasswordPage() {
               }
             />
             <Input
-              label={t('settings.changePassword.confirm')}
+              label={t('account.changePassword.confirm')}
               type={showConfirm ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -149,7 +150,7 @@ export default function ChangePasswordPage() {
 
             <Button type="submit" variant="accent" size="block" disabled={isPending}>
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isPending ? t('settings.changePassword.saving') : t('settings.changePassword.save')}
+              {isPending ? t('account.changePassword.saving') : t('account.changePassword.save')}
             </Button>
           </form>
         )}

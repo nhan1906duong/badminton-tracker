@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { LogOut, Trash2, AlertTriangle, Palette, ChevronRight, RefreshCw, Info, Languages, User, X, Lock, Download } from 'lucide-react'
+import { Trash2, AlertTriangle, Palette, ChevronRight, RefreshCw, Info, Languages, User, Download } from 'lucide-react'
 import { useBackupData } from '../hooks/useBackup'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
@@ -14,7 +14,7 @@ import { BottomSheet, Dialog } from '../../design-system/components'
 const IS_DEV = import.meta.env.DEV
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const { locale, setLocale, t } = useI18n()
   const clearAll = useClearAllData()
@@ -23,15 +23,13 @@ export default function SettingsPage() {
   const isAdmin = useIsAdmin()
   const [confirming, setConfirming] = useState(false)
   const [confirmRecalc, setConfirmRecalc] = useState(false)
-
   const { data: profile } = useProfile(user?.id)
-  const updatePlayerLink = useUpdatePlayerLink()
   const { data: players = [] } = usePlayers()
+  const updatePlayerLink = useUpdatePlayerLink()
   const [showPlayerPicker, setShowPlayerPicker] = useState(false)
   const [confirmUnlinkOpen, setConfirmUnlinkOpen] = useState(false)
   const [linkErrorOpen, setLinkErrorOpen] = useState(false)
 
-  const userAvatarUrl = profile?.avatar_url
   const linkedPlayer = profile?.player_id ? players.find((p) => p.id === profile.player_id) : null
 
   const handleClear = () => {
@@ -55,16 +53,6 @@ export default function SettingsPage() {
     })
   }
 
-  const handleUnlinkPlayer = () => {
-    if (!user) return
-    updatePlayerLink.mutate(
-      { userId: user.id, playerId: null },
-      {
-        onSuccess: () => setConfirmUnlinkOpen(false),
-      },
-    )
-  }
-
   const handleLinkPlayer = (playerId: string) => {
     if (!user) return
     updatePlayerLink.mutate(
@@ -79,139 +67,79 @@ export default function SettingsPage() {
     )
   }
 
+  const handleUnlinkPlayer = () => {
+    if (!user) return
+    updatePlayerLink.mutate(
+      { userId: user.id, playerId: null },
+      {
+        onSuccess: () => setConfirmUnlinkOpen(false),
+      },
+    )
+  }
+
   return (
     <div className="min-h-svh bg-[var(--bg)]">
       <div
         className="px-[var(--space-5)] pb-32 space-y-[var(--space-3)]"
         style={{ paddingTop: 'var(--space-6)' }}
       >
-        {/* User profile */}
-        <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)] flex items-center gap-3">
-          <div className="shrink-0">
-            <Avatar
-              src={userAvatarUrl}
-              name={user?.email || t('common.user')}
-              size={48}
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-bold text-[var(--fg)] truncate">
-              {user?.email || t('common.user')}
-            </p>
-            <p className="text-[13px] text-[var(--muted)]">{t('auth.signedIn')}</p>
-          </div>
-        </section>
-
-        {/* Your Player Profile */}
-        <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
-          <div className="px-[var(--space-4)] pt-[var(--space-4)] pb-[var(--space-2)]">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-              {t('settings.yourPlayer')}
-            </p>
-          </div>
-          {linkedPlayer ? (
-            <div className="flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)]">
-              <Avatar src={linkedPlayer.avatar_url} name={linkedPlayer.name} size={36} />
-              <span className="flex-1 text-[15px] font-semibold text-[var(--fg)] truncate">
-                {linkedPlayer.name}
-              </span>
-              <button
-                onClick={() => setConfirmUnlinkOpen(true)}
-                disabled={updatePlayerLink.isPending}
-                className="text-[13px] font-semibold text-[var(--danger)] active:opacity-60 transition-opacity flex items-center gap-1"
-              >
-                <X className="w-3.5 h-3.5" />
-                {t('settings.unlinkPlayer')}
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowPlayerPicker(true)}
-              className="w-full flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)] active:opacity-60 transition-opacity"
-            >
-              <div className="w-9 h-9 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">
-                <User className="w-4 h-4 text-[var(--muted)]" />
-              </div>
-              <span className="flex-1 text-left text-[15px] font-semibold text-[var(--accent)]">
-                {t('settings.linkPlayer')}
-              </span>
-              <ChevronRight className="w-4 h-4 text-[var(--muted)] shrink-0" />
-            </button>
-          )}
-        </section>
-
-        {/* Player picker bottom sheet */}
-        <BottomSheet open={showPlayerPicker} onClose={() => setShowPlayerPicker(false)}>
-          <div className="px-[var(--space-4)] pt-[var(--space-3)] pb-[var(--space-2)]">
-            <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-              {t('settings.selectPlayer')}
-            </p>
-          </div>
-          <div className="max-h-[50vh] overflow-y-auto pb-[var(--space-2)]">
-            {players.map((player) => (
-              <button
-                key={player.id}
-                onClick={() => handleLinkPlayer(player.id)}
-                disabled={updatePlayerLink.isPending}
-                className="w-full flex items-center gap-3 px-[var(--space-4)] py-3 active:bg-[var(--bg)] transition-colors"
-              >
-                <Avatar src={player.avatar_url} name={player.name} size={36} />
-                <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)] truncate">
-                  {player.name}
-                </span>
-              </button>
-            ))}
-          </div>
-        </BottomSheet>
-
-        <Dialog
-          open={confirmUnlinkOpen}
-          onClose={() => setConfirmUnlinkOpen(false)}
-          title={t('settings.unlinkConfirmTitle')}
-          description={t('settings.unlinkConfirmDescription')}
-          kind="warning"
-          actions={[
-            { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmUnlinkOpen(false) },
-            { label: updatePlayerLink.isPending ? t('common.saving') : t('settings.unlinkPlayer'), variant: 'danger', onClick: handleUnlinkPlayer },
-          ]}
-        />
-
-        <Dialog
-          open={linkErrorOpen}
-          onClose={() => setLinkErrorOpen(false)}
-          title={t('settings.linkFailedTitle')}
-          description={t('settings.linkFailedDescription')}
-          kind="danger"
-        />
-
         {/* Actions */}
         <section className="space-y-[var(--space-2)]">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)]">
-            <div className="flex items-center gap-3 mb-3">
-              <Languages className="w-5 h-5 shrink-0 text-[var(--fg)]" />
-              <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)]">{t('settings.language')}</span>
+          <section className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden">
+            <div className="px-[var(--space-4)] pt-[var(--space-4)] pb-[var(--space-2)]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                {t('settings.linkedPlayer')}
+              </p>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {(['en', 'vi'] as Locale[]).map((option) => {
-                const active = locale === option
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setLocale(option)}
-                    className={`min-h-[42px] rounded-[var(--radius-md)] border text-[14px] font-semibold transition-colors ${
-                      active
-                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                        : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]'
-                    }`}
-                  >
-                    {option === 'en' ? t('settings.languageEnglish') : t('settings.languageVietnamese')}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+
+            {linkedPlayer ? (
+              <div className="flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)]">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/players/${linkedPlayer.id}`)}
+                  className="min-w-0 flex-1 flex items-center gap-3 active:opacity-60 transition-opacity"
+                >
+                  <Avatar src={linkedPlayer.avatar_url} name={linkedPlayer.name} size={36} />
+                  <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)] truncate">
+                    {linkedPlayer.name}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setConfirmUnlinkOpen(true)}
+                  disabled={updatePlayerLink.isPending}
+                  className="shrink-0 text-[13px] font-semibold text-[var(--danger)] active:opacity-60 transition-opacity"
+                >
+                  {t('settings.unlinkPlayer')}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowPlayerPicker(true)}
+                className="w-full flex items-center gap-3 px-[var(--space-4)] pb-[var(--space-4)] active:opacity-60 transition-opacity"
+              >
+                <div className="w-9 h-9 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4 text-[var(--muted)]" />
+                </div>
+                <span className="flex-1 text-left text-[15px] font-semibold text-[var(--accent)]">
+                  {t('settings.linkPlayer')}
+                </span>
+                <ChevronRight className="w-4 h-4 text-[var(--muted)] shrink-0" />
+              </button>
+            )}
+          </section>
+
+          <button
+            type="button"
+            onClick={() => navigate('/settings/account')}
+            className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
+          >
+            <User className="w-5 h-5 shrink-0" />
+            <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.account')}</span>
+            <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
+          </button>
 
           <button
             onClick={() => navigate('/settings/points')}
@@ -245,22 +173,33 @@ export default function SettingsPage() {
             </span>
           </button>
 
-          <button
-            onClick={() => navigate('/settings/change-password')}
-            className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
-          >
-            <Lock className="w-5 h-5 shrink-0" />
-            <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.changePassword')}</span>
-            <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
-          </button>
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-4)]">
+            <div className="flex items-center gap-3 mb-3">
+              <Languages className="w-5 h-5 shrink-0 text-[var(--fg)]" />
+              <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)]">{t('settings.language')}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {(['en', 'vi'] as Locale[]).map((option) => {
+                const active = locale === option
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setLocale(option)}
+                    className={`min-h-[42px] rounded-[var(--radius-md)] border text-[14px] font-semibold transition-colors ${
+                      active
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
+                        : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]'
+                    }`}
+                  >
+                    {option === 'en' ? t('settings.languageEnglish') : t('settings.languageVietnamese')}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
-          <button
-            onClick={() => signOut()}
-            className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--danger)] active:bg-[var(--bg)] transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-[15px] font-semibold">{t('settings.logOut')}</span>
-          </button>
         </section>
 
         {/* Admin-only: Backup */}
@@ -332,6 +271,50 @@ export default function SettingsPage() {
             </button>
           </section>
         )}
+
+        <BottomSheet open={showPlayerPicker} onClose={() => setShowPlayerPicker(false)}>
+          <div className="px-[var(--space-4)] pt-[var(--space-3)] pb-[var(--space-2)]">
+            <p className="text-[13px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+              {t('settings.selectPlayer')}
+            </p>
+          </div>
+          <div className="max-h-[50vh] overflow-y-auto pb-[var(--space-2)]">
+            {players.map((player) => (
+              <button
+                key={player.id}
+                type="button"
+                onClick={() => handleLinkPlayer(player.id)}
+                disabled={updatePlayerLink.isPending}
+                className="w-full flex items-center gap-3 px-[var(--space-4)] py-3 active:bg-[var(--bg)] transition-colors"
+              >
+                <Avatar src={player.avatar_url} name={player.name} size={36} />
+                <span className="flex-1 text-left text-[15px] font-semibold text-[var(--fg)] truncate">
+                  {player.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </BottomSheet>
+
+        <Dialog
+          open={confirmUnlinkOpen}
+          onClose={() => setConfirmUnlinkOpen(false)}
+          title={t('settings.unlinkConfirmTitle')}
+          description={t('settings.unlinkConfirmDescription')}
+          kind="warning"
+          actions={[
+            { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmUnlinkOpen(false) },
+            { label: updatePlayerLink.isPending ? t('common.saving') : t('settings.unlinkPlayer'), variant: 'danger', onClick: handleUnlinkPlayer },
+          ]}
+        />
+
+        <Dialog
+          open={linkErrorOpen}
+          onClose={() => setLinkErrorOpen(false)}
+          title={t('settings.linkFailedTitle')}
+          description={t('settings.linkFailedDescription')}
+          kind="danger"
+        />
       </div>
     </div>
   )
