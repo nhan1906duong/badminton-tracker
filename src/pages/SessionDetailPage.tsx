@@ -48,7 +48,7 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2 } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { useSessionDonationStats } from '../hooks/usePlayerStats'
@@ -390,13 +390,7 @@ export default function SessionDetailPage() {
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/donated`) }}
           />
         )}
-        {sessionStatus === 'ended' && recordedMatches.length > 0 && (
-          <BottomSheetItem
-            icon={<Share2 className="w-5 h-5" />}
-            label={t('sessionDetail.shareSession')}
-            onClick={handleShare}
-          />
-        )}
+        {/* Share session — available via handleShare() when ready to surface */}
         {sessionStatus === 'live' && (
           <>
             <BottomSheetDivider />
