@@ -1,7 +1,7 @@
 {
   "name": "badminton-match-tracker",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "PWA for tracking badminton matches, players, and rankings",
   "type": "module",
   "scripts": {
