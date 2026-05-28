@@ -630,6 +630,43 @@ The shuttlecock SVG has two parts:
 <ShuttleLoading tiny />
 ```
 
+### PlayerBadgesStrip
+See [src/components/PlayerBadgesStrip.tsx](../src/components/PlayerBadgesStrip.tsx).
+
+Vertical list of record-holder badges rendered in the `PlayerDetailPage` header, directly below the rating line. A badge only appears if this player currently leads all players in that category (ties share the badge).
+
+**Layout:** `flex flex-col`, `gap: var(--space-2)`, `marginTop: var(--space-2)`. Each row is `flex items-center gap: var(--space-2)`.
+
+**Row structure:** `[LucideIcon 13px strokeWidth=2.5] [count + label — single span]`
+- Icon: colored by category (see table below), `flexShrink: 0`
+- Text: `var(--font-body)`, `var(--text-sm)`, weight 400, `color: var(--fg)`. Count and label are one span: `"7 hot streak"`.
+
+**Category → icon → color:**
+
+| Category | Icon | Color token |
+|----------|------|-------------|
+| `titles` | `Crown` | `var(--accent)` |
+| `played` | `Trophy` | `var(--info)` |
+| `streak` | `Flame` | `var(--danger)` |
+| `dynasty` | `Zap` | `color-mix(in oklch, var(--warn) 80%, var(--fg))` |
+| `donated` | `Coins` | `var(--success)` |
+
+**Badge order:** world titles → most played → hot streak → dynasty → top donor.
+
+**World titles rule:** the `titles` badge only counts sessions with a non-null `bwf_tournament_id`. Regular sessions are excluded.
+
+**Loading state:** 2 skeleton `animate-pulse` bars. Hidden entirely (`return null`) when no badges are earned — no empty state.
+
+### PlayerDetailPage Header Layout
+
+The player profile header (`<header>` in `PlayerDetailPage`) uses `position: relative` to float the rating top-right while the left column (rank chip → avatar → name → badges) stacks normally.
+
+- **Rating** (`player.rating`): `position: absolute; top: var(--space-4); right: var(--space-5)` — `var(--font-display)`, `var(--text-2xl)` (32px), weight 800, `letterSpacing: -0.03em`, `color: var(--fg)`.
+- **Rank chip**: `var(--font-mono)`, 13px, weight 700, uppercase, `color: var(--accent)`.
+- **You chip**: 10px mono uppercase, `color: var(--accent)`, `background: var(--accent-soft)`, `borderRadius: var(--radius-sm)`, `padding: 2px 6px`.
+
+---
+
 ### FireworkEffect
 See [src/components/firework-effect.tsx](../src/components/firework-effect.tsx).
 

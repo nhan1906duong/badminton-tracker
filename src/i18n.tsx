@@ -503,6 +503,12 @@ const en = {
   'points.overallRankings': 'Overall rankings',
   'points.pointsWinsDiff': 'Points, wins, diff',
   'points.ratingAvgWinRateDiff': 'Rating, avg points, win rate, diff',
+
+  'badges.mostPlayed': 'most played',
+  'badges.mostStreak': 'hot streak',
+  'badges.dynasty': 'dynasty',
+  'badges.mostTitles': 'world titles',
+  'badges.mostDonated': 'top donor',
 } as const
 
 type TranslationKey = keyof typeof en
@@ -994,6 +1000,12 @@ const vi: Record<TranslationKey, string> = {
   'points.overallRankings': 'Xếp hạng tổng',
   'points.pointsWinsDiff': 'Điểm, thắng, hiệu số',
   'points.ratingAvgWinRateDiff': 'Rating, điểm TB, tỉ lệ thắng, hiệu số',
+
+  'badges.mostPlayed': 'nhiều trận nhất',
+  'badges.mostStreak': 'chuỗi thắng liên tiếp',
+  'badges.dynasty': 'thống trị dài hạn',
+  'badges.mostTitles': 'danh hiệu thế giới',
+  'badges.mostDonated': 'đóng góp nhiều nhất',
 }
 
 const messages: Record<Locale, Record<TranslationKey, string>> = {

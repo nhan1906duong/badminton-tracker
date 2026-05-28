@@ -7,6 +7,8 @@ import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
 import { useHeadToHead } from '../hooks/useHeadToHead'
 import { usePlayerRankings } from '../hooks/useRankings'
 import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
+import { usePlayerBadges } from '../hooks/usePlayerBadges'
+import { PlayerBadgesStrip } from '../components/PlayerBadgesStrip'
 import type { PartnerEntry } from '../hooks/useBestPartner'
 import type { PlayerAchievement } from '../hooks/usePlayerAchievements'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
@@ -86,6 +88,7 @@ export default function PlayerDetailPage() {
   const { entries: h2hEntries, isLoading: h2hLoading } = useHeadToHead(id)
   const { data: rankings } = usePlayerRankings()
   const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
+  const { badges, isLoading: badgesLoading } = usePlayerBadges(id)
   const rankData = rankings?.find((r) => r.playerId === id)
 
   const [activeTab, setActiveTab] = useState<PlayerTab>('achievements')
@@ -191,7 +194,7 @@ export default function PlayerDetailPage() {
       />
 
       {/* Header */}
-      <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
+      <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)', position: 'relative' }}>
         {/* 1. Rank + You chip */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
           {rankData && (
@@ -307,19 +310,25 @@ export default function PlayerDetailPage() {
           </h1>
         )}
 
-        {/* 4. Rating */}
+        {/* 4. Rating — top right */}
         <div
           style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--text-sm)',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: 'var(--muted)',
+            position: 'absolute',
+            top: 'var(--space-4)',
+            right: 'var(--space-5)',
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-2xl)',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            color: 'var(--fg)',
+            textAlign: 'right',
           }}
         >
           {t('players.ratingPts', { rating: player.rating })}
         </div>
+
+        {/* Milestone badges strip */}
+        <PlayerBadgesStrip badges={badges} isLoading={badgesLoading} />
       </header>
 
       <div className="px-4 pb-24 space-y-4">
