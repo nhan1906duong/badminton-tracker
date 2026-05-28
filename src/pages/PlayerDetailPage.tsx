@@ -310,21 +310,18 @@ export default function PlayerDetailPage() {
           </h1>
         )}
 
-        {/* 4. Rating — top right */}
+        {/* 4. Rating below name */}
         <div
           style={{
-            position: 'absolute',
-            top: 'var(--space-4)',
-            right: 'var(--space-5)',
-            fontFamily: 'var(--font-display)',
-            fontSize: 'var(--text-2xl)',
-            fontWeight: 800,
-            letterSpacing: '-0.03em',
-            color: 'var(--fg)',
-            textAlign: 'right',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 700,
+            color: 'var(--muted)',
+            marginBottom: 'var(--space-2)',
+            letterSpacing: '0.02em',
           }}
         >
-          {t('players.ratingPts', { rating: player.rating })}
+          ({t('players.ratingPts', { rating: player.rating })})
         </div>
 
         {/* Milestone badges strip */}
