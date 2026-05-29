@@ -1,5 +1,5 @@
-import { BrowserRouter, useLocation, NavLink } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { AuthProvider } from './contexts/AuthContext'
 import AnimatedRoutes from './components/AnimatedRoutes'
 import { Trophy, Medal, Settings } from 'lucide-react'
@@ -35,18 +35,30 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 function NavButton({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const isActive = location.pathname === to
+
+  function handleClick() {
+    if (isActive) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      queryClient.invalidateQueries()
+    } else {
+      navigate(to)
+    }
+  }
+
   return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors ${
-          isActive ? 'text-[var(--accent)]' : 'text-[var(--muted)]'
-        }`
-      }
+    <button
+      onClick={handleClick}
+      className={`flex flex-col items-center gap-0.5 px-4 py-1.5 transition-colors ${
+        isActive ? 'text-[var(--accent)]' : 'text-[var(--muted)]'
+      }`}
     >
       {icon}
       <span className="text-[10px] font-medium">{label}</span>
-    </NavLink>
+    </button>
   )
 }
 

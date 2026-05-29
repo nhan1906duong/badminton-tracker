@@ -13,6 +13,7 @@ html {
   /* smooth scroll only for in-page anchors, not programmatic scrollTo */
   scroll-behavior: auto;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   background: var(--bg);
 }
 

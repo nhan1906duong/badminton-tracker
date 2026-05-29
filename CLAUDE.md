@@ -46,7 +46,11 @@ Routes in `src/components/AnimatedRoutes.tsx`. Page transitions are animated (fo
 
 **Tab routes** (no AppBar, bottom nav visible): `/sessions`, `/ranking`, `/settings`
 
+**Re-tap current tab**: Tapping the already-active tab scrolls to the top of the page and invalidates all TanStack Query cache (triggers a background refetch). Implemented in `NavButton` in `src/App.tsx`.
+
 **Back navigation**: All sub-page routes use `navigate(-1)` via the `AppBar` component. No custom back-routing logic in `App.tsx`.
+
+**PWA long-press**: `-webkit-touch-callout: none` on `html` in `src/index.css` suppresses the iOS callout menu on long-press.
 
 ### Match Creation Flow (single-page)
 

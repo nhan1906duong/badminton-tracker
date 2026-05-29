@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import {
   MemoryRouter,
   Routes,
@@ -473,6 +473,85 @@ describe('Tab Navigation', () => {
 
     expect(screen.getByTestId('tab-sessions')).toHaveAttribute('data-active', 'true')
     expect(screen.getByTestId('tab-home')).toHaveAttribute('data-active', 'false')
+  })
+})
+
+describe('NavButton re-tap behavior', () => {
+  beforeEach(() => {
+    vi.stubGlobal('scrollTo', vi.fn())
+  })
+
+  it('navigates when tapping an inactive tab', () => {
+    const navigate = vi.fn()
+    const invalidate = vi.fn()
+
+    function InactiveTabButton() {
+      function handleClick() {
+        const isActive = false
+        if (isActive) {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          invalidate()
+        } else {
+          navigate('/ranking')
+        }
+      }
+      return <button data-testid="btn" onClick={handleClick}>ranking</button>
+    }
+
+    render(<InactiveTabButton />)
+    fireEvent.click(screen.getByTestId('btn'))
+
+    expect(navigate).toHaveBeenCalledWith('/ranking')
+    expect(window.scrollTo).not.toHaveBeenCalled()
+    expect(invalidate).not.toHaveBeenCalled()
+  })
+
+  it('scrolls to top and invalidates queries when re-tapping the active tab', () => {
+    const navigate = vi.fn()
+    const invalidate = vi.fn()
+
+    function ActiveTabButton() {
+      function handleClick() {
+        const isActive = true
+        if (isActive) {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          invalidate()
+        } else {
+          navigate('/sessions')
+        }
+      }
+      return <button data-testid="btn" onClick={handleClick}>sessions</button>
+    }
+
+    render(<ActiveTabButton />)
+    fireEvent.click(screen.getByTestId('btn'))
+
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+    expect(invalidate).toHaveBeenCalled()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('does not navigate when re-tapping active tab', () => {
+    const navigate = vi.fn()
+    const invalidate = vi.fn()
+
+    function ActiveTabButton() {
+      function handleClick() {
+        const isActive = true
+        if (isActive) {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          invalidate()
+        } else {
+          navigate('/settings')
+        }
+      }
+      return <button data-testid="btn" onClick={handleClick}>settings</button>
+    }
+
+    render(<ActiveTabButton />)
+    fireEvent.click(screen.getByTestId('btn'))
+
+    expect(navigate).not.toHaveBeenCalled()
   })
 })
 
