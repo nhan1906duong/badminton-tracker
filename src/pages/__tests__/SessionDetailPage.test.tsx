@@ -42,12 +42,16 @@ let mockSessionData: Session | undefined = undefined
 const mockEndSession = { mutateAsync: vi.fn(), isPending: false }
 const mockStartSession = { mutateAsync: vi.fn(), isPending: false }
 const mockDeleteSession = { mutateAsync: vi.fn(), isPending: false }
+const mockUpdateSessionStartTime = { mutateAsync: vi.fn(), isPending: false }
+const mockRenameSession = { mutateAsync: vi.fn(), isPending: false }
 
 vi.mock('../../hooks/useSessions', () => ({
   useSession: () => ({ data: mockSessionData }),
   useEndSession: () => mockEndSession,
   useStartSession: () => mockStartSession,
   useDeleteSession: () => mockDeleteSession,
+  useUpdateSessionStartTime: () => mockUpdateSessionStartTime,
+  useRenameSession: () => mockRenameSession,
 }))
 
 vi.mock('../../hooks/useRankings', () => ({
@@ -57,8 +61,10 @@ vi.mock('../../hooks/useRankings', () => ({
   }),
 }))
 
+let mockIsAdmin = true
+
 vi.mock('../../hooks/useIsAdmin', () => ({
-  useIsAdmin: () => true,
+  useIsAdmin: () => mockIsAdmin,
 }))
 
 // ─── Component mocks ──────────────────────────────────────────────────────────
@@ -194,6 +200,7 @@ function clickMenuButton() {
 describe('SessionDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockIsAdmin = true
     mockSessionData = makeSession()
     mockMatchesData = []
     mockMatchesLoading = false
@@ -201,6 +208,7 @@ describe('SessionDetailPage', () => {
     mockDeleteMatch.isPending = false
     mockEndSession.isPending = false
     mockDeleteSession.isPending = false
+    mockRenameSession.isPending = false
     mockLocation.state = null
   })
 
@@ -569,6 +577,77 @@ describe('SessionDetailPage', () => {
     it('is hidden by default', () => {
       renderPage()
       expect(screen.queryByText('Delete Match?')).not.toBeInTheDocument()
+    })
+  })
+
+  // ── Rename session ────────────────────────────────────────────────────────
+
+  describe('rename session', () => {
+    function openRenameSheet() {
+      clickMenuButton()
+      fireEvent.click(screen.getByRole('button', { name: 'Rename session' }))
+    }
+
+    it('shows "Rename session" in menu for admin when no tournament linked', () => {
+      renderPage()
+      clickMenuButton()
+      expect(screen.getByRole('button', { name: 'Rename session' })).toBeInTheDocument()
+    })
+
+    it('hides "Rename session" when session has bwf_tournament_id', () => {
+      mockSessionData = makeSession({ bwf_tournament_id: 'tour-1' })
+      renderPage()
+      clickMenuButton()
+      expect(screen.queryByRole('button', { name: 'Rename session' })).not.toBeInTheDocument()
+    })
+
+    it('hides "Rename session" for non-admin', () => {
+      mockIsAdmin = false
+      renderPage()
+      clickMenuButton()
+      expect(screen.queryByRole('button', { name: 'Rename session' })).not.toBeInTheDocument()
+    })
+
+    it('opens rename sheet with current label pre-filled', () => {
+      renderPage()
+      openRenameSheet()
+      expect(screen.getByDisplayValue('Friday Night Smash')).toBeInTheDocument()
+    })
+
+    it('opens rename sheet with empty input when label is null', () => {
+      mockSessionData = makeSession({ label: null })
+      renderPage()
+      openRenameSheet()
+      expect(screen.getByPlaceholderText('Session name')).toHaveValue('')
+    })
+
+    it('calls renameSession.mutateAsync with updated label on save', async () => {
+      mockRenameSession.mutateAsync.mockResolvedValue(undefined)
+      renderPage()
+      openRenameSheet()
+      fireEvent.change(screen.getByDisplayValue('Friday Night Smash'), { target: { value: 'Saturday Morning' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Save name' }))
+      await waitFor(() => {
+        expect(mockRenameSession.mutateAsync).toHaveBeenCalledWith({ id: 'sess-1', label: 'Saturday Morning' })
+      })
+    })
+
+    it('closes sheet after save completes', async () => {
+      mockRenameSession.mutateAsync.mockResolvedValue(undefined)
+      renderPage()
+      openRenameSheet()
+      fireEvent.click(screen.getByRole('button', { name: 'Save name' }))
+      await waitFor(() => {
+        expect(screen.queryByTestId('bottom-sheet')).not.toBeInTheDocument()
+      })
+    })
+
+    it('closes sheet on cancel without saving', () => {
+      renderPage()
+      openRenameSheet()
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+      expect(mockRenameSession.mutateAsync).not.toHaveBeenCalled()
+      expect(screen.queryByTestId('bottom-sheet')).not.toBeInTheDocument()
     })
   })
 })

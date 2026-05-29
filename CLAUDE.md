@@ -119,7 +119,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/usePlayers.ts` | Player CRUD |
 | `src/components/PlayerForm.tsx` | Bottom-sheet modal for adding a player (design-system styled) |
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
-| `src/hooks/useSessions.ts` | Session CRUD + open session query |
+| `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |

@@ -40,7 +40,7 @@ function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'
 }
 import { useMatches } from '../hooks/useMatches'
 import { useSessionLeaderboard } from '../hooks/useRankings'
-import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime } from '../hooks/useSessions'
+import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime, useRenameSession } from '../hooks/useSessions'
 import MatchesContent from '../components/MatchesContent'
 import FloatingActionButton from '../components/FloatingActionButton'
 import { AppBar } from '../../design-system/components/app-bar'
@@ -71,6 +71,7 @@ export default function SessionDetailPage() {
   const { data: leaderboard, refetch: refetchLeaderboard } = useSessionLeaderboard(sid)
 
   const updateSessionStartTime = useUpdateSessionStartTime()
+  const renameSession = useRenameSession()
 
   const { stats } = usePlayerStats(sessionId)
   const { totalDonatedVnd } = useSessionDonationStats(sessionId ?? '')
@@ -87,6 +88,8 @@ export default function SessionDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [editTimeOpen, setEditTimeOpen] = useState(false)
   const [editTimeValue, setEditTimeValue] = useState('')
+  const [editLabelOpen, setEditLabelOpen] = useState(false)
+  const [editLabelValue, setEditLabelValue] = useState('')
 
   function toDatetimeLocal(iso: string): string {
     const d = new Date(iso)
@@ -98,6 +101,11 @@ export default function SessionDetailPage() {
     if (!editTimeValue) return
     await updateSessionStartTime.mutateAsync({ id: sid, started_at: new Date(editTimeValue).toISOString() })
     setEditTimeOpen(false)
+  }
+
+  async function handleSaveLabel() {
+    await renameSession.mutateAsync({ id: sid, label: editLabelValue })
+    setEditLabelOpen(false)
   }
 
   const handleRefresh = useCallback(async () => {
@@ -386,6 +394,13 @@ export default function SessionDetailPage() {
             />
           </>
         )}
+        {isAdmin && !session?.bwf_tournament_id && (
+          <BottomSheetItem
+            icon={<Pencil className="w-5 h-5" />}
+            label={t('sessionDetail.renameSession')}
+            onClick={() => { closeMenu(); setEditLabelValue(session?.label ?? ''); setEditLabelOpen(true) }}
+          />
+        )}
         {(matches?.length ?? 0) > 0 && (
           <BottomSheetItem
             icon={<Activity className="w-5 h-5" />}
@@ -407,20 +422,18 @@ export default function SessionDetailPage() {
             onClick={handleSharePreview}
           />
         )}
+        {(sessionStatus === 'live' || isAdmin) && <BottomSheetDivider />}
         {sessionStatus === 'live' && (
-          <>
-            <BottomSheetDivider />
-            <BottomSheetItem
-              icon={
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <rect x="6" y="6" width="12" height="12" rx="1" />
-                </svg>
-              }
-              label={t('sessionDetail.endSession')}
-              danger
-              onClick={() => { closeMenu(); setConfirmEndOpen(true) }}
-            />
-          </>
+          <BottomSheetItem
+            icon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <rect x="6" y="6" width="12" height="12" rx="1" />
+              </svg>
+            }
+            label={t('sessionDetail.endSession')}
+            danger
+            onClick={() => { closeMenu(); setConfirmEndOpen(true) }}
+          />
         )}
         {isAdmin && (
           <BottomSheetItem
@@ -481,6 +494,30 @@ export default function SessionDetailPage() {
             <button type="button" onClick={handleSaveScheduledTime} disabled={!editTimeValue || updateSessionStartTime.isPending}
               style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: editTimeValue ? 'pointer' : 'not-allowed', minHeight: 48, border: 'none', background: editTimeValue ? 'var(--accent)' : 'var(--border)', color: editTimeValue ? 'var(--surface)' : 'var(--muted)', opacity: editTimeValue ? 1 : 0.6, touchAction: 'manipulation' }}>
               {t('sessionDetail.saveTime')}
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={editLabelOpen} onClose={() => setEditLabelOpen(false)}>
+        <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 'var(--space-4)' }}>
+            {t('sessionDetail.renameSession')}
+          </div>
+          <input
+            type="text"
+            value={editLabelValue}
+            onChange={e => setEditLabelValue(e.target.value)}
+            placeholder={t('sessionDetail.renamePlaceholder')}
+            style={{ width: '100%', padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', color: 'var(--fg)', marginBottom: 'var(--space-4)', boxSizing: 'border-box' }}
+          />
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <button type="button" onClick={() => setEditLabelOpen(false)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
+              {t('common.cancel')}
+            </button>
+            <button type="button" onClick={handleSaveLabel} disabled={renameSession.isPending}
+              style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: 'none', background: 'var(--accent)', color: 'var(--surface)', touchAction: 'manipulation' }}>
+              {t('sessionDetail.saveName')}
             </button>
           </div>
         </div>

@@ -254,6 +254,9 @@ const en = {
   'sessionDetail.couldntEnd': "Couldn't end session",
   'sessionDetail.editScheduledTime': 'Edit scheduled time',
   'sessionDetail.saveTime': 'Save time',
+  'sessionDetail.renameSession': 'Rename session',
+  'sessionDetail.renamePlaceholder': 'Session name',
+  'sessionDetail.saveName': 'Save name',
   'sessionDetail.shareSession': 'Share summary',
 
   'sessionStats.eyebrow': 'Session ranking',
@@ -753,6 +756,9 @@ const vi: Record<TranslationKey, string> = {
   'sessionDetail.couldntEnd': 'Không thể kết thúc giải đấu',
   'sessionDetail.editScheduledTime': 'Sửa giờ đã đặt',
   'sessionDetail.saveTime': 'Lưu giờ',
+  'sessionDetail.renameSession': 'Đổi tên giải đấu',
+  'sessionDetail.renamePlaceholder': 'Tên giải đấu',
+  'sessionDetail.saveName': 'Lưu tên',
   'sessionDetail.shareSession': 'Chia sẻ tóm tắt',
 
   'sessionStats.eyebrow': 'Xếp hạng giải đấu',

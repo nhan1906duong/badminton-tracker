@@ -145,6 +145,7 @@ Protected routes redirect to `/login` if unauthenticated. After login, user retu
 | Modal | Triggered from |
 |-------|---------------|
 | `AvatarPicker` | Player Detail page avatar tap |
+| Rename session bottom sheet | Session detail (⋮ menu, admin only, non-BWF sessions only); pre-fills current label |
 | Delete confirmation dialog | Session detail (⋮ menu, admin only), Match Detail (⋮ menu, admin only); recorded data uses stronger warning copy |
 | End-session warning dialog | Session detail end action; warns when live matches still exist |
 | End-match-without-winner dialog | Match detail live action; saves current score but does not create ranking results |

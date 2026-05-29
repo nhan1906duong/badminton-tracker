@@ -154,6 +154,23 @@ export function useUpdateSessionStartTime() {
   })
 }
 
+export function useRenameSession() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, label }: { id: string; label: string }) => {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ label: label.trim() || null })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY, vars.id] })
+    },
+  })
+}
+
 export function useEndSession() {
   const qc = useQueryClient()
   return useMutation({

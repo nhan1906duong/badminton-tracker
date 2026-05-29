@@ -26,9 +26,9 @@ src/
 | 820 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
 | 635 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
 | 639 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useEndMatchNoWinner + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
-| 568 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end updates |
+| 568 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end/rename updates |
 | 520 | pages/MatchPointsPage.tsx | Completed-match point breakdown by player, score bonus, strength bonus, and Elo delta |
-| 400 | pages/SessionDetailPage.tsx | Session detail: recorded-result stats panel, leaderboard MVP, match list, session menu, BWF category badge |
+| 400 | pages/SessionDetailPage.tsx | Session detail: recorded-result stats panel, leaderboard MVP, match list, session menu (rename/end/delete), BWF category badge |
 | 342 | pages/EditPlayersPage.tsx | Edit match players: reassign slots for an existing match |
 | 434 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
@@ -173,7 +173,7 @@ hooks/
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
 ├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
 ├── useRankings.ts          # Overall Elo rankings + weekly Top 1 streak + session weekly rankings/leaderboards
-├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end mutations
+├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end/rename mutations
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
 

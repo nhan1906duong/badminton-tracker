@@ -146,6 +146,8 @@ Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. RLS pol
 
 Player updates are further restricted by `013_player_update_rls.sql`: only admins or the user linked to that player through `profiles.player_id` can update a player row.
 
+Session label (name) updates are enforced by the `trg_restrict_bwf_session_label` trigger (`014_restrict_bwf_session_label.sql`): only admins can rename a session, and no one can rename a session that has a `bwf_tournament_id` (those sessions derive their display name from the tournament record).
+
 Risky lifecycle actions use shared confirmation dialogs before mutation. Ending a session warns when live matches remain, deleting an ended session with matches warns about removing history/ranking data, and deleting live/completed matches warns about score and win/loss removal.
 
 ## Key Files
