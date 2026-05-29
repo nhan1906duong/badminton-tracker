@@ -176,7 +176,7 @@ export function usePlayerBadges(playerId: string) {
       result.push({ id: 'most_played', labelKey: 'badges.mostPlayed', category: 'played', count: playedMap.get(playerId) ?? 0 })
     if (bestStreakLeaders.has(playerId))
       result.push({ id: 'best_streak', labelKey: 'badges.mostStreak', category: 'streak', count: streakMap.get(playerId) ?? 0 })
-    if (dynastyLeaders.has(playerId))
+    if (dynastyLeaders.has(playerId) && (dynastyMap.get(playerId) ?? 0) > 1)
       result.push({ id: 'dynasty', labelKey: 'badges.dynasty', category: 'dynasty', count: dynastyMap.get(playerId) ?? 0 })
     if (mostDonatedLeaders.has(playerId))
       result.push({ id: 'most_donated', labelKey: 'badges.mostDonated', category: 'donated', count: (lossMap.get(playerId) ?? 0) * 5000 })
