@@ -130,6 +130,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins), most donated. Each badge is only awarded to the current leader(s) across all players. |
 | `src/components/PlayerBadgesStrip.tsx` | Renders the player badge list in `PlayerDetailPage` header below the rating. Each badge is a row: lucide icon (category-colored) + count + label. Hidden if player holds no badges. |
+| `src/lib/fair-shuffle.ts` | Cycle-based fair shuffle: `enumerateSplits` (all C(N,4)×3 splits), `generateNextMatch` (cycle filter + 4-tier ranking), `applyMatchResult` (advances cycle + win/play tracking) |
 | `src/lib/bwf-api.ts` | BWF category constants + priority order |
 | `src/lib/rating.ts` | Elo rating algorithm + SCORING_CONFIG |
 | `src/stores/new-match-store.ts` | Match creation flow state |

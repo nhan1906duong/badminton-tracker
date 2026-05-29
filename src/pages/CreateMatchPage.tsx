@@ -10,8 +10,8 @@ import { BottomSheet } from '../../design-system/components/bottom-sheet'
 import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { Player, MatchWithDetails } from '../types/database'
-import { generateNextMatch } from '../lib/fair-shuffle'
-import type { ShufflePlayer, PlayerStats } from '../lib/fair-shuffle'
+import { generateNextMatch, enumerateSplits, makeSplitKey } from '../lib/fair-shuffle'
+import type { ShufflePlayer } from '../lib/fair-shuffle'
 import { Plus, X, Zap, Calendar, List, ChevronRight, Loader2, Shuffle } from 'lucide-react'
 import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
 
@@ -21,17 +21,24 @@ function buildSessionHistory(
   sessionMatches: MatchWithDetails[],
   pool: ShufflePlayer[]
 ): {
-  stats: Map<string, PlayerStats>
-  partnerCount: Map<string, number>
-  opponentCount: Map<string, number>
+  splitRecord: Map<string, { team1Wins: number; team2Wins: number }>
+  cycleUsedSplits: Set<string>
+  playerWins: Map<string, number>
+  playerPlayed: Map<string, number>
 } {
-  const stats = new Map<string, PlayerStats>()
-  const partnerCount = new Map<string, number>()
-  const opponentCount = new Map<string, number>()
+  const splitRecord = new Map<string, { team1Wins: number; team2Wins: number }>()
+  const playerWins = new Map<string, number>()
+  const playerPlayed = new Map<string, number>()
 
-  const sorted = [...sessionMatches].sort(
-    (a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime()
-  )
+  const poolIds = new Set(pool.map(p => p.id))
+  const allSplitKeys = new Set(enumerateSplits(pool).map(s => s.key))
+  const totalPossible = allSplitKeys.size
+
+  let cycleUsedSplits = new Set<string>()
+
+  const sorted = [...sessionMatches]
+    .filter(m => m.status === 'COMPLETED')
+    .sort((a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime())
 
   for (const match of sorted) {
     const teamADef = match.teams.find(t => t.team_label === 'TEAM_A')
@@ -40,41 +47,46 @@ function buildSessionHistory(
 
     const teamAIds = match.participants.filter(p => p.team_id === teamADef.id).map(p => p.player_id)
     const teamBIds = match.participants.filter(p => p.team_id === teamBDef.id).map(p => p.player_id)
-    const playingIds = new Set([...teamAIds, ...teamBIds])
 
-    for (const player of pool) {
-      const s = stats.get(player.id) ?? { played: 0, rested: 0, consecutivePlayed: 0 }
-      if (playingIds.has(player.id)) {
-        s.played += 1
-        s.consecutivePlayed += 1
-      } else {
-        s.rested += 1
-        s.consecutivePlayed = 0
-      }
-      stats.set(player.id, s)
+    // Only track doubles matches where every participant is in the pool
+    if (teamAIds.length !== 2 || teamBIds.length !== 2) continue
+    if ([...teamAIds, ...teamBIds].some(id => !poolIds.has(id))) continue
+
+    const key = makeSplitKey(teamAIds, teamBIds)
+
+    // Track plays
+    for (const id of [...teamAIds, ...teamBIds]) {
+      playerPlayed.set(id, (playerPlayed.get(id) ?? 0) + 1)
     }
 
-    for (let i = 0; i < teamAIds.length; i++) {
-      for (let j = i + 1; j < teamAIds.length; j++) {
-        const key = [teamAIds[i], teamAIds[j]].sort().join('-')
-        partnerCount.set(key, (partnerCount.get(key) ?? 0) + 1)
+    // Track wins and per-split win record
+    const aWon = teamADef.is_winner
+    const bWon = teamBDef.is_winner
+    if (aWon || bWon) {
+      const winnerIds = aWon ? teamAIds : teamBIds
+      for (const id of winnerIds) {
+        playerWins.set(id, (playerWins.get(id) ?? 0) + 1)
       }
+
+      const pairA = [...teamAIds].sort().join('+')
+      const pairB = [...teamBIds].sort().join('+')
+      const [pair1] = [pairA, pairB].sort()
+      const winnerPair = aWon ? pairA : pairB
+
+      const rec = splitRecord.get(key) ?? { team1Wins: 0, team2Wins: 0 }
+      if (winnerPair === pair1) rec.team1Wins++
+      else rec.team2Wins++
+      splitRecord.set(key, rec)
     }
-    for (let i = 0; i < teamBIds.length; i++) {
-      for (let j = i + 1; j < teamBIds.length; j++) {
-        const key = [teamBIds[i], teamBIds[j]].sort().join('-')
-        partnerCount.set(key, (partnerCount.get(key) ?? 0) + 1)
-      }
-    }
-    for (const aId of teamAIds) {
-      for (const bId of teamBIds) {
-        const key = [aId, bId].sort().join('-')
-        opponentCount.set(key, (opponentCount.get(key) ?? 0) + 1)
-      }
+
+    // Advance cycle (only count splits that belong to the current pool)
+    if (allSplitKeys.has(key)) {
+      cycleUsedSplits.add(key)
+      if (cycleUsedSplits.size >= totalPossible) cycleUsedSplits = new Set()
     }
   }
 
-  return { stats, partnerCount, opponentCount }
+  return { splitRecord, cycleUsedSplits, playerWins, playerPlayed }
 }
 
 function getInitials(name: string): string {
@@ -247,6 +259,9 @@ export default function CreateMatchPage() {
   const [navStuck, setNavStuck] = useState(false)
   const [shuffleOpen, setShuffleOpen] = useState(false)
   const [shuffleSelectedIds, setShuffleSelectedIds] = useState<Set<string>>(new Set())
+  // In-memory cycle state so consecutive shuffles step through all splits before repeating
+  const [shuffleCycle, setShuffleCycle] = useState<Set<string> | null>(null)
+  const [lastShufflePoolKey, setLastShufflePoolKey] = useState<string>('')
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -290,12 +305,6 @@ export default function CreateMatchPage() {
   // ── Shuffle picker ───────────────────────────────────────────────────────────
 
   function openShufflePicker() {
-    // Pre-select players already placed in the current match slots
-    const current = new Set([
-      ...teamA.slice(0, teamSize).filter(Boolean) as string[],
-      ...teamB.slice(0, teamSize).filter(Boolean) as string[],
-    ])
-    setShuffleSelectedIds(current)
     setShuffleOpen(true)
   }
 
@@ -312,8 +321,22 @@ export default function CreateMatchPage() {
     const pool: ShufflePlayer[] = rawPool.map(p => ({ id: p.id, name: p.name }))
     if (pool.length < teamSize * 2) return
     if (teamSize === 2) {
-      const { stats, partnerCount, opponentCount } = buildSessionHistory(matches ?? [], pool)
-      const result = generateNextMatch({ selectedPlayers: pool, stats, partnerCount, opponentCount })
+      const { splitRecord, cycleUsedSplits: historyCycle, playerWins, playerPlayed } = buildSessionHistory(matches ?? [], pool)
+
+      const poolKey = pool.map(p => p.id).sort().join(',')
+      // On first shuffle or pool change: sync from history. Otherwise continue the in-memory cycle.
+      const currentCycle = (shuffleCycle === null || poolKey !== lastShufflePoolKey)
+        ? new Set(historyCycle)
+        : shuffleCycle
+
+      const result = generateNextMatch({ selectedPlayers: pool, splitRecord, cycleUsedSplits: currentCycle, playerWins, playerPlayed })
+
+      // Advance the in-memory cycle
+      const usedKey = makeSplitKey([result.team1[0].id, result.team1[1].id], [result.team2[0].id, result.team2[1].id])
+      const nextCycle = new Set(currentCycle)
+      nextCycle.add(usedKey)
+      setShuffleCycle(nextCycle.size >= enumerateSplits(pool).length ? new Set() : nextCycle)
+      setLastShufflePoolKey(poolKey)
       setSlot('A', 0, result.team1[0].id)
       setSlot('A', 1, result.team1[1].id)
       setSlot('B', 0, result.team2[0].id)
@@ -330,14 +353,19 @@ export default function CreateMatchPage() {
     setShuffleOpen(false)
   }
 
-  function handleShuffleAll() {
-    if (!allPlayers) return
-    performShuffle(allPlayers)
-  }
-
   function handleShuffleSelected() {
     if (!allPlayers) return
     performShuffle(allPlayers.filter(p => shuffleSelectedIds.has(p.id)))
+  }
+
+  function handleSelectAllShuffle() {
+    if (!allPlayers) return
+    const allSelected = allPlayers.every(p => shuffleSelectedIds.has(p.id))
+    if (allSelected) {
+      setShuffleSelectedIds(new Set())
+    } else {
+      setShuffleSelectedIds(new Set(allPlayers.map(p => p.id)))
+    }
   }
 
   // ── Player picker ────────────────────────────────────────────────────────────
@@ -963,23 +991,45 @@ export default function CreateMatchPage() {
       {/* ── Shuffle picker bottom sheet ──────────────────────────────────── */}
       <BottomSheet open={shuffleOpen} onClose={() => setShuffleOpen(false)}>
         {/* Header */}
-        <div style={{ padding: '0 var(--space-5) var(--space-3)' }}>
-          <div style={{ marginBottom: 'var(--space-1)' }}>
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-lg)',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              color: 'var(--fg)',
-            }}>
-              {t('shuffle.title')}
-            </span>
+        <div style={{ padding: '0 var(--space-5) var(--space-3)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ marginBottom: 'var(--space-1)' }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-lg)',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: 'var(--fg)',
+              }}>
+                {t('shuffle.title')}
+              </span>
+            </div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+              {shuffleSelectedIds.size === 0
+                ? t('shuffle.selectPlayers')
+                : t('shuffle.selectedCount', { count: shuffleSelectedIds.size })}
+            </p>
           </div>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-            {shuffleSelectedIds.size === 0
-              ? t('shuffle.noFilter')
-              : t('shuffle.selectedCount', { count: shuffleSelectedIds.size })}
-          </p>
+          <button
+            type="button"
+            onClick={handleSelectAllShuffle}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 700,
+              color: 'var(--accent)',
+              padding: 'var(--space-1) 0',
+              touchAction: 'manipulation',
+              flexShrink: 0,
+            }}
+          >
+            {allPlayers && allPlayers.every(p => shuffleSelectedIds.has(p.id))
+              ? t('shuffle.clearAll')
+              : t('shuffle.selectAll')}
+          </button>
         </div>
 
         {/* Player list */}
@@ -996,16 +1046,14 @@ export default function CreateMatchPage() {
                   alignItems: 'center',
                   gap: 'var(--space-3)',
                   padding: 'var(--space-3) 0',
-                  borderBottom: '1px solid var(--border)',
                   width: '100%',
                   background: 'transparent',
                   border: 'none',
-                  borderBottomColor: 'var(--border)',
-                  borderBottomWidth: 1,
-                  borderBottomStyle: 'solid',
+                  borderBottom: '1px solid var(--border)',
                   cursor: 'pointer',
                   textAlign: 'left',
                   touchAction: 'manipulation',
+                  minHeight: 44,
                 }}
               >
                 <div style={{
@@ -1039,36 +1087,8 @@ export default function CreateMatchPage() {
           })}
         </div>
 
-        {/* Shuffle CTAs */}
-        <div style={{ padding: 'var(--space-4) var(--space-5) 0', display: 'flex', gap: 'var(--space-3)' }}>
-          {/* Shuffle All */}
-          <button
-            type="button"
-            onClick={handleShuffleAll}
-            style={{
-              flex: 1,
-              padding: 'var(--space-3) var(--space-2)',
-              background: 'transparent',
-              color: 'var(--fg)',
-              fontFamily: 'var(--font-body)',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 700,
-              border: '2px solid var(--fg)',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
-              minHeight: 52,
-              touchAction: 'manipulation',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--space-2)',
-            }}
-          >
-            <Shuffle style={{ width: 15, height: 15 }} />
-            {t('shuffle.allPlayers')}
-          </button>
-
-          {/* Shuffle Selected */}
+        {/* Shuffle CTA */}
+        <div style={{ padding: 'var(--space-4) var(--space-5) 0' }}>
           {(() => {
             const selCount = shuffleSelectedIds.size
             const needed = teamSize * 2
@@ -1079,7 +1099,7 @@ export default function CreateMatchPage() {
                 onClick={handleShuffleSelected}
                 disabled={disabled}
                 style={{
-                  flex: 1,
+                  width: '100%',
                   padding: 'var(--space-3) var(--space-2)',
                   background: 'var(--accent)',
                   color: 'var(--surface)',

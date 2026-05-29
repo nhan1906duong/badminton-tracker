@@ -338,6 +338,9 @@ const en = {
   'shuffle.allPlayers': 'All Players',
   'shuffle.selectedButton': '{count} Selected',
   'shuffle.needMore': 'Need {count} more',
+  'shuffle.selectAll': 'Select all',
+  'shuffle.clearAll': 'Clear',
+  'shuffle.selectPlayers': 'Tap to select players',
 
   'editPlayers.title': 'Edit players',
   'editPlayers.fillEverySlot': 'Fill every player slot before saving.',
@@ -840,6 +843,9 @@ const vi: Record<TranslationKey, string> = {
   'shuffle.allPlayers': 'Tất Cả',
   'shuffle.selectedButton': '{count} Đã Chọn',
   'shuffle.needMore': 'Cần thêm {count}',
+  'shuffle.selectAll': 'Chọn tất cả',
+  'shuffle.clearAll': 'Bỏ chọn',
+  'shuffle.selectPlayers': 'Chạm để chọn người chơi',
 
   'editPlayers.title': 'Sửa thông tin vđv',
   'editPlayers.fillEverySlot': 'Hãy điền đầy đủ tất cả vị trí trước khi lưu.',

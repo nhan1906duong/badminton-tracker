@@ -233,7 +233,7 @@ Default bg: var(--accent) · Default text: var(--surface)
 Single-page flow at `/sessions/:id/matches/new` (`CreateMatchPage`):
 
 1. **Match type** — segmented chip selector (Men's Singles / Women's Singles / Men's Doubles / Women's Doubles / Mixed Doubles)
-2. **Players** — slot-based card (Team A slots / VS / Team B slots); tap a slot → bottom sheet player picker with search. A **Shuffle** button (doubles only) opens a bottom sheet to pick a player pool, then calls `generateNextMatch` from `src/lib/fair-shuffle.ts` to fill all four slots fairly based on session history.
+2. **Players** — slot-based card (Team A slots / VS / Team B slots); tap a slot → bottom sheet player picker with search. A **Shuffle** button (doubles only) opens a bottom sheet to pick a player pool, then calls `generateNextMatch` from `src/lib/fair-shuffle.ts` to fill all four slots. The player selection in the picker persists across opens — closing and reopening the sheet keeps whatever players were last selected.
 3. **When** — 3-way segmented control:
    - **Now** — match inserted as `LIVE`; blocks if a live match already exists (inline error)
    - **Schedule** — match inserted as `SCHEDULED` with a custom date/time; quick-pick buttons (15 min / 30 min / 1 hr)
@@ -244,35 +244,44 @@ After save: `navigate(-1)` back to session detail.
 
 ## Fair Shuffle (`src/lib/fair-shuffle.ts`)
 
-Available for doubles match types only. The Shuffle button in `CreateMatchPage` opens a player pool picker, then runs two steps:
+Available for doubles match types only. The Shuffle button in `CreateMatchPage` opens a player pool picker with a "Select all / Clear" toggle at the top-right. The player selection **persists across opens** — the picker reopens with the same players checked as the last time. First open starts with an empty selection. Pressing "Shuffle" cycles through all possible team splits before repeating.
 
-**Step 1 — Who plays (priority ranking)**
+**Split enumeration**
 
-Each player in the pool gets a priority score:
-```
-priority = rested×3 − played×2 − consecutivePlayed×2 + random()
-```
-The top 4 by priority are selected to play; the rest sit out. With exactly 4 players everyone always plays.
+For a pool of N players, `enumerateSplits` generates every possible doubles split: C(N,4) ways to choose who plays × 3 ways to pair the 4 players = e.g. 3 splits for 4 players, 15 for 5, 45 for 6. Each split has a canonical key via `makeSplitKey` (player IDs sorted within each team, teams sorted lexicographically), so AB|CD === BA|DC === CD|AB.
 
-**Step 2 — Best team split**
+**Cycle-based filtering (Step 1)**
 
-Given the 4 playing players `[a, b, c, d]`, all 3 possible 2v2 splits are scored:
-```
-score = partnerRepeatCount(team1)×5 + partnerRepeatCount(team2)×5
-      + opponentRepeatCount(all 4 cross-pairs)
-      + random(0..2)   ← tiebreaker
-```
-The split with the lowest score wins. The `×5` weight strongly penalises repeating the same partner over repeating the same opponent matchup.
+`cycleUsedSplits` tracks which splits have been used since the current cycle started. Only splits NOT in this set are candidates. When all splits are exhausted the cycle resets and all splits become candidates again. This guarantees every combination plays exactly once per round before any is repeated.
+
+The cycle is maintained **in-memory** as React state (`shuffleCycle` in `CreateMatchPage`), so consecutive shuffle presses — even without saving a match — step to the next unused split. The cycle initialises from session history on the first press or when the selected player pool changes.
+
+**Ranking within candidates (Step 2)**
+
+Candidates are sorted ascending by (lower = better):
+
+| Priority | Criterion |
+|---|---|
+| 1 | `\|team1Wins − team2Wins\|` for this specific matchup (prefer balanced head-to-head) |
+| 2 | `\|Σ sessionWins(team1) − Σ sessionWins(team2)\|` (prefer evenly matched teams) |
+| 3 | `−Σ playerPlayed(resting players)` (prefer splits that rest the most-played players) |
+| 4 | Random tiebreaker |
 
 **History (`buildSessionHistory` in `CreateMatchPage`)**
 
-Before shuffling, all completed + live matches in the session are replayed in chronological order to reconstruct `stats`, `partnerCount`, and `opponentCount`. This means the shuffle is always informed by the real match history of the current session.
+Before each shuffle, all **COMPLETED** doubles matches in the session where every participant is in the selected pool are replayed chronologically to reconstruct:
+- `splitRecord` — per-split win/loss counts
+- `cycleUsedSplits` — which splits are in the current history cycle (used to initialise in-memory state)
+- `playerWins` / `playerPlayed` — per-player totals for ranking criteria
+
+Matches involving players outside the current pool are ignored, keeping the cycle and stats pool-specific.
 
 **Key exports**
-- `generateNextMatch` — picks 4 players and best split for one match
-- `applyMatchResult` — updates stats/partner/opponent counts after a match
-- `generateMatchSchedule` — generates N matches in sequence (used for previews/tests)
-- `computeSessionStats` — replays a list of matches to rebuild stats maps
+- `makeSplitKey(team1Ids, team2Ids)` — canonical key for a team split
+- `enumerateSplits(players)` — all possible doubles splits for a pool
+- `generateNextMatch(input)` — returns the best next split from cycle candidates
+- `applyMatchResult(match, winnerTeam, ...)` — advances cycle + updates win/played counts
+- `generateMatchSchedule(players, n)` — generates N matches in sequence (used in tests)
 
 ## Match Detail Flow
 

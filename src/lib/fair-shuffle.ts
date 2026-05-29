@@ -9,7 +9,19 @@ export type PlayerStats = {
   consecutivePlayed: number
 }
 
+export type SplitRecord = {
+  team1Wins: number
+  team2Wins: number
+}
+
 export type ShuffleMatch = {
+  team1: [ShufflePlayer, ShufflePlayer]
+  team2: [ShufflePlayer, ShufflePlayer]
+  resting: ShufflePlayer[]
+}
+
+type CandidateSplit = {
+  key: string
   team1: [ShufflePlayer, ShufflePlayer]
   team2: [ShufflePlayer, ShufflePlayer]
   resting: ShufflePlayer[]
@@ -17,154 +29,153 @@ export type ShuffleMatch = {
 
 type GenerateMatchInput = {
   selectedPlayers: ShufflePlayer[]
-  stats: Map<string, PlayerStats>
-  partnerCount: Map<string, number>
-  opponentCount: Map<string, number>
+  splitRecord: Map<string, SplitRecord>
+  cycleUsedSplits: Set<string>
+  playerWins: Map<string, number>
+  playerPlayed: Map<string, number>
 }
 
-export function pairKey(a: ShufflePlayer, b: ShufflePlayer): string {
-  return [a.id, b.id].sort().join('-')
+// Canonical key for a team split — order of teams and players within teams doesn't matter
+export function makeSplitKey(team1Ids: readonly string[], team2Ids: readonly string[]): string {
+  const t1 = [...team1Ids].sort().join('+')
+  const t2 = [...team2Ids].sort().join('+')
+  return [t1, t2].sort().join('|')
 }
 
-function getCount(map: Map<string, number>, key: string): number {
-  return map.get(key) ?? 0
-}
+// All possible doubles splits from a pool: C(n,4) subsets × 3 ways to pair them
+export function enumerateSplits(players: ShufflePlayer[]): CandidateSplit[] {
+  const n = players.length
+  if (n < 4) return []
 
-function addCount(map: Map<string, number>, key: string): void {
-  map.set(key, (map.get(key) ?? 0) + 1)
-}
+  const result: CandidateSplit[] = []
 
-function calculateSplitScore(
-  team1: [ShufflePlayer, ShufflePlayer],
-  team2: [ShufflePlayer, ShufflePlayer],
-  partnerCount: Map<string, number>,
-  opponentCount: Map<string, number>
-): number {
-  const [a, b] = team1
-  const [c, d] = team2
+  for (let i = 0; i < n - 3; i++) {
+    for (let j = i + 1; j < n - 2; j++) {
+      for (let k = j + 1; k < n - 1; k++) {
+        for (let l = k + 1; l < n; l++) {
+          const [a, b, c, d] = [players[i], players[j], players[k], players[l]]
+          const playing = new Set([i, j, k, l])
+          const resting = players.filter((_, idx) => !playing.has(idx))
 
-  let score = 0
-  score += getCount(partnerCount, pairKey(a, b)) * 5
-  score += getCount(partnerCount, pairKey(c, d)) * 5
-  score += getCount(opponentCount, pairKey(a, c))
-  score += getCount(opponentCount, pairKey(a, d))
-  score += getCount(opponentCount, pairKey(b, c))
-  score += getCount(opponentCount, pairKey(b, d))
-  score += Math.random() * 2
+          for (const [t1, t2] of [
+            [[a, b], [c, d]],
+            [[a, c], [b, d]],
+            [[a, d], [b, c]],
+          ] as [[ShufflePlayer, ShufflePlayer], [ShufflePlayer, ShufflePlayer]][]) {
+            result.push({
+              key: makeSplitKey([t1[0].id, t1[1].id], [t2[0].id, t2[1].id]),
+              team1: t1,
+              team2: t2,
+              resting,
+            })
+          }
+        }
+      }
+    }
+  }
 
-  return score
+  return result
 }
 
 export function generateNextMatch(input: GenerateMatchInput): ShuffleMatch {
-  const { selectedPlayers, stats, partnerCount, opponentCount } = input
+  const { selectedPlayers, splitRecord, cycleUsedSplits, playerWins, playerPlayed } = input
 
   if (selectedPlayers.length < 4) {
     throw new Error("Please select at least 4 players to generate a men's doubles match.")
   }
 
-  const ranked = [...selectedPlayers]
-    .map((player) => {
-      const s = stats.get(player.id) ?? { played: 0, rested: 0, consecutivePlayed: 0 }
-      const priority = s.rested * 3 - s.played * 2 - s.consecutivePlayed * 2 + Math.random()
-      return { player, priority }
-    })
-    .sort((a, b) => b.priority - a.priority)
+  const allSplits = enumerateSplits(selectedPlayers)
 
-  const playing = ranked.slice(0, 4).map((x) => x.player)
-  const playingIds = new Set(playing.map((p) => p.id))
-  const resting = selectedPlayers.filter((p) => !playingIds.has(p.id))
+  // Cycle: only use splits not yet played in this round; if all used, start a new round
+  let candidates = allSplits.filter(s => !cycleUsedSplits.has(s.key))
+  if (candidates.length === 0) candidates = allSplits
 
-  const [a, b, c, d] = playing
+  // Rank by (ascending = better):
+  // 1. win imbalance for this specific matchup (prefer balanced head-to-head)
+  // 2. strength imbalance between teams (prefer evenly matched teams)
+  // 3. rest fairness (prefer splits that let the most-played players rest)
+  // 4. random tiebreaker
+  const scored = candidates.map(s => {
+    const rec = splitRecord.get(s.key) ?? { team1Wins: 0, team2Wins: 0 }
+    const winImbalance = Math.abs(rec.team1Wins - rec.team2Wins)
 
-  const splits = [
-    {
-      team1: [a, b] as [ShufflePlayer, ShufflePlayer],
-      team2: [c, d] as [ShufflePlayer, ShufflePlayer],
-    },
-    {
-      team1: [a, c] as [ShufflePlayer, ShufflePlayer],
-      team2: [b, d] as [ShufflePlayer, ShufflePlayer],
-    },
-    {
-      team1: [a, d] as [ShufflePlayer, ShufflePlayer],
-      team2: [b, c] as [ShufflePlayer, ShufflePlayer],
-    },
-  ].map((split) => ({
-    ...split,
-    score: calculateSplitScore(split.team1, split.team2, partnerCount, opponentCount),
-  }))
+    const t1Str = (playerWins.get(s.team1[0].id) ?? 0) + (playerWins.get(s.team1[1].id) ?? 0)
+    const t2Str = (playerWins.get(s.team2[0].id) ?? 0) + (playerWins.get(s.team2[1].id) ?? 0)
+    const strengthImbalance = Math.abs(t1Str - t2Str)
 
-  splits.sort((x, y) => x.score - y.score)
+    // Higher totalRestingPlayed = resting players have played more = they deserve the rest
+    const totalRestingPlayed = s.resting.reduce((sum, p) => sum + (playerPlayed.get(p.id) ?? 0), 0)
 
-  return { team1: splits[0].team1, team2: splits[0].team2, resting }
+    return { ...s, winImbalance, strengthImbalance, totalRestingPlayed, rand: Math.random() }
+  })
+
+  scored.sort((a, b) =>
+    a.winImbalance !== b.winImbalance ? a.winImbalance - b.winImbalance :
+    a.strengthImbalance !== b.strengthImbalance ? a.strengthImbalance - b.strengthImbalance :
+    b.totalRestingPlayed !== a.totalRestingPlayed ? b.totalRestingPlayed - a.totalRestingPlayed :
+    a.rand - b.rand
+  )
+
+  const { team1, team2, resting } = scored[0]
+  return { team1, team2, resting }
 }
 
+// Call after each match to advance state for the next shuffle
 export function applyMatchResult(
   match: ShuffleMatch,
-  selectedPlayers: ShufflePlayer[],
-  stats: Map<string, PlayerStats>,
-  partnerCount: Map<string, number>,
-  opponentCount: Map<string, number>
+  winnerTeam: 'team1' | 'team2' | null,
+  splitRecord: Map<string, SplitRecord>,
+  cycleUsedSplits: Set<string>,
+  totalPossibleSplits: number,
+  playerWins: Map<string, number>,
+  playerPlayed: Map<string, number>,
 ): void {
-  const playingIds = new Set([
-    match.team1[0].id,
-    match.team1[1].id,
-    match.team2[0].id,
-    match.team2[1].id,
-  ])
+  const key = makeSplitKey(
+    [match.team1[0].id, match.team1[1].id],
+    [match.team2[0].id, match.team2[1].id],
+  )
 
-  for (const player of selectedPlayers) {
-    const s = stats.get(player.id) ?? { played: 0, rested: 0, consecutivePlayed: 0 }
-    if (playingIds.has(player.id)) {
-      s.played += 1
-      s.consecutivePlayed += 1
-    } else {
-      s.rested += 1
-      s.consecutivePlayed = 0
-    }
-    stats.set(player.id, s)
+  cycleUsedSplits.add(key)
+  if (cycleUsedSplits.size >= totalPossibleSplits) cycleUsedSplits.clear()
+
+  for (const p of [...match.team1, ...match.team2]) {
+    playerPlayed.set(p.id, (playerPlayed.get(p.id) ?? 0) + 1)
   }
 
-  const [a, b] = match.team1
-  const [c, d] = match.team2
+  if (winnerTeam !== null) {
+    const winners = winnerTeam === 'team1' ? match.team1 : match.team2
+    for (const p of winners) {
+      playerWins.set(p.id, (playerWins.get(p.id) ?? 0) + 1)
+    }
 
-  addCount(partnerCount, pairKey(a, b))
-  addCount(partnerCount, pairKey(c, d))
-  addCount(opponentCount, pairKey(a, c))
-  addCount(opponentCount, pairKey(a, d))
-  addCount(opponentCount, pairKey(b, c))
-  addCount(opponentCount, pairKey(b, d))
+    const t1Norm = [...match.team1.map(p => p.id)].sort().join('+')
+    const t2Norm = [...match.team2.map(p => p.id)].sort().join('+')
+    const [pair1] = [t1Norm, t2Norm].sort()
+    const winnerNorm = winnerTeam === 'team1' ? t1Norm : t2Norm
+
+    const rec = splitRecord.get(key) ?? { team1Wins: 0, team2Wins: 0 }
+    if (winnerNorm === pair1) rec.team1Wins++
+    else rec.team2Wins++
+    splitRecord.set(key, rec)
+  }
 }
 
 export function generateMatchSchedule(
   selectedPlayers: ShufflePlayer[],
-  totalMatches: number
+  totalMatches: number,
 ): ShuffleMatch[] {
-  const stats = new Map<string, PlayerStats>()
-  const partnerCount = new Map<string, number>()
-  const opponentCount = new Map<string, number>()
+  const splitRecord = new Map<string, SplitRecord>()
+  const cycleUsedSplits = new Set<string>()
+  const playerWins = new Map<string, number>()
+  const playerPlayed = new Map<string, number>()
+  const totalPossibleSplits = enumerateSplits(selectedPlayers).length
   const matches: ShuffleMatch[] = []
 
   for (let i = 0; i < totalMatches; i++) {
-    const match = generateNextMatch({ selectedPlayers, stats, partnerCount, opponentCount })
+    const match = generateNextMatch({ selectedPlayers, splitRecord, cycleUsedSplits, playerWins, playerPlayed })
     matches.push(match)
-    applyMatchResult(match, selectedPlayers, stats, partnerCount, opponentCount)
+    applyMatchResult(match, null, splitRecord, cycleUsedSplits, totalPossibleSplits, playerWins, playerPlayed)
   }
 
   return matches
-}
-
-export function computeSessionStats(
-  selectedPlayers: ShufflePlayer[],
-  matches: ShuffleMatch[]
-): Map<string, PlayerStats> {
-  const stats = new Map<string, PlayerStats>()
-  const partnerCount = new Map<string, number>()
-  const opponentCount = new Map<string, number>()
-
-  for (const match of matches) {
-    applyMatchResult(match, selectedPlayers, stats, partnerCount, opponentCount)
-  }
-
-  return stats
 }
