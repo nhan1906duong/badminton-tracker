@@ -89,6 +89,11 @@
 7. End Session when done
 ```
 
+Match list display order (client-side, via `sortMatches` in `MatchesContent.tsx`):
+1. **LIVE** — top, oldest first (created_at asc)
+2. **SCHEDULED / queue** — middle, by queue_position asc (nulls last)
+3. **COMPLETED** — bottom, most recently ended first (ended_at desc, falls back to created_at)
+
 ## Ranking & Session Leaderboards
 
 `player_match_results` is the canonical source for weekly/session rankings. `useRecordResult()` creates or updates those rows when a winner is recorded. `useEndMatchNoWinner()` completes a match, clears team winners, deletes any result rows for that match, and saves non-empty score rows so invalid/stopped matches do not affect standings.

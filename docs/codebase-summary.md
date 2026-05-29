@@ -44,7 +44,7 @@ src/
 | 137 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
 | 170 | lib/fair-shuffle.ts | Fair shuffle algorithm: priority-based player selection + lowest-score team split |
-| 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states) |
+| 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states); exports `sortMatches` (LIVE first → SCHEDULED by queue_position → COMPLETED by ended_at desc) |
 | 111 | pages/LoginPage.tsx | Email + password login flow |
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
 | 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |

@@ -3,6 +3,30 @@ import MatchCard from './MatchCard'
 import { RotateCcw } from 'lucide-react'
 import { useI18n } from '../i18n'
 
+const STATUS_ORDER: Record<string, number> = { LIVE: 0, SCHEDULED: 1, COMPLETED: 2 }
+
+export function sortMatches(matches: MatchWithDetails[]): MatchWithDetails[] {
+  return [...matches].sort((a, b) => {
+    const orderDiff = (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3)
+    if (orderDiff !== 0) return orderDiff
+
+    if (a.status === 'SCHEDULED' && b.status === 'SCHEDULED') {
+      if (a.queue_position === null && b.queue_position === null) return 0
+      if (a.queue_position === null) return 1
+      if (b.queue_position === null) return -1
+      return a.queue_position - b.queue_position
+    }
+
+    if (a.status === 'COMPLETED' && b.status === 'COMPLETED') {
+      const aTime = a.ended_at ? new Date(a.ended_at).getTime() : new Date(a.created_at).getTime()
+      const bTime = b.ended_at ? new Date(b.ended_at).getTime() : new Date(b.created_at).getTime()
+      return bTime - aTime
+    }
+
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  })
+}
+
 interface MatchesContentProps {
   matches: MatchWithDetails[] | undefined
   isLoading: boolean
@@ -113,9 +137,11 @@ export default function MatchesContent({ matches, isLoading, isError, onRetry }:
   const numberMap = new Map<string, number>()
   sortedByCreated.forEach((m, i) => numberMap.set(m.id, i + 1))
 
+  const sorted = sortMatches(matches)
+
   return (
     <div className="space-y-[var(--space-3)]">
-      {matches.map((match) => (
+      {sorted.map((match) => (
         <MatchCard
           key={match.id}
           match={match}
