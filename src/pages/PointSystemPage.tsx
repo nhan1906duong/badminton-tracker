@@ -147,8 +147,8 @@ export default function PointSystemPage() {
               <RuleRow label={t('points.winStronger101')} value="+2" tone="good" />
               <RuleRow label={t('points.winStronger251')} value="+4" tone="good" />
               <RuleRow label={t('points.winStronger401')} value="+6" tone="good" />
-              <RuleRow label={t('points.strongerLose101')} value="-1" tone="warn" />
-              <RuleRow label={t('points.strongerLose251')} value="-2" tone="warn" />
+              <RuleRow label={t('points.strongerLose101')} value="-2" tone="warn" />
+              <RuleRow label={t('points.strongerLose251')} value="-3" tone="warn" />
             </RulesCard>
           </Section>
 
@@ -169,7 +169,7 @@ export default function PointSystemPage() {
               </div>
               <div className="border-t border-[var(--border)]">
                 <RuleRow label={t('points.abWinners')} value={t('points.ptsEach', { points: 16 })} tone="good" />
-                <RuleRow label={t('points.cdLosers')} value={t('points.ptsEach', { points: 4 })} />
+                <RuleRow label={t('points.cdLosers')} value={t('points.ptsEach', { points: 3 })} />
               </div>
             </div>
           </Section>

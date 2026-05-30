@@ -15,17 +15,17 @@ export function teamAvgRating(ratings: number[]): number {
 // Winner score difference bonus
 export function calculateScoreDifferenceBonus(winnerScore: number, loserScore: number): number {
   const diff = winnerScore - loserScore
-  if (diff <= 3) return 1
-  if (diff <= 7) return 2
-  if (diff <= 15) return 3
+  if (diff <= 4) return 1
+  if (diff <= 10) return 2
+  if (diff <= 16) return 3
   return 4
 }
 
 // Loser consolation bonus for fighting close
 export function calculateCloseGameBonus(loserScore: number): number {
-  if (loserScore >= 20) return 3
-  if (loserScore >= 18) return 2
-  if (loserScore >= 15) return 1
+  if (loserScore >= 19) return 3
+  if (loserScore >= 16) return 2
+  if (loserScore >= 13) return 1
   return 0
 }
 
@@ -42,8 +42,8 @@ function winnerStrengthBonus(winnerTeamRating: number, opponentTeamRating: numbe
 // Positive gap = loser was stronger than winner = lost to a weaker team = penalty
 function loserStrengthAdjustment(loserTeamRating: number, winnerTeamRating: number): number {
   const gap = loserTeamRating - winnerTeamRating
-  if (gap > 250) return -2  // lost to much weaker
-  if (gap > 100) return -1  // lost to weaker
+  if (gap > 250) return -3  // lost to much weaker
+  if (gap > 100) return -2  // lost to weaker
   return 0                  // lost to similar or stronger (no penalty)
 }
 

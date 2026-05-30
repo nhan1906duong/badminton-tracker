@@ -1,5 +1,23 @@
 # Player Rating & Point System Spec
 
+## Change Checklist
+
+When modifying any tier, penalty, base point, or sort order, update **all** of these together:
+
+| What | Where |
+|---|---|
+| Formula logic | `src/lib/rating.ts` |
+| Unit tests | `src/lib/rating.test.ts` |
+| Session leaderboard sort | `src/hooks/useRankings.ts` — `buildSessionWeeklyRankings()` |
+| Leaderboard sort tests | `src/hooks/__tests__/useRankings.test.ts` |
+| Point System UI labels | `src/i18n.tsx` (both `en` and `vi` locales) |
+| Point System UI values | `src/pages/PointSystemPage.tsx` (hardcoded penalty values + example) |
+| This spec | `docs/specs/player_rating_and_point_system_spec.md` |
+
+`useRecalculateAllRatings()` and `useEndSession()` call `calculateMatchPoints()` directly — no extra edits needed there.
+
+---
+
 ## Overview
 
 The app uses two independent scoring systems that serve different purposes:
@@ -46,19 +64,19 @@ difference = winnerScore - loserScore
 
 | Difference | Bonus |
 |---:|---:|
-| 1 – 3 | +1 |
-| 4 – 7 | +2 |
-| 8 – 15 | +3 |
-| 16+ | +4 |
+| 1 – 4 | +1 |
+| 5 – 10 | +2 |
+| 11 – 16 | +3 |
+| 17+ | +4 |
 
 **Loser — close game bonus**
 
 | Loser's final score | Bonus |
 |---:|---:|
-| 20+ | +3 |
-| 18 – 19 | +2 |
-| 15 – 17 | +1 |
-| 0 – 14 | +0 |
+| 19+ | +3 |
+| 16 – 18 | +2 |
+| 13 – 15 | +1 |
+| 0 – 12 | +0 |
 
 ### Strength Bonus
 
@@ -84,8 +102,8 @@ ratingGap  = opponentTeamRating - winnerTeamRating
 | Situation | Gap | Adjustment |
 |---|---:|---:|
 | Lost to stronger or similar | ≤ 100 | 0 |
-| Lost to weaker team | 101 to 250 | −1 |
-| Lost to much weaker team | 251+ | −2 |
+| Lost to weaker team | 101 to 250 | −2 |
+| Lost to much weaker team | 251+ | −3 |
 
 ### Example
 
@@ -99,16 +117,16 @@ ratingGap = 1150 - 850 = 300
 Winners (A, B):
   base          = 10
   attendance    = 1
-  score bonus   = diff 3 → +1
+  score bonus   = diff 3 → +1  (≤4 tier)
   strength bonus= gap 300 → +4
   total         = 16 pts each
 
 Losers (C, D):
   base          = 3
   attendance    = 1
-  close game    = loser scored 18 → +2
-  strength adj  = lost to weaker (gap = 1150 - 850 = 300 > 250) → -2
-  total         = 4 pts each
+  close game    = loser scored 18 → +2  (16–18 tier)
+  strength adj  = lost to weaker (gap = 1150 - 850 = 300 > 250) → -3
+  total         = 3 pts each
 ```
 
 ---
@@ -202,16 +220,18 @@ Weekly Top 1 streaks are derived from ended sessions and `player_match_results`:
 4. Count the current leader's consecutive active weeks backward from the latest active week.
 5. Ignore empty calendar weeks and de-duplicate duplicate result rows by `player_id + match_id`.
 
-### Weekly ranking (Ranking → This Session tab)
+### Session stats page / session leaderboard
 
-Filtered to the currently open session, sorted by:
+Filtered to the session, sorted by:
 
-1. `weeklyPoints` DESC
+1. `averageWeeklyPoints` DESC — total weekly points ÷ matches played (normalises for match count)
 2. `wins` DESC
 3. `pointDifference` DESC
 4. `name` ASC
 
-The same `player_match_results`-based ordering is shared by `useSessionWeeklyRankings()`, `useSessionLeaderboard(sessionId)`, and `useSessionLeaderboards()`. Session cards and session detail MVP/leader panels use these hooks so their leader matches the session stats page.
+The displayed primary score is `averageWeeklyPoints` (rounded integer, labelled "AVG PTS"). Raw `weeklyPoints` is retained on the stats object for session-wide aggregate calculations (e.g. the "Average points" stat row).
+
+The same ordering is shared by `useSessionWeeklyRankings()`, `useSessionLeaderboard(sessionId)`, and `useSessionLeaderboards()`. Session cards and session detail MVP/leader panels use these hooks so their leader always matches the session stats page.
 
 ---
 

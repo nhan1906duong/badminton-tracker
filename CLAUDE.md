@@ -127,7 +127,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
-| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks |
+| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `averageWeeklyPoints` (total ÷ matches played) |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins — only shown when count > 1), most donated. Each badge is only awarded to the current leader(s) across all players. |
@@ -144,3 +144,20 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/types/database.ts` | TypeScript types for all DB tables |
 | `docs/design-guidelines.md` | Design system reference |
 | `docs/navigation-flow.md` | Full navigation behavior spec |
+| `docs/specs/player_rating_and_point_system_spec.md` | Authoritative scoring system spec — update whenever formula changes |
+
+## Scoring System Change Checklist
+
+When changing any bonus tier, penalty value, base point, or session sort order, **all of the following must be updated in the same change**:
+
+| What | Where |
+|---|---|
+| Formula logic | `src/lib/rating.ts` — tier boundaries, penalty values |
+| Unit tests | `src/lib/rating.test.ts` — update expected values for changed tiers |
+| Session leaderboard sort | `src/hooks/useRankings.ts` — `buildSessionWeeklyRankings()` sort key |
+| Leaderboard sort tests | `src/hooks/__tests__/useRankings.test.ts` |
+| Point System UI labels | `src/i18n.tsx` — tier label strings (both `en` and `vi` locales) |
+| Point System UI values | `src/pages/PointSystemPage.tsx` — hardcoded penalty values and example points |
+| Spec doc | `docs/specs/player_rating_and_point_system_spec.md` — tables, example calculation |
+
+**Recalculation is automatic**: `useRecalculateAllRatings()` and `useEndSession()` both call `calculateMatchPoints()` directly, so they pick up formula changes with no extra edits.
