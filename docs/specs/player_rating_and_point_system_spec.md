@@ -224,12 +224,13 @@ Weekly Top 1 streaks are derived from ended sessions and `player_match_results`:
 
 Filtered to the session, sorted by:
 
-1. `averageWeeklyPoints` DESC — total weekly points ÷ matches played (normalises for match count)
-2. `wins` DESC
-3. `pointDifference` DESC
-4. `name` ASC
+1. `weeklyPoints` DESC — total points earned in the session (rewards both performance and participation)
+2. `averageWeeklyPoints` DESC — tiebreaker: if totals are equal, better per-match average wins
+3. `wins` DESC
+4. `pointDifference` DESC
+5. `name` ASC
 
-The displayed primary score is `averageWeeklyPoints` (rounded integer, labelled "AVG PTS"). Raw `weeklyPoints` is retained on the stats object for session-wide aggregate calculations (e.g. the "Average points" stat row).
+The displayed primary score is `averageWeeklyPoints` (rounded integer, labelled "AVG PTS"). Raw `weeklyPoints` drives the sort and is also used for session-wide aggregate calculations (e.g. the "Average points" stat row).
 
 The same ordering is shared by `useSessionWeeklyRankings()`, `useSessionLeaderboard(sessionId)`, and `useSessionLeaderboards()`. Session cards and session detail MVP/leader panels use these hooks so their leader always matches the session stats page.
 

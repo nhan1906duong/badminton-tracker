@@ -27,11 +27,11 @@ function result(
   }
 }
 
-describe('buildSessionWeeklyRankings — averageWeeklyPoints sort', () => {
-  it('ranks by average pts per match, not raw total', () => {
+describe('buildSessionWeeklyRankings — weeklyPoints sort', () => {
+  it('ranks by total weekly points, not average', () => {
     // Alice: 2 matches × 16 pts = 32 total, avg 16
     // Bob:   4 matches × 14 pts = 56 total, avg 14
-    // Bob has higher raw total but Alice has better average
+    // Bob has higher raw total so Bob wins despite lower average
     const results = [
       result('p1', 'm1', true, 16),
       result('p1', 'm2', true, 16),
@@ -41,10 +41,27 @@ describe('buildSessionWeeklyRankings — averageWeeklyPoints sort', () => {
       result('p2', 'm6', true, 14),
     ]
     const rankings = buildSessionWeeklyRankings(players, results)
-    expect(rankings[0].playerId).toBe('p1')  // Alice wins on avg (16 > 14)
-    expect(rankings[0].averageWeeklyPoints).toBe(16)
-    expect(rankings[1].playerId).toBe('p2')
-    expect(rankings[1].averageWeeklyPoints).toBe(14)
+    expect(rankings[0].playerId).toBe('p2')  // Bob wins on total (56 > 32)
+    expect(rankings[0].weeklyPoints).toBe(56)
+    expect(rankings[1].playerId).toBe('p1')
+    expect(rankings[1].weeklyPoints).toBe(32)
+  })
+
+  it('uses averageWeeklyPoints as tiebreaker when totals are equal', () => {
+    // Alice: 2 matches × 14 pts = 28 total, avg 14
+    // Bob:   2 matches with 16+12 = 28 total, avg 14 (same avg too — falls to wins)
+    // Carol: 4 matches with 7 pts each = 28 total, avg 7
+    const results = [
+      result('p1', 'm1', true, 14),
+      result('p1', 'm2', true, 14),   // 28 total, avg 14
+      result('p3', 'm3', true, 7),
+      result('p3', 'm4', true, 7),
+      result('p3', 'm5', true, 7),
+      result('p3', 'm6', true, 7),    // 28 total, avg 7
+    ]
+    const rankings = buildSessionWeeklyRankings(players, results)
+    expect(rankings[0].playerId).toBe('p1')  // Alice wins tiebreaker on avg (14 > 7)
+    expect(rankings[1].playerId).toBe('p3')
   })
 
   it('uses wins as tiebreaker when averages are equal', () => {

@@ -107,6 +107,7 @@ export function buildSessionWeeklyRankings(
       }
     })
     .sort((a, b) => {
+      if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
       if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
       if (b.wins !== a.wins) return b.wins - a.wins
       if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference
