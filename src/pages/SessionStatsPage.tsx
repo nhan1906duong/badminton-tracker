@@ -161,7 +161,7 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             letterSpacing: 0,
           }}
         >
-          {stat.averageWeeklyPoints}
+          {stat.weeklyPoints}
         </span>
         <span
           style={{
@@ -173,7 +173,7 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
             color: 'var(--muted)',
           }}
         >
-          {t('sessionStats.avgPoints')}
+          {t('sessionStats.points')}
         </span>
       </div>
     </button>
