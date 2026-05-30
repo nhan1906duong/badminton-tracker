@@ -1,6 +1,6 @@
 # Plan: Session Types Expansion
 
-**Status:** Pending  
+**Status:** Complete  
 **Created:** 2026-05-30  
 **Branch:** main  
 
@@ -14,15 +14,15 @@ Regular and tournament are mostly type-marking changes. League is the new featur
 
 | # | Phase | Status | File |
 |---|-------|--------|------|
-| 1 | Database Migration | pending | [phase-01-database-migration.md](phase-01-database-migration.md) |
-| 2 | Types & Constants | pending | [phase-02-types-and-constants.md](phase-02-types-and-constants.md) |
-| 3 | League Hooks & Utils | pending | [phase-03-league-hooks-and-utils.md](phase-03-league-hooks-and-utils.md) |
-| 4 | Update Session Hooks | pending | [phase-04-update-session-hooks.md](phase-04-update-session-hooks.md) |
-| 5 | Create Session Wizard | pending | [phase-05-create-session-wizard.md](phase-05-create-session-wizard.md) |
-| 6 | League Team Management | pending | [phase-06-league-team-management.md](phase-06-league-team-management.md) |
-| 7 | League Session Detail | pending | [phase-07-league-session-detail.md](phase-07-league-session-detail.md) |
-| 8 | League Match Creation | pending | [phase-08-league-match-creation.md](phase-08-league-match-creation.md) |
-| 9 | Testing & Validation | pending | [phase-09-testing-and-validation.md](phase-09-testing-and-validation.md) |
+| 1 | Database Migration | completed | [phase-01-database-migration.md](phase-01-database-migration.md) |
+| 2 | Types & Constants | completed | [phase-02-types-and-constants.md](phase-02-types-and-constants.md) |
+| 3 | League Hooks & Utils | completed | [phase-03-league-hooks-and-utils.md](phase-03-league-hooks-and-utils.md) |
+| 4 | Update Session Hooks | completed | [phase-04-update-session-hooks.md](phase-04-update-session-hooks.md) |
+| 5 | Create Session Wizard | completed | [phase-05-create-session-wizard.md](phase-05-create-session-wizard.md) |
+| 6 | League Team Management | completed | [phase-06-league-team-management.md](phase-06-league-team-management.md) |
+| 7 | League Session Detail | completed | [phase-07-league-session-detail.md](phase-07-league-session-detail.md) |
+| 8 | League Match Creation | completed | [phase-08-league-match-creation.md](phase-08-league-match-creation.md) |
+| 9 | Testing & Validation | completed | [phase-09-testing-and-validation.md](phase-09-testing-and-validation.md) |
 
 ## Dependencies
 

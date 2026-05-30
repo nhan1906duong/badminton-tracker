@@ -1,6 +1,11 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import type { Session } from '../types/database'
-import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
+import { LOCALE_TAG, useI18n, type Locale, type TFunction, matchTypeLabel } from '../i18n'
+import { useLeagueTeams } from '../hooks/useLeagueTeams'
+import { useLeagueStandings } from '../hooks/useLeagueStandings'
+import LeagueStandingsTable from '../components/LeagueStandingsTable'
+import LeagueScheduleGrid from '../components/LeagueScheduleGrid'
+import LeagueTeamEditor from '../components/LeagueTeamEditor'
 
 // ── Date / duration helpers ────────────────────────────────────────────────
 
@@ -38,9 +43,9 @@ function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended'
     return t('units.total', { duration: formatDurationMs(new Date(session.ended_at).getTime() - startedAt) })
   return '—'
 }
-import { useMatches } from '../hooks/useMatches'
+import { useCreateLeagueSchedule, useMatches } from '../hooks/useMatches'
 import { useSessionLeaderboard } from '../hooks/useRankings'
-import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime, useRenameSession } from '../hooks/useSessions'
+import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime, useRenameSession, useUpdateLeagueTotalRounds } from '../hooks/useSessions'
 import MatchesContent from '../components/MatchesContent'
 import FloatingActionButton from '../components/FloatingActionButton'
 import { AppBar } from '../../design-system/components/app-bar'
@@ -48,12 +53,12 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2 } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2, Users } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats'
 import { generateSessionShareCard } from '../lib/share-card'
 import { Button } from '../../design-system/components/button'
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 
 export default function SessionDetailPage() {
@@ -72,9 +77,17 @@ export default function SessionDetailPage() {
 
   const updateSessionStartTime = useUpdateSessionStartTime()
   const renameSession = useRenameSession()
+  const updateLeagueTotalRounds = useUpdateLeagueTotalRounds()
 
   const { stats } = usePlayerStats(sessionId)
   const { totalDonatedVnd } = useSessionDonationStats(sessionId ?? '')
+
+  // League data
+  const { data: leagueTeams } = useLeagueTeams(sessionId)
+  const standings = useLeagueStandings(sessionId)
+  const createLeagueSchedule = useCreateLeagueSchedule()
+
+  const isLeague = session?.type === 'league'
 
   const sharePlayers = useMemo(
     () => [...stats].filter((p) => p.matchesPlayed > 0).sort((a, b) => b.losses - a.losses),
@@ -90,6 +103,36 @@ export default function SessionDetailPage() {
   const [editTimeValue, setEditTimeValue] = useState('')
   const [editLabelOpen, setEditLabelOpen] = useState(false)
   const [editLabelValue, setEditLabelValue] = useState('')
+  const [teamEditorOpen, setTeamEditorOpen] = useState(false)
+  const [confirmAddRoundOpen, setConfirmAddRoundOpen] = useState(false)
+  const leagueScheduleEnsuredRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!session || !isLeague || !leagueTeams || !matches) return
+    if (!session.league_match_type || !session.league_total_rounds) return
+    const expectedMatchCount = (leagueTeams.length * (leagueTeams.length - 1) / 2) * session.league_total_rounds
+    if (matches.length >= expectedMatchCount || leagueTeams.length < 2 || createLeagueSchedule.isPending) return
+    if (leagueScheduleEnsuredRef.current === session.id) return
+
+    leagueScheduleEnsuredRef.current = session.id
+    createLeagueSchedule.mutate(
+      {
+        session_id: session.id,
+        match_type: session.league_match_type,
+        total_rounds: session.league_total_rounds,
+        played_at: session.started_at,
+        teams: leagueTeams.map(team => ({
+          id: team.id,
+          playerIds: team.players.map(player => player.id),
+        })),
+      },
+      {
+        onError: () => {
+          leagueScheduleEnsuredRef.current = null
+        },
+      },
+    )
+  }, [createLeagueSchedule, isLeague, leagueTeams, matches, session])
 
   function toDatetimeLocal(iso: string): string {
     const d = new Date(iso)
@@ -171,6 +214,18 @@ export default function SessionDetailPage() {
     } catch (err) {
       console.error('Failed to delete session:', err)
     }
+  }
+
+  function handleAddLeagueRound() {
+    closeMenu()
+    setConfirmAddRoundOpen(true)
+  }
+
+  async function handleConfirmAddLeagueRound() {
+    if (!session?.league_total_rounds || !leagueTeams || !session.league_match_type) return
+    leagueScheduleEnsuredRef.current = null
+    await updateLeagueTotalRounds.mutateAsync({ id: sid, league_total_rounds: session.league_total_rounds + 1 })
+    setConfirmAddRoundOpen(false)
   }
 
   function openMenu() { setMenuOpen(true) }
@@ -282,6 +337,28 @@ export default function SessionDetailPage() {
               {session.label ?? t('common.untitledSession')}
             </h1>
 
+            {/* Session type badge */}
+            {isLeague && session.league_match_type && (
+              <div className="mb-[var(--space-3)]">
+                <div
+                  className="inline-flex items-center gap-[var(--space-2)] px-2.5 py-1 rounded-full"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    background: 'var(--accent-soft)',
+                    color: 'var(--accent)',
+                  }}
+                >
+                  <span>{t('createSession.typeLeague')}</span>
+                  <span style={{ opacity: 0.4 }}>·</span>
+                  <span>{matchTypeLabel(session.league_match_type, t)}</span>
+                </div>
+              </div>
+            )}
+
             {/* Tournament category */}
             {session.bwf_tournaments && (
               <div className="mb-[var(--space-3)]">
@@ -313,8 +390,13 @@ export default function SessionDetailPage() {
         )}
 
         <div className="px-[var(--space-5)] space-y-6">
-          {/* Stats panel */}
-          {recordedMatches.length > 0 && (
+          {/* Stats panel (regular/tournament) or Standings (league) */}
+          {isLeague ? (
+            <LeagueStandingsTable
+              standings={standings ?? []}
+              isEnded={sessionStatus === 'ended'}
+            />
+          ) : recordedMatches.length > 0 && (
             <SessionStatsPanel
               matchCount={recordedMatches.length}
               playerCount={uniquePlayerCount}
@@ -323,6 +405,30 @@ export default function SessionDetailPage() {
               mvpAvatarUrl={mvpAvatarUrl}
               onPress={() => navigate(`/sessions/${sid}/stats`)}
             />
+          )}
+
+          {/* League schedule */}
+          {isLeague && leagueTeams && leagueTeams.length >= 2 && session.league_total_rounds && (
+            <section className="space-y-[var(--space-4)]">
+              <h2
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-xl)',
+                  fontWeight: 800,
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.02em',
+                  color: 'var(--fg)',
+                }}
+              >
+                {t('sessionDetail.schedule')}
+              </h2>
+              <LeagueScheduleGrid
+                teams={leagueTeams}
+                totalRounds={session.league_total_rounds}
+                matches={matches}
+                sessionId={sid}
+              />
+            </section>
           )}
 
 
@@ -361,8 +467,8 @@ export default function SessionDetailPage() {
         </div>
       </div>
 
-      {/* FAB — Add Match (live only) */}
-      {sessionStatus === 'live' && (
+      {/* FAB — Add Match (live only, non-league sessions) */}
+      {sessionStatus === 'live' && !isLeague && (
         <FloatingActionButton
           onClick={() => navigate(`/sessions/${sid}/matches/new`)}
           icon={<Plus className="w-6 h-6" />}
@@ -373,15 +479,29 @@ export default function SessionDetailPage() {
 
       {/* Menu sheet */}
       <BottomSheet open={menuOpen} onClose={closeMenu}>
-        {sessionStatus === 'live' && (
+        {sessionStatus === 'live' && !isLeague && (
           <BottomSheetItem
             icon={<Plus className="w-5 h-5" />}
             label={t('sessionDetail.newMatch')}
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/matches/new`) }}
           />
         )}
+        {sessionStatus === 'live' && isLeague && (
+          <BottomSheetItem
+            icon={<Plus className="w-5 h-5" />}
+            label={t('sessionDetail.addRound')}
+            onClick={handleAddLeagueRound}
+          />
+        )}
         {sessionStatus === 'scheduled' && (
           <>
+            {isLeague && (
+              <BottomSheetItem
+                icon={<Users className="w-5 h-5" />}
+                label={t('sessionDetail.manageTeams')}
+                onClick={() => { closeMenu(); setTeamEditorOpen(true) }}
+              />
+            )}
             <BottomSheetItem
               icon={<Play className="w-5 h-5" />}
               label={t('sessionDetail.startSession')}
@@ -522,6 +642,29 @@ export default function SessionDetailPage() {
           </div>
         </div>
       </BottomSheet>
+
+      {/* League Team Editor */}
+      {isLeague && sessionStatus === 'scheduled' && leagueTeams && session?.league_match_type && (
+        <LeagueTeamEditor
+          teams={leagueTeams}
+          matchType={session.league_match_type}
+          sessionId={sid}
+          open={teamEditorOpen}
+          onClose={() => setTeamEditorOpen(false)}
+        />
+      )}
+
+      <Dialog
+        open={confirmAddRoundOpen}
+        onClose={() => setConfirmAddRoundOpen(false)}
+        title={t('sessionDetail.addRoundTitle')}
+        description={t('sessionDetail.addRoundDescription', { round: (session?.league_total_rounds ?? 0) + 1 })}
+        kind="warning"
+        actions={[
+          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmAddRoundOpen(false) },
+          { label: updateLeagueTotalRounds.isPending ? t('common.creatingEllipsis') : t('sessionDetail.addRound'), variant: 'primary', onClick: handleConfirmAddLeagueRound },
+        ]}
+      />
 
       <Dialog
         open={actionError !== null}

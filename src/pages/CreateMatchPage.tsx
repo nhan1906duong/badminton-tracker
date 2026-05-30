@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches, useCreateMatch } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
+import { useLeagueTeams } from '../hooks/useLeagueTeams'
 import { useNewMatchStore } from '../stores/new-match-store'
 import { AppBar, SegmentedControl } from '../../design-system/components'
 import { MatchTypeChips } from '../../design-system/components/match-type-chips'
@@ -235,10 +236,12 @@ export default function CreateMatchPage() {
   const { locale, t } = useI18n()
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const { data: allPlayers } = usePlayers()
   const { data: matches } = useMatches(sessionId)
   const { data: session } = useSession(sessionId)
+  const { data: leagueTeams } = useLeagueTeams(sessionId)
   const createMatch = useCreateMatch()
 
   const matchType   = useNewMatchStore(s => s.matchType)
@@ -263,6 +266,11 @@ export default function CreateMatchPage() {
   const [shuffleCycle, setShuffleCycle] = useState<Set<string> | null>(null)
   const [lastShufflePoolKey, setLastShufflePoolKey] = useState<string>('')
 
+  // League team selection
+  const isLeague = session?.type === 'league'
+  const [leagueTeamA, setLeagueTeamA] = useState<string | null>(searchParams.get('teamA'))
+  const [leagueTeamB, setLeagueTeamB] = useState<string | null>(searchParams.get('teamB'))
+
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Reset store on unmount so stale data doesn't bleed into the next open
@@ -276,6 +284,34 @@ export default function CreateMatchPage() {
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
+
+  // League: auto-set match type from session config
+  useEffect(() => {
+    if (isLeague && session?.league_match_type && matchType !== session.league_match_type) {
+      setMatchType(session.league_match_type)
+    }
+  }, [isLeague, session?.league_match_type, matchType, setMatchType])
+
+  // League: auto-fill players when teams are selected and roster size matches requirement
+  useEffect(() => {
+    if (!isLeague || !leagueTeams) return
+    const teamSize = getTeamSize(matchType)
+
+    // Team A
+    if (leagueTeamA && teamA.every((id) => id === null)) {
+      const lt = leagueTeams.find((t) => t.id === leagueTeamA)
+      if (lt && lt.players.length === teamSize) {
+        lt.players.forEach((p, i) => setSlot('A', i, p.id))
+      }
+    }
+    // Team B
+    if (leagueTeamB && teamB.every((id) => id === null)) {
+      const lt = leagueTeams.find((t) => t.id === leagueTeamB)
+      if (lt && lt.players.length === teamSize) {
+        lt.players.forEach((p, i) => setSlot('B', i, p.id))
+      }
+    }
+  }, [isLeague, leagueTeams, leagueTeamA, leagueTeamB, matchType, teamA, teamB, setSlot])
 
   if (!sessionId) return null
   const sid = sessionId
@@ -385,6 +421,15 @@ export default function CreateMatchPage() {
 
   const filteredPlayers = allPlayers?.filter(p => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
+
+    // League: filter to team roster
+    if (isLeague && pickerTarget) {
+      const selectedTeamId = pickerTarget.team === 'A' ? leagueTeamA : leagueTeamB
+      if (!selectedTeamId) return false
+      const lt = leagueTeams?.find(t => t.id === selectedTeamId)
+      if (!lt?.players.some(lp => lp.id === p.id)) return false
+    }
+
     // Exclude already-used players except the current slot's player
     const currentSlotId = pickerTarget
       ? (pickerTarget.team === 'A' ? teamA[pickerTarget.index] : teamB[pickerTarget.index])
@@ -525,35 +570,204 @@ export default function CreateMatchPage() {
         </header>
 
         {/* ── Section 1: Match type ─────────────────────────────────────── */}
-        <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--space-4)',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--muted)',
+        {!isLeague && (
+          <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              marginBottom: 'var(--space-4)',
             }}>
-              {t('createMatch.matchType')}
-            </span>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              color: 'var(--muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--muted)',
+              }}>
+                {t('createMatch.matchType')}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}>
+                {MATCH_TYPE_SHORT[matchType]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
+              </span>
+            </div>
+            <MatchTypeChips value={matchType} onChange={(t) => setMatchType(t)} />
+          </section>
+        )}
+
+        {/* League match type indicator */}
+        {isLeague && session?.league_match_type && (
+          <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 'var(--space-3)',
             }}>
-              {MATCH_TYPE_SHORT[matchType]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
-            </span>
-          </div>
-          <MatchTypeChips value={matchType} onChange={(t) => setMatchType(t)} />
-        </section>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--muted)',
+              }}>
+                {t('createMatch.matchType')}
+              </span>
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+              padding: 'var(--space-3) var(--space-4)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-base)',
+                fontWeight: 700,
+                color: 'var(--fg)',
+              }}>
+                {MATCH_TYPE_SHORT[session.league_match_type]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--muted)',
+                marginLeft: 'auto',
+              }}>
+                League match
+              </span>
+            </div>
+          </section>
+        )}
+
+        {/* League team selectors */}
+        {isLeague && (
+          <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              marginBottom: 'var(--space-4)',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'var(--muted)',
+              }}>
+                Teams
+              </span>
+            </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-3)',
+            }}>
+              {/* Team A selector */}
+              <div style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-3) var(--space-4)',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: 'var(--muted)',
+                  display: 'block',
+                  marginBottom: 'var(--space-2)',
+                }}>
+                  {t('team.teamA')}
+                </span>
+                <select
+                  value={leagueTeamA ?? ''}
+                  onChange={(e) => {
+                    setLeagueTeamA(e.target.value || null)
+                    // Clear team A slots
+                    for (let i = 0; i < teamSize; i++) setSlot('A', i, null)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: 'var(--space-2) var(--space-3)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 'var(--text-base)',
+                    color: 'var(--fg)',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="">Select a team</option>
+                  {leagueTeams?.filter(t => t.id !== leagueTeamB).map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Team B selector */}
+              <div style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-3) var(--space-4)',
+              }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: 'var(--muted)',
+                  display: 'block',
+                  marginBottom: 'var(--space-2)',
+                }}>
+                  {t('team.teamB')}
+                </span>
+                <select
+                  value={leagueTeamB ?? ''}
+                  onChange={(e) => {
+                    setLeagueTeamB(e.target.value || null)
+                    // Clear team B slots
+                    for (let i = 0; i < teamSize; i++) setSlot('B', i, null)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: 'var(--space-2) var(--space-3)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 'var(--text-base)',
+                    color: 'var(--fg)',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    outline: 'none',
+                  }}
+                >
+                  <option value="">Select a team</option>
+                  {leagueTeams?.filter(t => t.id !== leagueTeamA).map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Section 2: Players ───────────────────────────────────────────── */}
         <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
