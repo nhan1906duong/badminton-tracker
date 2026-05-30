@@ -361,12 +361,12 @@ Sessions linked to a BWF tournament display a colored category badge:
 
 The Achievements tab on `PlayerDetailPage` shows sessions where the player ranked #1 (champion) or #2 (runner-up):
 
-1. `usePlayerAchievements(playerId)` groups completed matches by session
-2. Ranks players per session by wins (desc), then matches played (asc — fewer = better)
-3. Only includes players at rank #1 or #2
+1. `usePlayerAchievements(playerId)` fetches `player_match_results` and ranks players per session using `buildSessionWeeklyRankings` — the same sort as the session leaderboard (weeklyPoints → averageWeeklyPoints → wins → pointDifference)
+2. Genuine ties at rank #1 (all meaningful criteria equal) are excluded — no achievement awarded
+3. Only players at rank #1 or #2 receive an achievement
 4. Displays: custom circular rank badge (gold "1" / silver "2"), session name, BWF category badge, match stats (W/L/rate)
 
-- Hook: `src/hooks/usePlayerAchievements.ts`
+- Hook: `src/hooks/usePlayerAchievements.ts` — exports `computeAchievements` (pure, tested)
 - Rank badge: custom SVG component inline in `PlayerDetailPage.tsx`
 - Tab bar: `SegmentedControl` with horizontal scroll (`flex` + `shrink-0` + `overflow-x: auto`)
 
