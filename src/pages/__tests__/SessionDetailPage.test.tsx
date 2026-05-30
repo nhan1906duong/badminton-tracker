@@ -139,6 +139,7 @@ const FUTURE = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'sess-1',
+    type: 'regular',
     label: 'Friday Night Smash',
     started_at: PAST,
     ended_at: null,
