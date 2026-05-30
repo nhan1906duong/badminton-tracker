@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useMatches } from './useMatches'
 import { useSessions } from './useSessions'
+import { supabase } from '../lib/supabase'
+import { buildSessionWeeklyRankings } from './useRankings'
 
 export type BadgeCategory = 'played' | 'streak' | 'dynasty' | 'titles' | 'donated'
 export type BadgeLabelKey =
@@ -31,9 +34,19 @@ function findLeaders(map: Map<string, number>): Set<string> {
 export function usePlayerBadges(playerId: string) {
   const { data: allMatches, isLoading: matchesLoading } = useMatches()
   const { data: allSessions, isLoading: sessionsLoading } = useSessions()
+  const { data: allResults, isLoading: resultsLoading } = useQuery({
+    queryKey: ['player-match-results-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_match_results')
+        .select('session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
+      if (error) throw error
+      return data
+    },
+  })
 
   const badges = useMemo<PlayerBadge[]>(() => {
-    if (!allMatches || !allSessions || !playerId) return []
+    if (!allMatches || !allSessions || !allResults || !playerId) return []
 
     const completed = allMatches.filter(
       (m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)
@@ -76,63 +89,59 @@ export function usePlayerBadges(playerId: string) {
       streakMap.set(pid, best)
     }
 
-    // Group completed matches by session
-    const sessionMatchMap = new Map<string, typeof completed>()
-    for (const match of completed) {
-      const list = sessionMatchMap.get(match.session_id) ?? []
-      list.push(match)
-      sessionMatchMap.set(match.session_id, list)
+    // Group player_match_results by session (for leaderboard-based champion determination)
+    const sessionResultsMap = new Map<string, typeof allResults>()
+    const playerSessionsMap = new Map<string, Set<string>>()
+    for (const r of allResults) {
+      const list = sessionResultsMap.get(r.session_id) ?? []
+      list.push(r)
+      sessionResultsMap.set(r.session_id, list)
+
+      const sessions = playerSessionsMap.get(r.player_id) ?? new Set()
+      sessions.add(r.session_id)
+      playerSessionsMap.set(r.player_id, sessions)
     }
 
     // Sessions sorted ascending by date (for dynasty streak)
     const sortedSessions = [...allSessions]
-      .filter((s) => sessionMatchMap.has(s.id))
+      .filter((s) => sessionResultsMap.has(s.id))
       .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime())
 
-    // Per-session: find rank-1 player (null if tied)
+    // Per-session: determine champion using the same leaderboard ranking (weeklyPoints)
     const sessionWinnerMap = new Map<string, string | null>()
     const titlesMap = new Map<string, number>()
 
     for (const session of sortedSessions) {
-      const matches = sessionMatchMap.get(session.id)!
-      const wins = new Map<string, number>()
-      const played = new Map<string, number>()
+      const results = sessionResultsMap.get(session.id) ?? []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rankings = buildSessionWeeklyRankings(null, results as any)
 
-      for (const match of matches) {
-        const winnerTeam = match.teams.find((t) => t.is_winner)
-        if (!winnerTeam) continue
-        for (const p of match.participants) {
-          played.set(p.player_id, (played.get(p.player_id) ?? 0) + 1)
-          if (p.team_id === winnerTeam.id) {
-            wins.set(p.player_id, (wins.get(p.player_id) ?? 0) + 1)
-          }
-        }
-      }
-
-      const ranked = Array.from(wins.entries()).sort((a, b) => {
-        if (b[1] !== a[1]) return b[1] - a[1]
-        return (played.get(a[0]) ?? 0) - (played.get(b[0]) ?? 0)
-      })
-
-      if (ranked.length === 0) {
+      if (rankings.length === 0) {
         sessionWinnerMap.set(session.id, null)
         continue
       }
 
-      const topWins = ranked[0][1]
-      const topPlayed = played.get(ranked[0][0]) ?? 0
+      const top = rankings[0]
+      const second = rankings[1]
+      // Tie = second player is equal on all meaningful numeric criteria
       const tied =
-        ranked.length > 1 &&
-        ranked[1][1] === topWins &&
-        (played.get(ranked[1][0]) ?? 0) === topPlayed
+        second !== undefined &&
+        second.weeklyPoints === top.weeklyPoints &&
+        second.averageWeeklyPoints === top.averageWeeklyPoints &&
+        second.wins === top.wins &&
+        second.pointDifference === top.pointDifference
 
-      const winnerId = tied ? null : ranked[0][0]
-      sessionWinnerMap.set(session.id, winnerId)
-      // Award titles to ALL co-leaders (including ties) for BWF sessions
+      sessionWinnerMap.set(session.id, tied ? null : top.playerId)
+
       if (session.bwf_tournament_id) {
-        for (const [pid, w] of ranked) {
-          if (w === topWins && (played.get(pid) ?? 0) === topPlayed) {
-            titlesMap.set(pid, (titlesMap.get(pid) ?? 0) + 1)
+        for (const r of rankings) {
+          if (
+            r.weeklyPoints === top.weeklyPoints &&
+            r.averageWeeklyPoints === top.averageWeeklyPoints &&
+            r.wins === top.wins &&
+            r.pointDifference === top.pointDifference
+          ) {
+            titlesMap.set(r.playerId, (titlesMap.get(r.playerId) ?? 0) + 1)
           } else {
             break
           }
@@ -146,10 +155,7 @@ export function usePlayerBadges(playerId: string) {
       let best = 0
       let current = 0
       for (const session of sortedSessions) {
-        const participated = sessionMatchMap
-          .get(session.id)
-          ?.some((m) => m.participants.some((p) => p.player_id === pid))
-        if (!participated) continue
+        if (!playerSessionsMap.get(pid)?.has(session.id)) continue
         if (sessionWinnerMap.get(session.id) === pid) {
           current++
           if (current > best) best = current
@@ -160,7 +166,7 @@ export function usePlayerBadges(playerId: string) {
       dynastyMap.set(pid, best)
     }
 
-    // Find single-winner leaders per category
+    // Find leaders per category
     const mostPlayedLeaders = findLeaders(playedMap)
     const bestStreakLeaders = findLeaders(streakMap)
     const dynastyLeaders = findLeaders(dynastyMap)
@@ -169,7 +175,6 @@ export function usePlayerBadges(playerId: string) {
 
     const result: PlayerBadge[] = []
 
-    // World tour titles first
     if (mostTitlesLeaders.has(playerId))
       result.push({ id: 'most_titles', labelKey: 'badges.mostTitles', category: 'titles', count: titlesMap.get(playerId) ?? 0 })
     if (mostPlayedLeaders.has(playerId))
@@ -182,7 +187,7 @@ export function usePlayerBadges(playerId: string) {
       result.push({ id: 'most_donated', labelKey: 'badges.mostDonated', category: 'donated', count: (lossMap.get(playerId) ?? 0) * 5000 })
 
     return result
-  }, [allMatches, allSessions, playerId])
+  }, [allMatches, allSessions, allResults, playerId])
 
-  return { badges, isLoading: matchesLoading || sessionsLoading }
+  return { badges, isLoading: matchesLoading || sessionsLoading || resultsLoading }
 }

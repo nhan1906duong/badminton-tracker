@@ -28,6 +28,7 @@ export interface SessionWeeklyStats {
   name: string
   avatarUrl: string | null
   weeklyPoints: number
+  averageWeeklyPoints: number
   wins: number
   losses: number
   matchesPlayed: number
@@ -63,7 +64,7 @@ function uniquePlayerMatchResults<T extends { player_id: string; match_id: strin
   )
 }
 
-function buildSessionWeeklyRankings(
+export function buildSessionWeeklyRankings(
   players: PlayerRow[] | null | undefined,
   results: SessionResultRow[] | null | undefined
 ): SessionWeeklyStats[] {
@@ -97,6 +98,7 @@ function buildSessionWeeklyRankings(
         name: p?.name ?? 'Unknown',
         avatarUrl: p?.avatar_url ?? null,
         weeklyPoints: s.weeklyPoints,
+        averageWeeklyPoints: s.matchesPlayed > 0 ? Math.round(s.weeklyPoints / s.matchesPlayed) : 0,
         wins: s.wins,
         losses: s.losses,
         matchesPlayed: s.matchesPlayed,
@@ -106,6 +108,7 @@ function buildSessionWeeklyRankings(
     })
     .sort((a, b) => {
       if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
+      if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
       if (b.wins !== a.wins) return b.wins - a.wins
       if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference
       return a.name.localeCompare(b.name)
