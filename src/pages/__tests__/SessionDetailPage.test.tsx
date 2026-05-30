@@ -36,6 +36,7 @@ vi.mock('../../hooks/useMatches', () => ({
     refetch: mockRefetchMatches,
   }),
   useDeleteMatch: () => mockDeleteMatch,
+  useCreateLeagueSchedule: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
 let mockSessionData: Session | undefined = undefined
@@ -52,6 +53,7 @@ vi.mock('../../hooks/useSessions', () => ({
   useDeleteSession: () => mockDeleteSession,
   useUpdateSessionStartTime: () => mockUpdateSessionStartTime,
   useRenameSession: () => mockRenameSession,
+  useUpdateLeagueTotalRounds: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
 vi.mock('../../hooks/useRankings', () => ({
@@ -137,6 +139,7 @@ const FUTURE = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'sess-1',
+    type: 'regular',
     label: 'Friday Night Smash',
     started_at: PAST,
     ended_at: null,

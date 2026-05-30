@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, SetScore, MatchType, MatchStatus, Player } from '../types/database'
 import { calculateMatchPoints, teamAvgRating, SCORING_CONFIG } from '../lib/rating'
+import { generateRoundRobin } from '../lib/round-robin'
 
 const MATCHES_KEY = 'matches'
 const PLAYER_MATCHES_KEY = 'player-matches'
@@ -13,10 +14,22 @@ export interface CreateMatchInput {
   notes?: string
   status: MatchStatus
   queue_position?: number
+  league_round?: number
   team_a_player_ids: string[]
   team_b_player_ids: string[]
   winner_team?: 'TEAM_A' | 'TEAM_B'
   scores?: SetScore[]
+}
+
+export interface CreateLeagueScheduleInput {
+  session_id: string
+  match_type: MatchType
+  total_rounds: number
+  played_at: string
+  teams: Array<{
+    id: string
+    playerIds: string[]
+  }>
 }
 
 export function useMatches(sessionId?: string) {
@@ -72,6 +85,7 @@ export function useCreateMatch() {
           notes: input.notes || null,
           status: input.status,
           queue_position: input.queue_position ?? null,
+          league_round: input.league_round ?? null,
           created_by: user.id,
         })
         .select()
@@ -122,6 +136,133 @@ export function useCreateMatch() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
+    },
+  })
+}
+
+export function useCreateLeagueSchedule() {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: CreateLeagueScheduleInput) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data: existingMatches, error: existingError } = await supabase
+        .from('matches')
+        .select(`
+          id, league_round,
+          teams:match_teams(id, team_label),
+          participants:match_participants(player_id, team_id)
+        `)
+        .eq('session_id', input.session_id)
+      if (existingError) throw existingError
+
+      type ExistingMatch = {
+        id: string
+        league_round: number | null
+        teams: Array<{ id: string; team_label: 'TEAM_A' | 'TEAM_B' }>
+        participants: Array<{ player_id: string; team_id: string }>
+      }
+
+      const fixtureMatchesTeam = (match: ExistingMatch, teamAIds: Set<string>, teamBIds: Set<string>) => {
+        const teamAMatch = match.teams.find(team => team.team_label === 'TEAM_A')
+        const teamBMatch = match.teams.find(team => team.team_label === 'TEAM_B')
+        if (!teamAMatch || !teamBMatch) return false
+
+        const aPlayers = match.participants
+          .filter(player => player.team_id === teamAMatch.id)
+          .map(player => player.player_id)
+        const bPlayers = match.participants
+          .filter(player => player.team_id === teamBMatch.id)
+          .map(player => player.player_id)
+
+        const aIsTeamA = aPlayers.every(id => teamAIds.has(id)) && aPlayers.length === teamAIds.size
+        const aIsTeamB = aPlayers.every(id => teamBIds.has(id)) && aPlayers.length === teamBIds.size
+        const bIsTeamA = bPlayers.every(id => teamAIds.has(id)) && bPlayers.length === teamAIds.size
+        const bIsTeamB = bPlayers.every(id => teamBIds.has(id)) && bPlayers.length === teamBIds.size
+
+        return (aIsTeamA && bIsTeamB) || (aIsTeamB && bIsTeamA)
+      }
+
+      const existing = (existingMatches ?? []) as unknown as ExistingMatch[]
+
+      const fixtures = generateRoundRobin(input.teams.length, input.total_rounds)
+      const createdMatches: Match[] = []
+
+      for (let index = 0; index < fixtures.length; index++) {
+        const fixture = fixtures[index]
+        const teamA = input.teams[fixture.teamAIndex]
+        const teamB = input.teams[fixture.teamBIndex]
+        if (!teamA || !teamB) continue
+
+        const teamAIds = new Set(teamA.playerIds)
+        const teamBIds = new Set(teamB.playerIds)
+        const alreadyExists = existing.some(match =>
+          match.league_round === fixture.round && fixtureMatchesTeam(match, teamAIds, teamBIds)
+        )
+        if (alreadyExists) continue
+
+        const { data: match, error: matchError } = await supabase
+          .from('matches')
+          .insert({
+            session_id: input.session_id,
+            match_type: input.match_type,
+            played_at: input.played_at,
+            status: 'SCHEDULED',
+            queue_position: index + 1,
+            league_round: fixture.round,
+            created_by: user.id,
+          })
+          .select()
+          .single()
+        if (matchError) throw matchError
+
+        const matchId = (match as Match).id
+
+        const { data: matchTeams, error: teamsError } = await supabase
+          .from('match_teams')
+          .insert([
+            { match_id: matchId, team_label: 'TEAM_A', is_winner: false },
+            { match_id: matchId, team_label: 'TEAM_B', is_winner: false },
+          ])
+          .select()
+        if (teamsError) throw teamsError
+
+        const teamMap = new Map<string, string>()
+        for (const team of (matchTeams ?? []) as MatchTeam[]) {
+          teamMap.set(team.team_label, team.id)
+        }
+
+        const teamAMatchId = teamMap.get('TEAM_A')
+        const teamBMatchId = teamMap.get('TEAM_B')
+        if (!teamAMatchId || !teamBMatchId) throw new Error('Failed to create match teams')
+
+        const participants = [
+          ...teamA.playerIds.map(playerId => ({ match_id: matchId, team_id: teamAMatchId, player_id: playerId })),
+          ...teamB.playerIds.map(playerId => ({ match_id: matchId, team_id: teamBMatchId, player_id: playerId })),
+        ]
+
+        const { error: participantsError } = await supabase
+          .from('match_participants')
+          .insert(participants)
+        if (participantsError) throw participantsError
+
+        createdMatches.push(match as Match)
+        existing.push({
+          id: matchId,
+          league_round: fixture.round,
+          teams: (matchTeams ?? []) as MatchTeam[],
+          participants,
+        })
+      }
+
+      return createdMatches
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.session_id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
     },
   })
@@ -409,7 +550,7 @@ export function useStartMatch() {
     mutationFn: async (matchId: string) => {
       const { error } = await supabase
         .from('matches')
-        .update({ status: 'LIVE', queue_position: null })
+        .update({ status: 'LIVE', queue_position: null, played_at: new Date().toISOString() })
         .eq('id', matchId)
       if (error) throw error
     },

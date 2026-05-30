@@ -77,7 +77,7 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ label: 'Test Session' })
+    result.current.mutate({ type: 'regular', label: 'Test Session' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(MOCK_SESSION)
@@ -92,7 +92,7 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ label: 'Casual Session' })
+    result.current.mutate({ type: 'regular', label: 'Casual Session' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
@@ -113,7 +113,7 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ label: 'Some Tournament', bwf_tournament_id: 'tournament-1' })
+    result.current.mutate({ type: 'tournament', label: 'Some Tournament', bwf_tournament_id: 'tournament-1' })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toBeInstanceOf(DuplicateTournamentError)
@@ -126,7 +126,7 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ label: 'Test' })
+    result.current.mutate({ type: 'regular', label: 'Test' })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect((result.current.error as Error).message).toBe('Not authenticated')
@@ -141,7 +141,7 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ label: 'Test' })
+    result.current.mutate({ type: 'regular', label: 'Test' })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect((result.current.error as { message: string }).message).toBe('DB error')
@@ -158,7 +158,7 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ label: 'Tomorrow Session', started_at: scheduledAt })
+    result.current.mutate({ type: 'regular', label: 'Tomorrow Session', started_at: scheduledAt })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.started_at).toBe(scheduledAt)
@@ -174,7 +174,7 @@ describe('useCreateSession', () => {
     const invalidateSpy = vi.spyOn(qc, 'invalidateQueries')
 
     const { result } = renderHook(() => useCreateSession(), { wrapper })
-    result.current.mutate({ label: 'Test' })
+    result.current.mutate({ type: 'regular', label: 'Test' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['sessions'] })

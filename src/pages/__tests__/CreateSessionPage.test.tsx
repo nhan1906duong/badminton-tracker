@@ -27,6 +27,17 @@ vi.mock('../../hooks/useSessions', async () => {
   }
 })
 
+const mockCreateLeagueTeam = vi.fn()
+vi.mock('../../hooks/useLeagueTeams', () => ({
+  useCreateLeagueTeam: () => ({
+    mutateAsync: mockCreateLeagueTeam,
+    isPending: false,
+  }),
+}))
+
+vi.mock('../../hooks/usePlayers', () => ({
+  usePlayers: () => ({ data: [], isLoading: false }),
+}))
 
 const mockRefetch = vi.fn()
 const mockUseNearbyBwfTournaments = vi.fn((dayRange?: number): {
@@ -85,6 +96,15 @@ vi.mock('../../../design-system/components', () => ({
         <button onClick={onClose}>Close</button>
       </div>
     ) : null,
+  MatchTypeChips: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <div role="radiogroup" aria-label="Match type">
+      {['MEN_SINGLES', 'WOMEN_SINGLES', 'MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES'].map((type) => (
+        <button key={type} role="radio" aria-checked={value === type} onClick={() => onChange(type)}>
+          {type}
+        </button>
+      ))}
+    </div>
+  ),
 }))
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -111,6 +131,9 @@ function renderPage() {
   )
 }
 
+/** No-op: config is now inline on the same page as the type selector */
+function advanceToConfig() { /* single-page form — no step to advance */ }
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('CreateSessionPage', () => {
@@ -130,27 +153,37 @@ describe('CreateSessionPage', () => {
       expect(screen.getByText('New session')).toBeInTheDocument()
     })
 
-    it('CTA button is disabled when no name is entered', () => {
+    it('shows session type picker with Regular selected by default', () => {
       renderPage()
-      const btn = screen.getByRole('button', { name: /pick a name to continue/i })
-      expect(btn).toBeDisabled()
+      expect(screen.getByRole('tab', { name: /regular/i })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('tab', { name: /tournament/i })).toHaveAttribute('aria-selected', 'false')
+      expect(screen.getByRole('tab', { name: /league/i })).toHaveAttribute('aria-selected', 'false')
     })
 
-    it('shows empty custom name input', () => {
-      renderPage()
-      expect(screen.getByPlaceholderText('Type your own name…')).toHaveValue('')
-    })
-
-    it('Cancel button navigates back', () => {
+    it('Cancel button navigates back from type step', () => {
       renderPage()
       fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
       expect(mockNavigate).toHaveBeenCalledWith(-1)
     })
   })
 
-  describe('name selection', () => {
+  describe('config step (regular)', () => {
+    it('CTA button is disabled when no name is entered', () => {
+      renderPage()
+      advanceToConfig()
+      const btn = screen.getByRole('button', { name: /pick a name to continue/i })
+      expect(btn).toBeDisabled()
+    })
+
+    it('shows empty custom name input after advancing', () => {
+      renderPage()
+      advanceToConfig()
+      expect(screen.getByPlaceholderText('Type your own name…')).toHaveValue('')
+    })
+
     it('enables CTA when custom name is typed', () => {
       renderPage()
+      advanceToConfig()
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Weekly Badminton' },
       })
@@ -160,12 +193,15 @@ describe('CreateSessionPage', () => {
 
     it('CTA label shows "Start session now" in "now" mode with a name', () => {
       renderPage()
+      advanceToConfig()
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'My Session' },
       })
       expect(screen.getByRole('button', { name: /start session now/i })).toBeInTheDocument()
     })
+  })
 
+  describe('name selection', () => {
     it('clears custom name when tournament card is selected', () => {
       mockUseNearbyBwfTournaments.mockReturnValue({
         tournaments: [
@@ -184,17 +220,18 @@ describe('CreateSessionPage', () => {
       })
 
       renderPage()
-
-      // Type a name first
+      // Type a name in regular mode (custom input visible)
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Custom' },
       })
       expect(screen.getByPlaceholderText('Type your own name…')).toHaveValue('Custom')
 
-      // Select tournament card
+      // Switch to tournament type (name input hidden, cards shown), then select a card
+      fireEvent.click(screen.getByRole('tab', { name: /tournament/i }))
       fireEvent.click(screen.getByRole('radio', { name: /malaysia open 2026/i }))
 
-      // Custom name should be cleared
+      // Switch back to regular — custom name should have been cleared
+      fireEvent.click(screen.getByRole('tab', { name: /regular/i }))
       expect(screen.getByPlaceholderText('Type your own name…')).toHaveValue('')
     })
   })
@@ -203,6 +240,7 @@ describe('CreateSessionPage', () => {
     it('calls mutateAsync with label when custom name is entered in "now" mode', async () => {
       mockMutateAsync.mockResolvedValue(MOCK_SESSION)
       renderPage()
+      advanceToConfig()
 
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Weekly Badminton' },
@@ -211,7 +249,7 @@ describe('CreateSessionPage', () => {
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
-          expect.objectContaining({ label: 'Weekly Badminton' })
+          expect.objectContaining({ label: 'Weekly Badminton', type: 'regular' })
         )
         // In "now" mode, started_at should be undefined (uses server default)
         expect(mockMutateAsync).toHaveBeenCalledWith(
@@ -223,6 +261,7 @@ describe('CreateSessionPage', () => {
     it('navigates to session detail after successful creation', async () => {
       mockMutateAsync.mockResolvedValue(MOCK_SESSION)
       renderPage()
+      advanceToConfig()
 
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Weekly Badminton' },
@@ -237,6 +276,7 @@ describe('CreateSessionPage', () => {
     it('shows creating spinner when isPending is true', () => {
       mockCreateSession.isPending = true
       renderPage()
+      // On type step, isPending shows spinner even though button is disabled
       expect(screen.getByText(/creating/i)).toBeInTheDocument()
     })
   })
@@ -245,6 +285,7 @@ describe('CreateSessionPage', () => {
     it('shows duplicate tournament dialog when DuplicateTournamentError is thrown', async () => {
       mockMutateAsync.mockRejectedValue(new DuplicateTournamentError())
       renderPage()
+      advanceToConfig()
 
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Some Session' },
@@ -260,6 +301,7 @@ describe('CreateSessionPage', () => {
     it('shows generic error dialog on unexpected failure', async () => {
       mockMutateAsync.mockRejectedValue(new Error('Network error'))
       renderPage()
+      advanceToConfig()
 
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Some Session' },
@@ -276,6 +318,7 @@ describe('CreateSessionPage', () => {
     it('dismisses dialog when Close is clicked', async () => {
       mockMutateAsync.mockRejectedValue(new Error('Something went wrong'))
       renderPage()
+      advanceToConfig()
 
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Session' },
@@ -293,19 +336,22 @@ describe('CreateSessionPage', () => {
   describe('start time mode', () => {
     it('defaults to "Start now" mode', () => {
       renderPage()
+      advanceToConfig()
       expect(screen.getByRole('tab', { name: /start now/i })).toHaveAttribute('aria-selected', 'true')
       expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute('aria-selected', 'false')
     })
 
     it('switches to schedule mode when Schedule tab is clicked', () => {
       renderPage()
+      advanceToConfig()
       fireEvent.click(screen.getByRole('tab', { name: /schedule/i }))
       expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute('aria-selected', 'true')
       expect(screen.getByRole('tab', { name: /start now/i })).toHaveAttribute('aria-selected', 'false')
     })
 
-    it('CTA is disabled in schedule mode until time is picked', () => {
+    it('CTA is enabled in schedule mode after time is auto-picked', () => {
       renderPage()
+      advanceToConfig()
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Session' },
       })
@@ -319,6 +365,7 @@ describe('CreateSessionPage', () => {
     it('passes started_at when creating a scheduled session', async () => {
       mockMutateAsync.mockResolvedValue(MOCK_SESSION)
       renderPage()
+      advanceToConfig()
 
       fireEvent.change(screen.getByPlaceholderText('Type your own name…'), {
         target: { value: 'Scheduled Session' },
@@ -340,6 +387,7 @@ describe('CreateSessionPage', () => {
   describe('tournament suggestions', () => {
     it('shows "No tournaments" message when list is empty', () => {
       renderPage()
+      fireEvent.click(screen.getByRole('tab', { name: /tournament/i }))
       expect(screen.getByText(/no tournaments in the next 7 days/i)).toBeInTheDocument()
     })
 
@@ -351,12 +399,20 @@ describe('CreateSessionPage', () => {
       })
 
       renderPage()
+      fireEvent.click(screen.getByRole('tab', { name: /tournament/i }))
       // Skeletons are animated divs — just verify the empty message is not shown
       expect(screen.queryByText(/no tournaments in the next 7 days/i)).not.toBeInTheDocument()
     })
 
     it('calls refetch when Refresh is clicked', () => {
+      mockUseNearbyBwfTournaments.mockReturnValue({
+        tournaments: [],
+        isLoading: false,
+        refetch: mockRefetch,
+      })
+
       renderPage()
+      fireEvent.click(screen.getByRole('tab', { name: /tournament/i }))
       fireEvent.click(screen.getByRole('button', { name: /refresh/i }))
       expect(mockRefetch).toHaveBeenCalled()
     })

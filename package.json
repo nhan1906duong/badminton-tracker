@@ -9,7 +9,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:status": "./scripts/db-status.sh",
+    "db:backup": "./scripts/db-backup.sh",
+    "db:restore": "./scripts/db-restore.sh",
+    "db:rollback": "./scripts/db-rollback.sh",
+    "db:deploy": "./scripts/db-deploy.sh",
+    "db:new": "./scripts/db-migrate-new.sh"
   },
   "dependencies": {
     "@multiavatar/multiavatar": "^1.0.7",

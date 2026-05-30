@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { Session } from '../types/database'
+import type { Session, SessionType, MatchType } from '../types/database'
 import {
   teamAvgRating,
   calculateExpectedWinRate,
@@ -17,7 +17,7 @@ export function useSessions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('*, bwf_tournaments(category_name, category_slug)')
+        .select('*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds')
         .order('started_at', { ascending: false })
       if (error) throw error
       return data as Session[]
@@ -34,7 +34,7 @@ export function useOpenSession() {
 
       const { data, error } = await supabase
         .from('sessions')
-        .select('*, bwf_tournaments(category_name, category_slug)')
+        .select('*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds')
         .is('ended_at', null)
         .eq('created_by', user.id)
         .order('started_at', { ascending: false })
@@ -56,14 +56,19 @@ export class DuplicateTournamentError extends Error {
   }
 }
 
+export interface CreateSessionInput {
+  type: SessionType
+  label?: string
+  started_at?: string
+  bwf_tournament_id?: string
+  league_match_type?: MatchType
+  league_total_rounds?: number
+}
+
 export function useCreateSession() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: {
-      label?: string
-      started_at?: string
-      bwf_tournament_id?: string
-    }) => {
+    mutationFn: async (input: CreateSessionInput) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
@@ -78,13 +83,21 @@ export function useCreateSession() {
         if (existing) throw new DuplicateTournamentError()
       }
 
+      // Validate league fields
+      if (input.type === 'league' && (!input.league_match_type || !input.league_total_rounds)) {
+        throw new Error('League session requires match type and round count')
+      }
+
       // Create new session
       const { data, error } = await supabase
         .from('sessions')
         .insert({
+          type: input.type,
           label: input.label || null,
           started_at: input.started_at ?? new Date().toISOString(),
           bwf_tournament_id: input.bwf_tournament_id || null,
+          league_match_type: input.type === 'league' ? input.league_match_type : null,
+          league_total_rounds: input.type === 'league' ? input.league_total_rounds : null,
           created_by: user.id,
         })
         .select()
@@ -104,7 +117,7 @@ export function useSession(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('*, bwf_tournaments(category_name, category_slug)')
+        .select('*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds')
         .eq('id', id!)
         .single()
       if (error) throw error
@@ -390,6 +403,8 @@ export function useClearAllData() {
       await supabase.from('match_participants').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('match_teams').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('player_match_results').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('league_team_players').delete().neq('league_team_id', '00000000-0000-0000-0000-000000000000')
+      await supabase.from('league_teams').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000')
       await supabase.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
 
@@ -597,6 +612,23 @@ export function useRecalculateAllRatings() {
       qc.invalidateQueries({ queryKey: ['players'] })
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
       qc.invalidateQueries({ queryKey: ['matches'] })
+    },
+  })
+}
+
+export function useUpdateLeagueTotalRounds() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, league_total_rounds }: { id: string; league_total_rounds: number }) => {
+      const { error } = await supabase
+        .from('sessions')
+        .update({ league_total_rounds })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+      qc.invalidateQueries({ queryKey: [SESSIONS_KEY, vars.id] })
     },
   })
 }
