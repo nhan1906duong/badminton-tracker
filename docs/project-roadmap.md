@@ -7,7 +7,7 @@
 | 1 | Project Setup | ✅ Done | Vite, React, Tailwind, Supabase |
 | 2 | Authentication | ✅ Done | Email + password login |
 | 3 | Player Management | ✅ Done | CRUD + active toggle |
-| 4 | Session-Based Match Recording | ✅ Done | Sessions, active-player filter, match create/edit, authenticated start/end |
+| 4 | Session-Based Match Recording | ✅ Done | Sessions, match create/edit, authenticated start/end |
 | 5 | Home Dashboard | ✅ Done | Stats + recent matches + PodiumChart |
 | 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate, current weekly Top 1 streak |
 | 7 | Match History | ✅ Done | List + detail view |
@@ -20,8 +20,9 @@
 | 9e | Locale, Backup, and Player RLS | ✅ Done | English/Vietnamese switch, admin JSON backup, and linked-player/admin update policy |
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Session Types Expansion | ✅ Done | Regular / Tournament / League with round-robin, team standings, schedule grid |
-| 12 | Testing | ⏳ Pending | Unit tests, E2E tests |
-| 13 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
+| 12 | Session Attendance RSVP | ✅ Done | Linked players/admins confirm or decline regular/tournament attendance; declined players are filtered from match creation |
+| 13 | Testing | 🚧 In Progress | Unit and component tests exist; E2E/CI remain open |
+| 14 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
 
 ## Phase Details
 
@@ -47,9 +48,7 @@
 ### Phase 4: Session-Based Match Recording ✅
 - [x] Sessions table + migration
 - [x] Create session (auto-closes previous)
-- [x] Session detail page (active players + match list)
-- [x] Active-player filter (local-only, per session)
-- [x] Create-session active player picker w/ top-5 default (chip + virtualized bottom sheet)
+- [x] Session detail page (session summary + match list)
 - [x] Match creation scoped to session
 - [x] Match type selector (segmented chips)
 - [x] Player selection (filtered by active list)
@@ -143,13 +142,25 @@
 - [x] App icons and splash screens
 - [x] Offline cache for static assets
 
-### Phase 11: Testing 🚧
+### Phase 11: Session Types Expansion ✅
+- [x] Add explicit `regular` / `tournament` / `league` session types
+- [x] Add league teams, fixed match type, total rounds, round-robin scheduling, standings, and schedule grid
+- [x] Add league match creation flow that pre-fills players from selected teams
+
+### Phase 12: Session Attendance RSVP ✅
+- [x] Add `session_attendances` table and linked-player/admin RLS policies
+- [x] Add `useSessionAttendances`, `useUpsertAttendance`, and `useDeleteAttendance`
+- [x] Add `SessionAttendancePanel` with confirmed, declined, and no-response states
+- [x] Show attendance inline for scheduled regular/tournament sessions and in the live session menu
+- [x] Filter declined players out of regular/tournament match creation and shuffle pools
+
+### Phase 13: Testing 🚧
 - [x] Unit tests (Vitest)
 - [x] Component tests
 - [ ] E2E tests (Playwright)
 - [ ] CI/CD pipeline
 
-### Phase 12: Persistent Point Log ⏳
+### Phase 14: Persistent Point Log ⏳
 - [ ] Add a database table for point-by-point match events
 - [ ] Persist point increments, decrements, direct score edits, and undo actions for live matches
 - [ ] Restore point history when reopening or viewing a match

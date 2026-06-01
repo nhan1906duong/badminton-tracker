@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CreateMatchPage from '../CreateMatchPage'
 import { useNewMatchStore } from '../../stores/new-match-store'
-import type { MatchWithDetails, Player } from '../../types/database'
+import type { MatchWithDetails, Player, SessionAttendance } from '../../types/database'
 
 // ─── Router mocks ─────────────────────────────────────────────────────────────
 
@@ -35,10 +35,15 @@ vi.mock('../../hooks/usePlayers', () => ({
 
 let mockMatchesData: MatchWithDetails[] = []
 const mockCreateMatch = { mutateAsync: vi.fn(), isPending: false }
+let mockAttendancesData: SessionAttendance[] = []
 
 vi.mock('../../hooks/useMatches', () => ({
   useMatches: () => ({ data: mockMatchesData }),
   useCreateMatch: () => mockCreateMatch,
+}))
+
+vi.mock('../../hooks/useSessionAttendances', () => ({
+  useSessionAttendances: () => ({ data: mockAttendancesData }),
 }))
 
 vi.mock('../../hooks/useSessions', () => ({
@@ -121,6 +126,7 @@ describe('CreateMatchPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockMatchesData = []
+    mockAttendancesData = []
     mockCreateMatch.isPending = false
     useNewMatchStore.getState().reset()
   })
@@ -355,6 +361,24 @@ describe('CreateMatchPage', () => {
       fireEvent.click(screen.getAllByText('Tap to add')[0])
       expect(screen.getByText('Alice S.')).toBeInTheDocument()
       expect(screen.getByText('Bob J.')).toBeInTheDocument()
+    })
+
+    it('hides declined players from the regular-session picker', () => {
+      mockAttendancesData = [
+        {
+          id: 'att-1',
+          session_id: 'sess-1',
+          player_id: 'p2',
+          status: 'declined',
+          created_at: '2026-05-23T07:00:00Z',
+          updated_at: '2026-05-23T07:00:00Z',
+          created_by: 'user-2',
+        },
+      ]
+      renderPage()
+      fireEvent.click(screen.getAllByText('Tap to add')[0])
+      expect(screen.getByText('Alice S.')).toBeInTheDocument()
+      expect(screen.queryByText('Bob J.')).not.toBeInTheDocument()
     })
 
     it('selects a player and closes the picker', () => {

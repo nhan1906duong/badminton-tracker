@@ -35,6 +35,10 @@ Run every migration in numeric order:
 011_authenticated_update_sessions.sql
 012_authenticated_match_edits.sql
 013_player_update_rls.sql
+014_restrict_bwf_session_label.sql
+015_session_types.sql
+016_league_schedule.sql
+017_session_attendances.sql
 ```
 
 ---
@@ -139,6 +143,7 @@ Settings → Deployment Protection → **Disable** Vercel Authentication.
 | Create player | Add a player in the app |
 | Upload avatar | Pick a photo for a player |
 | Create session | Start a new session |
+| RSVP attendance | In a scheduled regular/tournament session, confirm or decline a linked player |
 | Create match | Add a match with scores |
 
 ---

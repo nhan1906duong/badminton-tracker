@@ -73,11 +73,11 @@
 ## Session-Based Match Flow
 
 ```
-1. Create Session (multiple SCHEDULE/LIVE sessions allowed; duplicate tournament blocked)
+1. Create Session (regular, tournament, or league)
          ↓
-2. Toggle Active Players (local filter, persisted per device)
+2. For scheduled regular/tournament sessions, linked players/admins RSVP in `session_attendances`
          ↓
-3. Add Match → Select Type + Players (filtered by active list)
+3. Add Match → Select Type + Players (declined RSVP players are filtered out for regular/tournament sessions)
          ↓
 4. Live scoring happens in page state until finalization
          ↓
@@ -88,6 +88,8 @@
          ↓
 7. End Session when done
 ```
+
+League sessions skip RSVP and use fixed `league_teams` rosters plus generated round-robin schedule rows on `matches.league_round`.
 
 Match list display order (client-side, via `sortMatches` in `MatchesContent.tsx`):
 1. **LIVE** — top, oldest first (created_at asc)
@@ -153,6 +155,8 @@ Player updates are further restricted by `013_player_update_rls.sql`: only admin
 
 Session label (name) updates are enforced by the `trg_restrict_bwf_session_label` trigger (`014_restrict_bwf_session_label.sql`): only admins can rename a session, and no one can rename a session that has a `bwf_tournament_id` (those sessions derive their display name from the tournament record).
 
+Session attendance rows are managed through `017_session_attendances.sql`: authenticated users can read all attendance rows, while inserts/updates/deletes are limited to admins or the auth profile linked to the target `player_id`.
+
 Risky lifecycle actions use shared confirmation dialogs before mutation. Ending a session warns when live matches remain, deleting an ended session with matches warns about removing history/ranking data, and deleting live/completed matches warns about score and win/loss removal.
 
 ## Key Files
@@ -163,6 +167,7 @@ Risky lifecycle actions use shared confirmation dialogs before mutation. Ending 
 | src/contexts/AuthContext.tsx | Auth state management |
 | src/hooks/useMatches.ts | Match CRUD with optimistic updates |
 | src/hooks/usePlayers.ts | Player CRUD |
+| src/hooks/useSessionAttendances.ts | Session RSVP query/upsert/delete hooks |
 | src/hooks/useBackup.ts | Admin JSON export of core app tables |
 | src/hooks/useIsAdmin.ts | Admin role check from current user's profile |
 | src/i18n.tsx | Locale provider, copy dictionary, and translation helper |

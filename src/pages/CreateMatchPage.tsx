@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { usePlayers } from '../hooks/usePlayers'
 import { useMatches, useCreateMatch } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
 import { useLeagueTeams } from '../hooks/useLeagueTeams'
+import { useSessionAttendances } from '../hooks/useSessionAttendances'
 import { useNewMatchStore } from '../stores/new-match-store'
 import { AppBar, SegmentedControl } from '../../design-system/components'
 import { MatchTypeChips } from '../../design-system/components/match-type-chips'
@@ -242,6 +243,7 @@ export default function CreateMatchPage() {
   const { data: matches } = useMatches(sessionId)
   const { data: session } = useSession(sessionId)
   const { data: leagueTeams } = useLeagueTeams(sessionId)
+  const { data: attendances } = useSessionAttendances(sessionId)
   const createMatch = useCreateMatch()
 
   const matchType   = useNewMatchStore(s => s.matchType)
@@ -270,6 +272,12 @@ export default function CreateMatchPage() {
   const isLeague = session?.type === 'league'
   const [leagueTeamA, setLeagueTeamA] = useState<string | null>(searchParams.get('teamA'))
   const [leagueTeamB, setLeagueTeamB] = useState<string | null>(searchParams.get('teamB'))
+
+  const declinedPlayerIds = useMemo(() => {
+    if (isLeague || !attendances?.length) return null
+    const ids = attendances.filter(a => a.status === 'declined').map(a => a.player_id)
+    return ids.length > 0 ? new Set<string>(ids) : null
+  }, [isLeague, attendances])
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -317,6 +325,10 @@ export default function CreateMatchPage() {
   const sid = sessionId
 
   // ── Derived ─────────────────────────────────────────────────────────────────
+
+  const availablePlayers = declinedPlayerIds
+    ? allPlayers?.filter(p => !declinedPlayerIds.has(p.id))
+    : allPlayers
 
   const teamSize = getTeamSize(matchType)
   const liveMatch = matches?.find(m => m.status === 'LIVE')
@@ -395,12 +407,12 @@ export default function CreateMatchPage() {
   }
 
   function handleSelectAllShuffle() {
-    if (!allPlayers) return
-    const allSelected = allPlayers.every(p => shuffleSelectedIds.has(p.id))
+    if (!availablePlayers) return
+    const allSelected = availablePlayers.every(p => shuffleSelectedIds.has(p.id))
     if (allSelected) {
       setShuffleSelectedIds(new Set())
     } else {
-      setShuffleSelectedIds(new Set(allPlayers.map(p => p.id)))
+      setShuffleSelectedIds(new Set(availablePlayers.map(p => p.id)))
     }
   }
 
@@ -419,7 +431,7 @@ export default function CreateMatchPage() {
     setPickerTarget(null)
   }
 
-  const filteredPlayers = allPlayers?.filter(p => {
+  const filteredPlayers = availablePlayers?.filter(p => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
 
     // League: filter to team roster
@@ -1240,7 +1252,7 @@ export default function CreateMatchPage() {
               flexShrink: 0,
             }}
           >
-            {allPlayers && allPlayers.every(p => shuffleSelectedIds.has(p.id))
+            {availablePlayers && availablePlayers.every(p => shuffleSelectedIds.has(p.id))
               ? t('shuffle.clearAll')
               : t('shuffle.selectAll')}
           </button>
@@ -1248,7 +1260,7 @@ export default function CreateMatchPage() {
 
         {/* Player list */}
         <div style={{ overflowY: 'auto', maxHeight: '45vh', padding: '0 var(--space-5)' }}>
-          {allPlayers?.map(p => {
+          {availablePlayers?.map(p => {
             const isSel = shuffleSelectedIds.has(p.id)
             return (
               <button

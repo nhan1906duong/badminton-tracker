@@ -735,6 +735,33 @@ Key rules in [src/index.css](../src/index.css):
 - `-webkit-tap-highlight-color: transparent` — replaced by `active:` states.
 - Always provide `aria-label` on icon-only buttons.
 
+### SessionAttendancePanel
+
+See [src/components/SessionAttendancePanel.tsx](../src/components/SessionAttendancePanel.tsx).
+
+Session RSVP list used on regular/tournament session detail screens. It appears inline while the session is scheduled, and inside a bottom sheet from the session ⋮ menu once the session is live.
+
+**Scope:**
+- Regular and tournament sessions only; league sessions use fixed team rosters instead.
+- Linked players can edit their own row; admins can edit every row.
+- Tapping the active status again removes the attendance row and returns the player to "No response".
+
+**Layout:**
+- Section wrapper: `margin-bottom: var(--space-6)`.
+- Header row: `flex`, `justify-content: space-between`, `gap: var(--space-3)`.
+- Title: `var(--font-display)`, `var(--text-xl)`, weight 800.
+- Summary: right-aligned `var(--font-mono)`, `var(--text-xs)`, muted color.
+- List container: `var(--surface)`, `1px solid var(--border)`, `border-radius: var(--radius-lg)`, `overflow: hidden`.
+- Rows: horizontal avatar/name/actions layout, `min-height: 68px`, `padding: var(--space-3) var(--space-4)`, divider on every row after the first.
+
+**Controls:**
+- Editable rows show two 44×44 icon buttons: Check = confirmed, X = declined.
+- Active confirmed button uses `var(--success)` + `var(--surface)` icon.
+- Active declined button uses `var(--danger)` + `var(--surface)` icon.
+- Inactive buttons use `var(--bg)`, `var(--border)`, and `var(--muted)`.
+- Buttons set `aria-pressed` and player-specific `aria-label` values.
+- Read-only rows show a 32×32 status mark for confirmed/declined, or uppercase mono "No response".
+
 ### MatchDetailPage
 
 Full-screen page (`/sessions/:id/matches/:matchId`) that handles all three match states: `SCHEDULED`, `LIVE`, and `COMPLETED`.

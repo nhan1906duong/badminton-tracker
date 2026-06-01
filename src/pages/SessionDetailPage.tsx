@@ -47,6 +47,7 @@ import { useCreateLeagueSchedule, useMatches } from '../hooks/useMatches'
 import { useSessionLeaderboard } from '../hooks/useRankings'
 import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime, useRenameSession, useUpdateLeagueTotalRounds } from '../hooks/useSessions'
 import MatchesContent from '../components/MatchesContent'
+import { SessionAttendancePanel } from '../components/SessionAttendancePanel'
 import FloatingActionButton from '../components/FloatingActionButton'
 import { AppBar } from '../../design-system/components/app-bar'
 import { Dialog } from '../../design-system/components/dialog'
@@ -105,6 +106,7 @@ export default function SessionDetailPage() {
   const [editLabelValue, setEditLabelValue] = useState('')
   const [teamEditorOpen, setTeamEditorOpen] = useState(false)
   const [confirmAddRoundOpen, setConfirmAddRoundOpen] = useState(false)
+  const [attendanceSheetOpen, setAttendanceSheetOpen] = useState(false)
   const leagueScheduleEnsuredRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -432,6 +434,11 @@ export default function SessionDetailPage() {
           )}
 
 
+          {/* Attendance RSVP (regular + tournament, scheduled only) */}
+          {!isLeague && sessionStatus === 'scheduled' && (
+            <SessionAttendancePanel sessionId={sid} />
+          )}
+
           {/* Matches */}
           {sessionStatus !== 'scheduled' && (
             <section className="space-y-[var(--space-4)]">
@@ -484,6 +491,13 @@ export default function SessionDetailPage() {
             icon={<Plus className="w-5 h-5" />}
             label={t('sessionDetail.newMatch')}
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/matches/new`) }}
+          />
+        )}
+        {sessionStatus === 'live' && !isLeague && (
+          <BottomSheetItem
+            icon={<Users className="w-5 h-5" />}
+            label={t('attendance.title')}
+            onClick={() => { closeMenu(); setAttendanceSheetOpen(true) }}
           />
         )}
         {sessionStatus === 'live' && isLeague && (
@@ -640,6 +654,19 @@ export default function SessionDetailPage() {
               {t('sessionDetail.saveName')}
             </button>
           </div>
+        </div>
+      </BottomSheet>
+
+      {/* Attendance sheet (live sessions) */}
+      <BottomSheet open={attendanceSheetOpen} onClose={() => setAttendanceSheetOpen(false)}>
+        <div
+          style={{
+            padding: '0 var(--space-5) var(--space-4)',
+            overflowY: 'auto',
+            maxHeight: '70vh',
+          }}
+        >
+          <SessionAttendancePanel sessionId={sid} />
         </div>
       </BottomSheet>
 

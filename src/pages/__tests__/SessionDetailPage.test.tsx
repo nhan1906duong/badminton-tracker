@@ -81,6 +81,12 @@ vi.mock('../../components/MatchesContent', () => ({
   },
 }))
 
+vi.mock('../../components/SessionAttendancePanel', () => ({
+  SessionAttendancePanel: ({ sessionId }: { sessionId: string }) => (
+    <div data-testid="attendance-panel" data-session-id={sessionId} />
+  ),
+}))
+
 vi.mock('../../components/FloatingActionButton', () => ({
   default: ({ onClick, ariaLabel }: { onClick: () => void; ariaLabel: string }) => (
     <button onClick={onClick} aria-label={ariaLabel} data-testid="fab" />
@@ -571,6 +577,64 @@ describe('SessionDetailPage', () => {
       openDeleteDialog()
       fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+  })
+
+  // ── Attendance panel ──────────────────────────────────────────────────────
+
+  describe('attendance panel', () => {
+    it('shows inline attendance panel for scheduled regular session', () => {
+      mockSessionData = makeSession({ started_at: FUTURE, type: 'regular' })
+      renderPage()
+      expect(screen.getByTestId('attendance-panel')).toBeInTheDocument()
+    })
+
+    it('hides attendance panel for live sessions (moved to menu)', () => {
+      mockSessionData = makeSession({ type: 'regular' })
+      renderPage()
+      expect(screen.queryByTestId('attendance-panel')).not.toBeInTheDocument()
+    })
+
+    it('hides attendance panel for ended sessions', () => {
+      mockSessionData = makeSession({ ended_at: PAST, type: 'regular' })
+      renderPage()
+      expect(screen.queryByTestId('attendance-panel')).not.toBeInTheDocument()
+    })
+
+    it('hides attendance panel for league sessions', () => {
+      mockSessionData = makeSession({ started_at: FUTURE, type: 'league' })
+      renderPage()
+      expect(screen.queryByTestId('attendance-panel')).not.toBeInTheDocument()
+    })
+
+    it('shows "Attendance" in menu for live regular session', () => {
+      mockSessionData = makeSession({ type: 'regular' })
+      renderPage()
+      clickMenuButton()
+      expect(screen.getByRole('button', { name: 'Attendance' })).toBeInTheDocument()
+    })
+
+    it('hides "Attendance" from menu for live league session', () => {
+      mockSessionData = makeSession({ type: 'league' })
+      renderPage()
+      clickMenuButton()
+      expect(screen.queryByRole('button', { name: 'Attendance' })).not.toBeInTheDocument()
+    })
+
+    it('hides "Attendance" from menu for scheduled sessions', () => {
+      mockSessionData = makeSession({ started_at: FUTURE, type: 'regular' })
+      renderPage()
+      clickMenuButton()
+      expect(screen.queryByRole('button', { name: 'Attendance' })).not.toBeInTheDocument()
+    })
+
+    it('opens attendance sheet when "Attendance" is clicked from menu', () => {
+      mockSessionData = makeSession({ type: 'regular' })
+      renderPage()
+      clickMenuButton()
+      fireEvent.click(screen.getByRole('button', { name: 'Attendance' }))
+      expect(screen.getByTestId('bottom-sheet')).toBeInTheDocument()
+      expect(screen.getByTestId('attendance-panel')).toBeInTheDocument()
     })
   })
 

@@ -276,6 +276,13 @@ const en = {
   'sessionDetail.completedShort': 'Done',
   'sessionDetail.pendingShort': 'Pending',
 
+  'attendance.title': 'Attendance',
+  'attendance.confirmed': 'Confirmed',
+  'attendance.declined': 'Declined',
+  'attendance.noResponse': 'No response',
+  'attendance.summary': '{confirmed} confirmed · {declined} declined · {pending} pending',
+  'attendance.noPlayers': 'No players found',
+
   'sessionStats.eyebrow': 'Session ranking',
   'sessionStats.title': 'Player stats',
   'sessionStats.loading': 'Loading player stats...',
@@ -827,6 +834,13 @@ const vi: Record<TranslationKey, string> = {
   'sessionDetail.l': 'B',
   'sessionDetail.completedShort': 'Xong',
   'sessionDetail.pendingShort': 'Chờ',
+
+  'attendance.title': 'Điểm danh',
+  'attendance.confirmed': 'Tham gia',
+  'attendance.declined': 'Vắng mặt',
+  'attendance.noResponse': 'Chưa phản hồi',
+  'attendance.summary': '{confirmed} tham gia · {declined} vắng mặt · {pending} chưa phản hồi',
+  'attendance.noPlayers': 'Không có vận động viên nào',
 
   'sessionStats.eyebrow': 'Xếp hạng giải đấu',
   'sessionStats.title': 'Thống kê',

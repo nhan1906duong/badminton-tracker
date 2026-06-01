@@ -36,7 +36,7 @@ Project Settings → API:
 
 ### 3. Run Migrations
 
-In Supabase Dashboard → SQL Editor, run every file in `supabase/migrations/` in numeric order (`001_...` through `013_...`). The later migrations add BWF tournament metadata, ranking fields, match lifecycle state, roles, user-player linking, profile auto-creation, authenticated session/match edit policies, and linked-player/admin-only player update RLS.
+In Supabase Dashboard → SQL Editor, run every file in `supabase/migrations/` in numeric order (`001_...` through `017_...`). The later migrations add BWF tournament metadata, ranking fields, match lifecycle state, roles, user-player linking, profile auto-creation, authenticated session/match edit policies, linked-player/admin-only player update RLS, session label restrictions, explicit session types, league scheduling, and session attendance RSVP rows.
 
 ### 4. Create Storage Bucket (Avatars)
 

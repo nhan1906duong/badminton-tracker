@@ -19,21 +19,21 @@ src/
 
 | LOC | File | Purpose |
 |-----|------|---------|
-| 1092 | i18n.tsx | English/Vietnamese locale provider, dictionary, and translation helper |
-| 1091 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
-| 1208 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue), fair shuffle |
-| 913 | pages/MatchDetailPage.tsx | Match detail: start, live score, record result, end with no winner, edit players, reopen, delete |
-| 820 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
-| 635 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
-| 639 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useEndMatchNoWinner + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
-| 568 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end/rename updates |
+| 1241 | i18n.tsx | English/Vietnamese locale provider, dictionary, and translation helper |
+| 1103 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
+| 1454 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue), fair shuffle, declined RSVP filtering |
+| 885 | pages/MatchDetailPage.tsx | Match detail: start, live score, record result, end with no winner, edit players, reopen, delete |
+| 836 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
+| 775 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
+| 780 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useEndMatchNoWinner + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
+| 634 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end/rename updates |
 | 520 | pages/MatchPointsPage.tsx | Completed-match point breakdown by player, score bonus, strength bonus, and Elo delta |
-| 400 | pages/SessionDetailPage.tsx | Session detail: recorded-result stats panel, leaderboard MVP, match list, session menu (rename/end/delete), BWF category badge |
+| 746 | pages/SessionDetailPage.tsx | Session detail: stats/standings, match list, session menu, BWF category badge, attendance RSVP |
 | 342 | pages/EditPlayersPage.tsx | Edit match players: reassign slots for an existing match |
-| 434 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
+| 423 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
 | 309 | hooks/useRankings.ts | usePlayerRankings (Elo + weekly Top 1 streak) + per-session leaderboard hooks |
-| 217 | pages/RankingPage.tsx | Player rankings by Elo rating and current weekly Top 1 streak (`/ranking`) |
+| 517 | pages/RankingPage.tsx | Player rankings by Elo rating and current weekly Top 1 streak (`/ranking`) |
 | 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
 | 338 | pages/SettingsPage.tsx | Profile, player link/unlink, change password, logout, dev tools |
@@ -43,12 +43,13 @@ src/
 | 138 | components/AvatarPicker.tsx | Bottom sheet: 2x5 default avatar grid + camera / gallery / remove photo |
 | 137 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
+| 234 | components/SessionAttendancePanel.tsx | Session RSVP list with confirmed/declined/no-response states |
 | 170 | lib/fair-shuffle.ts | Fair shuffle algorithm: priority-based player selection + lowest-score team split |
 | 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states); exports `sortMatches` (LIVE first → SCHEDULED by queue_position → COMPLETED by ended_at desc) |
 | 111 | pages/LoginPage.tsx | Email + password login flow |
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
 | 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
-| 129 | types/database.ts | TypeScript types for all entities including MatchStatus and PlayerMatchResult |
+| 189 | types/database.ts | TypeScript types for all entities including MatchStatus, PlayerMatchResult, SessionAttendance, and league entities |
 | 104 | hooks/useBestPartner.ts | Compute best doubles partner from match history |
 | 100 | lib/rating.ts | Elo rating algorithm + SCORING_CONFIG constants |
 | 91 | components/PlayerSelector.tsx | Bottom-sheet player picker with search |
@@ -59,6 +60,7 @@ src/
 | 69 | lib/match-helpers.ts | Helper functions for match logic (getTeamSize, MATCH_TYPE_SHORT, etc.) |
 | 265 | pages/SessionDonatedListPage.tsx | Sorted donor list for a session (`/sessions/:id/donated`) |
 | 68 | hooks/useBwfTournaments.ts | Read BWF tournament cache from Supabase; filter by date window |
+| 63 | hooks/useSessionAttendances.ts | Query/upsert/delete hooks for `session_attendances` |
 | 57 | design-system/components/bwf-category-badge.tsx | Tiered color badge for BWF tournament categories (S1000/S750/S500/S300/S100/Finals) |
 | 90 | hooks/usePlayerAchievements.ts | Compute player achievements per session (champion/runner-up ranking) |
 | 78 | hooks/usePlayerPointsHistory.ts | Group a player's `player_match_results` by session for future point-history UI |
@@ -94,6 +96,7 @@ components/
 ├── PlayerSelector.tsx       # Bottom-sheet player picker with search
 ├── PodiumChart.tsx          # SVG podium chart for top-5 rankings
 ├── ScoreEntry.tsx           # Set score inputs
+├── SessionAttendancePanel.tsx # Scheduled/live session RSVP list
 ├── TeamAssignment.tsx       # Team slot assignment UI for match creation
 
 design-system/components/
@@ -148,6 +151,7 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 - **MatchParticipant:** id, match_id, team_id, player_id
 - **MatchScore:** id, match_id, set_number, team_a_score, team_b_score
 - **PlayerMatchResult:** id, player_id, match_id, session_id, is_winner, team_score, opponent_score, base_points, attendance_points, score_bonus, strength_bonus, total_weekly_points, rating_before, rating_after, rating_delta, created_at
+- **SessionAttendance:** id, session_id, player_id, status (`confirmed`/`declined`), created_at, updated_at, created_by
 
 ## Hooks
 
@@ -173,6 +177,7 @@ hooks/
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
 ├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
 ├── useRankings.ts          # Overall Elo rankings + weekly Top 1 streak + session weekly rankings/leaderboards
+├── useSessionAttendances.ts # Fetch/upsert/delete session RSVP rows
 ├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end/rename mutations
 ├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
@@ -233,7 +238,7 @@ Default bg: var(--accent) · Default text: var(--surface)
 Single-page flow at `/sessions/:id/matches/new` (`CreateMatchPage`):
 
 1. **Match type** — segmented chip selector (Men's Singles / Women's Singles / Men's Doubles / Women's Doubles / Mixed Doubles)
-2. **Players** — slot-based card (Team A slots / VS / Team B slots); tap a slot → bottom sheet player picker with search. A **Shuffle** button (doubles only) opens a bottom sheet to pick a player pool, then calls `generateNextMatch` from `src/lib/fair-shuffle.ts` to fill all four slots. The player selection in the picker persists across opens — closing and reopening the sheet keeps whatever players were last selected.
+2. **Players** — slot-based card (Team A slots / VS / Team B slots); tap a slot → bottom sheet player picker with search. For regular/tournament sessions, players with `session_attendances.status = 'declined'` are hidden from the picker and shuffle pool. A **Shuffle** button (doubles only) opens a bottom sheet to pick a player pool, then calls `generateNextMatch` from `src/lib/fair-shuffle.ts` to fill all four slots. The player selection in the picker persists across opens — closing and reopening the sheet keeps whatever players were last selected.
 3. **When** — 3-way segmented control:
    - **Now** — match inserted as `LIVE`; blocks if a live match already exists (inline error)
    - **Schedule** — match inserted as `SCHEDULED` with a custom date/time; quick-pick buttons (15 min / 30 min / 1 hr)
@@ -339,6 +344,16 @@ Each loss = 5,000 VND penalty (`LOSS_PENALTY_VND` in `lib/currency.ts`).
 
 - SessionDetailPage renders a "Total Donated" panel when `totalLosses > 0`; tap navigates to `/sessions/:id/donated`.
 - SessionDonatedListPage shows a sorted list: Avatar + Name on left, `N Losses` (yellow, bold) + `M matches joined` on the right.
+
+## Session Attendance
+
+Regular and tournament sessions support RSVP rows in `session_attendances`.
+
+- `SessionDetailPage` renders `SessionAttendancePanel` inline while the session is scheduled.
+- For live regular/tournament sessions, the same panel opens from the session ⋮ menu as a bottom sheet.
+- Linked players can confirm/decline only their own player row; admins can manage every row.
+- Tapping the active status again deletes the row, returning that player to "No response".
+- `CreateMatchPage` reads `useSessionAttendances(sessionId)` and excludes declined players from the player picker and shuffle pool. League sessions ignore RSVP because they use fixed league team rosters.
 
 ## BWF Tournament Category Badges
 

@@ -12,8 +12,8 @@ Medium Value
 4. Match Score Live Entry (Set-by-Set)
 Currently scores are recorded after the fact. A live "21–18, 21–15" entry during a match (with a running point tapper like a tennis app) would make it more real-time.
 
-5. Attendance / RSVP per Session
-Before a session starts, players can confirm or decline attendance. Helps admins plan court booking and match queue.
+5. Attendance / RSVP per Session — implemented
+Before a session starts, players can confirm or decline attendance. The app stores `session_attendances`, shows RSVP in scheduled/live regular sessions, and hides declined players from regular/tournament match creation.
 
 6. Streak & Milestone Badges
 Built on usePlayerAchievements.ts — surface earned badges visually on the player profile (e.g., "5-win streak", "50 matches played", "donated 100x").

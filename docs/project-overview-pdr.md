@@ -21,6 +21,7 @@ Track badminton matches, manage players, and view rankings with multi-user suppo
 | Authentication | Implemented | Email + password via Supabase |
 | Player CRUD | Implemented | Create, list, toggle active status |
 | Match Creation | Implemented | Single-page flow: type + players + mode (Now/Schedule/Queue) |
+| Session Attendance RSVP | Implemented | Scheduled regular/tournament sessions let linked players confirm or decline; declined players are hidden from match creation |
 | Unified Player Grid | Implemented | 2-column grid showing Team A/B assignment |
 | Auto Team Assignment | Implemented | Players auto-assign to Team A (blue) then Team B (red) |
 | Inline Player Add | Implemented | Add player without leaving match flow |
@@ -51,12 +52,13 @@ matches ────────────┼── match_teams ──┬─ m
 
 profiles (1:1 with auth.users) ── avatar_url, role, player_id
 player_match_results ── per-player match points + Elo deltas
+session_attendances ── per-session confirmed/declined RSVP rows
 ```
 
 ## Match Flow
 
 1. Select match type (singles/doubles) via segmented control
-2. Pick Team A/B slots from the player bottom sheet
+2. Pick Team A/B slots from the player bottom sheet; declined RSVP players are excluded for regular/tournament sessions
 3. Choose Now, Schedule, or Queue
 4. In match detail, record a winner → save scores and ranking rows to Supabase
 5. Or end without winner → save score only, excluded from ranking/history aggregates

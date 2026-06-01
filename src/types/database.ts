@@ -138,6 +138,19 @@ export interface PlayerMatchResult {
   created_at: string
 }
 
+export type AttendanceStatus = 'confirmed' | 'declined'
+
+export interface SessionAttendance {
+  id: string
+  session_id: string
+  player_id: string
+  status: AttendanceStatus
+  created_at: string
+  updated_at: string
+  created_by: string | null
+  player?: Player
+}
+
 export interface LeagueTeam {
   id: string
   session_id: string
