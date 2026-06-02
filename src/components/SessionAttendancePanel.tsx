@@ -63,6 +63,8 @@ export function SessionAttendancePanel({ sessionId }: Props) {
             letterSpacing: '-0.02em',
             color: 'var(--fg)',
             margin: 0,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
           }}
         >
           {t('attendance.title')}
