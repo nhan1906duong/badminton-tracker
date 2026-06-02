@@ -5,7 +5,7 @@ import { usePlayers } from '../hooks/usePlayers'
 import { useI18n } from '../i18n'
 import { BottomSheet } from '../../design-system/components'
 import { formatShortPlayerName } from '../lib/player-name'
-import { generateVietnameseTeamName, type TeamNameOptions } from '../lib/team-name-generator'
+import { generateVietnameseTeamName } from '../lib/team-name-generator'
 import { Plus, X, ChevronRight, Shuffle } from 'lucide-react'
 
 export interface LeagueTeamDraft {
@@ -83,19 +83,16 @@ const LeagueTeamBuilder = forwardRef<LeagueTeamBuilderHandle, LeagueTeamBuilderP
 
   const buildRandomTeamNames = useCallback(() => {
     const usedNames = new Set<string>()
-    const styles: Array<NonNullable<TeamNameOptions['style']>> = ['sport', 'fun', 'power', 'location']
     return teams.map(() => {
       for (let attempt = 0; attempt < 20; attempt++) {
-        const style = styles[Math.floor(Math.random() * styles.length)]
-        const name = generateVietnameseTeamName({ style })
+        const name = generateVietnameseTeamName()
         if (!usedNames.has(name)) {
           usedNames.add(name)
           return name
         }
       }
 
-      const style = styles[Math.floor(Math.random() * styles.length)]
-      const fallback = `${generateVietnameseTeamName({ style })} ${usedNames.size + 1}`
+      const fallback = `${generateVietnameseTeamName()} ${usedNames.size + 1}`
       usedNames.add(fallback)
       return fallback
     })

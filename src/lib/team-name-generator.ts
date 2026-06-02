@@ -1,149 +1,111 @@
-export type TeamNameOptions = {
-  style?: 'sport' | 'fun' | 'power' | 'location'
-  location?: string
-}
-
-const vietnameseAdjectives = [
-  'Tốc Độ',
-  'Bất Bại',
-  'Rực Lửa',
-  'Thần Tốc',
-  'Mạnh Mẽ',
-  'Máu Lửa',
-  'Kiên Cường',
-  'Bùng Nổ',
-  'Tinh Nhuệ',
-  'Quyết Chiến',
+const roastPhrases = [
+  'Xin Nhẹ Một Set',
+  'Chưa Thua Trận Nào',
+  'Thua Tại Sân Trơn',
+  'Đập Nhẹ Thôi Mà',
+  'Cầu Bay Vợt Gãy',
+  'Đánh Vui Nhưng Không Nhường',
+  'Vừa Khởi Động Đã Thắng',
+  'Hôm Nay Tay Hơi Run',
+  'Đội Bạn May Thôi',
+  'Không Cay Chỉ Hơi Tức',
+  'Đập Một Cái Là Xong',
+  'Cứu Cầu Bằng Niềm Tin',
+  'Vợt Này Mượn Nha',
+  'Thắng Nhờ Phong Độ',
+  'Thua Do Thiếu May Mắn',
+  'Cầu Chạm Lưới Là Chiến Thuật',
+  'Đứng Nhìn Cũng Ghi Điểm',
+  'Đánh Nhẹ Mà Đối Thủ Mệt',
+  'Không Mạnh Nhưng Lì',
+  'Một Set Nữa Rồi Về',
+  'Đừng Đập Vào Mặt',
+  'Cầu Này Tính Không',
+  'Trọng Tài Nhà Làm',
+  'Ăn Điểm Bằng Khí Chất',
+  'Đội Hình Hơi Mỏi',
+  'Mới Tập Nhưng Rất Gắt',
+  'Đánh Cho Ra Mồ Hôi',
+  'Cầu Qua Là Mừng',
+  'Giao Cầu Xong Cầu Nguyện',
+  'Đập Hụt Nhưng Có Uy',
+  'Phòng Thủ Bằng Ánh Mắt',
+  'Cầu Cao Tới Nóc',
+  'Đội Hình Không Bao Giờ Lỗi',
+  'Thua Là Do Gió',
+  'Thắng Là Do Trình',
+  'Đánh Xong Đi Ăn',
+  'Xin Đừng Bỏ Nhỏ',
+  'Bỏ Nhỏ Nhưng Không Nhỏ Mọn',
+  'Đập Cầu Như Đập Deadline',
+  'Mệt Nhưng Vẫn Gáy',
+  'Tay Yếu Nhưng Miệng Mạnh',
+  'Đánh Ít Gáy Nhiều',
+  'Cầu Lông Không Cầu May',
+  'Đập Cầu Không Đập Bạn',
+  'Đội Bạn Tự Thua',
+  'Cầu Đi Đâu Không Biết',
+  'Vợt Chỉ Đường Cầu Tự Đi',
+  'Không Hay Nhưng Hên',
+  'Hên Là Một Kỹ Năng',
+  'Đội Hình Vô Tri',
+  'Cú Đập Tình Thương',
+  'Đập Nhẹ Sương Sương',
+  'Cầu Qua Sân Là Thành Công',
+  'Gãy Vợt Không Gãy Ý Chí',
+  'Không Sợ Smash Chỉ Sợ Đói',
+  'Còn Pin Là Còn Đánh',
+  'Hết Pin Xin Nghỉ',
+  'Đánh Tới Khi Đói',
+  'Thắng Thì Gáy Thua Thì Im',
+  'Đánh Vui Có Thưởng',
 ]
 
-const vietnameseAnimals = [
-  'Rồng',
-  'Hổ',
-  'Đại Bàng',
-  'Sói',
-  'Phượng Hoàng',
-  'Báo Đen',
-  'Chim Ưng',
-  'Sư Tử',
+const roastPrefixes = [
+  'Xin Nhẹ',
+  'Chưa Thua',
+  'Đập Nhẹ',
+  'Giao Cầu',
+  'Cứu Cầu',
+  'Phòng Thủ',
+  'Bỏ Nhỏ',
+  'Đánh Vui',
+  'Thắng Nhờ',
+  'Thua Do',
+  'Mới Tập',
+  'Tay Yếu',
+  'Không Hay',
+  'Hơi Mỏi',
+  'Vừa Khởi Động',
 ]
 
-const badmintonWords = [
-  'Smash',
-  'Cầu Bay',
-  'Vợt Lửa',
-  'Lông Vũ',
-  'Chiến Cầu',
-  'Cú Đập',
-  'Cầu Lông',
-  'Vợt Thần',
-]
-
-const vietnameseSymbols = [
-  'Sấm Sét',
-  'Bão Lửa',
-  'Ánh Chớp',
-  'Ngọn Gió',
-  'Mặt Trời',
-  'Lửa Đỏ',
-  'Sao Vàng',
-  'Hào Quang',
-]
-
-const funWords = [
-  'Không Ngán',
-  'Đánh Là Cháy',
-  'Cầu Tới Bến',
-  'Gãy Vợt',
-  'Hết Pin',
-  'Mồ Hôi Rơi',
-  'Nhẹ Tay Thôi',
-  'Xin Một Set',
-]
-
-const locations = [
-  'Sài Gòn',
-  'Hà Nội',
-  'Đà Nẵng',
-  'Cần Thơ',
-  'Thủ Đức',
-  'Tân Bình',
-  'Bình Dương',
-  'Đồng Nai',
-  'An Giang',
-  'Miền Tây',
-]
-
-type WordType = 'adjective' | 'animal' | 'badminton' | 'symbol' | 'fun' | 'location'
-type Pattern = readonly WordType[]
-
-const patterns: readonly Pattern[] = [
-  ['adjective', 'animal'],
-  ['animal', 'location'],
-  ['badminton', 'location'],
-  ['symbol', 'location'],
-  ['adjective', 'badminton'],
-  ['fun'],
-  ['fun', 'location'],
-  ['symbol', 'badminton'],
+const roastSuffixes = [
+  'Một Set',
+  'Trận Nào',
+  'Thôi Mà',
+  'Xong Cầu Nguyện',
+  'Bằng Niềm Tin',
+  'Bằng Ánh Mắt',
+  'Nhưng Không Nhỏ Mọn',
+  'Nhưng Không Nhường',
+  'Phong Độ',
+  'Thiếu May Mắn',
+  'Nhưng Rất Gắt',
+  'Nhưng Miệng Mạnh',
+  'Nhưng Hên',
+  'Nhưng Vẫn Gáy',
+  'Đã Thấy Mệt',
 ]
 
 function randomItem<T>(items: readonly T[]): T {
   return items[Math.floor(Math.random() * items.length)]
 }
 
-function getWord(type: WordType, options?: TeamNameOptions): string {
-  switch (type) {
-    case 'adjective':
-      return randomItem(vietnameseAdjectives)
-    case 'animal':
-      return randomItem(vietnameseAnimals)
-    case 'badminton':
-      return randomItem(badmintonWords)
-    case 'symbol':
-      return randomItem(vietnameseSymbols)
-    case 'fun':
-      return randomItem(funWords)
-    case 'location':
-      return options?.location || randomItem(locations)
-  }
-}
-
-export function generateVietnameseTeamName(options?: TeamNameOptions): string {
-  let availablePatterns: readonly Pattern[] = patterns
-
-  if (options?.style === 'sport') {
-    availablePatterns = [
-      ['badminton', 'location'],
-      ['badminton', 'adjective'],
-      ['badminton', 'symbol'],
-    ]
-  }
-
-  if (options?.style === 'fun') {
-    availablePatterns = [
-      ['fun'],
-      ['fun', 'location'],
-    ]
-  }
-
-  if (options?.style === 'power') {
-    availablePatterns = [
-      ['adjective', 'animal'],
-      ['symbol', 'location'],
-      ['animal', 'location'],
-    ]
-  }
-
-  if (options?.style === 'location') {
-    availablePatterns = [
-      ['badminton', 'location'],
-      ['animal', 'location'],
-      ['symbol', 'location'],
-    ]
-  }
-
-  return randomItem(availablePatterns)
-    .map((type) => getWord(type, options))
-    .filter(Boolean)
-    .join(' ')
+export function generateVietnameseTeamName(): string {
+  const patterns = [
+    () => randomItem(roastPhrases),
+    () => randomItem(roastPhrases),
+    () => `${randomItem(roastPrefixes)} ${randomItem(roastSuffixes)}`,
+  ]
+  return randomItem(patterns)()
 }
