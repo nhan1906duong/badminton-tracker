@@ -4,7 +4,7 @@ import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
 import { SessionCard, EmptyState, ErrorState, PullToRefresh } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
-import { Plus, Trophy } from 'lucide-react'
+import { Plus, Trophy, User } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
 import {
   formatSessionDuration,
@@ -15,6 +15,7 @@ import {
 import type { MatchWithDetails } from '../types/database'
 import { useI18n } from '../i18n'
 import { useSessionLeaderboards } from '../hooks/useRankings'
+import { useAuth } from '../hooks/useAuth'
 
 interface SessionStat {
   matchCount: number
@@ -28,6 +29,7 @@ interface SessionStat {
 
 export default function SessionsListPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const { locale, t } = useI18n()
   const {
     data: sessions,
@@ -106,12 +108,23 @@ export default function SessionsListPage() {
         className="px-[var(--space-5)] pb-[var(--space-4)]"
         style={{ paddingTop: 'var(--space-6)' }}
       >
-        <h1
-          className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em] mb-[var(--space-2)]"
-          style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
-        >
-          {t('sessions.title')}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+          <h1
+            className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em]"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+          >
+            {t('sessions.title')}
+          </h1>
+          {!user && (
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'color-mix(in oklch, var(--muted) 35%, var(--bg))', color: 'var(--surface)', display: 'grid', placeItems: 'center', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0 }}
+            >
+              <User size={18} />
+            </button>
+          )}
+        </div>
         {subtitle && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
             {subtitle}
@@ -166,11 +179,13 @@ export default function SessionsListPage() {
         )}
       </div>
 
-      <FloatingActionButton
-        onClick={() => navigate('/sessions/new')}
-        icon={<Plus className="w-6 h-6" />}
-        ariaLabel={t('sessions.createNew')}
-      />
+      {user && (
+        <FloatingActionButton
+          onClick={() => navigate('/sessions/new')}
+          icon={<Plus className="w-6 h-6" />}
+          ariaLabel={t('sessions.createNew')}
+        />
+      )}
     </div>
     </PullToRefresh>
   )

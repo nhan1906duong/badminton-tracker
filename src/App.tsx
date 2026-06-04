@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import AnimatedRoutes from './components/AnimatedRoutes'
 import { Trophy, Medal, Settings } from 'lucide-react'
 import { LocaleProvider, useI18n } from './i18n'
+import { useAuth } from './hooks/useAuth'
 import './index.css'
 
 const TAB_ROUTES = ['/sessions', '/ranking', '/settings']
@@ -13,6 +14,7 @@ const queryClient = new QueryClient()
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const { t } = useI18n()
+  const { user } = useAuth()
   const isTabRoute = TAB_ROUTES.includes(location.pathname)
 
   return (
@@ -26,7 +28,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
             <NavButton to="/sessions" icon={<Trophy className="w-5 h-5" />} label={t('nav.sessions')} />
             <NavButton to="/ranking" icon={<Medal className="w-5 h-5" />} label={t('nav.ranking')} />
-            <NavButton to="/settings" icon={<Settings className="w-5 h-5" />} label={t('nav.settings')} />
+            {user && <NavButton to="/settings" icon={<Settings className="w-5 h-5" />} label={t('nav.settings')} />}
           </div>
         </nav>
       )}

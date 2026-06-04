@@ -69,6 +69,10 @@ vi.mock('../../hooks/useIsAdmin', () => ({
   useIsAdmin: () => mockIsAdmin,
 }))
 
+vi.mock('../../hooks/useAuth', () => ({
+  useAuth: () => ({ user: { id: 'user-1' }, isLoading: false }),
+}))
+
 // ─── Component mocks ──────────────────────────────────────────────────────────
 
 vi.mock('../../components/MatchesContent', () => ({

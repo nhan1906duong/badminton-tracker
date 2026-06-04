@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       await signInWithPassword(email, password)
       const from = location.state?.from as { pathname?: string } | undefined
-      navigate(from?.pathname || '/', { replace: true })
+      navigate(from?.pathname || '/sessions', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.invalidCredentials'))
     }
@@ -105,6 +105,14 @@ export default function LoginPage() {
             {isSigningIn ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </form>
+
+        <button
+          type="button"
+          onClick={() => navigate('/sessions')}
+          className="mt-[var(--space-3)] text-[13px] text-[var(--muted)] underline underline-offset-2 active:opacity-60"
+        >
+          {t('auth.continueAsGuest')}
+        </button>
       </div>
     </div>
   )

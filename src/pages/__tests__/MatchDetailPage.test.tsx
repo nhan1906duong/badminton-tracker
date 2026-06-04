@@ -43,6 +43,10 @@ vi.mock('../../hooks/useIsAdmin', () => ({
   useIsAdmin: () => true,
 }))
 
+vi.mock('../../hooks/useAuth', () => ({
+  useAuth: () => ({ user: { id: 'user-1' }, isLoading: false }),
+}))
+
 // ─── Design system mocks ──────────────────────────────────────────────────────
 
 vi.mock('../../../design-system/components', () => ({

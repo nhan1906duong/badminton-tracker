@@ -56,6 +56,7 @@ import { SessionStatsPanel } from '../../design-system/components/session-stats-
 import { formatShortPlayerName } from '../lib/player-name'
 import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2, Users } from 'lucide-react'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useAuth } from '../hooks/useAuth'
 import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats'
 import { generateSessionShareCard } from '../lib/share-card'
 import { Button } from '../../design-system/components/button'
@@ -64,6 +65,7 @@ import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 
 export default function SessionDetailPage() {
   const { locale, t } = useI18n()
+  const { user } = useAuth()
   const isAdmin = useIsAdmin()
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -281,10 +283,11 @@ export default function SessionDetailPage() {
           icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
           onClick: () => navigate(backTo),
         }}
-        rightAction={{
-          icon: <MoreVertical className="w-5 h-5" />,
-          onClick: openMenu,
-        }}
+        rightAction={
+          user || (matches?.length ?? 0) > 0 || (sessionStatus === 'ended' && recordedMatches.length > 0)
+            ? { icon: <MoreVertical className="w-5 h-5" />, onClick: openMenu }
+            : undefined
+        }
       />
 
       {/* Scrollable content */}
@@ -474,8 +477,8 @@ export default function SessionDetailPage() {
         </div>
       </div>
 
-      {/* FAB — Add Match (live only, non-league sessions) */}
-      {sessionStatus === 'live' && !isLeague && (
+      {/* FAB — Add Match (live only, non-league sessions, authenticated only) */}
+      {user && sessionStatus === 'live' && !isLeague && (
         <FloatingActionButton
           onClick={() => navigate(`/sessions/${sid}/matches/new`)}
           icon={<Plus className="w-6 h-6" />}
@@ -486,28 +489,28 @@ export default function SessionDetailPage() {
 
       {/* Menu sheet */}
       <BottomSheet open={menuOpen} onClose={closeMenu}>
-        {sessionStatus === 'live' && !isLeague && (
+        {user && sessionStatus === 'live' && !isLeague && (
           <BottomSheetItem
             icon={<Plus className="w-5 h-5" />}
             label={t('sessionDetail.newMatch')}
             onClick={() => { closeMenu(); navigate(`/sessions/${sid}/matches/new`) }}
           />
         )}
-        {sessionStatus === 'live' && !isLeague && (
+        {user && sessionStatus === 'live' && !isLeague && (
           <BottomSheetItem
             icon={<Users className="w-5 h-5" />}
             label={t('attendance.title')}
             onClick={() => { closeMenu(); setAttendanceSheetOpen(true) }}
           />
         )}
-        {sessionStatus === 'live' && isLeague && (
+        {user && sessionStatus === 'live' && isLeague && (
           <BottomSheetItem
             icon={<Plus className="w-5 h-5" />}
             label={t('sessionDetail.addRound')}
             onClick={handleAddLeagueRound}
           />
         )}
-        {sessionStatus === 'scheduled' && (
+        {user && sessionStatus === 'scheduled' && (
           <>
             {isLeague && (
               <BottomSheetItem
@@ -556,8 +559,8 @@ export default function SessionDetailPage() {
             onClick={handleSharePreview}
           />
         )}
-        {(sessionStatus === 'live' || isAdmin) && <BottomSheetDivider />}
-        {sessionStatus === 'live' && (
+        {(user && sessionStatus === 'live' || isAdmin) && <BottomSheetDivider />}
+        {user && sessionStatus === 'live' && (
           <BottomSheetItem
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

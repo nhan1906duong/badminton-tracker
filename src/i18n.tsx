@@ -115,6 +115,7 @@ const en = {
   'auth.signingIn': 'Signing in...',
   'auth.invalidCredentials': 'Invalid email or password',
   'auth.signedIn': 'Signed in',
+  'auth.continueAsGuest': 'Go to home',
 
   'account.title': 'Account Settings',
   'account.logOut': 'Log Out',
@@ -674,6 +675,7 @@ const vi: Record<TranslationKey, string> = {
   'auth.signingIn': 'Đang đăng nhập...',
   'auth.invalidCredentials': 'Email hoặc mật khẩu không đúng',
   'auth.signedIn': 'Đã đăng nhập',
+  'auth.continueAsGuest': 'Chuyển đến trang chủ',
 
   'account.title': 'Cài đặt tài khoản',
   'account.logOut': 'Đăng xuất',

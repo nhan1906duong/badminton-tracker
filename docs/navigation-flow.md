@@ -7,20 +7,20 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 | Route | Component | Auth | Tab |
 |-------|-----------|------|-----|
 | `/login` | `LoginPage` | No | No |
-| `/` | `→ /sessions` (redirect) | Yes | — |
-| `/sessions` | `SessionsListPage` | Yes | Yes |
+| `/` | `→ /sessions` (redirect) | No | — |
+| `/sessions` | `SessionsListPage` | No | Yes |
 | `/sessions/active` | `ActiveSessionRedirect` | Yes | No |
 | `/sessions/new` | `CreateSessionPage` | Yes | No |
-| `/sessions/:id` | `SessionDetailPage` | Yes | No |
-| `/sessions/:id/stats` | `SessionStatsPage` | Yes | No |
-| `/sessions/:id/donated` | `SessionDonatedListPage` | Yes | No |
+| `/sessions/:id` | `SessionDetailPage` | No | No |
+| `/sessions/:id/stats` | `SessionStatsPage` | No | No |
+| `/sessions/:id/donated` | `SessionDonatedListPage` | No | No |
 | `/sessions/:id/matches/new` | `CreateMatchPage` | Yes | No |
-| `/sessions/:id/matches/:matchId` | `MatchDetailPage` | Yes | No |
+| `/sessions/:id/matches/:matchId` | `MatchDetailPage` | No | No |
 | `/sessions/:id/matches/:matchId/points` | `MatchPointsPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/players/edit` | `EditPlayersPage` | Yes | No |
 | `/sessions/:id/matches/:matchId/edit` | `LegacyEditMatchRedirect` | Yes | No |
-| `/players/:playerId` | `PlayerDetailPage` | Yes | No |
-| `/ranking` | `RankingPage` | Yes | Yes |
+| `/players/:playerId` | `PlayerDetailPage` | No | No |
+| `/ranking` | `RankingPage` | No | Yes |
 | `/settings` | `SettingsPage` | Yes | Yes |
 | `/settings/points` | `PointSystemPage` | Yes | No |
 | `/settings/change-password` | `ChangePasswordPage` | Yes | No |
@@ -37,11 +37,20 @@ All routes are defined in `src/components/AnimatedRoutes.tsx`.
 
 Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
 
+Authenticated users see all three tabs. Guests see only Sessions and Ranking — Settings is hidden.
+
 ```
+Authenticated:
 ┌──────────┬─────────┬──────────┐
 │ Sessions │ Ranking │ Settings │
 │/sessions │/ranking │/settings │
 └──────────┴─────────┴──────────┘
+
+Guest:
+┌──────────┬─────────┐
+│ Sessions │ Ranking │
+│/sessions │/ranking │
+└──────────┴─────────┘
 ```
 
 ## Screen Flow
@@ -68,7 +77,7 @@ Three tabs, visible on tab routes only. Hidden on `/login` and all sub-routes.
 │                │               │ Language switch   │
 │                │               │ Backup (admin)    │
 │                │               │ Design Sys (dev)  │
-│                │               │ Log Out ──► /login│
+│                │               │ Log Out ──► /sessions│
 │                │               │                   │
 └───────┬────────┴───────────────┴───────────────────┘
         │
@@ -138,7 +147,9 @@ The `AppBar` component handles back navigation for sub-page routes via `navigate
 
 ## Auth Guard
 
-Protected routes redirect to `/login` if unauthenticated. After login, user returns to the original route via `location.state`.
+The app supports public (guest) access. Read-only routes have no auth requirement. Write routes (`/sessions/new`, `/sessions/:id/matches/new`, `/…/points`, `/…/players/edit`, all `/settings`) redirect to `/login` if unauthenticated. After login, the user returns to the original route via `location.state`, or `/sessions` if no prior route.
+
+Write-action UI (FABs, ⋮ menu items, action buttons) is hidden from guests at the component level in addition to being blocked by Supabase RLS at the database level.
 
 ## Modals (No Route Change)
 

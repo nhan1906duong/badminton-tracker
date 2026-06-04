@@ -16,6 +16,7 @@ import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Player } from '../types/database'
 import { LOCALE_TAG, matchTypeLabel, useI18n, type Locale } from '../i18n'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useAuth } from '../hooks/useAuth'
 import {
   ChevronLeft, MoreVertical, Minus, RotateCcw, ArrowLeftRight,
   CheckCircle, RefreshCw, Trash2, Pencil, Loader2,
@@ -193,6 +194,7 @@ const scoreNumStyle: React.CSSProperties = {
 
 export default function MatchDetailPage() {
   const { locale, t } = useI18n()
+  const { user } = useAuth()
   const isAdmin = useIsAdmin()
   const { id: sessionId, matchId } = useParams<{ id: string; matchId: string }>()
   const navigate = useNavigate()
@@ -562,11 +564,11 @@ export default function MatchDetailPage() {
           icon: <ChevronLeft style={{ width: 18, height: 18 }} />,
           onClick: () => navigate(-1),
         }}
-        rightAction={{
+        rightAction={user ? {
           ariaLabel: t('common.moreOptions'),
           icon: <MoreVertical style={{ width: 18, height: 18 }} />,
           onClick: () => setSheet('menu'),
-        }}
+        } : undefined}
         stuck={isNavStuck}
       />
 
@@ -750,36 +752,38 @@ export default function MatchDetailPage() {
               </span>
             </div>
 
-            {/* Action row */}
-            <div style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-6)', display: 'grid', gridTemplateColumns: isCompleted ? (completedWinnerLabel ? '1fr 1fr' : '1fr') : '1fr 1fr', gap: 'var(--space-2)' }}>
-              {isCompleted ? (
-                <>
-                  <button type="button" onClick={handleReopenMatch} disabled={reopenMatch.isPending}
-                    style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
-                    {reopenMatch.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <RefreshCw style={{ width: 16, height: 16, color: 'var(--muted)' }} />}
-                    {t('matchDetail.reopenEditing')}
-                  </button>
-                  {completedWinnerLabel && (
-                    <button type="button" onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/points`)}
+            {/* Action row — only for authenticated users */}
+            {user && (
+              <div style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-6)', display: 'grid', gridTemplateColumns: isCompleted ? (completedWinnerLabel ? '1fr 1fr' : '1fr') : '1fr 1fr', gap: 'var(--space-2)' }}>
+                {isCompleted ? (
+                  <>
+                    <button type="button" onClick={handleReopenMatch} disabled={reopenMatch.isPending}
                       style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--muted)' }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                      {t('matchDetail.viewPoints')}
+                      {reopenMatch.isPending ? <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> : <RefreshCw style={{ width: 16, height: 16, color: 'var(--muted)' }} />}
+                      {t('matchDetail.reopenEditing')}
                     </button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <button type="button" onClick={swapServe} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
-                    <ArrowLeftRight style={{ width: 16, height: 16, color: 'var(--muted)' }} />
-                    {t('matchDetail.swapServe')}
-                  </button>
-                  <button type="button" onClick={undoLast} disabled={pointLog.length === 0} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: pointLog.length === 0 ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, opacity: pointLog.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}>
-                    <RotateCcw style={{ width: 16, height: 16, color: 'var(--muted)' }} />
-                    {t('matchDetail.undoLastPoint')}
-                  </button>
-                </>
-              )}
-            </div>
+                    {completedWinnerLabel && (
+                      <button type="button" onClick={() => navigate(`/sessions/${sessionId}/matches/${matchId}/points`)}
+                        style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--muted)' }}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        {t('matchDetail.viewPoints')}
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={swapServe} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, touchAction: 'manipulation' }}>
+                      <ArrowLeftRight style={{ width: 16, height: 16, color: 'var(--muted)' }} />
+                      {t('matchDetail.swapServe')}
+                    </button>
+                    <button type="button" onClick={undoLast} disabled={pointLog.length === 0} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--fg)', cursor: pointLog.length === 0 ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', minHeight: 48, opacity: pointLog.length === 0 ? 0.4 : 1, touchAction: 'manipulation' }}>
+                      <RotateCcw style={{ width: 16, height: 16, color: 'var(--muted)' }} />
+                      {t('matchDetail.undoLastPoint')}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
           </>
         )}
@@ -788,7 +792,7 @@ export default function MatchDetailPage() {
       {/* ── Bottom bar ────────────────────────────────────────────────────── */}
       <div style={{ position: 'sticky', bottom: 0, padding: `var(--space-3) var(--space-5) max(var(--space-4), calc(env(safe-area-inset-bottom) + var(--space-3)))`, background: 'color-mix(in oklch, var(--bg) 92%, transparent)', backdropFilter: 'saturate(180%) blur(12px)', WebkitBackdropFilter: 'saturate(180%) blur(12px)', borderTop: '1px solid var(--border)', zIndex: 18, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
 
-        {isScheduled && (
+        {isScheduled && user && (
           <button type="button" onClick={handleStartMatch} disabled={!serving || startMatch.isPending}
             style={{ width: '100%', padding: 'var(--space-4)', background: serving ? 'var(--accent)' : 'var(--border)', color: serving ? 'var(--surface)' : 'var(--muted)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 700, border: 'none', borderRadius: 'var(--radius-lg)', cursor: serving ? 'pointer' : 'not-allowed', minHeight: 52, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-2)', boxShadow: serving ? '0 1px 2px oklch(0% 0 0 / 0.08), 0 6px 18px oklch(55% 0.20 30 / 0.22)' : 'none', transition: 'opacity 0.12s, transform 0.12s', touchAction: 'manipulation' }}>
             {startMatch.isPending ? (
@@ -801,7 +805,7 @@ export default function MatchDetailPage() {
           </button>
         )}
 
-        {isLive && (() => {
+        {isLive && user && (() => {
           const autoWinner = computeWinner(liveScore.a, liveScore.b)
           if (autoWinner) {
             return (

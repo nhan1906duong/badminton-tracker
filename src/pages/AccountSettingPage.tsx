@@ -53,7 +53,7 @@ export default function AccountSettingPage() {
 
           <button
             type="button"
-            onClick={() => signOut()}
+            onClick={() => { navigate('/sessions'); signOut() }}
             className="inline-flex px-[var(--space-1)] py-[var(--space-3)] text-[var(--danger)] active:opacity-60 transition-opacity"
           >
             <span className="text-[15px] font-semibold">{t('account.logOut')}</span>
