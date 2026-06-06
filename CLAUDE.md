@@ -127,7 +127,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
-| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker |
+| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers |
 | `src/hooks/useMenDoublesRankings.ts` | Computes MD pair rankings (win rate → wins → matches played) from ended sessions only; exports `computeMenDoublesRankings` (pure fn, tested) |
 | `src/hooks/useH2HPairs.ts` | Exact-composition 2v2 head-to-head: exports `computeH2HPairs` (pure fn, tested) + `useH2HPairs` hook; handles both normal and reversed team orientations |
 | `src/components/HeadToHeadTab.tsx` | Head to Head tab on RankingPage: 2-slot player picker per side, half-circle win-% gauge, win counts, match history |

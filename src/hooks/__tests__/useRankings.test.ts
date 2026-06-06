@@ -125,7 +125,7 @@ describe('computeRankChanges', () => {
     return { playerId, rating, rank }
   }
 
-  function prevResult(playerId: string, sessionId: string, matchId: string, wins = true, points = 10): import('../useRankings').PrevResult {
+  function prevResult(playerId: string, sessionId: string, wins = true, points = 10): import('../useRankings').PrevResult {
     return { session_id: sessionId, player_id: playerId, is_winner: wins, total_weekly_points: points, team_score: 21, opponent_score: 15 }
   }
 
@@ -159,8 +159,8 @@ describe('computeRankChanges', () => {
 
     // p3 has best pre-session avg (15); p1 has mid avg (5); winner has none (0)
     const prevResults = [
-      prevResult('p3', 's0', 'm1', true, 15),  // avg 15
-      prevResult('p1', 's0', 'm2', true, 5),   // avg 5
+      prevResult('p3', 's0', true, 15),  // avg 15
+      prevResult('p1', 's0', true, 5),   // avg 5
     ]
 
     const changes = computeRankChanges(rankings, prevResults, deltaMap)
