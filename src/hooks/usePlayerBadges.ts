@@ -102,7 +102,7 @@ export function computeBadges(
   }
 
   const sortedSessions = [...allSessions]
-    .filter((s) => sessionResultsMap.has(s.id))
+    .filter((s) => sessionResultsMap.has(s.id) && s.ended_at !== null)
     .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime())
 
   // Per-session: determine champion using the leaderboard ranking (weeklyPoints)

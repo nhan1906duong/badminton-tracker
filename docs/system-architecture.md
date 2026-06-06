@@ -110,6 +110,8 @@ Match list display order (client-side, via `sortMatches` in `MatchesContent.tsx`
 
 Only `COMPLETED` matches with a winning team count toward session stat panels, player history, head-to-head stats, partner stats, donations, and Elo recalculation.
 
+Only **ended sessions** (`ended_at IS NOT NULL`) count toward player achievements (champion/runner-up), milestone badges (dynasty, titles, most-played, streak, most-donated), and all-time ranking stats (matchesPlayed, wins, losses, weeklyPoints). Results from matches inside a live session are written to `player_match_results` immediately but are excluded from these aggregations until the session is closed.
+
 The all-time ranking rows also show a current weekly Top 1 streak when a player has led more than one consecutive active calendar week. This is derived client-side from ended sessions and `player_match_results`: sessions are grouped by local calendar week from `started_at`, player `total_weekly_points` are summed across all sessions in that week, and the weekly leader is chosen by points, wins, point difference, then name. Empty calendar weeks are ignored, and duplicate result rows are de-duplicated by `player_id + match_id`.
 
 ## Authentication Flow

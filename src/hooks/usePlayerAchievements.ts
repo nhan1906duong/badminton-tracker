@@ -52,7 +52,7 @@ export function computeAchievements(
 
   for (const [sessionId, results] of sessionResultsMap) {
     const session = sessions.find((s) => s.id === sessionId)
-    if (!session) continue
+    if (!session || !session.ended_at) continue
 
     const rankings = buildSessionWeeklyRankings(null, results)
     const playerRank = rankings.findIndex((r) => r.playerId === playerId)

@@ -166,7 +166,9 @@ export function usePlayerRankings() {
         totalWeeklyPoints: number; pointsFor: number; pointsAgainst: number; totalRatingDelta: number
       }>()
 
+      const endedSessionIds = new Set((endedSessions ?? []).map(s => s.id))
       const uniqueResults = uniquePlayerMatchResults((results ?? []) as ResultRow[])
+        .filter(r => endedSessionIds.has(r.session_id))
 
       for (const r of uniqueResults) {
         const s = statsMap.get(r.player_id) ?? {

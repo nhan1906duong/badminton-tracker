@@ -62,7 +62,7 @@ src/
 | 68 | hooks/useBwfTournaments.ts | Read BWF tournament cache from Supabase; filter by date window |
 | 63 | hooks/useSessionAttendances.ts | Query/upsert/delete hooks for `session_attendances` |
 | 57 | design-system/components/bwf-category-badge.tsx | Tiered color badge for BWF tournament categories (S1000/S750/S500/S300/S100/Finals) |
-| 90 | hooks/usePlayerAchievements.ts | Compute player achievements per session (champion/runner-up ranking) |
+| 90 | hooks/usePlayerAchievements.ts | Compute player achievements per ended session only (champion/runner-up ranking) |
 | 78 | hooks/usePlayerPointsHistory.ts | Group a player's `player_match_results` by session for future point-history UI |
 | 61 | stores/new-match-store.ts | Zustand store for match creation flow (matchType, teamA/B, mode, scheduledAt) |
 | 65 | hooks/usePlayerMatchHistory.ts | Paginated match history for a player (cursor-based) |
