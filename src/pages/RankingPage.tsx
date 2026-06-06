@@ -2,6 +2,7 @@ import { useCallback, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Medal, UserPlus, Crown, User } from 'lucide-react'
 import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useMenDoublesRankings } from '../hooks/useMenDoublesRankings'
 import { useSessions } from '../hooks/useSessions'
 import Avatar from '../components/Avatar'
 import PlayerRecordLine from '../components/PlayerRecordLine'
@@ -12,6 +13,7 @@ import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
 import FloatingActionButton from '../components/FloatingActionButton'
 import PlayerForm from '../components/PlayerForm'
 import { LOCALE_TAG, useI18n } from '../i18n'
+import { formatShortPlayerName } from '../lib/player-name'
 import { ShuttleLoading } from '../components/ShuttleLoading'
 
 function GhostRank({ rank, showCrown }: { rank: number; showCrown?: boolean }) {
@@ -262,7 +264,7 @@ export default function RankingPage() {
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()
   const [showAddPlayer, setShowAddPlayer] = useState(false)
-  const [activeTab, setActiveTab] = useState<'all' | 'session'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'session' | 'doubles'>('all')
 
   const latestSession = useMemo(
     () => sessions.find((s) => s.ended_at != null) ?? null,
@@ -271,6 +273,8 @@ export default function RankingPage() {
 
   const { data: sessionLeaderboard, isLoading: sessionLoading, refetch: refetchSession } =
     useSessionLeaderboard(latestSession?.id)
+
+  const { rankings: doublesRankings, isLoading: doublesLoading } = useMenDoublesRankings()
 
   const sessionRankings = sessionLeaderboard?.rankings ?? []
 
@@ -281,7 +285,8 @@ export default function RankingPage() {
   }, [refetch, refetchCompletedMatchCount, refetchSession])
 
   const TAB_ALL = t('ranking.tabAll')
-
+  const TAB_DOUBLES = t('ranking.tabDoubles')
+  const TAB_SESSION = t('ranking.tabSession')
 
   return (
     <>
@@ -327,11 +332,8 @@ export default function RankingPage() {
       >
         {([
           { key: 'all', label: <span>{TAB_ALL}</span> },
-          { key: 'session', label: (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              {latestSession?.label ?? t('ranking.tabSession')}
-            </span>
-          )},
+          { key: 'doubles', label: <span>{TAB_DOUBLES}</span> },
+          { key: 'session', label: <span>{latestSession?.label ?? TAB_SESSION}</span> },
         ] as const).map(({ key, label }) => (
           <button
             key={key}
@@ -457,7 +459,7 @@ export default function RankingPage() {
             })}
           </div>
         )
-      ) : (
+      ) : activeTab === 'session' ? (
         /* Session tab */
         !latestSession ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12 }}>
@@ -508,6 +510,97 @@ export default function RankingPage() {
                 isMe={myPlayerId === stat.playerId}
               />
             ))}
+          </div>
+        )
+      ) : (
+        /* Doubles tab */
+        doublesLoading ? (
+          <ShuttleLoading compact />
+        ) : doublesRankings.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: 12 }}>
+            <Medal style={{ width: 40, height: 40, color: 'var(--muted)' }} />
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{t('ranking.noDoubles')}</p>
+          </div>
+        ) : (
+          <div style={{ margin: '0 var(--space-5)' }}>
+            <p
+              className="text-[11px] font-bold uppercase tracking-[0.1em] px-1 mb-3"
+              style={{ color: 'var(--muted)' }}
+            >
+              {t('ranking.pairCount', { count: doublesRankings.length })}
+            </p>
+            {doublesRankings.map((pair, i) => {
+              const isLast = i === doublesRankings.length - 1
+              const winRatePct = Math.round(pair.winRate * 100)
+              return (
+                <div
+                  key={pair.key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-3)',
+                    padding: 'var(--space-3) 0',
+                    borderBottom: isLast ? 'none' : '1px solid var(--border)',
+                  }}
+                >
+                  <GhostRank rank={i + 1} />
+
+                  <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                    <Avatar src={pair.player1.avatar_url} name={pair.player1.name} size={20} />
+                    <Avatar src={pair.player2.avatar_url} name={pair.player2.name} size={20} />
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 15,
+                        fontWeight: 800,
+                        color: 'var(--fg)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {formatShortPlayerName(pair.player1.name)} / {formatShortPlayerName(pair.player2.name)}
+                    </div>
+                    <PlayerRecordLine
+                      matchesPlayed={pair.matchesPlayed}
+                      wins={pair.wins}
+                      losses={pair.losses}
+                      winRate={winRatePct}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 48 }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 'var(--text-xl)',
+                        fontWeight: 900,
+                        lineHeight: 1,
+                        color: 'var(--fg)',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {winRatePct}%
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: 'var(--muted)',
+                      }}
+                    >
+                      {t('ranking.rate')}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )
       )}

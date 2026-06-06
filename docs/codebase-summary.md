@@ -33,7 +33,8 @@ src/
 | 423 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
 | 309 | hooks/useRankings.ts | usePlayerRankings (Elo + weekly Top 1 streak) + per-session leaderboard hooks |
-| 517 | pages/RankingPage.tsx | Player rankings by Elo rating and current weekly Top 1 streak (`/ranking`) |
+| 517 | pages/RankingPage.tsx | Three-tab ranking page: Player (Elo all-time), Pair (MD pairs win rate), Current session (`/ranking`) |
+| 80 | hooks/useMenDoublesRankings.ts | Compute MD pair rankings (win rate, wins, matches) from ended sessions only |
 | 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
 | 338 | pages/SettingsPage.tsx | Profile, player link/unlink, change password, logout, dev tools |

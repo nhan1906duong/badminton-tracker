@@ -128,6 +128,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker |
+| `src/hooks/useMenDoublesRankings.ts` | Computes MD pair rankings (win rate → wins → matches played) from ended sessions only; exports `computeMenDoublesRankings` (pure fn, tested) |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins — only shown when count > 1), most donated. Each badge is only awarded to the current leader(s) across all players. |

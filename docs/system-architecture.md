@@ -112,7 +112,9 @@ Only `COMPLETED` matches with a winning team count toward session stat panels, p
 
 Only **ended sessions** (`ended_at IS NOT NULL`) count toward player achievements (champion/runner-up), milestone badges (dynasty, titles, most-played, streak, most-donated), and all-time ranking stats (matchesPlayed, wins, losses, weeklyPoints). Results from matches inside a live session are written to `player_match_results` immediately but are excluded from these aggregations until the session is closed.
 
-The all-time ranking rows also show a current weekly Top 1 streak when a player has led more than one consecutive active calendar week. This is derived client-side from ended sessions and `player_match_results`: sessions are grouped by local calendar week from `started_at`, player `total_weekly_points` are summed across all sessions in that week, and the weekly leader is chosen by points, wins, point difference, then name. Empty calendar weeks are ignored, and duplicate result rows are de-duplicated by `player_id + match_id`.
+The all-time ranking rows (Player tab) also show a current weekly Top 1 streak when a player has led more than one consecutive active calendar week. This is derived client-side from ended sessions and `player_match_results`: sessions are grouped by local calendar week from `started_at`, player `total_weekly_points` are summed across all sessions in that week, and the weekly leader is chosen by points, wins, point difference, then name. Empty calendar weeks are ignored, and duplicate result rows are de-duplicated by `player_id + match_id`.
+
+`RankingPage` has three tabs: **Player** (all-time Elo), **Pair** (MD doubles pair rankings sorted by win rate → wins → matches played, using `useMenDoublesRankings`), and **Current session** (latest ended session leaderboard). The Pair tab only counts MEN_DOUBLES matches from ended sessions.
 
 ## Authentication Flow
 
