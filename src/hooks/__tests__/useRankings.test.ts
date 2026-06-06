@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildSessionWeeklyRankings } from '../useRankings'
+import { buildSessionWeeklyRankings, computeRankChanges } from '../useRankings'
+import type { PlayerRankingStats } from '../useRankings'
 
 const players = [
   { id: 'p1', name: 'Alice', avatar_url: null },
@@ -116,5 +117,65 @@ describe('buildSessionWeeklyRankings — weeklyPoints sort', () => {
 
   it('returns empty array for no results', () => {
     expect(buildSessionWeeklyRankings(players, [])).toEqual([])
+  })
+})
+
+describe('computeRankChanges', () => {
+  function makeRanking(playerId: string, rank: number, rating: number): Pick<PlayerRankingStats, 'playerId' | 'rating' | 'rank'> {
+    return { playerId, rating, rank }
+  }
+
+  function prevResult(playerId: string, sessionId: string, matchId: string, wins = true, points = 10): import('../useRankings').PrevResult {
+    return { session_id: sessionId, player_id: playerId, is_winner: wins, total_weekly_points: points, team_score: 21, opponent_score: 15 }
+  }
+
+  it('detects a player who moved up after the last session', () => {
+    // Player A: rating 1150 (gained +100 last session, so prevRating = 1050)
+    // Player B: rating 1100 (no change, prevRating = 1100)
+    // Current: A=rank1, B=rank2. Before: B=rank1, A=rank2 → A went up +1, B went down -1
+    const rankings = [makeRanking('A', 1, 1150), makeRanking('B', 2, 1100)]
+    const deltaMap = new Map([['A', 100]])
+    const changes = computeRankChanges(rankings, [], deltaMap)
+    expect(changes.get('A')).toBe(1)   // moved up 1
+    expect(changes.get('B')).toBe(-1)  // moved down 1
+  })
+
+  it('breaks ties in prevRating by pre-session averageWeeklyPoints', () => {
+    // All three players have identical prevRating (1000) — a 3-way tie.
+    // Tie must be broken by pre-session avgWeeklyPoints.
+    // winner: +200 Elo gain → prevRating=1000, 0 history → should be prevRank 3
+    // p1:    +100 Elo gain → prevRating=1000, low avg history → should be prevRank 2
+    // p3:      0 Elo gain → prevRating=1000, high avg history → should be prevRank 1
+    //
+    // Old code sorted prevRating-only (stable, so kept current-rank order [winner, p1, p3])
+    // → gave prevRanks winner=1, p1=2, p3=3, so rankChanges were all 0 (wrong for winner/p3).
+    // New code uses avgWeeklyPoints tiebreaker → correct prev ordering.
+    const rankings = [
+      makeRanking('winner', 1, 1200),  // +200 last session, prevRating=1000
+      makeRanking('p1',    2, 1100),   // +100 last session, prevRating=1000
+      makeRanking('p3',    3, 1000),   // +0   last session, prevRating=1000
+    ]
+    const deltaMap = new Map([['winner', 200], ['p1', 100]])
+
+    // p3 has best pre-session avg (15); p1 has mid avg (5); winner has none (0)
+    const prevResults = [
+      prevResult('p3', 's0', 'm1', true, 15),  // avg 15
+      prevResult('p1', 's0', 'm2', true, 5),   // avg 5
+    ]
+
+    const changes = computeRankChanges(rankings, prevResults, deltaMap)
+    // p3 was prevRank 1 (highest avg), now rank 3 → -2
+    expect(changes.get('p3')).toBe(-2)
+    // p1 was prevRank 2, now rank 2 → 0
+    expect(changes.get('p1')).toBe(0)
+    // winner was prevRank 3 (no history), now rank 1 → +2
+    expect(changes.get('winner')).toBe(2)
+  })
+
+  it('returns 0 for all players when there is no last session', () => {
+    const rankings = [makeRanking('A', 1, 1100), makeRanking('B', 2, 1000)]
+    const changes = computeRankChanges(rankings, [], new Map())
+    expect(changes.get('A')).toBe(0)
+    expect(changes.get('B')).toBe(0)
   })
 })

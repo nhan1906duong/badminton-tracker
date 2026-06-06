@@ -58,6 +58,55 @@ export interface SessionLeaderboard {
   leader: SessionWeeklyStats | undefined
 }
 
+export interface PrevResult {
+  session_id: string
+  player_id: string
+  is_winner: boolean
+  total_weekly_points: number
+  team_score: number
+  opponent_score: number
+}
+
+// Returns a map of playerId → rankChange (positive = moved up).
+// prevResults must be the per-player match rows *excluding* the last session.
+// lastSessionDeltaMap holds the summed Elo delta each player earned in that last session.
+export function computeRankChanges(
+  rankings: Pick<PlayerRankingStats, 'playerId' | 'rating' | 'rank'>[],
+  prevResults: PrevResult[],
+  lastSessionDeltaMap: Map<string, number>,
+): Map<string, number> {
+  const prevStatsMap = new Map<string, { matchesPlayed: number; wins: number; totalWeeklyPoints: number; pointsFor: number; pointsAgainst: number }>()
+  for (const r of prevResults) {
+    const s = prevStatsMap.get(r.player_id) ?? { matchesPlayed: 0, wins: 0, totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0 }
+    s.matchesPlayed += 1
+    s.wins += r.is_winner ? 1 : 0
+    s.totalWeeklyPoints += r.total_weekly_points
+    s.pointsFor += r.team_score
+    s.pointsAgainst += r.opponent_score
+    prevStatsMap.set(r.player_id, s)
+  }
+
+  const prevRatingOf = (r: Pick<PlayerRankingStats, 'playerId' | 'rating'>) =>
+    r.rating - (lastSessionDeltaMap.get(r.playerId) ?? 0)
+
+  const prevSorted = [...rankings].sort((a, b) => {
+    const rDiff = prevRatingOf(b) - prevRatingOf(a)
+    if (rDiff !== 0) return rDiff
+    const psA = prevStatsMap.get(a.playerId) ?? { matchesPlayed: 0, wins: 0, totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0 }
+    const psB = prevStatsMap.get(b.playerId) ?? { matchesPlayed: 0, wins: 0, totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0 }
+    const avgA = psA.matchesPlayed > 0 ? psA.totalWeeklyPoints / psA.matchesPlayed : 0
+    const avgB = psB.matchesPlayed > 0 ? psB.totalWeeklyPoints / psB.matchesPlayed : 0
+    if (avgB !== avgA) return avgB - avgA
+    const wrA = psA.matchesPlayed > 0 ? psA.wins / psA.matchesPlayed : 0
+    const wrB = psB.matchesPlayed > 0 ? psB.wins / psB.matchesPlayed : 0
+    if (wrB !== wrA) return wrB - wrA
+    return (psB.pointsFor - psB.pointsAgainst) - (psA.pointsFor - psA.pointsAgainst)
+  })
+
+  const prevRankMap = new Map(prevSorted.map((r, i) => [r.playerId, i + 1]))
+  return new Map(rankings.map(r => [r.playerId, (prevRankMap.get(r.playerId) ?? r.rank) - r.rank]))
+}
+
 function uniquePlayerMatchResults<T extends { player_id: string; match_id: string }>(results: T[] | null | undefined): T[] {
   return Array.from(
     new Map((results ?? []).map(result => [`${result.player_id}:${result.match_id}`, result])).values()
@@ -242,16 +291,12 @@ export function usePlayerRankings() {
       })
       rankings.forEach((r, i) => { r.rank = i + 1 })
 
-      // Compute previous rank (before the last session's Elo changes)
-      const prevRatingOf = (r: PlayerRankingStats) => r.rating - (lastSessionDeltaMap.get(r.playerId) ?? 0)
-      const prevSorted = [...rankings].sort((a, b) => prevRatingOf(b) - prevRatingOf(a))
-      const prevRankMap = new Map(prevSorted.map((r, i) => [r.playerId, i + 1]))
-
-      // rankChange: positive = moved up (e.g. was 3, now 1 → +2)
-      rankings.forEach(r => {
-        const prev = prevRankMap.get(r.playerId) ?? r.rank
-        r.rankChange = prev - r.rank
-      })
+      // Compute previous rank (before the last session's contribution)
+      const prevResultsForRank = lastSession?.id
+        ? uniqueResults.filter(r => r.session_id !== lastSession.id)
+        : uniqueResults
+      const rankChangeMap = computeRankChanges(rankings, prevResultsForRank, lastSessionDeltaMap)
+      rankings.forEach(r => { r.rankChange = rankChangeMap.get(r.playerId) ?? 0 })
 
       return rankings
     },
