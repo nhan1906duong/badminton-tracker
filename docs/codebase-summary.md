@@ -33,7 +33,7 @@ src/
 | 423 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
 | 309 | hooks/useRankings.ts | usePlayerRankings (Elo + weekly Top 1 streak) + per-session leaderboard hooks |
-| 517 | pages/RankingPage.tsx | Three-tab ranking page: Player (Elo all-time), Pair (MD pairs win rate), Current session (`/ranking`) |
+| 517 | pages/RankingPage.tsx | Four-tab ranking page: Singles (Elo all-time), Doubles (MD pairs win rate), Current session, Head to Head (`/ranking`) |
 | 80 | hooks/useMenDoublesRankings.ts | Compute MD pair rankings (win rate, wins, matches) from ended sessions only |
 | 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
@@ -73,6 +73,8 @@ src/
 | 46 | components/DonorListItem.tsx | Row for SessionDonatedListPage (avatar + losses + match count) |
 | 45 | hooks/usePlayerMatches.ts | Paginated match history for a player (infinite scroll) |
 | 66 | hooks/useHeadToHead.ts | Head-to-head stats vs each opponent, with per-opponent match list |
+| 75 | hooks/useH2HPairs.ts | `computeH2HPairs` (pure, tested) + hook: exact-composition 2v2 head-to-head wins/losses |
+| — | components/HeadToHeadTab.tsx | H2H tab UI: 2-slot player pickers per side, win-% gauge, win counts, match history |
 | — | design-system/components/avatar.tsx | Rectangle avatar: accent bg, 2-letter initials, image support |
 | 2 | components/Avatar.tsx | Re-export shim → design-system/components/avatar.tsx |
 | 13 | lib/supabase.ts | Supabase client initialization |

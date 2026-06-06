@@ -1,6 +1,7 @@
 import { useCallback, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Medal, UserPlus, Crown, User } from 'lucide-react'
+import HeadToHeadTab from '../components/HeadToHeadTab'
 import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useMenDoublesRankings } from '../hooks/useMenDoublesRankings'
 import { useSessions } from '../hooks/useSessions'
@@ -264,7 +265,7 @@ export default function RankingPage() {
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()
   const [showAddPlayer, setShowAddPlayer] = useState(false)
-  const [activeTab, setActiveTab] = useState<'all' | 'session' | 'doubles'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'session' | 'doubles' | 'h2h'>('all')
 
   const latestSession = useMemo(
     () => sessions.find((s) => s.ended_at != null) ?? null,
@@ -287,6 +288,7 @@ export default function RankingPage() {
   const TAB_ALL = t('ranking.tabAll')
   const TAB_DOUBLES = t('ranking.tabDoubles')
   const TAB_SESSION = t('ranking.tabSession')
+  const TAB_H2H = t('ranking.tabH2H')
 
   return (
     <>
@@ -327,13 +329,22 @@ export default function RankingPage() {
 
       {/* Tabs */}
       <div
-        className="px-[var(--space-5)] mb-[var(--space-4)]"
-        style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--border)', paddingBottom: 'var(--space-2)' }}
+        className="mb-[var(--space-4)] [&::-webkit-scrollbar]:hidden"
+        style={{
+          display: 'flex',
+          gap: 0,
+          borderBottom: '1px solid var(--border)',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+          paddingLeft: 'var(--space-5)',
+        }}
       >
         {([
           { key: 'all', label: <span>{TAB_ALL}</span> },
           { key: 'doubles', label: <span>{TAB_DOUBLES}</span> },
           { key: 'session', label: <span>{latestSession?.label ?? TAB_SESSION}</span> },
+          { key: 'h2h', label: <span>{TAB_H2H}</span> },
         ] as const).map(({ key, label }) => (
           <button
             key={key}
@@ -512,7 +523,7 @@ export default function RankingPage() {
             ))}
           </div>
         )
-      ) : (
+      ) : activeTab === 'doubles' ? (
         /* Doubles tab */
         doublesLoading ? (
           <ShuttleLoading compact />
@@ -603,6 +614,9 @@ export default function RankingPage() {
             })}
           </div>
         )
+      ) : (
+        /* H2H tab */
+        <HeadToHeadTab />
       )}
     </div>
     </PullToRefresh>

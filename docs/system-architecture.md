@@ -114,7 +114,7 @@ Only **ended sessions** (`ended_at IS NOT NULL`) count toward player achievement
 
 The all-time ranking rows (Player tab) also show a current weekly Top 1 streak when a player has led more than one consecutive active calendar week. This is derived client-side from ended sessions and `player_match_results`: sessions are grouped by local calendar week from `started_at`, player `total_weekly_points` are summed across all sessions in that week, and the weekly leader is chosen by points, wins, point difference, then name. Empty calendar weeks are ignored, and duplicate result rows are de-duplicated by `player_id + match_id`.
 
-`RankingPage` has three tabs: **Player** (all-time Elo), **Pair** (MD doubles pair rankings sorted by win rate → wins → matches played, using `useMenDoublesRankings`), and **Current session** (latest ended session leaderboard). The Pair tab only counts MEN_DOUBLES matches from ended sessions.
+`RankingPage` has four tabs: **Singles** (all-time Elo), **Doubles** (MD doubles pair rankings sorted by win rate → wins → matches played, using `useMenDoublesRankings`), **Current session** (latest ended session leaderboard), and **Head to Head** (interactive 2v2 comparison: select up to 2 players per side, shows win counts, a win-% gauge, and match history). The Doubles tab only counts MEN_DOUBLES matches from ended sessions. The Head to Head tab uses `computeH2HPairs` (exported pure function from `useH2HPairs.ts`) which matches on exact team composition and handles both normal and reversed orientations.
 
 ## Authentication Flow
 
