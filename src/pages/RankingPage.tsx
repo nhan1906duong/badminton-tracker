@@ -50,15 +50,12 @@ function GhostRank({ rank, showCrown }: { rank: number; showCrown?: boolean }) {
   )
 }
 
-// SVG trend arrows matching design/pages/ranking-page.html .rank-trend
 function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
   const { t } = useI18n()
   const baseStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: 3,
-    minWidth: 32,
-    justifyContent: 'flex-end',
     fontFamily: 'var(--font-mono)',
     fontSize: 11,
     fontWeight: 700,
@@ -102,7 +99,7 @@ function RankTrend({ change, isNew }: { change: number; isNew?: boolean }) {
     )
   }
   return (
-    <div style={{ ...baseStyle, color: 'var(--muted)', minWidth: 32, justifyContent: 'flex-end' }}>
+    <div style={{ ...baseStyle, color: 'var(--muted)' }}>
       <span style={{ display: 'block', width: 8, height: 2, background: 'currentColor', borderRadius: 1 }} aria-hidden="true" />
     </div>
   )
@@ -452,19 +449,25 @@ export default function RankingPage() {
                     />
                   </div>
 
-                  {/* Rating on top, trend indicator below */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 64 }}>
-                    <div
-                      className="text-[15px] font-extrabold leading-none"
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        color: 'var(--accent)',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {s.rating}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    {(isNew || s.rankChange !== 0) && <RankTrend change={s.rankChange} isNew={isNew} />}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                      <div
+                        className="text-[15px] font-extrabold leading-none"
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          color: 'var(--accent)',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {s.rating}
+                      </div>
+                      {!isNew && s.lastSessionRatingDelta !== 0 && (
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: s.lastSessionRatingDelta > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                          {s.lastSessionRatingDelta > 0 ? '+' : ''}{s.lastSessionRatingDelta}
+                        </div>
+                      )}
                     </div>
-                    <RankTrend change={s.rankChange} isNew={isNew} />
                   </div>
                 </button>
               )

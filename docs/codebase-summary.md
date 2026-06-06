@@ -320,7 +320,7 @@ Session summaries now read the same `player_match_results` source as the session
 - `SessionDetailPage` and `SessionsListPage` use the leaderboard leader for MVP/top-player display instead of recomputing wins from raw matches.
 - Recorded-result counts only include `COMPLETED` matches with at least one `match_teams.is_winner = true`; no-winner completed matches are hidden from stats panels, donations, player history, partner stats, and head-to-head aggregates.
 - Pull-to-refresh on session list/detail refreshes both matches and leaderboard data.
-- `RankingPage` shows current weekly Top 1 streak text beside player names on the all-time tab only when the streak is greater than one active calendar week. The streak is derived from ended sessions grouped by local calendar week and aggregated by `total_weekly_points`.
+- `RankingPage` shows current weekly Top 1 streak text beside player names on the all-time tab only when the streak is greater than one active calendar week. The streak is derived from ended sessions grouped by local calendar week and aggregated by `total_weekly_points`. Each row's right column shows the Elo rating, with the rank-change arrow (`rankChange`) and last-session Elo delta (`lastSessionRatingDelta`, green `+N` / red `-N`) displayed below it — rank trend is omitted when rank is unchanged, elo delta is omitted when the player did not participate in the latest session.
 
 ## Match Points Breakdown
 
