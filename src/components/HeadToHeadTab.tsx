@@ -189,11 +189,6 @@ function PlayerSlot({
           >
             {formatShortPlayerName(player.name)}
           </div>
-          {player.nationality && (
-            <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--font-mono)', marginTop: 1 }}>
-              {player.nationality}
-            </div>
-          )}
         </div>
       </div>
     )
