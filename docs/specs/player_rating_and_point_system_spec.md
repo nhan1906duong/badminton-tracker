@@ -29,7 +29,7 @@ The app uses two independent scoring systems that serve different purposes:
 
 Keeping them separate prevents highly active players from always dominating the all-time leaderboard, while still rewarding performance within a single session.
 
-Only matches with a declared winner are counted in weekly points, Elo, session leaderboards, player history, head-to-head stats, and best-partner stats. A match can be ended without a winner; that stores its score and marks it `COMPLETED`, but deletes any `player_match_results` rows for the match and leaves it out of ranking/history aggregates.
+Only matches with a declared winner are counted in weekly points, Elo, session leaderboards, player history, head-to-head stats, and partner stats. A match can be ended without a winner; that stores its score and marks it `COMPLETED`, but deletes any `player_match_results` rows for the match and leaves it out of ranking/history aggregates.
 
 ---
 
@@ -189,7 +189,7 @@ Team A loses:
 
 ### No-winner completion — on match end
 
-`useEndMatchNoWinner()` marks the match `COMPLETED`, clears `match_teams.is_winner`, deletes any existing `player_match_results` rows, and saves non-empty score rows. Use this when a live match is stopped or invalid and should not affect standings, donations, Elo, match history, head-to-head records, or best-partner calculations.
+`useEndMatchNoWinner()` marks the match `COMPLETED`, clears `match_teams.is_winner`, deletes any existing `player_match_results` rows, and saves non-empty score rows. Use this when a live match is stopped or invalid and should not affect standings, donations, Elo, match history, head-to-head records, or partner stats.
 
 ### Elo ratings — on session end
 

@@ -73,7 +73,7 @@ A match has:
 - N participants (`match_participants` linking players to teams)
 - M scores (`match_scores` per set)
 
-Only completed matches with a winning team count toward rankings, donations, player history, head-to-head stats, and best-partner stats. Completed no-winner matches keep their saved score but clear `player_match_results`.
+Only completed matches with a winning team count toward rankings, donations, player history, head-to-head stats, and partner stats. Completed no-winner matches keep their saved score but clear `player_match_results`.
 
 A session has `label`, `started_at`, `ended_at`, `bwf_tournament_id` (FK to `bwf_tournaments`), `type` (`'regular' | 'tournament' | 'league'`), `league_match_type`, and `league_total_rounds`. Multiple sessions with different tournaments (or no tournament) can be open simultaneously. Creating a session with a `bwf_tournament_id` that already has a session is blocked at both the app layer (`DuplicateTournamentError`) and the DB layer (partial unique index).
 

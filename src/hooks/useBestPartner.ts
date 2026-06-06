@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useMatches } from './useMatches'
-import type { Player } from '../types/database'
+import type { MatchWithDetails, Player } from '../types/database'
 
 const DOUBLES_TYPES = ['MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES']
 
@@ -9,25 +9,14 @@ export interface PartnerEntry {
   winRate: number
   totalMatches: number
   wins: number
-}
-
-export interface BestPartnerResult {
-  best: PartnerEntry | null
-  worst: PartnerEntry | null
-  // legacy fields kept for backwards compat
-  partner: Player | null
-  winRate: number
-  totalMatches: number
-  wins: number
+  matches: MatchWithDetails[]
 }
 
 export function useBestPartner(playerId: string) {
   const { data: matches, isLoading } = useMatches()
 
-  const result = useMemo<BestPartnerResult>(() => {
-    if (!matches || !playerId) {
-      return { best: null, worst: null, partner: null, winRate: 0, totalMatches: 0, wins: 0 }
-    }
+  const allPartners = useMemo<PartnerEntry[]>(() => {
+    if (!matches || !playerId) return []
 
     const playerMatches = matches.filter((m) => {
       if (m.status !== 'COMPLETED') return false
@@ -36,11 +25,12 @@ export function useBestPartner(playerId: string) {
       return m.participants.some((p) => p.player_id === playerId)
     })
 
-    if (playerMatches.length === 0) {
-      return { best: null, worst: null, partner: null, winRate: 0, totalMatches: 0, wins: 0 }
-    }
+    if (playerMatches.length === 0) return []
 
-    const teammateStats = new Map<string, { total: number; wins: number; player: Player }>()
+    const teammateStats = new Map<
+      string,
+      { total: number; wins: number; player: Player; matches: MatchWithDetails[] }
+    >()
 
     for (const match of playerMatches) {
       const playerParticipant = match.participants.find((p) => p.player_id === playerId)
@@ -58,47 +48,34 @@ export function useBestPartner(playerId: string) {
         if (stats) {
           stats.total += 1
           if (isWinner) stats.wins += 1
+          stats.matches.push(match)
         } else {
           teammateStats.set(teammate.player_id, {
             total: 1,
             wins: isWinner ? 1 : 0,
             player: teammate.player,
+            matches: [match],
           })
         }
       }
     }
 
-    if (teammateStats.size === 0) {
-      return { best: null, worst: null, partner: null, winRate: 0, totalMatches: 0, wins: 0 }
-    }
-
-    const sorted = Array.from(teammateStats.values()).sort((a, b) => {
-      const rateA = a.total > 0 ? a.wins / a.total : 0
-      const rateB = b.total > 0 ? b.wins / b.total : 0
-      if (rateB !== rateA) return rateB - rateA
-      if (b.wins !== a.wins) return b.wins - a.wins
-      return b.total - a.total
-    })
-
-    const toEntry = (s: typeof sorted[0]): PartnerEntry => ({
-      partner: s.player,
-      winRate: s.total > 0 ? s.wins / s.total : 0,
-      totalMatches: s.total,
-      wins: s.wins,
-    })
-
-    const best = toEntry(sorted[0])
-    const worst = sorted.length > 1 ? toEntry(sorted[sorted.length - 1]) : null
-
-    return {
-      best,
-      worst,
-      partner: best.partner,
-      winRate: best.winRate,
-      totalMatches: best.totalMatches,
-      wins: best.wins,
-    }
+    return Array.from(teammateStats.values())
+      .sort((a, b) => {
+        const rateA = a.total > 0 ? a.wins / a.total : 0
+        const rateB = b.total > 0 ? b.wins / b.total : 0
+        if (rateB !== rateA) return rateB - rateA
+        if (b.wins !== a.wins) return b.wins - a.wins
+        return b.total - a.total
+      })
+      .map((s) => ({
+        partner: s.player,
+        winRate: s.total > 0 ? s.wins / s.total : 0,
+        totalMatches: s.total,
+        wins: s.wins,
+        matches: s.matches,
+      }))
   }, [matches, playerId])
 
-  return { ...result, isLoading }
+  return { allPartners, isLoading }
 }

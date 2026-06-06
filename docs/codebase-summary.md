@@ -23,7 +23,7 @@ src/
 | 1103 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
 | 1454 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue), fair shuffle, declined RSVP filtering |
 | 885 | pages/MatchDetailPage.tsx | Match detail: start, live score, record result, end with no winner, edit players, reopen, delete |
-| 836 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, best partner, match history, achievements tab |
+| 927 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, all partners (win-rate sorted, expandable), H2H opponents (expandable), match history, achievements tab |
 | 775 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
 | 780 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useEndMatchNoWinner + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
 | 634 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end/rename updates |
@@ -50,7 +50,7 @@ src/
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
 | 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
 | 189 | types/database.ts | TypeScript types for all entities including MatchStatus, PlayerMatchResult, SessionAttendance, and league entities |
-| 104 | hooks/useBestPartner.ts | Compute best doubles partner from match history |
+| 81 | hooks/useBestPartner.ts | Compute all doubles partners sorted by win rate desc, with per-partner match list |
 | 100 | lib/rating.ts | Elo rating algorithm + SCORING_CONFIG constants |
 | 91 | components/PlayerSelector.tsx | Bottom-sheet player picker with search |
 | 90 | hooks/usePlayers.ts | Player CRUD hooks |
@@ -71,7 +71,7 @@ src/
 | 47 | lib/session-format.ts | `formatSessionDuration` utility |
 | 46 | components/DonorListItem.tsx | Row for SessionDonatedListPage (avatar + losses + match count) |
 | 45 | hooks/usePlayerMatches.ts | Paginated match history for a player (infinite scroll) |
-| 50 | hooks/useHeadToHead.ts | Head-to-head stats between two players |
+| 66 | hooks/useHeadToHead.ts | Head-to-head stats vs each opponent, with per-opponent match list |
 | — | design-system/components/avatar.tsx | Rectangle avatar: accent bg, 2-letter initials, image support |
 | 2 | components/Avatar.tsx | Re-export shim → design-system/components/avatar.tsx |
 | 13 | lib/supabase.ts | Supabase client initialization |
@@ -110,7 +110,7 @@ design-system/components/
 ```
 pages/
 ├── LoginPage.tsx                # /login - email + password auth
-├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit, stats, best partner, match history, achievements
+├── PlayerDetailPage.tsx         # /players/:playerId - avatar/name edit, stats, all partners (win-rate sorted), match history, achievements
 ├── SessionsListPage.tsx         # /sessions - Session history with BWF category badges
 ├── CreateSessionPage.tsx        # /sessions/new - Create session
 ├── SessionDetailPage.tsx        # /sessions/:id - Session detail (stats panel + matches)
@@ -160,9 +160,9 @@ hooks/
 ├── useAuth.ts              # Supabase auth state
 ├── useAvatarUpload.ts      # Upload/delete/set-default avatar to Supabase Storage
 ├── useBackup.ts            # Admin JSON export of core Supabase tables
-├── useBestPartner.ts       # Compute best doubles partner from match history
+├── useBestPartner.ts       # Compute all doubles partners sorted by win rate desc, with per-partner match list
 ├── useBwfTournaments.ts    # Read BWF tournament cache; filter by date window
-├── useHeadToHead.ts        # Head-to-head stats between two players
+├── useHeadToHead.ts        # Head-to-head stats vs each opponent, with per-opponent match list
 ├── useMatches.ts           # Match CRUD: useMatches, useMatch, useCreateMatch,
 │                           #   useUpdateMatch, useDeleteMatch, useStartMatch,
 │                           #   useRecordResult, useEndMatchNoWinner,
@@ -315,7 +315,7 @@ Session summaries now read the same `player_match_results` source as the session
 - `useSessionLeaderboard(sessionId)` returns `{ rankings, leader }` for one session.
 - `useSessionLeaderboards()` returns a `Map<sessionId, { rankings, leader }>` for all sessions, used by `SessionsListPage`.
 - `SessionDetailPage` and `SessionsListPage` use the leaderboard leader for MVP/top-player display instead of recomputing wins from raw matches.
-- Recorded-result counts only include `COMPLETED` matches with at least one `match_teams.is_winner = true`; no-winner completed matches are hidden from stats panels, donations, player history, best partner, and head-to-head aggregates.
+- Recorded-result counts only include `COMPLETED` matches with at least one `match_teams.is_winner = true`; no-winner completed matches are hidden from stats panels, donations, player history, partner stats, and head-to-head aggregates.
 - Pull-to-refresh on session list/detail refreshes both matches and leaderboard data.
 - `RankingPage` shows current weekly Top 1 streak text beside player names on the all-time tab only when the streak is greater than one active calendar week. The streak is derived from ended sessions grouped by local calendar week and aggregated by `total_weekly_points`.
 

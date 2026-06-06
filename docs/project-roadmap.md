@@ -12,7 +12,7 @@
 | 6 | Player Rankings | ✅ Done | Win rate, leaderboard, top donate, current weekly Top 1 streak |
 | 7 | Match History | ✅ Done | List + detail view |
 | 8 | Avatar Upload | ✅ Done | Camera/gallery picker, Supabase Storage |
-| 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, best partner, match history, achievements |
+| 9 | Player Detail Page | ✅ Done | Avatar/name edit, stats, all partners (win-rate sorted, expandable), match history, achievements |
 | 9a | BWF Category Badges | ✅ Done | Tiered color badges (S1000/S750/S500/S300/S100/Finals) on sessions |
 | 9b | Champion Celebration | ✅ Done | One-time firework effect for linked champion on ended session stats |
 | 9c | Ranking Sync & No-Winner Handling | ✅ Done | Session MVP/top-player panels use shared leaderboard data; no-winner matches are excluded from aggregates |
@@ -121,7 +121,7 @@
 - [x] Add `useSessionLeaderboard(sessionId)` and `useSessionLeaderboards()` for session detail/list summaries
 - [x] Sync session card top player, session detail MVP, and session stats ranking to `player_match_results`
 - [x] Add `useEndMatchNoWinner()` to complete a match while clearing winner/ranking rows
-- [x] Exclude no-winner completed matches from session stats, player match history, head-to-head stats, and best-partner stats
+- [x] Exclude no-winner completed matches from session stats, player match history, head-to-head stats, and partner stats
 - [x] Add stronger confirmation dialogs for ending sessions with live matches and deleting recorded data
 - [x] Add ARIA dialog semantics to the shared `Dialog` component
 
@@ -173,5 +173,5 @@
 | MVP (Phases 1-4) | ✅ Done | Working app |
 | Core Features (Phases 5-7) | ✅ Done | Dashboard + match history |
 | Avatar & Rankings (Phase 8) | ✅ Done | Avatar upload + leaderboard |
-| Player Detail Page (Phase 9) | ✅ Done | Avatar/name edit + stats + best partner |
+| Player Detail Page (Phase 9) | ✅ Done | Avatar/name edit + stats + all partners |
 | Release (Phase 10-11) | Q3 2026 | In progress |

@@ -9,7 +9,7 @@ import { usePlayerRankings } from '../hooks/useRankings'
 import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
 import { usePlayerBadges } from '../hooks/usePlayerBadges'
 import { PlayerBadgesStrip } from '../components/PlayerBadgesStrip'
-import type { PartnerEntry } from '../hooks/useBestPartner'
+
 import type { PlayerAchievement } from '../hooks/usePlayerAchievements'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
 import { useAuth } from '../hooks/useAuth'
@@ -83,7 +83,7 @@ export default function PlayerDetailPage() {
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = usePlayer(id)
   const { stats } = usePlayerStats()
-  const { best: bestPartner, worst: worstPartner, isLoading: partnerLoading } = useBestPartner(id)
+  const { allPartners, isLoading: partnerLoading } = useBestPartner(id)
   const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
   const { entries: h2hEntries, isLoading: h2hLoading } = useHeadToHead(id)
   const { data: rankings } = usePlayerRankings()
@@ -96,7 +96,8 @@ export default function PlayerDetailPage() {
   const [editName, setEditName] = useState('')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
-  const [showAllH2H, setShowAllH2H] = useState(false)
+  const [expandedPartners, setExpandedPartners] = useState<Set<string>>(new Set())
+  const [expandedH2H, setExpandedH2H] = useState<Set<string>>(new Set())
   const [isStuck, setIsStuck] = useState(false)
 
   const { user } = useAuth()
@@ -387,27 +388,110 @@ export default function PlayerDetailPage() {
 
         {/* ── Partners tab ── */}
         {activeTab === 'partners' && (
-          <div
-            className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
-            style={{ borderRadius: 'var(--radius-lg)' }}
-          >
+          <div className="space-y-2">
             {partnerLoading ? (
               <div className="p-4">
                 <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
               </div>
-            ) : !bestPartner ? (
-              <div className="p-4">
+            ) : allPartners.length === 0 ? (
+              <div
+                className="bg-[var(--surface)] border border-[var(--border)] p-4"
+                style={{ borderRadius: 'var(--radius-lg)' }}
+              >
                 <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
               </div>
             ) : (
               <>
-                <PartnerRow label={t('players.bestPartner')} entry={bestPartner} />
-                {worstPartner && (
-                  <>
-                    <div style={{ height: 1, background: 'var(--border)' }} />
-                    <PartnerRow label={t('players.worstPartner')} entry={worstPartner} />
-                  </>
-                )}
+                <div
+                  className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  {t('players.partnersCount', { count: allPartners.length })}
+                </div>
+                {allPartners.map((entry) => {
+                  const isExpanded = expandedPartners.has(entry.partner.id)
+                  const losses = entry.totalMatches - entry.wins
+                  const winRate = Math.round(entry.winRate * 100)
+                  return (
+                    <div
+                      key={entry.partner.id}
+                      className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+                      style={{ borderRadius: 'var(--radius-lg)' }}
+                    >
+                      <button
+                        onClick={() =>
+                          setExpandedPartners((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(entry.partner.id)) next.delete(entry.partner.id)
+                            else next.add(entry.partner.id)
+                            return next
+                          })
+                        }
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
+                      >
+                        <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={32} />
+                        <div className="flex-1 min-w-0 text-left">
+                          <p
+                            className="text-[15px] font-semibold truncate"
+                            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                          >
+                            {entry.partner.name}
+                          </p>
+                          <PlayerRecordLine
+                            matchesPlayed={entry.totalMatches}
+                            wins={entry.wins}
+                            losses={losses}
+                            winRate={winRate}
+                            marginTop={2}
+                          />
+                        </div>
+                        {isExpanded
+                          ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                          : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                        }
+                      </button>
+
+                      {isExpanded && (
+                        <div style={{ borderTop: '1px solid var(--border)' }}>
+                          {entry.matches.map((match) => {
+                            const row = getMatchRow(match, id)
+                            if (!row) return null
+                            return (
+                              <div
+                                key={match.id}
+                                className="flex items-center gap-3 px-4 py-2.5"
+                                style={{ borderBottom: '1px solid var(--border)' }}
+                              >
+                                <Badge variant={row.isWin ? 'win' : 'loss'}>
+                                  {row.isWin ? 'W' : 'L'}
+                                </Badge>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
+                                    {row.teammates
+                                      ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
+                                      : t('players.vsOpponent', { opponents: row.opponents || '—' })}
+                                  </p>
+                                  <p
+                                    className="text-[11px]"
+                                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                  >
+                                    {row.scoreStr}
+                                  </p>
+                                </div>
+                                <span
+                                  className="text-[11px] font-bold uppercase tracking-[0.06em] shrink-0"
+                                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                >
+                                  {row.type}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </>
             )}
           </div>
@@ -415,71 +499,109 @@ export default function PlayerDetailPage() {
 
         {/* ── Head to Head tab ── */}
         {activeTab === 'h2h' && (
-          <div
-            className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
-            style={{ borderRadius: 'var(--radius-lg)' }}
-          >
+          <div className="space-y-2">
             {h2hLoading ? (
               <div className="p-4">
                 <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
               </div>
             ) : h2hEntries.length === 0 ? (
-              <div className="p-4">
+              <div
+                className="bg-[var(--surface)] border border-[var(--border)] p-4"
+                style={{ borderRadius: 'var(--radius-lg)' }}
+              >
                 <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
               </div>
             ) : (
               <>
-                {(showAllH2H ? h2hEntries : h2hEntries.slice(0, 5)).map((entry, i) => {
-                  const winRate = entry.totalMatches > 0 ? entry.wins / entry.totalMatches : 0
-                  const isWinning = entry.wins > entry.losses
-                  const isTied = entry.wins === entry.losses
+                <div
+                  className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
+                  style={{ color: 'var(--muted)' }}
+                >
+                  {t('players.h2hCount', { count: h2hEntries.length })}
+                </div>
+                {h2hEntries.map((entry) => {
+                  const isExpanded = expandedH2H.has(entry.opponent.id)
+                  const winRate = Math.round(entry.totalMatches > 0 ? (entry.wins / entry.totalMatches) * 100 : 0)
                   return (
                     <div
                       key={entry.opponent.id}
-                      className="flex items-center gap-3 px-4 py-2.5"
-                      style={{ borderBottom: '1px solid var(--border)' }}
+                      className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+                      style={{ borderRadius: 'var(--radius-lg)' }}
                     >
-                      <span
-                        className="text-[11px] font-bold w-4 text-right shrink-0"
-                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                      <button
+                        onClick={() =>
+                          setExpandedH2H((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(entry.opponent.id)) next.delete(entry.opponent.id)
+                            else next.add(entry.opponent.id)
+                            return next
+                          })
+                        }
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
                       >
-                        {i + 1}
-                      </span>
-                      <Avatar src={entry.opponent.avatar_url} name={entry.opponent.name} size={32} />
-                      <p className="text-[14px] font-medium flex-1 min-w-0 truncate" style={{ color: 'var(--fg)' }}>
-                        {entry.opponent.name}
-                      </p>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span
-                          className="text-[13px] font-bold"
-                          style={{ color: isWinning ? 'var(--success)' : isTied ? 'var(--muted)' : 'var(--danger)' }}
-                        >
-                          {entry.wins} {t('players.wins')}
-                        </span>
-                        <span className="text-[11px]" style={{ color: 'var(--border)' }}>·</span>
-                        <span className="text-[13px] font-bold" style={{ color: 'var(--muted)' }}>
-                          {entry.losses} {t('players.losses')}
-                        </span>
-                        <span
-                          className="text-[11px] w-8 text-right"
-                          style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                        >
-                          {Math.round(winRate * 100)}%
-                        </span>
-                      </div>
+                        <Avatar src={entry.opponent.avatar_url} name={entry.opponent.name} size={32} />
+                        <div className="flex-1 min-w-0 text-left">
+                          <p
+                            className="text-[15px] font-semibold truncate"
+                            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                          >
+                            {entry.opponent.name}
+                          </p>
+                          <PlayerRecordLine
+                            matchesPlayed={entry.totalMatches}
+                            wins={entry.wins}
+                            losses={entry.losses}
+                            winRate={winRate}
+                            marginTop={2}
+                          />
+                        </div>
+                        {isExpanded
+                          ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                          : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                        }
+                      </button>
+
+                      {isExpanded && (
+                        <div style={{ borderTop: '1px solid var(--border)' }}>
+                          {entry.matches.map((match) => {
+                            const row = getMatchRow(match, id)
+                            if (!row) return null
+                            return (
+                              <div
+                                key={match.id}
+                                className="flex items-center gap-3 px-4 py-2.5"
+                                style={{ borderBottom: '1px solid var(--border)' }}
+                              >
+                                <Badge variant={row.isWin ? 'win' : 'loss'}>
+                                  {row.isWin ? 'W' : 'L'}
+                                </Badge>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
+                                    {row.teammates
+                                      ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
+                                      : t('players.vsOpponent', { opponents: row.opponents || '—' })}
+                                  </p>
+                                  <p
+                                    className="text-[11px]"
+                                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                  >
+                                    {row.scoreStr}
+                                  </p>
+                                </div>
+                                <span
+                                  className="text-[11px] font-bold uppercase tracking-[0.06em] shrink-0"
+                                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                                >
+                                  {row.type}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
-
-                {h2hEntries.length > 5 && (
-                  <button
-                    onClick={() => setShowAllH2H((v) => !v)}
-                    className="w-full py-2.5 text-[13px] font-semibold active:bg-[var(--bg)]"
-                    style={{ color: 'var(--accent)' }}
-                  >
-                    {showAllH2H ? t('players.showLess') : t('players.showAll', { count: h2hEntries.length })}
-                  </button>
-                )}
               </>
             )}
           </div>
@@ -716,37 +838,6 @@ function PlayerStatCell({
   )
 }
 
-function PartnerRow({ label, entry }: { label: string; entry: PartnerEntry }) {
-  return (
-    <div className="px-4 py-3">
-      <p
-        className="text-[11px] font-bold uppercase tracking-[0.06em] mb-1.5"
-        style={{ color: 'var(--muted)' }}
-      >
-        {label}
-      </p>
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <Avatar src={entry.partner.avatar_url} name={entry.partner.name} size={20} />
-          <p className="text-[15px] font-semibold truncate min-w-0" style={{ color: 'var(--fg)' }}>
-            {entry.partner.name}
-          </p>
-        </div>
-        <div style={{ paddingLeft: 28 }}>
-          <PlayerRecordLine
-            matchesPlayed={entry.totalMatches}
-            wins={entry.wins}
-            losses={entry.totalMatches - entry.wins}
-            winRate={Math.round(entry.winRate * 100)}
-            fontSize={13}
-            marginTop={1}
-            showMatches={false}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function AchievementRow({
   achievement,
