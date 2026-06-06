@@ -363,6 +363,7 @@ export default function RankingPage() {
               marginBottom: -1,
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
+              flexShrink: 0,
             }}
           >
             {label}
