@@ -135,6 +135,8 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins — only shown when count > 1), most donated. Each badge is only awarded to the current leader(s) across all players. |
 | `src/components/PlayerBadgesStrip.tsx` | Renders the player badge list in `PlayerDetailPage` header below the rating. Each badge is a row: lucide icon (category-colored) + count + label. Hidden if player holds no badges. |
+| `src/hooks/usePlayerPointsHistory.ts` | Fetches `player_match_results` for a player and groups them into `SessionPointsHistory[]` (session + `MatchPointsEntry[]` with match + points). Used for rating history chart and match points display. |
+| `src/components/RatingChart.tsx` | SVG line chart showing Elo rating over sessions. Dots for each session; filled + star marker (★) for sessions the player won. Rendered above the tab bar on `PlayerDetailPage`. |
 | `src/hooks/useLeagueTeams.ts` | Fetches league teams + their players for a session |
 | `src/hooks/useLeagueStandings.ts` | Computes standings (W/L/Pts) from completed league matches |
 | `src/components/LeagueStandingsTable.tsx` | Standings table rendered at the top of a league session detail |

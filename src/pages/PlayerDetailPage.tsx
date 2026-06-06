@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
 import { usePlayerStats } from '../hooks/usePlayerStats'
 import { useBestPartner } from '../hooks/useBestPartner'
 import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
+import { usePlayerPointsHistory } from '../hooks/usePlayerPointsHistory'
+import { RatingChart, type RatingChartPoint } from '../components/RatingChart'
 import { useHeadToHead } from '../hooks/useHeadToHead'
 import { usePlayerRankings } from '../hooks/useRankings'
 import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
@@ -85,10 +87,26 @@ export default function PlayerDetailPage() {
   const { stats } = usePlayerStats()
   const { allPartners, isLoading: partnerLoading } = useBestPartner(id)
   const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
+  const { history: pointsHistory } = usePlayerPointsHistory(id)
+
   const { entries: h2hEntries, isLoading: h2hLoading } = useHeadToHead(id)
   const { data: rankings } = usePlayerRankings()
   const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
   const { badges, isLoading: badgesLoading } = usePlayerBadges(id)
+
+  const chartData = useMemo<RatingChartPoint[]>(() => {
+    const winSessionIds = new Set(
+      achievements.filter((a) => a.type === 'win').map((a) => a.session.id),
+    )
+    return [...pointsHistory]
+      .reverse()
+      .flatMap(({ session, matches }) => {
+        const lastMatch = matches[matches.length - 1]
+        const rating = lastMatch?.points.rating_after
+        if (rating == null) return []
+        return [{ rating, date: session.started_at, isWin: winSessionIds.has(session.id) }]
+      })
+  }, [pointsHistory, achievements])
   const rankData = rankings?.find((r) => r.playerId === id)
 
   const [activeTab, setActiveTab] = useState<PlayerTab>('achievements')
@@ -378,6 +396,27 @@ export default function PlayerDetailPage() {
             </span>
           </div>
         </div>
+
+        {/* Rating history chart */}
+        {chartData.length >= 2 && (
+          <div
+            className="overflow-hidden"
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
+              padding: 'var(--space-4)',
+            }}
+          >
+            <div
+              className="text-[11px] font-bold uppercase tracking-[0.1em] mb-3"
+              style={{ color: 'var(--muted)' }}
+            >
+              {t('players.ratingHistory')}
+            </div>
+            <RatingChart data={chartData} />
+          </div>
+        )}
 
         {/* Tab bar */}
         <SegmentedControl
