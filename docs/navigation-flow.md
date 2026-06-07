@@ -103,6 +103,7 @@ Guest:
 └─────────────────────────────────────────┘
         │
         ├──► /sessions/:id/stats ──► (back)
+        │       Player row tap ──► bottom sheet (match history + points for that session; no navigation)
         │
         ├──► /sessions/:id/donated ──► (back)
         │
