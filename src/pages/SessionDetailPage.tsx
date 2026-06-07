@@ -711,7 +711,7 @@ export default function SessionDetailPage() {
     {sharePreview && (
       <div
         className="fixed inset-0 z-50 flex flex-col items-center justify-end px-4 pb-8"
-        style={{ background: 'oklch(0% 0 0 / 0.60)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+        style={{ background: 'oklch(0% 0 0 / 0.60)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', touchAction: 'none' }}
         onClick={() => setSharePreview(null)}
       >
         <div

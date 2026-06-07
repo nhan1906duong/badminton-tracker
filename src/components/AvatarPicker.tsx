@@ -43,7 +43,7 @@ export default function AvatarPicker({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ touchAction: 'none' }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
 
       <div

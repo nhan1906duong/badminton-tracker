@@ -36,7 +36,7 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      style={{ background: 'oklch(0% 0 0 / 0.5)' }}
+      style={{ background: 'oklch(0% 0 0 / 0.5)', touchAction: 'none' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div

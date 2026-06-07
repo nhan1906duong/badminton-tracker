@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { useI18n } from '../../src/i18n'
 
 // ── Base sheet ─────────────────────────────────────────────────────────────
@@ -10,8 +10,31 @@ export interface BottomSheetProps {
 }
 
 export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open || !wrapperRef.current) return
+    const wrapper = wrapperRef.current
+
+    const handleTouchMove = (e: TouchEvent) => {
+      let el = e.target as HTMLElement | null
+      while (el && el !== wrapper) {
+        const style = window.getComputedStyle(el)
+        const overflowY = style.overflowY
+        if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+          return // allow scroll inside scrollable children
+        }
+        el = el.parentElement
+      }
+      e.preventDefault()
+    }
+
+    wrapper.addEventListener('touchmove', handleTouchMove, { passive: false })
+    return () => wrapper.removeEventListener('touchmove', handleTouchMove)
+  }, [open])
+
   return (
-    <>
+    <div ref={wrapperRef} style={{ display: 'contents' }}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-[100]"
@@ -50,7 +73,7 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
         />
         {children}
       </div>
-    </>
+    </div>
   )
 }
 
