@@ -131,6 +131,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useMenDoublesRankings.ts` | Computes MD pair rankings (win rate → wins → matches played) from ended sessions only; exports `computeMenDoublesRankings` (pure fn, tested) |
 | `src/hooks/useH2HPairs.ts` | Exact-composition 2v2 head-to-head: exports `computeH2HPairs` (pure fn, tested) + `useH2HPairs` hook; handles both normal and reversed team orientations |
 | `src/components/HeadToHeadTab.tsx` | Head to Head tab on RankingPage: 2-slot player picker per side, half-circle win-% gauge, win counts, match history |
+| `src/components/CalendarTab.tsx` | Calendar tab on SessionsPage: vertical timeline of completed sessions grouped by month/day; champion Avatar + card with BWF badge, match count, and champion win % footer |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
 | `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins — only shown when count > 1), most donated. Each badge is only awarded to the current leader(s) across all players. |

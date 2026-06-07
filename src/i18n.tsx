@@ -230,6 +230,11 @@ const en = {
   'sessions.notStartedYet': "Session hasn't started yet",
   'sessions.noMatchesStarted': 'No matches started yet',
   'sessions.elapsed': 'elapsed',
+  'sessions.tabList': 'Sessions',
+  'sessions.tabCalendar': 'Calendar',
+
+  'calendar.noSessions': 'No sessions yet',
+  'calendar.champion': 'Champion',
 
   'sessionDetail.notFound': 'Session not found.',
   'sessionDetail.statusLive': 'Live · in progress',
@@ -802,6 +807,11 @@ const vi: Record<TranslationKey, string> = {
   'sessions.notStartedYet': 'Giải đấu chưa bắt đầu',
   'sessions.noMatchesStarted': 'Chưa có trận nào bắt đầu',
   'sessions.elapsed': 'Đã diễn ra',
+  'sessions.tabList': 'Danh sách',
+  'sessions.tabCalendar': 'Lịch',
+
+  'calendar.noSessions': 'Chưa có giải đấu',
+  'calendar.champion': 'Nhà vô địch',
 
   'sessionDetail.notFound': 'Không tìm thấy giải đấu.',
   'sessionDetail.statusLive': 'Đang diễn ra',

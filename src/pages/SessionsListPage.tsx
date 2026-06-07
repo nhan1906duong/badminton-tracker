@@ -1,9 +1,10 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
-import { SessionCard, EmptyState, ErrorState, PullToRefresh } from '../../design-system/components'
+import { SessionCard, EmptyState, ErrorState, PullToRefresh, Tabs } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
+import { CalendarTab } from '../components/CalendarTab'
 import { Plus, Trophy, User } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
 import {
@@ -31,6 +32,7 @@ export default function SessionsListPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { locale, t } = useI18n()
+  const [activeTabKey, setActiveTabKey] = useState<'list' | 'calendar'>('list')
   const {
     data: sessions,
     isLoading: sessionsLoading,
@@ -132,52 +134,76 @@ export default function SessionsListPage() {
         )}
       </div>
 
-      {/* List */}
-      <div className="px-[var(--space-5)] space-y-[var(--space-3)] pb-32">
-        {isLoading ? (
-          <ShuttleLoading compact />
-        ) : isError ? (
-          <ErrorState
-            message={t('sessions.loadError')}
-            onRetry={() => {
-              refetchSessions()
-              refetchMatches()
-            }}
-          />
-        ) : sessions && sessions.length > 0 ? (
-          sessions.map((session) => {
-            const stat = sessionStats.get(session.id)
-            return (
-              <button
-                key={session.id}
-                onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
-                className="w-full text-left active:scale-[0.98] transition-transform"
-                style={{ borderRadius: 'var(--radius-lg)' }}
-              >
-                <SessionCard
-                  status={getSessionStatus(session)}
-                  name={getSessionName(session, locale)}
-                  dateTime={formatSessionDateTime(session.started_at, locale)}
-                  duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
-                  matchCount={stat?.matchCount ?? 0}
-                  topPlayer={stat?.topPlayer}
-                  compact
-                  tournamentCategory={session.bwf_tournaments ? {
-                    categoryName: session.bwf_tournaments.category_name,
-                    categorySlug: session.bwf_tournaments.category_slug,
-                  } : null}
-                />
-              </button>
-            )
-          })
-        ) : (
-          <EmptyState
-            icon={<Trophy className="w-9 h-9 mx-auto" />}
-            title={t('sessions.noneYet')}
-            description={t('sessions.emptyDescription')}
-          />
-        )}
+      {/* Tab switcher */}
+      <div className="px-[var(--space-5)]">
+        <Tabs
+          tabs={[t('sessions.tabList'), t('sessions.tabCalendar')]}
+          activeTab={activeTabKey === 'list' ? t('sessions.tabList') : t('sessions.tabCalendar')}
+          onTabChange={(tab) => setActiveTabKey(tab === t('sessions.tabList') ? 'list' : 'calendar')}
+        />
       </div>
+
+      {/* List */}
+      {activeTabKey === 'list' && (
+        <div className="px-[var(--space-5)] space-y-[var(--space-3)] pt-[var(--space-4)] pb-32">
+          {isLoading ? (
+            <ShuttleLoading compact />
+          ) : isError ? (
+            <ErrorState
+              message={t('sessions.loadError')}
+              onRetry={() => {
+                refetchSessions()
+                refetchMatches()
+              }}
+            />
+          ) : sessions && sessions.length > 0 ? (
+            sessions.map((session) => {
+              const stat = sessionStats.get(session.id)
+              return (
+                <button
+                  key={session.id}
+                  onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
+                  className="w-full text-left active:scale-[0.98] transition-transform"
+                  style={{ borderRadius: 'var(--radius-lg)' }}
+                >
+                  <SessionCard
+                    status={getSessionStatus(session)}
+                    name={getSessionName(session, locale)}
+                    dateTime={formatSessionDateTime(session.started_at, locale)}
+                    duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
+                    matchCount={stat?.matchCount ?? 0}
+                    topPlayer={stat?.topPlayer}
+                    compact
+                    tournamentCategory={session.bwf_tournaments ? {
+                      categoryName: session.bwf_tournaments.category_name,
+                      categorySlug: session.bwf_tournaments.category_slug,
+                    } : null}
+                  />
+                </button>
+              )
+            })
+          ) : (
+            <EmptyState
+              icon={<Trophy className="w-9 h-9 mx-auto" />}
+              title={t('sessions.noneYet')}
+              description={t('sessions.emptyDescription')}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Calendar */}
+      {activeTabKey === 'calendar' && (
+        isLoading ? (
+          <div className="px-[var(--space-5)] pt-[var(--space-4)]">
+            <ShuttleLoading compact />
+          </div>
+        ) : (
+          <div className="pt-[var(--space-4)]">
+            <CalendarTab />
+          </div>
+        )
+      )}
 
       {user && (
         <FloatingActionButton
