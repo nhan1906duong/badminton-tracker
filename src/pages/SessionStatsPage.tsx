@@ -1,11 +1,12 @@
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Activity, ChevronLeft, Medal, Crown } from 'lucide-react'
-import { AppBar, Avatar, EmptyState, StatRow, PullToRefresh } from '../../design-system/components'
+import { Activity, ChevronLeft, Medal, Crown, LineChart } from 'lucide-react'
+import { AppBar, Avatar, EmptyState, StatRow, PullToRefresh, SegmentedControl } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
 import { useMatches } from '../hooks/useMatches'
 import { useSession } from '../hooks/useSessions'
-import { useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useSessionLeaderboard, useSessionMatchResults, computeSessionRankingHistory, type SessionWeeklyStats } from '../hooks/useRankings'
+import { SessionRankingChart } from '../components/SessionRankingChart'
 import { useI18n } from '../i18n'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
@@ -180,6 +181,8 @@ function PlayerStatsRow({ stat, rank, isLast, onClick }: PlayerStatsRowProps) {
   )
 }
 
+type StatsTab = 'rankings' | 'chart'
+
 export default function SessionStatsPage() {
   const { t } = useI18n()
   const { id: sessionId } = useParams<{ id: string }>()
@@ -195,6 +198,21 @@ export default function SessionStatsPage() {
     () => matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? [],
     [matches]
   )
+
+  const { data: matchResults } = useSessionMatchResults(sessionId)
+
+  const rankingHistories = useMemo(() => {
+    if (!matches || !matchResults || rankings.length === 0) return []
+    const players = rankings.map(r => ({ id: r.playerId, name: r.name, avatar_url: r.avatarUrl }))
+    return computeSessionRankingHistory(matches, matchResults, players)
+  }, [matches, matchResults, rankings])
+
+  const [activeTab, setActiveTab] = useState<StatsTab>('rankings')
+  const statsTabs = [
+    { id: 'rankings' as StatsTab, label: t('sessionStats.tabRankings') },
+    { id: 'chart' as StatsTab, label: t('sessionStats.tabChart'), icon: <LineChart size={13} /> },
+  ]
+
   const totalPoints = rankings.reduce((sum, s) => sum + s.weeklyPoints, 0)
   const averagePoints = rankings.length > 0 ? Math.round(totalPoints / rankings.length) : 0
   const isLoading = matchesLoading || rankingsLoading
@@ -365,7 +383,7 @@ export default function SessionStatsPage() {
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-lg)',
                   padding: '0 var(--space-4)',
-                  marginBottom: 'var(--space-6)',
+                  marginBottom: 'var(--space-4)',
                 }}
               >
                 <StatRow label={t('sessionStats.completedMatches')} value={completedMatches.length} />
@@ -373,46 +391,77 @@ export default function SessionStatsPage() {
                 <StatRow label={t('sessionStats.averagePoints')} value={averagePoints} />
               </section>
 
-              <section>
-                <div className="flex items-baseline justify-between gap-[var(--space-3)] mb-[var(--space-3)]">
-                  <h2
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: 'var(--text-xl)',
-                      fontWeight: 900,
-                      lineHeight: 1.1,
-                      letterSpacing: 0,
-                      color: 'var(--fg)',
-                    }}
-                  >
-                    {t('sessionStats.ranking')}
-                  </h2>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
-                      color: 'var(--muted)',
-                    }}
-                  >
-                    {t('sessionStats.weeklyPoints')}
-                  </span>
-                </div>
+              <div style={{ marginBottom: 'var(--space-4)' }}>
+                <SegmentedControl
+                  tabs={statsTabs}
+                  value={activeTab}
+                  onChange={setActiveTab}
+                />
+              </div>
 
-                <div>
-                  {rankings.map((stat, index) => (
-                    <PlayerStatsRow
-                      key={stat.playerId}
-                      stat={stat}
-                      rank={index + 1}
-                      isLast={index === rankings.length - 1}
-                      onClick={() => navigate(`/players/${stat.playerId}`)}
+              {activeTab === 'rankings' && (
+                <section>
+                  <div className="flex items-baseline justify-between gap-[var(--space-3)] mb-[var(--space-3)]">
+                    <h2
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 'var(--text-xl)',
+                        fontWeight: 900,
+                        lineHeight: 1.1,
+                        letterSpacing: 0,
+                        color: 'var(--fg)',
+                      }}
+                    >
+                      {t('sessionStats.ranking')}
+                    </h2>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: 'var(--muted)',
+                      }}
+                    >
+                      {t('sessionStats.weeklyPoints')}
+                    </span>
+                  </div>
+                  <div>
+                    {rankings.map((stat, index) => (
+                      <PlayerStatsRow
+                        key={stat.playerId}
+                        stat={stat}
+                        rank={index + 1}
+                        isLast={index === rankings.length - 1}
+                        onClick={() => navigate(`/players/${stat.playerId}`)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {activeTab === 'chart' && (
+                <section
+                  style={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: 'var(--space-4)',
+                  }}
+                >
+                  {rankingHistories.length > 0 && completedMatches.length > 0 ? (
+                    <SessionRankingChart
+                      histories={rankingHistories}
+                      totalMatches={completedMatches.length}
                     />
-                  ))}
-                </div>
-              </section>
+                  ) : (
+                    <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', textAlign: 'center', padding: 'var(--space-6) 0' }}>
+                      {t('sessionStats.emptyDescription')}
+                    </p>
+                  )}
+                </section>
+              )}
             </>
           )}
         </main>

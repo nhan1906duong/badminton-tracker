@@ -366,6 +366,76 @@ export function useSessionLeaderboard(sessionId: string | undefined) {
   })
 }
 
+export interface PlayerRankingAtMatch {
+  matchIndex: number
+  rank: number
+  weeklyPoints: number
+}
+
+export interface PlayerRankingHistory {
+  playerId: string
+  name: string
+  avatarUrl: string | null
+  history: PlayerRankingAtMatch[]
+}
+
+export function computeSessionRankingHistory(
+  matches: Array<{ id: string; status: string; played_at: string | null; teams: Array<{ is_winner: boolean }> }>,
+  results: SessionResultRow[],
+  players: Array<{ id: string; name: string; avatar_url: string | null }>,
+): PlayerRankingHistory[] {
+  const completed = matches
+    .filter(m => m.status === 'COMPLETED' && m.teams.some(t => t.is_winner))
+    .sort((a, b) => new Date(a.played_at ?? 0).getTime() - new Date(b.played_at ?? 0).getTime())
+
+  const resultsByMatchId = new Map<string, SessionResultRow[]>()
+  for (const r of results) {
+    const arr = resultsByMatchId.get(r.match_id) ?? []
+    arr.push(r)
+    resultsByMatchId.set(r.match_id, arr)
+  }
+
+  const historyMap = new Map<string, PlayerRankingAtMatch[]>()
+  const cumulative: SessionResultRow[] = []
+
+  for (let i = 0; i < completed.length; i++) {
+    const matchResults = resultsByMatchId.get(completed[i].id) ?? []
+    cumulative.push(...matchResults)
+
+    const rankings = buildSessionWeeklyRankings(players, cumulative)
+    rankings.forEach((stat, idx) => {
+      const history = historyMap.get(stat.playerId) ?? []
+      history.push({ matchIndex: i + 1, rank: idx + 1, weeklyPoints: stat.weeklyPoints })
+      historyMap.set(stat.playerId, history)
+    })
+  }
+
+  return Array.from(historyMap.entries()).map(([playerId, history]) => {
+    const p = players.find(pl => pl.id === playerId)
+    return {
+      playerId,
+      name: p?.name ?? 'Unknown',
+      avatarUrl: p?.avatar_url ?? null,
+      history,
+    }
+  })
+}
+
+export function useSessionMatchResults(sessionId: string | undefined) {
+  return useQuery({
+    queryKey: ['session-match-results', sessionId],
+    enabled: !!sessionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_match_results')
+        .select('session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
+        .eq('session_id', sessionId!)
+      if (error) throw error
+      return (data ?? []) as SessionResultRow[]
+    },
+  })
+}
+
 export function useSessionLeaderboards() {
   return useQuery({
     queryKey: ['player-rankings', 'session-leaderboards'],

@@ -306,6 +306,8 @@ const en = {
   'sessionStats.diff': 'diff',
   'sessionStats.champion': 'You are the champion!',
   'sessionStats.championBadge': 'Champion',
+  'sessionStats.tabRankings': 'Rankings',
+  'sessionStats.tabChart': 'Chart',
 
   'createSession.title': 'New session',
   'createSession.subtitle': 'Pick a name. Set a time. Start swinging.',
@@ -883,6 +885,8 @@ const vi: Record<TranslationKey, string> = {
   'sessionStats.diff': 'Hiệu số',
   'sessionStats.champion': 'Bạn là nhà vô địch!',
   'sessionStats.championBadge': 'Quán quân',
+  'sessionStats.tabRankings': 'Xếp hạng',
+  'sessionStats.tabChart': 'Biểu đồ',
 
   'createSession.title': 'Giải đấu mới',
   'createSession.subtitle': 'Chọn tên. Chọn giờ. Bắt đầu.',

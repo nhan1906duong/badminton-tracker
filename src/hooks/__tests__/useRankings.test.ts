@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSessionWeeklyRankings, computeRankChanges } from '../useRankings'
+import { buildSessionWeeklyRankings, computeRankChanges, computeSessionRankingHistory } from '../useRankings'
 import type { PlayerRankingStats } from '../useRankings'
 
 const players = [
@@ -177,5 +177,131 @@ describe('computeRankChanges', () => {
     const changes = computeRankChanges(rankings, [], new Map())
     expect(changes.get('A')).toBe(0)
     expect(changes.get('B')).toBe(0)
+  })
+})
+
+describe('computeSessionRankingHistory', () => {
+  const p = [
+    { id: 'p1', name: 'Alice', avatar_url: null },
+    { id: 'p2', name: 'Bob', avatar_url: null },
+  ]
+
+  function match(id: string, played_at: string, hasWinner = true) {
+    return {
+      id,
+      status: 'COMPLETED',
+      played_at,
+      teams: [{ is_winner: hasWinner }, { is_winner: false }],
+    }
+  }
+
+  function res(playerId: string, matchId: string, points: number) {
+    return {
+      session_id: 's1',
+      match_id: matchId,
+      player_id: playerId,
+      is_winner: true,
+      team_score: 21,
+      opponent_score: 15,
+      total_weekly_points: points,
+      rating_delta: null,
+    }
+  }
+
+  it('returns one history entry per completed match per player', () => {
+    const matches = [
+      match('m1', '2024-01-01T10:00:00Z'),
+      match('m2', '2024-01-01T11:00:00Z'),
+    ]
+    const results = [
+      res('p1', 'm1', 20),
+      res('p2', 'm1', 15),
+      res('p1', 'm2', 10),
+    ]
+    const histories = computeSessionRankingHistory(matches, results, p)
+    const alice = histories.find(h => h.playerId === 'p1')!
+    const bob = histories.find(h => h.playerId === 'p2')!
+    expect(alice.history).toHaveLength(2)
+    expect(bob.history).toHaveLength(2)  // Bob stays in ranking even after m2 (no new result)
+  })
+
+  it('sorts matches by played_at, not insertion order', () => {
+    const matches = [
+      match('m2', '2024-01-01T11:00:00Z'),
+      match('m1', '2024-01-01T10:00:00Z'),
+    ]
+    const results = [
+      res('p1', 'm1', 30),  // earlier match — should be matchIndex 1
+      res('p1', 'm2', 10),  // later match — should be matchIndex 2
+    ]
+    const histories = computeSessionRankingHistory(matches, results, p)
+    const alice = histories.find(h => h.playerId === 'p1')!
+    // After m1: Alice has 30 pts. After m2: Alice has 40 pts total.
+    expect(alice.history[0].matchIndex).toBe(1)
+    expect(alice.history[1].matchIndex).toBe(2)
+    // After m2, Bob (no results) should not appear
+    expect(alice.history[0].weeklyPoints).toBe(30)
+    expect(alice.history[1].weeklyPoints).toBe(40)
+  })
+
+  it('records cumulative weekly points (not per-match)', () => {
+    const matches = [
+      match('m1', '2024-01-01T10:00:00Z'),
+      match('m2', '2024-01-01T11:00:00Z'),
+    ]
+    const results = [
+      res('p1', 'm1', 20),
+      res('p1', 'm2', 15),
+    ]
+    const histories = computeSessionRankingHistory(matches, results, p)
+    const alice = histories.find(h => h.playerId === 'p1')!
+    expect(alice.history[0].weeklyPoints).toBe(20)  // after m1
+    expect(alice.history[1].weeklyPoints).toBe(35)  // after m2 (20+15)
+  })
+
+  it('rank reflects position among all players after each match', () => {
+    const matches = [
+      match('m1', '2024-01-01T10:00:00Z'),
+      match('m2', '2024-01-01T11:00:00Z'),
+    ]
+    const results = [
+      res('p1', 'm1', 10),
+      res('p2', 'm1', 20),  // Bob leads after m1
+      res('p1', 'm2', 30),  // Alice overtakes after m2 (total 40 vs Bob's 20)
+    ]
+    const histories = computeSessionRankingHistory(matches, results, p)
+    const alice = histories.find(h => h.playerId === 'p1')!
+    const bob = histories.find(h => h.playerId === 'p2')!
+    expect(alice.history[0].rank).toBe(2)  // after m1: Bob 20 > Alice 10
+    expect(bob.history[0].rank).toBe(1)
+    expect(alice.history[1].rank).toBe(1)  // after m2: Alice 40 > Bob 20
+    expect(bob.history[1].rank).toBe(2)
+  })
+
+  it('excludes matches without a winner', () => {
+    const matchesWithNoWinner = [
+      { id: 'm1', status: 'COMPLETED', played_at: '2024-01-01T10:00:00Z', teams: [{ is_winner: false }, { is_winner: false }] },
+      match('m2', '2024-01-01T11:00:00Z'),
+    ]
+    const results = [res('p1', 'm2', 15)]
+    const histories = computeSessionRankingHistory(matchesWithNoWinner, results, p)
+    const alice = histories.find(h => h.playerId === 'p1')!
+    expect(alice.history).toHaveLength(1)
+    expect(alice.history[0].matchIndex).toBe(1)  // m2 becomes index 1 (m1 was excluded)
+  })
+
+  it('returns empty array when there are no completed matches', () => {
+    const matches = [{ id: 'm1', status: 'LIVE', played_at: null, teams: [] }]
+    const histories = computeSessionRankingHistory(matches, [], p)
+    expect(histories).toHaveLength(0)
+  })
+
+  it('preserves avatarUrl and name from the players list', () => {
+    const playersWithAvatar = [{ id: 'p1', name: 'Alice', avatar_url: 'https://example.com/alice.jpg' }]
+    const matches = [match('m1', '2024-01-01T10:00:00Z')]
+    const results = [res('p1', 'm1', 10)]
+    const histories = computeSessionRankingHistory(matches, results, playersWithAvatar)
+    expect(histories[0].name).toBe('Alice')
+    expect(histories[0].avatarUrl).toBe('https://example.com/alice.jpg')
   })
 })

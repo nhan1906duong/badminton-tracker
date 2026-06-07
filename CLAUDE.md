@@ -127,7 +127,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
-| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers |
+| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers; exports `computeSessionRankingHistory` (pure fn, tested) + `useSessionMatchResults` — computes per-match cumulative ranking history used by `SessionRankingChart` |
 | `src/hooks/useMenDoublesRankings.ts` | Computes MD pair rankings (win rate → wins → matches played) from ended sessions only; exports `computeMenDoublesRankings` (pure fn, tested) |
 | `src/hooks/useH2HPairs.ts` | Exact-composition 2v2 head-to-head: exports `computeH2HPairs` (pure fn, tested) + `useH2HPairs` hook; handles both normal and reversed team orientations |
 | `src/components/HeadToHeadTab.tsx` | Head to Head tab on RankingPage: 2-slot player picker per side, half-circle win-% gauge, win counts, match history |
@@ -138,6 +138,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/PlayerBadgesStrip.tsx` | Renders the player badge list in `PlayerDetailPage` header below the rating. Each badge is a row: lucide icon (category-colored) + count + label. Hidden if player holds no badges. |
 | `src/hooks/usePlayerPointsHistory.ts` | Fetches `player_match_results` for a player and groups them into `SessionPointsHistory[]` (session + `MatchPointsEntry[]` with match + points). Used for rating history chart and match points display. |
 | `src/components/RatingChart.tsx` | SVG line chart showing Elo rating over sessions. Dots for each session; filled + star marker (★) for sessions the player won. Rendered above the tab bar on `PlayerDetailPage`. |
+| `src/components/SessionRankingChart.tsx` | Multi-player ranking progression chart on `SessionStatsPage` (Chart tab). Smooth Catmull-Rom lines, Pantone color palette, player avatars with gradient glow at latest rank-1 point. Filter buttons (L5/L10/All) and focus/dim legend chips. Uses `computeSessionRankingHistory` data. |
 | `src/hooks/useLeagueTeams.ts` | Fetches league teams + their players for a session |
 | `src/hooks/useLeagueStandings.ts` | Computes standings (W/L/Pts) from completed league matches |
 | `src/components/LeagueStandingsTable.tsx` | Standings table rendered at the top of a league session detail |
