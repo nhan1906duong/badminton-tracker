@@ -543,7 +543,7 @@ export default function SessionStatsPage() {
               </div>
             </div>
 
-            <div style={{ margin: '0 calc(-1 * var(--space-3))', maxHeight: '52vh', overflowY: 'auto' }}>
+            <div style={{ margin: '0 calc(-1 * var(--space-3))', maxHeight: '52vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
               {playerMatchEntries.length === 0 ? (
                 <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', textAlign: 'center', padding: 'var(--space-5)' }}>
                   {t('sessionStats.emptyDescription')}
