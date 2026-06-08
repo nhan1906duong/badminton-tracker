@@ -114,7 +114,9 @@ Decompose into:
 
 ---
 
-## Recommendation 5 — Replace native form controls with design-system equivalents
+## Recommendation 5 — Replace native form controls with design-system equivalents — ✅ DONE
+
+> **Done:** The league `<select>` was already removed under Rec #3 (bottom-sheet picker). The remaining work was in `SessionDetailPage`: the edit-scheduled-time sheet now uses the overlay-input card pattern from `WhenPanel` (separate Date / Time rows with friendly visible text + a transparent native `<input type="date">`/`type="time"` overlay) instead of a raw `<input type="datetime-local">`, and both the edit-time and rename-session sheets now use `<Button variant="secondary">` / `<Button variant="accent">` instead of hand-rolled `<button>`s. `friendlyDate` / `friendlyTime` are reused from `match-create/helpers.ts`.
 
 **Why:** Several flows still use raw HTML elements that bypass the design system:
 - `<select>` for league team selection (`CreateMatchPage.tsx:666-737`) — OS-styled dropdown, no dark-mode polish, no custom focus ring
@@ -204,7 +206,7 @@ Decompose into:
 | 2 | Extract `SectionLabel` / `StatNumber` / `EyebrowBadge` / `MetaRow` | M | High |
 | 3 | ~~Split `CreateMatchPage` + bottom-sheet league picker + two-line CTA~~ — ✅ done | M | High |
 | 4 | ~~Pin live sessions to top of `SessionsListPage`~~ — ✅ done | S | Medium-High |
-| 5 | Replace native `<select>` + modal hand-rolled buttons | S | Medium |
+| 5 | ~~Replace native `<select>` + modal hand-rolled buttons~~ — ✅ done | S | Medium |
 | 6 | `RankingPage` tab overflow fix | XS | Medium |
 | 7 | A11y + polish pass (7 small items) | S each | Medium (cumulative) |
 | 8 | Dark-mode toggle if absent on `SettingsPage` | S | Medium |
