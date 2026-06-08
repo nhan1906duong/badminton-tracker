@@ -14,7 +14,7 @@ export { Card } from './card'
 export type { CardProps } from './card'
 
 export { Tabs } from './tabs'
-export type { TabsProps } from './tabs'
+export type { TabsProps, TabItem } from './tabs'
 
 export { MatchCard } from './match-card'
 export { SessionCard } from './session-card'

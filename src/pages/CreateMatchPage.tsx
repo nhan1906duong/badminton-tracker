@@ -463,7 +463,12 @@ export default function CreateMatchPage() {
   // ── CTA label ────────────────────────────────────────────────────────────────
 
   function ctaLabel(): string {
-    if (!allFilled) return t('createMatch.pickPlayers')
+    if (!allFilled) {
+      const remaining = totalSlots - filledCount
+      return remaining > 0
+        ? t('createMatch.pickMorePlayers', { count: remaining })
+        : t('createMatch.pickPlayers')
+    }
     if (mode === 'now') return t('createMatch.startNow')
     if (mode === 'schedule' && scheduledAt) {
       return t('createMatch.scheduleCta', { date: friendlyDate(scheduledAt, locale, t), time: friendlyTime(scheduledAt, locale) })

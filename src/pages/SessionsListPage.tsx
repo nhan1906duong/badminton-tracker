@@ -5,8 +5,9 @@ import { useMatches } from '../hooks/useMatches'
 import { SessionCard, EmptyState, ErrorState, PullToRefresh, Tabs } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
 import { CalendarTab } from '../components/CalendarTab'
-import { Plus, Trophy, User } from 'lucide-react'
+import { Plus, Trophy } from 'lucide-react'
 import FloatingActionButton from '../components/FloatingActionButton'
+import LoginAffordance from '../components/LoginAffordance'
 import {
   formatSessionDuration,
   formatSessionDateTime,
@@ -117,15 +118,7 @@ export default function SessionsListPage() {
           >
             {t('sessions.title')}
           </h1>
-          {!user && (
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'color-mix(in oklch, var(--muted) 35%, var(--bg))', color: 'var(--surface)', display: 'grid', placeItems: 'center', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0 }}
-            >
-              <User size={18} />
-            </button>
-          )}
+          {!user && <LoginAffordance />}
         </div>
         {subtitle && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>

@@ -125,6 +125,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/usePlayers.ts` | Player CRUD |
 | `src/components/PlayerForm.tsx` | Bottom-sheet modal for adding a player (design-system styled) |
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
+| `src/components/LoginAffordance.tsx` | Pill-shaped "Sign in" chip rendered next to the page title on tab routes when the user is unauthenticated. Single source for the login entry point — do not re-implement inline. |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers; exports `computeSessionRankingHistory` (pure fn, tested) + `useSessionMatchResults` — computes per-match cumulative ranking history used by `SessionRankingChart` |

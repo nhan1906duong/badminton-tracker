@@ -358,6 +358,27 @@ See [design-system/components/tabs.tsx](../design-system/components/tabs.tsx).
 - Animated underline indicator in `--fg`
 - Active tab: `--fg`; inactive: `--muted`
 - Transition: `--duration-normal`
+- Container carries `role="tablist"`; each tab is a `role="tab"` button with `aria-selected`.
+
+**Two APIs:**
+
+```tsx
+// 1. String labels — the simplest case; activeTab matches the string itself
+<Tabs tabs={['List', 'Calendar']} activeTab={tab} onTabChange={setTab} />
+
+// 2. TabItem[] — when the visible label is dynamic (e.g. a session name) but
+//    the page state needs a stable key. activeTab matches `key`, not `label`.
+<Tabs
+  tabs={[
+    { key: 'all', label: 'All' },
+    { key: 'session', label: latestSession?.label ?? 'Latest' },
+  ]}
+  activeTab={activeTab}
+  onTabChange={(key) => setActiveTab(key)}
+/>
+```
+
+Use the keyed API any time the label can change at runtime — otherwise the active state breaks when the label string mutates.
 
 ---
 

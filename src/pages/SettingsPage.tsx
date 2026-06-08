@@ -91,12 +91,12 @@ export default function SettingsPage() {
             type="button"
             onClick={() => setLocale(nextLocale)}
             aria-label={t('settings.language')}
-            className="inline-flex h-7 items-center gap-1 rounded-full border border-[color-mix(in_oklch,var(--danger)_18%,transparent)] bg-[color-mix(in_oklch,var(--danger)_12%,var(--surface))] px-2 text-[var(--danger)] active:bg-[color-mix(in_oklch,var(--danger)_18%,var(--surface))] transition-colors"
+            className="inline-flex h-7 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
           >
             <span className="text-[12px] leading-none">
               {localeFlag}
             </span>
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--danger)]">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
               {localeLabel}
             </span>
           </button>

@@ -1,6 +1,6 @@
 import { useCallback, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Medal, UserPlus, Crown, User } from 'lucide-react'
+import { Medal, UserPlus, Crown } from 'lucide-react'
 import HeadToHeadTab from '../components/HeadToHeadTab'
 import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useMenDoublesRankings } from '../hooks/useMenDoublesRankings'
@@ -10,8 +10,9 @@ import PlayerRecordLine from '../components/PlayerRecordLine'
 import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { useIsAdmin } from '../hooks/useIsAdmin'
-import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
+import { PullToRefresh, BwfCategoryBadge, Tabs } from '../../design-system/components'
 import FloatingActionButton from '../components/FloatingActionButton'
+import LoginAffordance from '../components/LoginAffordance'
 import PlayerForm from '../components/PlayerForm'
 import { LOCALE_TAG, useI18n } from '../i18n'
 import { formatShortPlayerName } from '../lib/player-name'
@@ -307,15 +308,7 @@ export default function RankingPage() {
           >
             {t('ranking.title')}
           </h1>
-          {!user && (
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'color-mix(in oklch, var(--muted) 35%, var(--bg))', color: 'var(--surface)', display: 'grid', placeItems: 'center', cursor: 'pointer', touchAction: 'manipulation', flexShrink: 0 }}
-            >
-              <User size={18} />
-            </button>
-          )}
+          {!user && <LoginAffordance />}
         </div>
         {!isLoading && rankings.length > 0 && (
           <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
@@ -325,47 +318,17 @@ export default function RankingPage() {
       </div>
 
       {/* Tabs */}
-      <div
-        className="mb-[var(--space-4)] [&::-webkit-scrollbar]:hidden"
-        style={{
-          display: 'flex',
-          gap: 0,
-          borderBottom: '1px solid var(--border)',
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          WebkitOverflowScrolling: 'touch',
-          paddingLeft: 'var(--space-5)',
-        }}
-      >
-        {([
-          { key: 'all', label: <span>{TAB_ALL}</span> },
-          { key: 'doubles', label: <span>{TAB_DOUBLES}</span> },
-          { key: 'session', label: <span>{latestSession?.label ?? TAB_SESSION}</span> },
-          { key: 'h2h', label: <span>{TAB_H2H}</span> },
-        ] as const).map(({ key, label }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setActiveTab(key)}
-            style={{
-              padding: '8px 12px',
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: 'var(--font-body)',
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: activeTab === key ? 'var(--fg)' : 'var(--muted)',
-              borderBottom: activeTab === key ? '2px solid var(--fg)' : '2px solid transparent',
-              marginBottom: -1,
-              touchAction: 'manipulation',
-              WebkitTapHighlightColor: 'transparent',
-              flexShrink: 0,
-            }}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="mb-[var(--space-4)] overflow-x-auto px-[var(--space-5)] [&::-webkit-scrollbar]:hidden">
+        <Tabs
+          tabs={[
+            { key: 'all', label: TAB_ALL },
+            { key: 'doubles', label: TAB_DOUBLES },
+            { key: 'session', label: latestSession?.label ?? TAB_SESSION },
+            { key: 'h2h', label: TAB_H2H },
+          ]}
+          activeTab={activeTab}
+          onTabChange={(key) => setActiveTab(key as typeof activeTab)}
+        />
       </div>
 
       {/* Content */}
