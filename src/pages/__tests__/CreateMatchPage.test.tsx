@@ -87,6 +87,7 @@ vi.mock('../../../design-system/components', () => ({
       {action}
     </div>
   ),
+  Avatar: ({ name }: { name: string }) => <div aria-label={name} />,
 }))
 
 vi.mock('../../../design-system/components/match-type-chips', () => ({

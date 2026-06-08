@@ -60,6 +60,8 @@ At `/sessions/:id/matches/new` (`CreateMatchPage`):
 3. Choose **When**: Now (LIVE), Schedule (SCHEDULED + datetime), or Queue (SCHEDULED + queue_position)
 4. Save → `navigate(-1)` back to session detail
 
+`CreateMatchPage` is orchestration-only; the screen is composed from focused subcomponents in `src/components/match-create/`: `PlayerSlotsCard` (team headers + slots, uses `<Avatar>`), `WhenPanel` (Now/Schedule/Queue), `LeagueTeamSelectors` (bottom-sheet team picker for league sessions), `ShufflePickerSheet` (owns shuffle selection + logic), `PlayerPickerSheet`, and shared date `helpers.ts`. The bottom CTA is two-line (primary verb + secondary meta).
+
 After a match is created, tap it from session detail to open `MatchDetailPage`:
 - Start (SCHEDULED → LIVE), Record Result (LIVE → COMPLETED with winner), End Match (LIVE → COMPLETED without winner), Reopen (COMPLETED → LIVE)
 - Edit Players → `EditPlayersPage` (`/matches/:matchId/players/edit`)

@@ -393,6 +393,11 @@ const en = {
   'createMatch.selectPlayer': 'Select player',
   'createMatch.searchPlayers': 'Search players...',
   'createMatch.noPlayerMatches': 'No players match this filter.',
+  'createMatch.teams': 'Teams',
+  'createMatch.selectTeam': 'Select a team',
+  'createMatch.leagueMatch': 'League match',
+  'createMatch.ctaSchedule': 'Schedule match',
+  'createMatch.ctaQueue': 'Add to queue',
 
   'shuffle.button': 'Shuffle',
   'shuffle.ariaLabel': 'Shuffle players',
@@ -972,6 +977,11 @@ const vi: Record<TranslationKey, string> = {
   'createMatch.selectPlayer': 'Chọn người chơi',
   'createMatch.searchPlayers': 'Tìm người chơi...',
   'createMatch.noPlayerMatches': 'Không có người chơi phù hợp.',
+  'createMatch.teams': 'Đội',
+  'createMatch.selectTeam': 'Chọn đội',
+  'createMatch.leagueMatch': 'Trận giải',
+  'createMatch.ctaSchedule': 'Lên lịch trận',
+  'createMatch.ctaQueue': 'Thêm vào hàng đợi',
 
   'shuffle.button': 'Xáo',
   'shuffle.ariaLabel': 'Xáo ngẫu nhiên người chơi',
