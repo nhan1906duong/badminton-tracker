@@ -1,10 +1,21 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, type ReactNode } from 'react'
+
+export interface TabItem {
+  key: string
+  label: ReactNode
+}
 
 export interface TabsProps {
-  tabs: string[]
+  tabs: ReadonlyArray<string | TabItem>
+  /** The active tab — matches the string for `string[]` tabs, or the `key` for `TabItem[]` tabs. */
   activeTab: string
+  /** Fires with the string or the `key` of the tapped tab. */
   onTabChange: (tab: string) => void
   className?: string
+}
+
+function normalize(tab: string | TabItem): TabItem {
+  return typeof tab === 'string' ? { key: tab, label: tab } : tab
 }
 
 export function Tabs({ tabs, activeTab, onTabChange, className = '' }: TabsProps) {
@@ -25,24 +36,31 @@ export function Tabs({ tabs, activeTab, onTabChange, className = '' }: TabsProps
     <div
       className={`relative flex gap-2 border-b ${className}`}
       style={{ borderColor: 'var(--border)', paddingBottom: 'var(--space-2)' }}
+      role="tablist"
     >
-      {tabs.map((tab) => (
-        <button
-          key={tab}
-          ref={tab === activeTab ? activeRef : undefined}
-          onClick={() => onTabChange(tab)}
-          className={`px-3 py-2 text-[13px] font-semibold transition-colors duration-[var(--duration-fast)] select-none cursor-pointer`}
-          style={{
-            color: tab === activeTab ? 'var(--fg)' : 'var(--muted)',
-            fontFamily: 'var(--font-body)',
-            border: 'none',
-            background: 'transparent',
-            touchAction: 'manipulation',
-          }}
-        >
-          {tab}
-        </button>
-      ))}
+      {tabs.map((rawTab) => {
+        const tab = normalize(rawTab)
+        const isActive = tab.key === activeTab
+        return (
+          <button
+            key={tab.key}
+            ref={isActive ? activeRef : undefined}
+            onClick={() => onTabChange(tab.key)}
+            role="tab"
+            aria-selected={isActive}
+            className={`px-3 py-2 text-[13px] font-semibold transition-colors duration-[var(--duration-fast)] select-none cursor-pointer whitespace-nowrap`}
+            style={{
+              color: isActive ? 'var(--fg)' : 'var(--muted)',
+              fontFamily: 'var(--font-body)',
+              border: 'none',
+              background: 'transparent',
+              touchAction: 'manipulation',
+            }}
+          >
+            {tab.label}
+          </button>
+        )
+      })}
       {/* Underline indicator */}
       <div
         className="absolute bottom-0 h-[2px] transition-all duration-[var(--duration-normal)]"

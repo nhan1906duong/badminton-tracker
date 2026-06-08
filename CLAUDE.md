@@ -60,6 +60,8 @@ At `/sessions/:id/matches/new` (`CreateMatchPage`):
 3. Choose **When**: Now (LIVE), Schedule (SCHEDULED + datetime), or Queue (SCHEDULED + queue_position)
 4. Save → `navigate(-1)` back to session detail
 
+`CreateMatchPage` is orchestration-only; the screen is composed from focused subcomponents in `src/components/match-create/`: `PlayerSlotsCard` (team headers + slots, uses `<Avatar>`), `WhenPanel` (Now/Schedule/Queue), `LeagueTeamSelectors` (bottom-sheet team picker for league sessions), `ShufflePickerSheet` (owns shuffle selection + logic), `PlayerPickerSheet`, and shared date `helpers.ts`. The bottom CTA is two-line (primary verb + secondary meta).
+
 After a match is created, tap it from session detail to open `MatchDetailPage`:
 - Start (SCHEDULED → LIVE), Record Result (LIVE → COMPLETED with winner), End Match (LIVE → COMPLETED without winner), Reopen (COMPLETED → LIVE)
 - Edit Players → `EditPlayersPage` (`/matches/:matchId/players/edit`)
@@ -125,6 +127,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/usePlayers.ts` | Player CRUD |
 | `src/components/PlayerForm.tsx` | Bottom-sheet modal for adding a player (design-system styled) |
 | `src/components/FloatingActionButton.tsx` | Hanko-style square FAB (56×56px, accent color, fixed bottom-right) |
+| `src/components/LoginAffordance.tsx` | Pill-shaped "Sign in" chip rendered next to the page title on tab routes when the user is unauthenticated. Single source for the login entry point — do not re-implement inline. |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
 | `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers; exports `computeSessionRankingHistory` (pure fn, tested) + `useSessionMatchResults` — computes per-match cumulative ranking history used by `SessionRankingChart` |

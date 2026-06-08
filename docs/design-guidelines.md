@@ -358,6 +358,27 @@ See [design-system/components/tabs.tsx](../design-system/components/tabs.tsx).
 - Animated underline indicator in `--fg`
 - Active tab: `--fg`; inactive: `--muted`
 - Transition: `--duration-normal`
+- Container carries `role="tablist"`; each tab is a `role="tab"` button with `aria-selected`.
+
+**Two APIs:**
+
+```tsx
+// 1. String labels — the simplest case; activeTab matches the string itself
+<Tabs tabs={['List', 'Calendar']} activeTab={tab} onTabChange={setTab} />
+
+// 2. TabItem[] — when the visible label is dynamic (e.g. a session name) but
+//    the page state needs a stable key. activeTab matches `key`, not `label`.
+<Tabs
+  tabs={[
+    { key: 'all', label: 'All' },
+    { key: 'session', label: latestSession?.label ?? 'Latest' },
+  ]}
+  activeTab={activeTab}
+  onTabChange={(key) => setActiveTab(key)}
+/>
+```
+
+Use the keyed API any time the label can change at runtime — otherwise the active state breaks when the label string mutates.
 
 ---
 
@@ -409,11 +430,41 @@ Selectable suggestion card — used to present AI/data-driven recommendations (e
 - Use `role="radio" aria-checked` on each card; wrap list in `role="radiogroup"`
 
 ### SectionLabel
+See [design-system/components/section-label.tsx](../design-system/components/section-label.tsx).
 
-Mono uppercase label above a form section — pairs with an optional right-side action button.
+Mono uppercase label above a section — pairs with an optional right-side `action` slot.
 
 - `font-[family:var(--font-mono)] text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]`
-- Right action: `text-[var(--accent)] font-semibold text-[13px]`, min-height 32px
+- `action` prop: any node, rendered right-aligned (the label + action sit in a `flex items-baseline justify-between` row)
+- Without `action`, renders just the label in a plain block
+
+### StatNumber
+See [design-system/components/stat-number.tsx](../design-system/components/stat-number.tsx).
+
+Large display numeral with tabular figures — ranking values, stat cells, MVP card.
+
+- `font-[family:var(--font-display)]`, weight 800, `font-variant-numeric: tabular-nums`, `line-height: 1`
+- `size`: `'lg'` (18px) · `'xl'` (24px, default) · `'2xl'` (32px)
+- `color`: `'fg'` (default) · `'accent'` · `'muted'`
+- For ellipsis/letter-spacing, pass `className` (e.g. `overflow-hidden text-ellipsis whitespace-nowrap tracking-[-0.02em]`)
+
+### EyebrowBadge
+See [design-system/components/eyebrow-badge.tsx](../design-system/components/eyebrow-badge.tsx).
+
+Mono uppercase status eyebrow above a hero title (LIVE / SCHEDULED / COMPLETED).
+
+- `font-[family:var(--font-mono)] text-[11px] font-bold uppercase tracking-[0.1em]`, `min-height: 18px`
+- `tone`: `'live'` (`--accent`) · `'scheduled'` (`--fg`) · `'completed'` / `'neutral'` (`--muted`)
+- `pulse`: renders a pulsing 8px dot in the tone color before the label (use with `live`)
+
+### MetaRow
+See [design-system/components/meta-row.tsx](../design-system/components/meta-row.tsx).
+
+Small mono meta line with `·` dot separators — date · duration · count.
+
+- `font-[family:var(--font-mono)] text-[13px] text-[var(--muted)]`, wraps, `gap: var(--space-2)`
+- `items: Array<{ label: ReactNode; emphasis?: boolean }>` — `emphasis` renders the item in `--fg` weight 600
+- Dot separators are inserted automatically between items
 
 ### OrDivider
 

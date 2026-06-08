@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel, BwfCategoryBadge } from '../../design-system/components'
+import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, SectionLabel, StatNumber, EyebrowBadge, MetaRow, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel, BwfCategoryBadge } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
 import { Plus, Activity, Share2, Pencil, Trash2 } from 'lucide-react'
 
@@ -39,6 +39,10 @@ export default function DesignSystemPage() {
         <RankItemSection />
         <StatRowSection />
         <SectionHeaderSection />
+        <SectionLabelSection />
+        <StatNumberSection />
+        <EyebrowBadgeSection />
+        <MetaRowSection />
         <PatternSection />
         <DialogSection />
         <BottomSheetSection />
@@ -815,6 +819,91 @@ function SectionHeaderSection() {
     <Section title="Section Header">
       <SectionHeader title="Rankings" action={{ label: 'View All', onClick: () => {} }} />
       <SectionHeader title="Quick Stats" />
+    </Section>
+  )
+}
+
+/* ---------- Section Label ---------- */
+
+function SectionLabelSection() {
+  return (
+    <Section title="Section Label">
+      <DSCard>
+        <SectionLabel>Match Type</SectionLabel>
+        <SectionLabel
+          action={
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
+              MD · 2 v 2
+            </span>
+          }
+        >
+          Players
+        </SectionLabel>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Stat Number ---------- */
+
+function StatNumberSection() {
+  return (
+    <Section title="Stat Number">
+      <DSCard>
+        <div className="flex items-end gap-6">
+          <StatNumber value={42} size="lg" />
+          <StatNumber value={1284} size="xl" color="accent" />
+          <StatNumber value="75%" size="2xl" />
+        </div>
+        <div className="flex items-center gap-6">
+          <StatNumber value={7} color="fg" />
+          <StatNumber value={3} color="accent" />
+          <StatNumber value={0} color="muted" />
+        </div>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Eyebrow Badge ---------- */
+
+function EyebrowBadgeSection() {
+  return (
+    <Section title="Eyebrow Badge">
+      <DSCard>
+        <div className="space-y-2">
+          <div><EyebrowBadge tone="live" pulse>Live</EyebrowBadge></div>
+          <div><EyebrowBadge tone="scheduled">Scheduled</EyebrowBadge></div>
+          <div><EyebrowBadge tone="completed">Completed</EyebrowBadge></div>
+          <div><EyebrowBadge tone="neutral">Draft</EyebrowBadge></div>
+        </div>
+      </DSCard>
+    </Section>
+  )
+}
+
+/* ---------- Meta Row ---------- */
+
+function MetaRowSection() {
+  return (
+    <Section title="Meta Row">
+      <DSCard>
+        <MetaRow
+          items={[
+            { label: 'Sat, Jun 8', emphasis: true },
+            { label: '7:00 PM' },
+            { label: '12 matches' },
+          ]}
+        />
+      </DSCard>
     </Section>
   )
 }

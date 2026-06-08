@@ -81,6 +81,13 @@ vi.mock('../../../design-system/components', () => ({
       ))}
     </div>
   ),
+  SectionLabel: ({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) => (
+    <div>
+      <span>{children}</span>
+      {action}
+    </div>
+  ),
+  Avatar: ({ name }: { name: string }) => <div aria-label={name} />,
 }))
 
 vi.mock('../../../design-system/components/match-type-chips', () => ({
@@ -137,9 +144,10 @@ describe('CreateMatchPage', () => {
       expect(screen.getByText('New match')).toBeInTheDocument()
     })
 
-    it('CTA is disabled when no players are selected', () => {
+    it('CTA is disabled and reports the slot count when no players are selected', () => {
       renderPage()
-      const btn = screen.getByRole('button', { name: /pick players to continue/i })
+      // Default match type is MEN_DOUBLES → 4 slots, 0 filled → "Pick 4 more players"
+      const btn = screen.getByRole('button', { name: /pick 4 more players/i })
       expect(btn).toBeDisabled()
     })
 
@@ -173,7 +181,7 @@ describe('CreateMatchPage', () => {
       expect(screen.getByRole('button', { name: /start match now/i })).not.toBeDisabled()
     })
 
-    it('CTA stays disabled when only some slots are filled', () => {
+    it('CTA stays disabled and reports remaining slots when only some are filled', () => {
       useNewMatchStore.setState({
         matchType: 'MEN_DOUBLES',
         teamA: ['p1', null],
@@ -182,7 +190,20 @@ describe('CreateMatchPage', () => {
         scheduledAt: null,
       })
       renderPage()
-      expect(screen.getByRole('button', { name: /pick players to continue/i })).toBeDisabled()
+      // 4 slots, 1 filled → "Pick 3 more players"
+      expect(screen.getByRole('button', { name: /pick 3 more players/i })).toBeDisabled()
+    })
+
+    it('CTA uses singular form when one slot is missing', () => {
+      useNewMatchStore.setState({
+        matchType: 'MEN_DOUBLES',
+        teamA: ['p1', 'p2'],
+        teamB: ['p3', null],
+        mode: 'now',
+        scheduledAt: null,
+      })
+      renderPage()
+      expect(screen.getByRole('button', { name: /pick 1 more player\b/i })).toBeDisabled()
     })
 
     it('shows "Add to queue" label in queue mode with all players filled', () => {

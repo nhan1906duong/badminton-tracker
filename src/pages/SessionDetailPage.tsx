@@ -54,14 +54,15 @@ import { Dialog } from '../../design-system/components/dialog'
 import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
 import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2, Users } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2, Users, Calendar, Clock, ChevronRight } from 'lucide-react'
+import { friendlyDate, friendlyTime } from '../components/match-create/helpers'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { useAuth } from '../hooks/useAuth'
 import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats'
 import { generateSessionShareCard } from '../lib/share-card'
 import { Button } from '../../design-system/components/button'
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
+import { PullToRefresh, BwfCategoryBadge, EyebrowBadge, MetaRow } from '../../design-system/components'
 
 export default function SessionDetailPage() {
   const { locale, t } = useI18n()
@@ -142,6 +143,22 @@ export default function SessionDetailPage() {
     const d = new Date(iso)
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+
+  function handleEditDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.value) return
+    const [y, mo, d] = e.target.value.split('-').map(Number)
+    const next = new Date(editTimeValue || Date.now())
+    next.setFullYear(y, mo - 1, d)
+    setEditTimeValue(toDatetimeLocal(next.toISOString()))
+  }
+
+  function handleEditTimeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.value) return
+    const [hh, mm] = e.target.value.split(':').map(Number)
+    const next = new Date(editTimeValue || Date.now())
+    next.setHours(hh, mm, 0, 0)
+    setEditTimeValue(toDatetimeLocal(next.toISOString()))
   }
 
   async function handleSaveScheduledTime() {
@@ -299,33 +316,15 @@ export default function SessionDetailPage() {
         {session && (
           <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
             {/* Eyebrow */}
-            <div
-              className="inline-flex items-center gap-[var(--space-2)]"
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: sessionStatus === 'live' ? 'var(--accent)'
-                  : sessionStatus === 'scheduled' ? 'var(--fg)'
-                  : 'var(--muted)',
-                marginBottom: 'var(--space-3)',
-                minHeight: 18,
-              }}
+            <EyebrowBadge
+              tone={sessionStatus === 'live' ? 'live' : sessionStatus === 'scheduled' ? 'scheduled' : 'completed'}
+              pulse={sessionStatus === 'live'}
+              className="mb-[var(--space-3)]"
             >
-              {sessionStatus === 'live' && (
-                <span
-                  className="rounded-full animate-pulse flex-shrink-0"
-                  style={{ width: 8, height: 8, background: 'var(--accent)' }}
-                />
-              )}
-              <span>
-                {sessionStatus === 'live' ? t('sessionDetail.statusLive')
-                  : sessionStatus === 'scheduled' ? t('sessionDetail.statusScheduled')
-                  : t('sessionDetail.statusCompleted')}
-              </span>
-            </div>
+              {sessionStatus === 'live' ? t('sessionDetail.statusLive')
+                : sessionStatus === 'scheduled' ? t('sessionDetail.statusScheduled')
+                : t('sessionDetail.statusCompleted')}
+            </EyebrowBadge>
 
             {/* Title */}
             <h1
@@ -375,22 +374,21 @@ export default function SessionDetailPage() {
             )}
 
             {/* Datetime + duration */}
-            <div
-              className="flex items-center flex-wrap gap-[var(--space-2)]"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}
-            >
-              <span>
-                <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
-                  {formatSessionDate(session.started_at, locale, t)}
-                </strong>
-                {' · '}{formatSessionTime(session.started_at, locale)}
-              </span>
-              <span
-                className="flex-shrink-0 rounded-full"
-                style={{ width: 3, height: 3, background: 'var(--border)' }}
-              />
-              {sessionStatus && <span>{getSessionMeta(session, sessionStatus, t)}</span>}
-            </div>
+            <MetaRow
+              items={[
+                {
+                  label: (
+                    <>
+                      <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
+                        {formatSessionDate(session.started_at, locale, t)}
+                      </strong>
+                      {' · '}{formatSessionTime(session.started_at, locale)}
+                    </>
+                  ),
+                },
+                ...(sessionStatus ? [{ label: getSessionMeta(session, sessionStatus, t) }] : []),
+              ]}
+            />
           </header>
         )}
 
@@ -618,20 +616,61 @@ export default function SessionDetailPage() {
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 'var(--space-4)' }}>
             {t('sessionDetail.editScheduledTime')}
           </div>
-          <input
-            type="datetime-local"
-            value={editTimeValue}
-            onChange={e => setEditTimeValue(e.target.value)}
-            style={{ width: '100%', padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)', color: 'var(--fg)', marginBottom: 'var(--space-4)', boxSizing: 'border-box' }}
-          />
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            overflow: 'hidden',
+            marginBottom: 'var(--space-4)',
+          }}>
+            {/* Date row */}
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: 'var(--space-4)', borderBottom: '1px solid var(--border)', minHeight: 56, cursor: 'pointer', position: 'relative' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--fg)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
+                <Calendar style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }} />
+                {t('createSession.date')}
+              </span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                {editTimeValue && friendlyDate(new Date(editTimeValue), locale, t)}
+                <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+              </span>
+              <input
+                type="date"
+                value={editTimeValue.slice(0, 10)}
+                onChange={handleEditDateChange}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+              />
+            </label>
+            {/* Time row */}
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: 'var(--space-4)', minHeight: 56, cursor: 'pointer', position: 'relative' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--fg)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
+                <Clock style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }} />
+                {t('createSession.time')}
+              </span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                {editTimeValue && friendlyTime(new Date(editTimeValue), locale)}
+                <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+              </span>
+              <input
+                type="time"
+                value={editTimeValue.slice(11, 16)}
+                onChange={handleEditTimeChange}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+              />
+            </label>
+          </div>
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <button type="button" onClick={() => setEditTimeOpen(false)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
+            <Button variant="secondary" size="block" onClick={() => setEditTimeOpen(false)}>
               {t('common.cancel')}
-            </button>
-            <button type="button" onClick={handleSaveScheduledTime} disabled={!editTimeValue || updateSessionStartTime.isPending}
-              style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: editTimeValue ? 'pointer' : 'not-allowed', minHeight: 48, border: 'none', background: editTimeValue ? 'var(--accent)' : 'var(--border)', color: editTimeValue ? 'var(--surface)' : 'var(--muted)', opacity: editTimeValue ? 1 : 0.6, touchAction: 'manipulation' }}>
+            </Button>
+            <Button
+              variant="accent"
+              size="block"
+              onClick={handleSaveScheduledTime}
+              disabled={!editTimeValue || updateSessionStartTime.isPending}
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {t('sessionDetail.saveTime')}
-            </button>
+            </Button>
           </div>
         </div>
       </BottomSheet>
@@ -649,13 +688,18 @@ export default function SessionDetailPage() {
             style={{ width: '100%', padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', color: 'var(--fg)', marginBottom: 'var(--space-4)', boxSizing: 'border-box' }}
           />
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <button type="button" onClick={() => setEditLabelOpen(false)} style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--fg)', touchAction: 'manipulation' }}>
+            <Button variant="secondary" size="block" onClick={() => setEditLabelOpen(false)}>
               {t('common.cancel')}
-            </button>
-            <button type="button" onClick={handleSaveLabel} disabled={renameSession.isPending}
-              style={{ flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer', minHeight: 48, border: 'none', background: 'var(--accent)', color: 'var(--surface)', touchAction: 'manipulation' }}>
+            </Button>
+            <Button
+              variant="accent"
+              size="block"
+              onClick={handleSaveLabel}
+              disabled={renameSession.isPending}
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {t('sessionDetail.saveName')}
-            </button>
+            </Button>
           </div>
         </div>
       </BottomSheet>

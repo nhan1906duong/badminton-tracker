@@ -20,7 +20,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import PlayerRecordLine from '../components/PlayerRecordLine'
-import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge } from '../../design-system/components'
+import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge, StatNumber } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Session } from '../types/database'
@@ -840,23 +840,12 @@ function PlayerStatCell({
         minWidth: 0,
       }}
     >
-      <span
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'var(--text-xl)',
-          fontWeight: 800,
-          lineHeight: 1,
-          letterSpacing: '-0.02em',
-          fontFeatureSettings: '"tnum" 1',
-          color: accent ? 'var(--accent)' : 'var(--fg)',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          maxWidth: '100%',
-        }}
-      >
-        {value}
-      </span>
+      <StatNumber
+        value={value}
+        size="xl"
+        color={accent ? 'accent' : 'fg'}
+        className="overflow-hidden text-ellipsis whitespace-nowrap max-w-full tracking-[-0.02em]"
+      />
       <span
         style={{
           fontFamily: 'var(--font-mono)',
