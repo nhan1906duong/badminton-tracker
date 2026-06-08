@@ -2,7 +2,7 @@ import { useMemo, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
-import { SessionCard, EmptyState, ErrorState, PullToRefresh, Tabs } from '../../design-system/components'
+import { SessionCard, EmptyState, ErrorState, PullToRefresh, Tabs, SectionLabel } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
 import { CalendarTab } from '../components/CalendarTab'
 import { Plus, Trophy } from 'lucide-react'
@@ -14,7 +14,7 @@ import {
   getSessionName,
   getSessionStatus,
 } from '../lib/session-format'
-import type { MatchWithDetails } from '../types/database'
+import type { MatchWithDetails, Session } from '../types/database'
 import { useI18n } from '../i18n'
 import { useSessionLeaderboards } from '../hooks/useRankings'
 import { useAuth } from '../hooks/useAuth'
@@ -84,6 +84,27 @@ export default function SessionsListPage() {
     return stats
   }, [allMatches, sessionLeaderboards, t])
 
+  // Group sessions: Live → Upcoming → Recent. Within each group the
+  // existing reverse-chronological order (from the query) is preserved.
+  const sessionGroups = useMemo(() => {
+    const live: Session[] = []
+    const scheduled: Session[] = []
+    const completed: Session[] = []
+    for (const session of sessions ?? []) {
+      const status = getSessionStatus(session)
+      if (status === 'active') live.push(session)
+      else if (status === 'scheduled') scheduled.push(session)
+      else completed.push(session)
+    }
+    return [
+      { key: 'live', label: t('sessions.groupLive'), items: live },
+      { key: 'scheduled', label: t('sessions.groupUpcoming'), items: scheduled },
+      { key: 'completed', label: t('sessions.groupRecent'), items: completed },
+    ].filter((g) => g.items.length > 0)
+  }, [sessions, t])
+
+  const showGroupHeaders = sessionGroups.length > 1
+
   const isLoading = sessionsLoading || matchesLoading || leaderboardsLoading
   const isError = sessionsError || matchesError || leaderboardsError
 
@@ -149,32 +170,41 @@ export default function SessionsListPage() {
                 refetchMatches()
               }}
             />
-          ) : sessions && sessions.length > 0 ? (
-            sessions.map((session) => {
-              const stat = sessionStats.get(session.id)
-              return (
-                <button
-                  key={session.id}
-                  onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
-                  className="w-full text-left active:scale-[0.98] transition-transform"
-                  style={{ borderRadius: 'var(--radius-lg)' }}
-                >
-                  <SessionCard
-                    status={getSessionStatus(session)}
-                    name={getSessionName(session, locale)}
-                    dateTime={formatSessionDateTime(session.started_at, locale)}
-                    duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
-                    matchCount={stat?.matchCount ?? 0}
-                    topPlayer={stat?.topPlayer}
-                    compact
-                    tournamentCategory={session.bwf_tournaments ? {
-                      categoryName: session.bwf_tournaments.category_name,
-                      categorySlug: session.bwf_tournaments.category_slug,
-                    } : null}
-                  />
-                </button>
-              )
-            })
+          ) : sessionGroups.length > 0 ? (
+            sessionGroups.map((group) => (
+              <div key={group.key} className="space-y-[var(--space-3)]">
+                {showGroupHeaders && (
+                  <SectionLabel className="px-[var(--space-1)] pt-[var(--space-2)]">
+                    {group.label}
+                  </SectionLabel>
+                )}
+                {group.items.map((session) => {
+                  const stat = sessionStats.get(session.id)
+                  return (
+                    <button
+                      key={session.id}
+                      onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
+                      className="w-full text-left active:scale-[0.98] transition-transform"
+                      style={{ borderRadius: 'var(--radius-lg)' }}
+                    >
+                      <SessionCard
+                        status={getSessionStatus(session)}
+                        name={getSessionName(session, locale)}
+                        dateTime={formatSessionDateTime(session.started_at, locale)}
+                        duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
+                        matchCount={stat?.matchCount ?? 0}
+                        topPlayer={stat?.topPlayer}
+                        compact
+                        tournamentCategory={session.bwf_tournaments ? {
+                          categoryName: session.bwf_tournaments.category_name,
+                          categorySlug: session.bwf_tournaments.category_slug,
+                        } : null}
+                      />
+                    </button>
+                  )
+                })}
+              </div>
+            ))
           ) : (
             <EmptyState
               icon={<Trophy className="w-9 h-9 mx-auto" />}

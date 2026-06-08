@@ -232,6 +232,9 @@ const en = {
   'sessions.elapsed': 'elapsed',
   'sessions.tabList': 'Sessions',
   'sessions.tabCalendar': 'Calendar',
+  'sessions.groupLive': 'Live now',
+  'sessions.groupUpcoming': 'Upcoming',
+  'sessions.groupRecent': 'Recent',
 
   'calendar.noSessions': 'No sessions yet',
   'calendar.champion': 'Champion',
@@ -817,6 +820,9 @@ const vi: Record<TranslationKey, string> = {
   'sessions.elapsed': 'Đã diễn ra',
   'sessions.tabList': 'Danh sách',
   'sessions.tabCalendar': 'Lịch',
+  'sessions.groupLive': 'Đang diễn ra',
+  'sessions.groupUpcoming': 'Sắp diễn ra',
+  'sessions.groupRecent': 'Gần đây',
 
   'calendar.noSessions': 'Chưa có giải đấu',
   'calendar.champion': 'Nhà vô địch',

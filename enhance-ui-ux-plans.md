@@ -95,7 +95,9 @@ Decompose into:
 
 ---
 
-## Recommendation 4 — Pin live sessions to the top of `SessionsListPage`
+## Recommendation 4 — Pin live sessions to the top of `SessionsListPage` — ✅ DONE
+
+> **Done:** `SessionsListPage` now partitions sessions into three ordered groups — **Live now → Upcoming → Recent** — via a `sessionGroups` memo (reverse-chronological order preserved within each group). Each non-empty group renders a `SectionLabel` header, suppressed when only one group is present (`showGroupHeaders`). New i18n keys `sessions.groupLive` / `groupUpcoming` / `groupRecent` added in both locales.
 
 **Why:** Today, sessions render in a flat reverse-chronological list mixing active, scheduled, and ended. When two sessions are live simultaneously (a supported scenario per CLAUDE.md), a user must visually scan each card for the live indicator. The header subtitle already counts active sessions, but the list itself doesn't prioritize them.
 
@@ -201,7 +203,7 @@ Decompose into:
 | 1 | ~~Signed-out discoverability (Settings tab + login-prompt CTAs)~~ — ❌ won't apply (public-first by design) | S | — |
 | 2 | Extract `SectionLabel` / `StatNumber` / `EyebrowBadge` / `MetaRow` | M | High |
 | 3 | ~~Split `CreateMatchPage` + bottom-sheet league picker + two-line CTA~~ — ✅ done | M | High |
-| 4 | Pin live sessions to top of `SessionsListPage` | S | Medium-High |
+| 4 | ~~Pin live sessions to top of `SessionsListPage`~~ — ✅ done | S | Medium-High |
 | 5 | Replace native `<select>` + modal hand-rolled buttons | S | Medium |
 | 6 | `RankingPage` tab overflow fix | XS | Medium |
 | 7 | A11y + polish pass (7 small items) | S each | Medium (cumulative) |
