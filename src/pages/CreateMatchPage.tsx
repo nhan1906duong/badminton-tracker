@@ -6,7 +6,7 @@ import { useSession } from '../hooks/useSessions'
 import { useLeagueTeams } from '../hooks/useLeagueTeams'
 import { useSessionAttendances } from '../hooks/useSessionAttendances'
 import { useNewMatchStore } from '../stores/new-match-store'
-import { AppBar, SegmentedControl } from '../../design-system/components'
+import { AppBar, SegmentedControl, SectionLabel } from '../../design-system/components'
 import { MatchTypeChips } from '../../design-system/components/match-type-chips'
 import { BottomSheet } from '../../design-system/components/bottom-sheet'
 import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
@@ -540,32 +540,22 @@ export default function CreateMatchPage() {
         {/* ── Section 1: Match type ─────────────────────────────────────── */}
         {!isLeague && (
           <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              marginBottom: 'var(--space-4)',
-            }}>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: 'var(--muted)',
-              }}>
-                {t('createMatch.matchType')}
-              </span>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                color: 'var(--muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-              }}>
-                {MATCH_TYPE_SHORT[matchType]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
-              </span>
-            </div>
+            <SectionLabel
+              className="mb-[var(--space-4)]"
+              action={
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}>
+                  {MATCH_TYPE_SHORT[matchType]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
+                </span>
+              }
+            >
+              {t('createMatch.matchType')}
+            </SectionLabel>
             <MatchTypeChips value={matchType} onChange={(t) => setMatchType(t)} />
           </section>
         )}
@@ -622,23 +612,7 @@ export default function CreateMatchPage() {
         {/* League team selectors */}
         {isLeague && (
           <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              marginBottom: 'var(--space-4)',
-            }}>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: 'var(--muted)',
-              }}>
-                Teams
-              </span>
-            </div>
+            <SectionLabel className="mb-[var(--space-4)]">Teams</SectionLabel>
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -651,18 +625,7 @@ export default function CreateMatchPage() {
                 borderRadius: 'var(--radius-lg)',
                 padding: 'var(--space-3) var(--space-4)',
               }}>
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: 'var(--muted)',
-                  display: 'block',
-                  marginBottom: 'var(--space-2)',
-                }}>
-                  {t('team.teamA')}
-                </span>
+                <SectionLabel className="mb-[var(--space-2)]">{t('team.teamA')}</SectionLabel>
                 <select
                   value={leagueTeamA ?? ''}
                   onChange={(e) => {
@@ -696,18 +659,7 @@ export default function CreateMatchPage() {
                 borderRadius: 'var(--radius-lg)',
                 padding: 'var(--space-3) var(--space-4)',
               }}>
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: 'var(--muted)',
-                  display: 'block',
-                  marginBottom: 'var(--space-2)',
-                }}>
-                  {t('team.teamB')}
-                </span>
+                <SectionLabel className="mb-[var(--space-2)]">{t('team.teamB')}</SectionLabel>
                 <select
                   value={leagueTeamB ?? ''}
                   onChange={(e) => {
@@ -739,22 +691,9 @@ export default function CreateMatchPage() {
 
         {/* ── Section 2: Players ───────────────────────────────────────────── */}
         <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--space-4)',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--muted)',
-            }}>
-              {t('createMatch.players')}
-            </span>
+          <SectionLabel
+            className="mb-[var(--space-4)]"
+            action={
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <span style={{
                 fontFamily: 'var(--font-mono)',
@@ -792,7 +731,10 @@ export default function CreateMatchPage() {
                 </button>
               )}
             </div>
-          </div>
+            }
+          >
+            {t('createMatch.players')}
+          </SectionLabel>
 
           <div style={{
             background: 'var(--surface)',
@@ -809,9 +751,7 @@ export default function CreateMatchPage() {
               background: 'var(--bg)',
               borderBottom: '1px solid var(--border)',
             }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-                {t('team.teamA')}
-              </span>
+              <SectionLabel>{t('team.teamA')}</SectionLabel>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)' }}>
                 {teamName(teamA, teamSize)}
               </span>
@@ -855,9 +795,7 @@ export default function CreateMatchPage() {
               background: 'var(--bg)',
               borderBottom: '1px solid var(--border)',
             }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-                {t('team.teamB')}
-              </span>
+              <SectionLabel>{t('team.teamB')}</SectionLabel>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)' }}>
                 {teamName(teamB, teamSize)}
               </span>
@@ -879,18 +817,7 @@ export default function CreateMatchPage() {
 
         {/* ── Section 3: When ──────────────────────────────────────────────── */}
         <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
-          <div style={{ marginBottom: 'var(--space-4)' }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--muted)',
-            }}>
-              {t('createMatch.when')}
-            </span>
-          </div>
+          <SectionLabel className="mb-[var(--space-4)]">{t('createMatch.when')}</SectionLabel>
 
           {/* Segmented control */}
           <div style={{ marginBottom: 'var(--space-4)' }}>

@@ -61,7 +61,7 @@ import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats
 import { generateSessionShareCard } from '../lib/share-card'
 import { Button } from '../../design-system/components/button'
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { PullToRefresh, BwfCategoryBadge } from '../../design-system/components'
+import { PullToRefresh, BwfCategoryBadge, EyebrowBadge, MetaRow } from '../../design-system/components'
 
 export default function SessionDetailPage() {
   const { locale, t } = useI18n()
@@ -299,33 +299,15 @@ export default function SessionDetailPage() {
         {session && (
           <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
             {/* Eyebrow */}
-            <div
-              className="inline-flex items-center gap-[var(--space-2)]"
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: sessionStatus === 'live' ? 'var(--accent)'
-                  : sessionStatus === 'scheduled' ? 'var(--fg)'
-                  : 'var(--muted)',
-                marginBottom: 'var(--space-3)',
-                minHeight: 18,
-              }}
+            <EyebrowBadge
+              tone={sessionStatus === 'live' ? 'live' : sessionStatus === 'scheduled' ? 'scheduled' : 'completed'}
+              pulse={sessionStatus === 'live'}
+              className="mb-[var(--space-3)]"
             >
-              {sessionStatus === 'live' && (
-                <span
-                  className="rounded-full animate-pulse flex-shrink-0"
-                  style={{ width: 8, height: 8, background: 'var(--accent)' }}
-                />
-              )}
-              <span>
-                {sessionStatus === 'live' ? t('sessionDetail.statusLive')
-                  : sessionStatus === 'scheduled' ? t('sessionDetail.statusScheduled')
-                  : t('sessionDetail.statusCompleted')}
-              </span>
-            </div>
+              {sessionStatus === 'live' ? t('sessionDetail.statusLive')
+                : sessionStatus === 'scheduled' ? t('sessionDetail.statusScheduled')
+                : t('sessionDetail.statusCompleted')}
+            </EyebrowBadge>
 
             {/* Title */}
             <h1
@@ -375,22 +357,21 @@ export default function SessionDetailPage() {
             )}
 
             {/* Datetime + duration */}
-            <div
-              className="flex items-center flex-wrap gap-[var(--space-2)]"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}
-            >
-              <span>
-                <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
-                  {formatSessionDate(session.started_at, locale, t)}
-                </strong>
-                {' · '}{formatSessionTime(session.started_at, locale)}
-              </span>
-              <span
-                className="flex-shrink-0 rounded-full"
-                style={{ width: 3, height: 3, background: 'var(--border)' }}
-              />
-              {sessionStatus && <span>{getSessionMeta(session, sessionStatus, t)}</span>}
-            </div>
+            <MetaRow
+              items={[
+                {
+                  label: (
+                    <>
+                      <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
+                        {formatSessionDate(session.started_at, locale, t)}
+                      </strong>
+                      {' · '}{formatSessionTime(session.started_at, locale)}
+                    </>
+                  ),
+                },
+                ...(sessionStatus ? [{ label: getSessionMeta(session, sessionStatus, t) }] : []),
+              ]}
+            />
           </header>
         )}
 

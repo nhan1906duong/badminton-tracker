@@ -23,6 +23,19 @@ export { ListItem } from './list-item'
 export { RankItem } from './rank-item'
 export { StatRow } from './stat-row'
 export { SectionHeader } from './section-header'
+
+export { SectionLabel } from './section-label'
+export type { SectionLabelProps } from './section-label'
+
+export { StatNumber } from './stat-number'
+export type { StatNumberProps, StatNumberSize, StatNumberColor } from './stat-number'
+
+export { EyebrowBadge } from './eyebrow-badge'
+export type { EyebrowBadgeProps, EyebrowTone } from './eyebrow-badge'
+
+export { MetaRow } from './meta-row'
+export type { MetaRowProps, MetaItem } from './meta-row'
+
 export { AppBar } from './app-bar'
 export type { AppBarProps } from './app-bar'
 

@@ -81,6 +81,12 @@ vi.mock('../../../design-system/components', () => ({
       ))}
     </div>
   ),
+  SectionLabel: ({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) => (
+    <div>
+      <span>{children}</span>
+      {action}
+    </div>
+  ),
 }))
 
 vi.mock('../../../design-system/components/match-type-chips', () => ({

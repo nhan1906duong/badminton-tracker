@@ -1,5 +1,6 @@
 import { Activity } from 'lucide-react'
 import { Avatar } from './avatar'
+import { StatNumber } from './stat-number'
 import { useI18n } from '../../src/i18n'
 
 export interface SessionStatsPanelProps {
@@ -122,40 +123,20 @@ function StatCell({ value, label, accent = false, mvp = false, divider = false, 
           style={{ gap: 'var(--space-2)', minWidth: 0, maxWidth: '100%' }}
         >
           <Avatar src={avatarUrl} name={avatarName} size={24} />
-          <span
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-lg)',
-              fontWeight: 800,
-              lineHeight: 1,
-              letterSpacing: '-0.02em',
-              color: 'var(--accent)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {value}
-          </span>
+          <StatNumber
+            value={value}
+            size="lg"
+            color="accent"
+            className="overflow-hidden text-ellipsis whitespace-nowrap tracking-[-0.02em]"
+          />
         </div>
       ) : (
-        <span
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'var(--text-xl)',
-            fontWeight: 800,
-            lineHeight: 1,
-            letterSpacing: '-0.02em',
-            fontFeatureSettings: '"tnum" 1',
-            color: 'var(--fg)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            maxWidth: '100%',
-          }}
-        >
-          {value}
-        </span>
+        <StatNumber
+          value={value}
+          size="xl"
+          color="fg"
+          className="overflow-hidden text-ellipsis whitespace-nowrap max-w-full tracking-[-0.02em]"
+        />
       )}
 
       {/* Label */}
