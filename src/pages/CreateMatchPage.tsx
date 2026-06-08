@@ -12,8 +12,8 @@ import { BottomSheet } from '../../design-system/components/bottom-sheet'
 import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { Player, MatchWithDetails } from '../types/database'
-import { generateNextMatch, enumerateSplits, makeSplitKey } from '../lib/fair-shuffle'
-import type { ShufflePlayer } from '../lib/fair-shuffle'
+import { generateNextMatch, makeSplitKey } from '../lib/fair-shuffle'
+import type { ShufflePlayer, ShuffleMatch } from '../lib/fair-shuffle'
 import { Plus, X, Zap, Calendar, List, ChevronRight, Loader2, Shuffle } from 'lucide-react'
 import { LOCALE_TAG, useI18n, type Locale, type TFunction } from '../i18n'
 
@@ -23,20 +23,13 @@ function buildSessionHistory(
   sessionMatches: MatchWithDetails[],
   pool: ShufflePlayer[]
 ): {
-  splitRecord: Map<string, { team1Wins: number; team2Wins: number }>
-  cycleUsedSplits: Set<string>
-  playerWins: Map<string, number>
-  playerPlayed: Map<string, number>
+  playedSplits: Set<string>
+  recentMatchHistory: ShuffleMatch[]
 } {
-  const splitRecord = new Map<string, { team1Wins: number; team2Wins: number }>()
-  const playerWins = new Map<string, number>()
-  const playerPlayed = new Map<string, number>()
+  const playedSplits = new Set<string>()
+  const recentMatchHistory: ShuffleMatch[] = []
 
   const poolIds = new Set(pool.map(p => p.id))
-  const allSplitKeys = new Set(enumerateSplits(pool).map(s => s.key))
-  const totalPossible = allSplitKeys.size
-
-  let cycleUsedSplits = new Set<string>()
 
   const sorted = [...sessionMatches]
     .filter(m => m.status === 'COMPLETED')
@@ -50,45 +43,18 @@ function buildSessionHistory(
     const teamAIds = match.participants.filter(p => p.team_id === teamADef.id).map(p => p.player_id)
     const teamBIds = match.participants.filter(p => p.team_id === teamBDef.id).map(p => p.player_id)
 
-    // Only track doubles matches where every participant is in the pool
     if (teamAIds.length !== 2 || teamBIds.length !== 2) continue
     if ([...teamAIds, ...teamBIds].some(id => !poolIds.has(id))) continue
 
-    const key = makeSplitKey(teamAIds, teamBIds)
+    playedSplits.add(makeSplitKey(teamAIds, teamBIds))
 
-    // Track plays
-    for (const id of [...teamAIds, ...teamBIds]) {
-      playerPlayed.set(id, (playerPlayed.get(id) ?? 0) + 1)
-    }
-
-    // Track wins and per-split win record
-    const aWon = teamADef.is_winner
-    const bWon = teamBDef.is_winner
-    if (aWon || bWon) {
-      const winnerIds = aWon ? teamAIds : teamBIds
-      for (const id of winnerIds) {
-        playerWins.set(id, (playerWins.get(id) ?? 0) + 1)
-      }
-
-      const pairA = [...teamAIds].sort().join('+')
-      const pairB = [...teamBIds].sort().join('+')
-      const [pair1] = [pairA, pairB].sort()
-      const winnerPair = aWon ? pairA : pairB
-
-      const rec = splitRecord.get(key) ?? { team1Wins: 0, team2Wins: 0 }
-      if (winnerPair === pair1) rec.team1Wins++
-      else rec.team2Wins++
-      splitRecord.set(key, rec)
-    }
-
-    // Advance cycle (only count splits that belong to the current pool)
-    if (allSplitKeys.has(key)) {
-      cycleUsedSplits.add(key)
-      if (cycleUsedSplits.size >= totalPossible) cycleUsedSplits = new Set()
-    }
+    const t1 = teamAIds.map(id => pool.find(p => p.id === id)!).filter(Boolean) as [ShufflePlayer, ShufflePlayer]
+    const t2 = teamBIds.map(id => pool.find(p => p.id === id)!).filter(Boolean) as [ShufflePlayer, ShufflePlayer]
+    recentMatchHistory.push({ team1: t1, team2: t2, resting: [] })
+    if (recentMatchHistory.length > 2) recentMatchHistory.shift()
   }
 
-  return { splitRecord, cycleUsedSplits, playerWins, playerPlayed }
+  return { playedSplits, recentMatchHistory }
 }
 
 function getInitials(name: string): string {
@@ -264,9 +230,7 @@ export default function CreateMatchPage() {
   const [navStuck, setNavStuck] = useState(false)
   const [shuffleOpen, setShuffleOpen] = useState(false)
   const [shuffleSelectedIds, setShuffleSelectedIds] = useState<Set<string>>(new Set())
-  // In-memory cycle state so consecutive shuffles step through all splits before repeating
-  const [shuffleCycle, setShuffleCycle] = useState<Set<string> | null>(null)
-  const [lastShufflePoolKey, setLastShufflePoolKey] = useState<string>('')
+  const [lastShuffleKey, setLastShuffleKey] = useState<string | null>(null)
 
   // League team selection
   const isLeague = session?.type === 'league'
@@ -369,22 +333,9 @@ export default function CreateMatchPage() {
     const pool: ShufflePlayer[] = rawPool.map(p => ({ id: p.id, name: p.name }))
     if (pool.length < teamSize * 2) return
     if (teamSize === 2) {
-      const { splitRecord, cycleUsedSplits: historyCycle, playerWins, playerPlayed } = buildSessionHistory(matches ?? [], pool)
-
-      const poolKey = pool.map(p => p.id).sort().join(',')
-      // On first shuffle or pool change: sync from history. Otherwise continue the in-memory cycle.
-      const currentCycle = (shuffleCycle === null || poolKey !== lastShufflePoolKey)
-        ? new Set(historyCycle)
-        : shuffleCycle
-
-      const result = generateNextMatch({ selectedPlayers: pool, splitRecord, cycleUsedSplits: currentCycle, playerWins, playerPlayed })
-
-      // Advance the in-memory cycle
-      const usedKey = makeSplitKey([result.team1[0].id, result.team1[1].id], [result.team2[0].id, result.team2[1].id])
-      const nextCycle = new Set(currentCycle)
-      nextCycle.add(usedKey)
-      setShuffleCycle(nextCycle.size >= enumerateSplits(pool).length ? new Set() : nextCycle)
-      setLastShufflePoolKey(poolKey)
+      const { playedSplits, recentMatchHistory } = buildSessionHistory(matches ?? [], pool)
+      const result = generateNextMatch({ selectedPlayers: pool, playedSplits, recentMatchHistory, lastPickKey: lastShuffleKey ?? undefined })
+      setLastShuffleKey(makeSplitKey([result.team1[0].id, result.team1[1].id], [result.team2[0].id, result.team2[1].id]))
       setSlot('A', 0, result.team1[0].id)
       setSlot('A', 1, result.team1[1].id)
       setSlot('B', 0, result.team2[0].id)
