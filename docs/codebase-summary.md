@@ -45,7 +45,7 @@ src/
 | 137 | hooks/useAvatarUpload.ts | Avatar upload/delete/set-default mutations for Supabase Storage |
 | 127 | components/TeamAssignment.tsx | Team slot assignment UI for match creation |
 | 234 | components/SessionAttendancePanel.tsx | Session RSVP list with confirmed/declined/no-response states |
-| 170 | lib/fair-shuffle.ts | Fair shuffle algorithm: tier-based split selection (fresh > recent-partner > already-played) |
+| 170 | lib/fair-shuffle.ts | Fair shuffle algorithm: priority-based player selection + lowest-score team split |
 | 127 | components/MatchesContent.tsx | Match list renderer (loading / error / empty states); exports `sortMatches` (LIVE first → SCHEDULED by queue_position → COMPLETED by ended_at desc) |
 | 111 | pages/LoginPage.tsx | Email + password login flow |
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
@@ -252,37 +252,43 @@ After save: `navigate(-1)` back to session detail.
 
 ## Fair Shuffle (`src/lib/fair-shuffle.ts`)
 
-Available for doubles match types only. The Shuffle button in `CreateMatchPage` opens a player pool picker with a "Select all / Clear" toggle at the top-right. The player selection **persists across opens** — the picker reopens with the same players checked as the last time. First open starts with an empty selection.
+Available for doubles match types only. The Shuffle button in `CreateMatchPage` opens a player pool picker with a "Select all / Clear" toggle at the top-right. The player selection **persists across opens** — the picker reopens with the same players checked as the last time. First open starts with an empty selection. Pressing "Shuffle" cycles through all possible team splits before repeating.
 
 **Split enumeration**
 
 For a pool of N players, `enumerateSplits` generates every possible doubles split: C(N,4) ways to choose who plays × 3 ways to pair the 4 players = e.g. 3 splits for 4 players, 15 for 5, 45 for 6. Each split has a canonical key via `makeSplitKey` (player IDs sorted within each team, teams sorted lexicographically), so AB|CD === BA|DC === CD|AB.
 
-**Tier-based selection**
+**Cycle-based filtering (Step 1)**
 
-All possible splits for the selected pool are classified into three tiers, and one is chosen at random from the best non-empty tier:
+`cycleUsedSplits` tracks which splits have been used since the current cycle started. Only splits NOT in this set are candidates. When all splits are exhausted the cycle resets and all splits become candidates again. This guarantees every combination plays exactly once per round before any is repeated.
 
-| Tier | Condition | Priority |
-|---|---|---|
-| **Tier 3** (best) | Not yet played in this session AND neither team pair appeared together in the last 2 matches | Picked first |
-| **Tier 2** | Not yet played in this session BUT a team pair was together in a recent match | Fallback if tier 3 is empty |
-| **Tier 1** | Already played in this session | Last resort |
+The cycle is maintained **in-memory** as React state (`shuffleCycle` in `CreateMatchPage`), so consecutive shuffle presses — even without saving a match — step to the next unused split. The cycle initialises from session history on the first press or when the selected player pool changes.
 
-This ensures fresh match-ups are always preferred, recently repeated partners are deprioritised, and every split eventually gets a chance once all fresher options are exhausted.
+**Ranking within candidates (Step 2)**
+
+Candidates are sorted ascending by (lower = better):
+
+| Priority | Criterion |
+|---|---|
+| 1 | `\|team1Wins − team2Wins\|` for this specific matchup (prefer balanced head-to-head) |
+| 2 | `\|Σ sessionWins(team1) − Σ sessionWins(team2)\|` (prefer evenly matched teams) |
+| 3 | `−Σ playerPlayed(resting players)` (prefer splits that rest the most-played players) |
+| 4 | Random tiebreaker |
 
 **History (`buildSessionHistory` in `CreateMatchPage`)**
 
 Before each shuffle, all **COMPLETED** doubles matches in the session where every participant is in the selected pool are replayed chronologically to reconstruct:
-- `playedSplits` — set of split keys already used in this session (used to classify tier 1)
-- `recentMatchHistory` — the last 2 played matches (used to detect tier-2 partner repeats)
+- `splitRecord` — per-split win/loss counts
+- `cycleUsedSplits` — which splits are in the current history cycle (used to initialise in-memory state)
+- `playerWins` / `playerPlayed` — per-player totals for ranking criteria
 
-Matches involving players outside the current pool are ignored, keeping state pool-specific.
+Matches involving players outside the current pool are ignored, keeping the cycle and stats pool-specific.
 
 **Key exports**
 - `makeSplitKey(team1Ids, team2Ids)` — canonical key for a team split
 - `enumerateSplits(players)` — all possible doubles splits for a pool
-- `generateNextMatch({ selectedPlayers, playedSplits, recentMatchHistory })` — picks a split from the best available tier
-- `applyMatchResult(match, playedSplits, recentMatchHistory)` — records the played split + updates recent history
+- `generateNextMatch(input)` — returns the best next split from cycle candidates
+- `applyMatchResult(match, winnerTeam, ...)` — advances cycle + updates win/played counts
 - `generateMatchSchedule(players, n)` — generates N matches in sequence (used in tests)
 
 ## Match Detail Flow

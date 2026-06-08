@@ -3,21 +3,28 @@ import { Shuffle } from 'lucide-react'
 import { BottomSheet } from '../../../design-system/components/bottom-sheet'
 import { formatShortPlayerName } from '../../lib/player-name'
 import { useI18n } from '../../i18n'
-import { generateNextMatch, makeSplitKey } from '../../lib/fair-shuffle'
-import type { ShufflePlayer, ShuffleMatch } from '../../lib/fair-shuffle'
+import { generateNextMatch, enumerateSplits, makeSplitKey } from '../../lib/fair-shuffle'
+import type { ShufflePlayer } from '../../lib/fair-shuffle'
 import type { MatchWithDetails, Player } from '../../types/database'
 
 function buildSessionHistory(
   sessionMatches: MatchWithDetails[],
   pool: ShufflePlayer[]
 ): {
-  playedSplits: Set<string>
-  recentMatchHistory: ShuffleMatch[]
+  splitRecord: Map<string, { team1Wins: number; team2Wins: number }>
+  cycleUsedSplits: Set<string>
+  playerWins: Map<string, number>
+  playerPlayed: Map<string, number>
 } {
-  const playedSplits = new Set<string>()
-  const recentMatchHistory: ShuffleMatch[] = []
+  const splitRecord = new Map<string, { team1Wins: number; team2Wins: number }>()
+  const playerWins = new Map<string, number>()
+  const playerPlayed = new Map<string, number>()
 
   const poolIds = new Set(pool.map(p => p.id))
+  const allSplitKeys = new Set(enumerateSplits(pool).map(s => s.key))
+  const totalPossible = allSplitKeys.size
+
+  let cycleUsedSplits = new Set<string>()
 
   const sorted = [...sessionMatches]
     .filter(m => m.status === 'COMPLETED')
@@ -31,18 +38,45 @@ function buildSessionHistory(
     const teamAIds = match.participants.filter(p => p.team_id === teamADef.id).map(p => p.player_id)
     const teamBIds = match.participants.filter(p => p.team_id === teamBDef.id).map(p => p.player_id)
 
+    // Only track doubles matches where every participant is in the pool
     if (teamAIds.length !== 2 || teamBIds.length !== 2) continue
     if ([...teamAIds, ...teamBIds].some(id => !poolIds.has(id))) continue
 
-    playedSplits.add(makeSplitKey(teamAIds, teamBIds))
+    const key = makeSplitKey(teamAIds, teamBIds)
 
-    const t1 = teamAIds.map(id => pool.find(p => p.id === id)!).filter(Boolean) as [ShufflePlayer, ShufflePlayer]
-    const t2 = teamBIds.map(id => pool.find(p => p.id === id)!).filter(Boolean) as [ShufflePlayer, ShufflePlayer]
-    recentMatchHistory.push({ team1: t1, team2: t2, resting: [] })
-    if (recentMatchHistory.length > 2) recentMatchHistory.shift()
+    // Track plays
+    for (const id of [...teamAIds, ...teamBIds]) {
+      playerPlayed.set(id, (playerPlayed.get(id) ?? 0) + 1)
+    }
+
+    // Track wins and per-split win record
+    const aWon = teamADef.is_winner
+    const bWon = teamBDef.is_winner
+    if (aWon || bWon) {
+      const winnerIds = aWon ? teamAIds : teamBIds
+      for (const id of winnerIds) {
+        playerWins.set(id, (playerWins.get(id) ?? 0) + 1)
+      }
+
+      const pairA = [...teamAIds].sort().join('+')
+      const pairB = [...teamBIds].sort().join('+')
+      const [pair1] = [pairA, pairB].sort()
+      const winnerPair = aWon ? pairA : pairB
+
+      const rec = splitRecord.get(key) ?? { team1Wins: 0, team2Wins: 0 }
+      if (winnerPair === pair1) rec.team1Wins++
+      else rec.team2Wins++
+      splitRecord.set(key, rec)
+    }
+
+    // Advance cycle (only count splits that belong to the current pool)
+    if (allSplitKeys.has(key)) {
+      cycleUsedSplits.add(key)
+      if (cycleUsedSplits.size >= totalPossible) cycleUsedSplits = new Set()
+    }
   }
 
-  return { playedSplits, recentMatchHistory }
+  return { splitRecord, cycleUsedSplits, playerWins, playerPlayed }
 }
 
 export interface ShuffleResult {
@@ -69,7 +103,8 @@ export function ShufflePickerSheet({
 }: ShufflePickerSheetProps) {
   const { t } = useI18n()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [lastShuffleKey, setLastShuffleKey] = useState<string | null>(null)
+  const [shuffleCycle, setShuffleCycle] = useState<Set<string> | null>(null)
+  const [lastShufflePoolKey, setLastShufflePoolKey] = useState<string | null>(null)
 
   function toggle(id: string) {
     setSelectedIds(prev => {
@@ -94,9 +129,23 @@ export function ShufflePickerSheet({
     if (pool.length < teamSize * 2) return
 
     if (teamSize === 2) {
-      const { playedSplits, recentMatchHistory } = buildSessionHistory(matches ?? [], pool)
-      const result = generateNextMatch({ selectedPlayers: pool, playedSplits, recentMatchHistory, lastPickKey: lastShuffleKey ?? undefined })
-      setLastShuffleKey(makeSplitKey([result.team1[0].id, result.team1[1].id], [result.team2[0].id, result.team2[1].id]))
+      const { splitRecord, cycleUsedSplits: historyCycle, playerWins, playerPlayed } = buildSessionHistory(matches ?? [], pool)
+
+      const poolKey = pool.map(p => p.id).sort().join(',')
+      // On first shuffle or pool change: sync from history. Otherwise continue the in-memory cycle.
+      const currentCycle = (shuffleCycle === null || poolKey !== lastShufflePoolKey)
+        ? new Set(historyCycle)
+        : shuffleCycle
+
+      const result = generateNextMatch({ selectedPlayers: pool, splitRecord, cycleUsedSplits: currentCycle, playerWins, playerPlayed })
+
+      // Advance the in-memory cycle
+      const usedKey = makeSplitKey([result.team1[0].id, result.team1[1].id], [result.team2[0].id, result.team2[1].id])
+      const nextCycle = new Set(currentCycle)
+      nextCycle.add(usedKey)
+      setShuffleCycle(nextCycle.size >= enumerateSplits(pool).length ? new Set() : nextCycle)
+      setLastShufflePoolKey(poolKey)
+
       onResult({
         teamA: [result.team1[0].id, result.team1[1].id],
         teamB: [result.team2[0].id, result.team2[1].id],
