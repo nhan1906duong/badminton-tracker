@@ -142,6 +142,10 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/usePlayerPointsHistory.ts` | Fetches `player_match_results` for a player and groups them into `SessionPointsHistory[]` (session + `MatchPointsEntry[]` with match + points). Used for rating history chart and match points display. |
 | `src/components/RatingChart.tsx` | SVG line chart showing Elo rating over sessions. Dots for each session; filled + star marker (★) for sessions the player won. Rendered above the tab bar on `PlayerDetailPage`. |
 | `src/components/SessionRankingChart.tsx` | Multi-player ranking progression chart on `SessionStatsPage` (Chart tab). Smooth Catmull-Rom lines, Pantone color palette, player avatars with gradient glow at latest rank-1 point. Filter buttons (L5/L10/All) and focus/dim legend chips. Uses `computeSessionRankingHistory` data. |
+| `src/hooks/usePlayerRackets.ts` | CRUD for `player_rackets` (max `MAX_RACKETS_PER_PLAYER` = 4 per player, enforced at the app layer); `usePlayerRackets`, `useCreatePlayerRacket`, `useUpdatePlayerRacket`, `useDeletePlayerRacket` |
+| `src/components/PlayerRacketsCard.tsx` | Rackets section on `PlayerDetailPage`: lists a player's rackets, add/edit (via `RacketFormSheet`) and delete (via `Dialog` confirm) when `canEdit`; shows `RacketAddedCelebration` after a new racket is added |
+| `src/components/RacketFormSheet.tsx` | Bottom-sheet form to add/edit a `PlayerRacket` (brand `SegmentedControl` + real name + nickname); `onCreated` receives the new racket's `"{brand} {real_name}"` |
+| `src/components/RacketAddedCelebration.tsx` | Full-screen celebration overlay shown after adding a racket: looping firework Lottie animation + "Congrats {player}, you just added {racket}..." message; dismiss by tapping outside (no button) |
 | `src/hooks/useLeagueTeams.ts` | Fetches league teams + their players for a session |
 | `src/hooks/useLeagueStandings.ts` | Computes standings (W/L/Pts) from completed league matches |
 | `src/components/LeagueStandingsTable.tsx` | Standings table rendered at the top of a league session detail |
