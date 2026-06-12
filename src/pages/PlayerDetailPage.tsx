@@ -20,6 +20,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin'
 import Avatar from '../components/Avatar'
 import AvatarPicker from '../components/AvatarPicker'
 import PlayerRecordLine from '../components/PlayerRecordLine'
+import { PlayerRacketsCard } from '../components/PlayerRacketsCard'
 import { AppBar, Badge, PullToRefresh, SegmentedControl, BwfCategoryBadge, StatNumber } from '../../design-system/components'
 import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { formatShortPlayerName } from '../lib/player-name'
@@ -396,6 +397,9 @@ export default function PlayerDetailPage() {
             </span>
           </div>
         </div>
+
+        {/* Rackets */}
+        <PlayerRacketsCard playerId={id} playerName={player.name} canEdit={canEdit} />
 
         {/* Rating history chart */}
         {chartData.length >= 2 && (

@@ -151,6 +151,21 @@ export interface SessionAttendance {
   player?: Player
 }
 
+export const MAX_RACKETS_PER_PLAYER = 4
+
+export const RACKET_BRANDS = ['Yonex', 'Mizuno', 'Li-Ning', 'Victor', 'Felet', 'Other'] as const
+
+export type RacketBrand = (typeof RACKET_BRANDS)[number]
+
+export interface PlayerRacket {
+  id: string
+  player_id: string
+  brand: string
+  real_name: string
+  nickname?: string | null
+  created_at: string
+}
+
 export interface LeagueTeam {
   id: string
   session_id: string

@@ -738,6 +738,28 @@ Canvas-based firework celebration overlay. Renders rockets with trails that expl
 
 ---
 
+### RacketAddedCelebration
+See [src/components/RacketAddedCelebration.tsx](../src/components/RacketAddedCelebration.tsx).
+
+Full-screen modal celebration shown when a player adds a new racket via `PlayerRacketsCard`.
+
+- Overlay `fixed inset-0 z-50`, `oklch(0% 0 0 / 0.45)` background with 2px blur
+- Centered card: `var(--surface)`, `var(--border)`, `var(--radius-xl)`, `var(--space-5)` padding, soft shadow
+- Looping firework `DotLottieReact` animation (`loop`, `autoplay`), 160×160
+- Single message line (`players.racketAddedMessage`, interpolated with `{player}` and `{racket}`) — no title/description split, no confirm button
+- **Dismiss by tapping outside only** — overlay `onClick={onClose}`, inner card `onClick={(e) => e.stopPropagation()}`
+
+```tsx
+<RacketAddedCelebration
+  open={!!celebrationRacketName}
+  onClose={() => setCelebrationRacketName(null)}
+  playerName={player.name}
+  racketName={celebrationRacketName ?? ''}
+/>
+```
+
+---
+
 ## Global CSS
 
 Key rules in [src/index.css](../src/index.css):
