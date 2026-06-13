@@ -42,15 +42,15 @@ export function PlayerCardImage({ avatarUrl, name }: PlayerCardImageProps) {
       style={{
         position: 'absolute',
         top: 0,
-        right: -24,
-        width: 220,
-        height: 220,
+        right: '-8.3333%',
+        width: '66.6667%',
+        aspectRatio: '1 / 1',
         opacity: 0.12,
         maskImage: 'linear-gradient(225deg, black 30%, transparent 90%)',
         WebkitMaskImage: 'linear-gradient(225deg, black 30%, transparent 90%)',
       }}
     >
-      <Avatar src={avatarUrl} name={name} size={220} />
+      <Avatar src={avatarUrl} name={name} size={220} className="!w-full !h-full" />
     </div>
   )
 }

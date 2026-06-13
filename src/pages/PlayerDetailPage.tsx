@@ -58,6 +58,11 @@ export default function PlayerDetailPage() {
   }, [pointsHistory, achievements])
   const rankData = rankings?.find((r) => r.playerId === id)
 
+  const hasOverview =
+    !achievementsLoading &&
+    !badgesLoading &&
+    (achievements.some((a) => a.type === 'win' || a.type === 'runner_up') || badges.length > 0)
+
   const [sheet, setSheet] = useState<'menu' | 'ranking' | 'h2h' | 'partners' | null>(null)
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState('')
@@ -164,7 +169,7 @@ export default function PlayerDetailPage() {
     <PullToRefresh onRefresh={handleRefresh}>
     <div className="min-h-svh relative" style={{ zIndex: 1 }}>
       {/* Hero: AppBar + header share a background avatar watermark, bleeding up behind the status bar */}
-      <div style={{ position: 'relative', overflow: 'hidden', zIndex: 61, marginTop: 'calc(-1 * env(safe-area-inset-top))' }}>
+      <div style={{ position: 'relative', overflow: 'hidden', zIndex: 61, marginTop: 'calc(-1 * env(safe-area-inset-top))', minHeight: 'min(48vw, 246px)' }}>
         {/* Background avatar watermark — tap to edit */}
         {canEdit ? (
           <button
@@ -357,7 +362,9 @@ export default function PlayerDetailPage() {
         <PlayerOverviewCard achievements={achievements} badges={badges} locale={locale} isLoading={achievementsLoading || badgesLoading} onSessionClick={jumpToSession} />
 
         {/* Rackets — header card with newest racket, tap to view all */}
-        <PlayerRacketHeaderCard playerId={id} canEdit={canEdit} isMe={isMe} />
+        <div style={{ marginTop: hasOverview ? 0 : 'var(--space-2)' }}>
+          <PlayerRacketHeaderCard playerId={id} canEdit={canEdit} isMe={isMe} />
+        </div>
 
         {/* ── History ── */}
         <div className="space-y-2">

@@ -33,6 +33,7 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe }: Props) {
             borderRadius: 'var(--radius-lg)',
             minHeight: 44,
             gap: 32,
+            animationDuration: '1000ms',
           }}
         >
           <img

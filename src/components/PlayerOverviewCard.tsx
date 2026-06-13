@@ -27,7 +27,11 @@ export function PlayerOverviewCard({ achievements, badges, locale, isLoading, on
   return (
     <div
       className="page-enter-left relative overflow-hidden"
-      style={{ borderRadius: 'var(--radius-lg)', marginTop: 0}}
+      style={{ 
+        borderRadius: 'var(--radius-lg)',
+        marginTop: 0,
+        animationDuration: '1000ms',
+      }}
     >
       <div className="relative flex flex-col" style={{ paddingBlock: 'var(--space-4)', paddingInline: 'var(--space-2)', gap: 'var(--space-3)' }}>
         {champions.length > 0 && (
