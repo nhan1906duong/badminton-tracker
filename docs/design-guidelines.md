@@ -681,18 +681,17 @@ The shuttlecock SVG has two parts:
 <ShuttleLoading tiny />
 ```
 
-### PlayerBadgesStrip
-See [src/components/PlayerBadgesStrip.tsx](../src/components/PlayerBadgesStrip.tsx).
+### PlayerOverviewCard
 
-Vertical list of record-holder badges rendered in the `PlayerDetailPage` header, directly below the rating line. A badge only appears if this player currently leads all players in that category (ties share the badge).
+See [src/components/PlayerOverviewCard.tsx](../src/components/PlayerOverviewCard.tsx).
 
-**Layout:** `flex flex-col`, `gap: var(--space-2)`, `marginTop: var(--space-2)`. Each row is `flex items-center gap: var(--space-2)`.
+Overview section on `PlayerDetailPage`, rendered below the header. Shows up to three grouped sections, each a `SectionLabel` + rows:
 
-**Row structure:** `[LucideIcon 13px strokeWidth=2.5] [count + label — single span]`
-- Icon: colored by category (see table below), `flexShrink: 0`
-- Text: `var(--font-body)`, `var(--text-sm)`, weight 400, `color: var(--fg)`. Count and label are one span: `"7 hot streak"`.
+- **Champion** — sessions where the player ranked #1, with a `Crown` icon (`#D4A843`)
+- **Runner-up** — sessions where the player ranked #2, with a `Medal` icon (`#B0B0B0`)
+- **Awards** — record-holder badges, one row per badge: `[LucideIcon 14px strokeWidth=2.5] [count + label — single span]`, icon/color from `CATEGORY_ICON` / `CATEGORY_COLOR` in `src/lib/badge-categories.ts`
 
-**Category → icon → color:**
+**Category → icon → color** (`badge-categories.ts`):
 
 | Category | Icon | Color token |
 |----------|------|-------------|
@@ -702,19 +701,29 @@ Vertical list of record-holder badges rendered in the `PlayerDetailPage` header,
 | `dynasty` | `Zap` | `color-mix(in oklch, var(--warn) 80%, var(--fg))` |
 | `donated` | `Coins` | `var(--success)` |
 
-**Badge order:** world titles → most played → hot streak → dynasty → top donor.
+Each session row shows the session label (`formatSessionLabel`) and a `BwfCategoryBadge` if the session is BWF-linked; tapping a row expands and scrolls to that session in the match history below.
 
 **World titles rule:** the `titles` badge only counts sessions with a non-null `bwf_tournament_id`. Regular sessions are excluded.
 
-**Loading state:** 2 skeleton `animate-pulse` bars. Hidden entirely (`return null`) when no badges are earned — no empty state.
+**Hidden entirely** (`return null`) when the player has no champion/runner-up sessions and no badges — no empty state.
 
-### PlayerDetailPage Header Layout
+### PlayerDetailPage Hero
 
-The player profile header (`<header>` in `PlayerDetailPage`) uses `position: relative` to float the rating top-right while the left column (rank chip → avatar → name → badges) stacks normally.
+The player profile hero combines the `AppBar` and header into one section with `position: relative; overflow: hidden`, bleeding up behind the status bar via `marginTop: calc(-1 * env(safe-area-inset-top))`.
 
-- **Rating** (`player.rating`): `position: absolute; top: var(--space-4); right: var(--space-5)` — `var(--font-display)`, `var(--text-2xl)` (32px), weight 800, `letterSpacing: -0.03em`, `color: var(--fg)`.
-- **Rank chip**: `var(--font-mono)`, 13px, weight 700, uppercase, `color: var(--accent)`.
-- **You chip**: 10px mono uppercase, `color: var(--accent)`, `background: var(--accent-soft)`, `borderRadius: var(--radius-sm)`, `padding: 2px 6px`.
+- **Background art**: `PlayerCardImage` — absolutely positioned behind the header content (`zIndex: 0`). If the player has a custom (non-multiavatar) avatar, shows a 5:4 crop of it on the right, masked with a left-to-right fade into the page background. Otherwise shows a large, dimmed (`opacity: 0.12`) circular `Avatar` watermark, masked from the top-right corner.
+- **Tap to edit**: when `canEdit`, the entire background art is a button (`aria-label="players.changeAvatar"`) that opens `AvatarPicker`.
+- **Page background**: a fixed, full-width `overview/{1..4}.jpg` image (randomly picked per visit) renders behind everything (`zIndex: 0`, `mixBlendMode: multiply`), dimmed by a `color-mix(in oklch, var(--bg) 95%, transparent)` overlay.
+
+### PlayerDetailPage Detail Sheets
+
+Ranking chart, head-to-head, and partners are no longer tabs — they're opened from a `⋮` menu `BottomSheet` (`BottomSheetItem` rows: `TrendingUp` Ranking Chart, `Swords` Head to Head, `Users` Partners). Each option re-opens the same `BottomSheet` with its content (`PlayerRankingChartContent`, `PlayerH2HContent`, `PlayerPartnersContent`) in a `max-h-[70vh] overflow-y-auto overscroll-contain` container.
+
+### PlayerRacketHeaderCard
+
+See [src/components/PlayerRacketHeaderCard.tsx](../src/components/PlayerRacketHeaderCard.tsx).
+
+Rackets entry point on `PlayerDetailPage`: a full-width card (`minHeight: 44`) with a 64px-wide `/racket-header.jpg` image on the left (`objectPosition: '85% 15%'`) and the newest racket's name/nickname + racket count on the right, `ChevronRight` trailing. Tapping opens a `BottomSheet` listing all rackets, with a "Manage rackets" item (own profile only) linking to `/players/:playerId/rackets`. Hidden (`return null`) when the viewer can't edit and the player has no rackets.
 
 ---
 
@@ -741,7 +750,7 @@ Canvas-based firework celebration overlay. Renders rockets with trails that expl
 ### RacketAddedCelebration
 See [src/components/RacketAddedCelebration.tsx](../src/components/RacketAddedCelebration.tsx).
 
-Full-screen modal celebration shown when a player adds a new racket via `PlayerRacketsCard`.
+Full-screen modal celebration shown when a player adds a new racket via `RacketFormSheet` on `PlayerRacketsPage`.
 
 - Overlay `fixed inset-0 z-50`, `oklch(0% 0 0 / 0.45)` background with 2px blur
 - Centered card: `var(--surface)`, `var(--border)`, `var(--radius-xl)`, `var(--space-5)` padding, soft shadow

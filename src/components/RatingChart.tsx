@@ -41,6 +41,11 @@ export function RatingChart({ data }: Props) {
   const linePoints =
     data.length > 1 ? data.map((d, i) => `${toX(i)},${toY(d.rating)}`).join(' ') : ''
 
+  const areaPoints =
+    data.length > 1
+      ? `${toX(0)},${padT + cH} ${linePoints} ${toX(data.length - 1)},${padT + cH}`
+      : ''
+
   const labelIndices = new Set<number>()
   if (data.length <= 6) {
     data.forEach((_, i) => labelIndices.add(i))
@@ -82,6 +87,10 @@ export function RatingChart({ data }: Props) {
         </g>
       ))}
 
+      {areaPoints && (
+        <polygon points={areaPoints} fill="var(--accent)" opacity={0.08} />
+      )}
+
       {linePoints && (
         <polyline
           points={linePoints}
@@ -107,10 +116,10 @@ export function RatingChart({ data }: Props) {
             <circle
               cx={x}
               cy={y}
-              r={d.isWin ? 5 : 3.5}
+              r={d.isWin ? 4 : 2.5}
               fill={d.isWin ? 'var(--accent)' : 'var(--bg)'}
               stroke="var(--accent)"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
           </g>
         )

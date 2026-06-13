@@ -23,7 +23,7 @@ src/
 | 1103 | pages/DesignSystemPage.tsx | Dev-only design tokens & component catalogue |
 | 1454 | pages/CreateMatchPage.tsx | Single-page match creation: type, players, mode (Now/Schedule/Queue), fair shuffle, declined RSVP filtering |
 | 885 | pages/MatchDetailPage.tsx | Match detail: start, live score, record result, end with no winner, edit players, reopen, delete |
-| 927 | pages/PlayerDetailPage.tsx | Player detail: edit avatar/name, stats, all partners (win-rate sorted, expandable), H2H opponents (expandable), match history, achievements tab |
+| 927 | pages/PlayerDetailPage.tsx | Player detail: hero avatar background + edit avatar/name, stats, overview card (champion/runner-up sessions + record badges), rackets header card, match history; ranking chart / H2H / partners surfaced via a bottom-sheet menu |
 | 775 | pages/CreateSessionPage.tsx | Create session + BWF tournament picker |
 | 780 | hooks/useMatches.ts | Match CRUD + useStartMatch + useRecordResult + useEndMatchNoWinner + useReorderQueue + useReopenMatch + useUpdateMatchPlayers |
 | 634 | hooks/useSessions.ts | Session CRUD + useOpenSession() + cached start/end/rename updates |
@@ -82,6 +82,20 @@ src/
 | 33 | lib/avatar.ts | Multiavatar URL and SVG helpers |
 | 18 | hooks/useMatchPlayerResults.ts | Fetch point rows for one completed match |
 | 8 | lib/player-name.ts | Player display-name formatter (`Danh Nguyen` → `Danh N.`) |
+| 125 | components/PlayerRacketHeaderCard.tsx | Rackets entry point on PlayerDetailPage: header-image card for the newest racket, opens a bottom sheet with all rackets + "Manage rackets" link |
+| 111 | components/PlayerRacketsCard.tsx | Rackets list on PlayerRacketsPage: add/edit/delete a player's rackets when `canEdit` |
+| 109 | components/PlayerOverviewCard.tsx | PlayerDetailPage overview: champion/runner-up session rows + record-holder award badges |
+| 109 | components/PlayerVersusList.tsx | Shared expandable win/loss list vs. opponents or partners, used by PlayerH2HContent and PlayerPartnersContent |
+| 98 | pages/PlayerRacketsPage.tsx | `/players/:playerId/rackets` — full racket management page |
+| 71 | hooks/usePlayerRackets.ts | CRUD for `player_rackets` (max 4 per player) |
+| 56 | components/PlayerCardImage.tsx | PlayerDetailPage hero background art from the player's avatar |
+| 42 | components/PlayerMatchHistoryItem.tsx | Single completed-match row (W/L, teammates/opponents, score, type) via `getMatchRow` |
+| 41 | lib/player-match-row.ts | `getMatchRow` (pure, tested) — derives win/loss, teammates, opponents, score, type for a completed match |
+| 31 | components/PlayerRankingChartContent.tsx | Wraps RatingChart for the "Ranking Chart" bottom sheet on PlayerDetailPage |
+| 29 | components/PlayerH2HContent.tsx | Head-to-head bottom sheet content on PlayerDetailPage |
+| 29 | components/PlayerPartnersContent.tsx | Partners bottom sheet content on PlayerDetailPage |
+| 19 | lib/badge-categories.ts | `CATEGORY_ICON` / `CATEGORY_COLOR` maps for `BadgeCategory` |
+| 13 | lib/session-label.ts | `formatSessionLabel` (pure, tested) — session label or formatted start date |
 
 ## Components
 
@@ -377,16 +391,15 @@ Sessions linked to a BWF tournament display a colored category badge:
 
 ## Player Achievements
 
-The Achievements tab on `PlayerDetailPage` shows sessions where the player ranked #1 (champion) or #2 (runner-up):
+`PlayerOverviewCard` on `PlayerDetailPage` shows sessions where the player ranked #1 (champion) or #2 (runner-up), plus any record-holder badges:
 
 1. `usePlayerAchievements(playerId)` fetches `player_match_results` and ranks players per session using `buildSessionWeeklyRankings` — the same sort as the session leaderboard (weeklyPoints → averageWeeklyPoints → wins → pointDifference)
 2. Genuine ties at rank #1 (all meaningful criteria equal) are excluded — no achievement awarded
 3. Only players at rank #1 or #2 receive an achievement
-4. Displays: custom circular rank badge (gold "1" / silver "2"), session name, BWF category badge, match stats (W/L/rate)
+4. Each row shows a crown (champion) or medal (runner-up) icon, the session label (`formatSessionLabel`), and a BWF category badge if applicable; tapping a row jumps to that session in the match history below and expands it
 
 - Hook: `src/hooks/usePlayerAchievements.ts` — exports `computeAchievements` (pure, tested)
-- Rank badge: custom SVG component inline in `PlayerDetailPage.tsx`
-- Tab bar: `SegmentedControl` with horizontal scroll (`flex` + `shrink-0` + `overflow-x: auto`)
+- Card is hidden entirely (`null`) when the player has no achievements and no badges
 
 ## Champion Celebration
 

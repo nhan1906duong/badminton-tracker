@@ -12,7 +12,7 @@ export function usePlayerRackets(playerId: string) {
         .from('player_rackets')
         .select('*')
         .eq('player_id', playerId)
-        .order('created_at')
+        .order('created_at', { ascending: false })
       if (error) throw error
       return data as PlayerRacket[]
     },
