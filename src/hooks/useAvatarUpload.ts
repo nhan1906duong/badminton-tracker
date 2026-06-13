@@ -34,7 +34,7 @@ export function useAvatarUpload() {
 
   return useMutation({
     mutationFn: async ({ file, entity, id }: UploadParams) => {
-      const blob = await compressImage(file, 200)
+      const blob = await compressImage(file, 512)
       const path = `${entity}/${id}.jpg`
 
       const { error: uploadError } = await supabase.storage

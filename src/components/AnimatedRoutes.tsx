@@ -18,6 +18,7 @@ import AccountSettingPage from '../pages/AccountSettingPage'
 import DesignSystemPage from '../pages/DesignSystemPage'
 import SessionDonatedListPage from '../pages/SessionDonatedListPage'
 import PlayerDetailPage from '../pages/PlayerDetailPage'
+import PlayerRacketsPage from '../pages/PlayerRacketsPage'
 import RankingPage from '../pages/RankingPage'
 import { useOpenSession } from '../hooks/useSessions'
 import { useNavigate } from 'react-router-dom'
@@ -108,6 +109,7 @@ const routes = [
   { path: '/sessions/:id/matches/:matchId/edit', element: <LegacyEditMatchRedirect />, auth: true },
   { path: '/sessions/:id/donated', element: <SessionDonatedListPage />, auth: false },
   { path: '/players/:playerId', element: <PlayerDetailPage />, auth: false },
+  { path: '/players/:playerId/rackets', element: <PlayerRacketsPage />, auth: false },
   { path: '/ranking', element: <RankingPage />, auth: false },
   { path: '/settings', element: <SettingsPage />, auth: true },
   { path: '/settings/account', element: <AccountSettingPage />, auth: true },

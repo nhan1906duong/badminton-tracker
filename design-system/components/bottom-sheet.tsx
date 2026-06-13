@@ -51,6 +51,7 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
 
       {/* Panel */}
       <div
+        data-bottom-sheet-panel
         className="fixed bottom-0 left-1/2 w-full max-w-lg z-[101]"
         style={{
           background: 'var(--surface)',

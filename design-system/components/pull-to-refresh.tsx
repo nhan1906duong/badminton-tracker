@@ -114,6 +114,8 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
       if (window.scrollY !== 0 || isRefreshing.current) return
+      const target = e.target as HTMLElement | null
+      if (target?.closest('[data-bottom-sheet-panel]')) return
       touchStartY.current = e.touches[0].clientY
       touching.current = true
     }
