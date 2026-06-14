@@ -20,9 +20,9 @@ import { AppBar, BottomSheet, BottomSheetItem, BottomSheetCancel, PullToRefresh 
 import { formatSessionLabel } from '../lib/session-label'
 import { PlayerOverviewCard } from '../components/PlayerOverviewCard'
 import { PlayerRankingChartContent } from '../components/PlayerRankingChartContent'
-import { PlayerH2HContent } from '../components/PlayerH2HContent'
+import { PlayerOpponentsContent } from '../components/PlayerOpponentsContent'
 import { PlayerPartnersContent } from '../components/PlayerPartnersContent'
-import { Camera, ChevronLeft, ChevronDown, ChevronRight, Pencil, Swords, Users, MoreVertical, TrendingUp } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronDown, ChevronRight, Pencil, Swords, Users, MoreVertical, TrendingUp, ArrowLeftRight } from 'lucide-react'
 import { useI18n } from '../i18n'
 
 const OVERVIEW_IMAGES = ['overview-1.jpg', 'overview-2.jpg', 'overview-3.jpg', 'overview-4.jpg']
@@ -464,8 +464,9 @@ export default function PlayerDetailPage() {
         {sheet === 'menu' && (
           <>
             <BottomSheetItem icon={<TrendingUp size={20} />} label={t('players.rankingChart')} onClick={() => setSheet('ranking')} />
-            <BottomSheetItem icon={<Swords size={20} />} label={t('players.tabH2H')} onClick={() => setSheet('h2h')} />
+            <BottomSheetItem icon={<Swords size={20} />} label={t('players.tabOpponents')} onClick={() => setSheet('h2h')} />
             <BottomSheetItem icon={<Users size={20} />} label={t('players.tabPartners')} onClick={() => setSheet('partners')} />
+            <BottomSheetItem icon={<ArrowLeftRight size={20} />} label={t('players.compareTeams')} onClick={() => navigate(`/players/${id}/head-to-head`)} />
             <BottomSheetCancel onClick={() => setSheet(null)} />
           </>
         )}
@@ -476,7 +477,7 @@ export default function PlayerDetailPage() {
         )}
         {sheet === 'h2h' && (
           <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
-            <PlayerH2HContent playerId={id} />
+            <PlayerOpponentsContent playerId={id} />
           </div>
         )}
         {sheet === 'partners' && (

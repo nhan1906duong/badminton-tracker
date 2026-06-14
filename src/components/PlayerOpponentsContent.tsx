@@ -1,4 +1,4 @@
-import { useHeadToHead } from '../hooks/useHeadToHead'
+import { useOpponents } from '../hooks/useOpponents'
 import { PlayerVersusList } from './PlayerVersusList'
 import { useI18n } from '../i18n'
 
@@ -6,9 +6,9 @@ interface Props {
   playerId: string
 }
 
-export function PlayerH2HContent({ playerId }: Props) {
+export function PlayerOpponentsContent({ playerId }: Props) {
   const { t } = useI18n()
-  const { entries, isLoading } = useHeadToHead(playerId)
+  const { entries, isLoading } = useOpponents(playerId)
 
   const versusEntries = entries.map((entry) => ({
     person: entry.opponent,
@@ -23,7 +23,7 @@ export function PlayerH2HContent({ playerId }: Props) {
       entries={versusEntries}
       playerId={playerId}
       isLoading={isLoading}
-      countLabel={t('players.h2hCount', { count: entries.length })}
+      countLabel={t('players.opponentsCount', { count: entries.length })}
     />
   )
 }

@@ -1,55 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { X, Plus } from 'lucide-react'
 import { useH2HPairs } from '../hooks/useH2HPairs'
 import { usePlayers } from '../hooks/usePlayers'
 import Avatar from './Avatar'
-import { Badge } from '../../design-system/components'
+import { PlayerMatchHistoryItem } from './PlayerMatchHistoryItem'
 import { useI18n } from '../i18n'
 import { formatShortPlayerName } from '../lib/player-name'
-import type { MatchWithDetails, Player } from '../types/database'
-
-const MATCH_TYPE_SHORT: Record<string, string> = {
-  MEN_SINGLES: 'MS',
-  WOMEN_SINGLES: 'WS',
-  MEN_DOUBLES: 'MD',
-  WOMEN_DOUBLES: 'WD',
-  MIXED_DOUBLES: 'XD',
-}
-
-function getH2HRow(match: MatchWithDetails, teamAIds: string[]) {
-  const teamA = match.teams.find((t) => t.team_label === 'TEAM_A')
-  const teamB = match.teams.find((t) => t.team_label === 'TEAM_B')
-  if (!teamA || !teamB) return null
-
-  const teamAPlayerIds = match.participants.filter((p) => p.team_id === teamA.id).map((p) => p.player_id)
-  const inputTeamAIsTeamA = teamAIds.some((id) => teamAPlayerIds.includes(id))
-
-  const myTeam = inputTeamAIsTeamA ? teamA : teamB
-  const oppTeam = inputTeamAIsTeamA ? teamB : teamA
-
-  const myPlayers = match.participants
-    .filter((p) => p.team_id === myTeam.id)
-    .map((p) => formatShortPlayerName(p.player.name))
-  const oppPlayers = match.participants
-    .filter((p) => p.team_id === oppTeam.id)
-    .map((p) => formatShortPlayerName(p.player.name))
-
-  const scoreStr = match.scores
-    .map((s) => {
-      const my = inputTeamAIsTeamA ? s.team_a_score : s.team_b_score
-      const opp = inputTeamAIsTeamA ? s.team_b_score : s.team_a_score
-      return `${my}–${opp}`
-    })
-    .join(', ') || '—'
-
-  return {
-    isWin: !!myTeam.is_winner,
-    myPlayers: myPlayers.join(' & '),
-    oppPlayers: oppPlayers.join(' & '),
-    scoreStr,
-    type: MATCH_TYPE_SHORT[match.match_type] ?? '—',
-  }
-}
+import type { Player } from '../types/database'
 
 // ── Win Gauge (half-circle SVG) ───────────────────────────────────────────────
 
@@ -365,47 +322,29 @@ function PlayerPicker({
   )
 }
 
-// ── Match history row ─────────────────────────────────────────────────────────
-
-function MatchHistoryRow({ match, teamAIds }: { match: MatchWithDetails; teamAIds: string[] }) {
-  const row = getH2HRow(match, teamAIds)
-  if (!row) return null
-
-  return (
-    <div
-      className="flex items-center gap-3 px-4 py-2.5"
-      style={{ borderBottom: '1px solid var(--border)' }}
-    >
-      <Badge variant={row.isWin ? 'win' : 'loss'}>
-        {row.isWin ? 'W' : 'L'}
-      </Badge>
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
-          {row.myPlayers} vs {row.oppPlayers}
-        </p>
-        <p className="text-[11px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
-          {row.scoreStr}
-        </p>
-      </div>
-      <span
-        className="text-[11px] font-bold uppercase tracking-[0.06em] shrink-0"
-        style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-      >
-        {row.type}
-      </span>
-    </div>
-  )
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function HeadToHeadTab() {
+interface Props {
+  initialPlayerId?: string
+}
+
+export default function HeadToHeadTab({ initialPlayerId }: Props) {
   const { t } = useI18n()
   const { data: allPlayers = [] } = usePlayers()
 
   const [teamA, setTeamA] = useState<(Player | null)[]>([null, null])
   const [teamB, setTeamB] = useState<(Player | null)[]>([null, null])
   const [picker, setPicker] = useState<{ side: 'A' | 'B'; slot: 0 | 1 } | null>(null)
+
+  const didInitRef = useRef(false)
+  useEffect(() => {
+    if (didInitRef.current || !initialPlayerId || allPlayers.length === 0) return
+    const player = allPlayers.find((p) => p.id === initialPlayerId)
+    if (!player) return
+    didInitRef.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from async-loaded player list
+    setTeamA([player, null])
+  }, [initialPlayerId, allPlayers])
 
   const teamAIds = useMemo(() => teamA.filter(Boolean).map((p) => p!.id), [teamA])
   const teamBIds = useMemo(() => teamB.filter(Boolean).map((p) => p!.id), [teamB])
@@ -545,14 +484,14 @@ export default function HeadToHeadTab() {
               </span>
             </div>
             <div
-              className="bg-[var(--surface)] border border-[var(--border)] overflow-hidden"
+              className="bg-[var(--surface)] border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden"
               style={{ borderRadius: 'var(--radius-lg)' }}
             >
               {matches.map((match) => (
-                <MatchHistoryRow
+                <PlayerMatchHistoryItem
                   key={match.id}
                   match={match}
-                  teamAIds={teamAIds}
+                  playerId={teamAIds[0]}
                 />
               ))}
             </div>

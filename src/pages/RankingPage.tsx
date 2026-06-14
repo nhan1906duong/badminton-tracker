@@ -1,7 +1,6 @@
 import { useCallback, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Medal, UserPlus, Crown } from 'lucide-react'
-import HeadToHeadTab from '../components/HeadToHeadTab'
 import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
 import { useMenDoublesRankings } from '../hooks/useMenDoublesRankings'
 import { useSessions } from '../hooks/useSessions'
@@ -263,7 +262,7 @@ export default function RankingPage() {
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()
   const [showAddPlayer, setShowAddPlayer] = useState(false)
-  const [activeTab, setActiveTab] = useState<'all' | 'session' | 'doubles' | 'h2h'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'session' | 'doubles'>('all')
 
   const latestSession = useMemo(
     () => sessions.find((s) => s.ended_at != null) ?? null,
@@ -286,7 +285,6 @@ export default function RankingPage() {
   const TAB_ALL = t('ranking.tabAll')
   const TAB_DOUBLES = t('ranking.tabDoubles')
   const TAB_SESSION = t('ranking.tabSession')
-  const TAB_H2H = t('ranking.tabH2H')
 
   return (
     <>
@@ -324,7 +322,6 @@ export default function RankingPage() {
             { key: 'all', label: TAB_ALL },
             { key: 'doubles', label: TAB_DOUBLES },
             { key: 'session', label: latestSession?.label ?? TAB_SESSION },
-            { key: 'h2h', label: TAB_H2H },
           ]}
           activeTab={activeTab}
           onTabChange={(key) => setActiveTab(key as typeof activeTab)}
@@ -490,7 +487,7 @@ export default function RankingPage() {
             ))}
           </div>
         )
-      ) : activeTab === 'doubles' ? (
+      ) : (
         /* Doubles tab */
         doublesLoading ? (
           <ShuttleLoading compact />
@@ -581,9 +578,6 @@ export default function RankingPage() {
             })}
           </div>
         )
-      ) : (
-        /* H2H tab */
-        <HeadToHeadTab />
       )}
     </div>
     </PullToRefresh>

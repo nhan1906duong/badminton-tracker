@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useMatches } from './useMatches'
 import type { MatchWithDetails, Player } from '../types/database'
 
-export interface H2HEntry {
+export interface OpponentEntry {
   opponent: Player
   wins: number
   losses: number
@@ -10,10 +10,10 @@ export interface H2HEntry {
   matches: MatchWithDetails[]
 }
 
-export function useHeadToHead(playerId: string) {
+export function useOpponents(playerId: string) {
   const { data: allMatches, isLoading } = useMatches()
 
-  const entries = useMemo<H2HEntry[]>(() => {
+  const entries = useMemo<OpponentEntry[]>(() => {
     if (!allMatches || !playerId) return []
 
     const map = new Map<
