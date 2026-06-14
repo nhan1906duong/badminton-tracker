@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
-import { usePlayerStats } from '../hooks/usePlayerStats'
 import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
 import { usePlayerPointsHistory } from '../hooks/usePlayerPointsHistory'
 import { type RatingChartPoint } from '../components/RatingChart'
@@ -35,7 +34,6 @@ export default function PlayerDetailPage() {
   const id = playerId ?? ''
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = usePlayer(id)
-  const { stats } = usePlayerStats()
   const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
   const { history: pointsHistory } = usePlayerPointsHistory(id)
 
@@ -89,10 +87,9 @@ export default function PlayerDetailPage() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const playerStats = stats.find((s) => s.playerId === id)
-  const total = playerStats?.matchesPlayed ?? 0
-  const wins = playerStats?.wins ?? 0
-  const losses = playerStats?.losses ?? 0
+  const wins = rankData?.wins ?? 0
+  const losses = rankData?.losses ?? 0
+  const total = rankData?.matchesPlayed ?? 0
   const winRatePercent = total > 0 ? Math.round((wins / total) * 100) : 0
 
   const handleStartEditName = useCallback(() => {
@@ -355,12 +352,14 @@ export default function PlayerDetailPage() {
           </div>
         </header>
         </div>
+
+        {/* Overview — champion/runner-up sessions + award badges; shares the hero background */}
+        <div className="px-4">
+          <PlayerOverviewCard achievements={achievements} badges={badges} locale={locale} isLoading={achievementsLoading || badgesLoading} onSessionClick={jumpToSession} />
+        </div>
       </div>
 
       <div className="px-4 pb-24 space-y-4">
-        {/* Overview — champion/runner-up sessions + award badges */}
-        <PlayerOverviewCard achievements={achievements} badges={badges} locale={locale} isLoading={achievementsLoading || badgesLoading} onSessionClick={jumpToSession} />
-
         {/* Rackets — header card with newest racket, tap to view all */}
         <div style={{ marginTop: hasOverview ? 0 : 'var(--space-2)' }}>
           <PlayerRacketHeaderCard playerId={id} canEdit={canEdit} isMe={isMe} />

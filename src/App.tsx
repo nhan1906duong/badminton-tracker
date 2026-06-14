@@ -9,7 +9,13 @@ import './index.css'
 
 const TAB_ROUTES = ['/sessions', '/ranking', '/settings']
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+    },
+  },
+})
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()

@@ -21,16 +21,16 @@ export function PlayerCardImage({ avatarUrl, name }: PlayerCardImageProps) {
           position: 'absolute',
           top: 0,
           right: 0,
-          width: '60%',
-          aspectRatio: '5 / 4',
-          maskImage: 'linear-gradient(90deg, transparent, black 35%)',
-          WebkitMaskImage: 'linear-gradient(90deg, transparent, black 35%)',
+          width: '75%',
+          aspectRatio: '5 : 3',
+          maskImage: 'radial-gradient(circle at 100% 0%, black 40%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(circle at 100% 0%, black 40%, transparent 75%)',
         }}
       >
         <img
           src={avatarUrl}
           alt=""
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top' }}
         />
       </div>
     )
