@@ -136,7 +136,7 @@ export default function SettingsPage() {
             ) : (
               <button
                 type="button"
-                onClick={() => setShowPlayerPicker(true)}
+                onClick={() => (user ? setShowPlayerPicker(true) : navigate('/login'))}
                 className="w-full flex items-center gap-3 active:opacity-60 transition-opacity"
               >
                 <div className="w-9 h-9 rounded-full bg-[var(--bg)] border border-[var(--border)] flex items-center justify-center shrink-0">
@@ -152,7 +152,7 @@ export default function SettingsPage() {
 
           <button
             type="button"
-            onClick={() => navigate('/settings/account')}
+            onClick={() => navigate(user ? '/settings/account' : '/login')}
             className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
           >
             <User className="w-5 h-5 shrink-0" />
@@ -177,29 +177,33 @@ export default function SettingsPage() {
               <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
             </button>
 
-            <div className="mx-[var(--space-4)] border-t border-[var(--border)]" />
+            {user && (
+              <>
+                <div className="mx-[var(--space-4)] border-t border-[var(--border)]" />
 
-            <button
-              type="button"
-              onClick={handleRecalculate}
-              disabled={recalculate.isPending}
-              className={`w-full flex items-center gap-3 px-[var(--space-4)] py-3 transition-colors active:bg-[var(--bg)] ${
-                confirmRecalc ? 'text-[var(--warn)]' : 'text-[var(--fg)]'
-              }`}
-            >
-              {confirmRecalc ? (
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-              ) : (
-                <RefreshCw className={`w-5 h-5 shrink-0 ${recalculate.isPending ? 'animate-spin' : ''}`} />
-              )}
-              <span className="flex-1 text-left text-[15px] font-semibold">
-                {recalculate.isPending
-                  ? t('settings.recalculating')
-                  : confirmRecalc
-                    ? t('settings.tapAgainRecalculate')
-                    : t('settings.recalculateAllRatings')}
-              </span>
-            </button>
+                <button
+                  type="button"
+                  onClick={handleRecalculate}
+                  disabled={recalculate.isPending}
+                  className={`w-full flex items-center gap-3 px-[var(--space-4)] py-3 transition-colors active:bg-[var(--bg)] ${
+                    confirmRecalc ? 'text-[var(--warn)]' : 'text-[var(--fg)]'
+                  }`}
+                >
+                  {confirmRecalc ? (
+                    <AlertTriangle className="w-5 h-5 shrink-0" />
+                  ) : (
+                    <RefreshCw className={`w-5 h-5 shrink-0 ${recalculate.isPending ? 'animate-spin' : ''}`} />
+                  )}
+                  <span className="flex-1 text-left text-[15px] font-semibold">
+                    {recalculate.isPending
+                      ? t('settings.recalculating')
+                      : confirmRecalc
+                        ? t('settings.tapAgainRecalculate')
+                        : t('settings.recalculateAllRatings')}
+                  </span>
+                </button>
+              </>
+            )}
           </section>
 
         </section>

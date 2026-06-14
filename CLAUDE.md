@@ -39,6 +39,7 @@ Users have a `role` column (`'admin' | 'user'`) on their `profiles` row. Admins 
 - `src/hooks/useIsAdmin.ts` — returns `true` if the current user's profile role is `'admin'`
 - Admin-gated UI: "Delete session" (SessionDetailPage ⋮ menu), "Delete match" (MatchDetailPage ⋮ menu), "Add player" FAB (RankingPage)
 - Authenticated-user UI: player avatar/name editing from PlayerDetailPage
+- `SettingsPage` (`/settings`) and `PointSystemPage` (`/settings/points`) are public (`auth: false`); unauthenticated users tapping the profile row or "Account" are routed to `/login` instead of opening the player picker / account page. "Recalculate all ratings" is only rendered when signed in.
 
 ### Navigation & Back Button
 
@@ -133,7 +134,8 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers; exports `computeSessionRankingHistory` (pure fn, tested) + `useSessionMatchResults` — computes per-match cumulative ranking history used by `SessionRankingChart` |
 | `src/hooks/useMenDoublesRankings.ts` | Computes MD pair rankings (win rate → wins → matches played) from ended sessions only; exports `computeMenDoublesRankings` (pure fn, tested) |
 | `src/hooks/useH2HPairs.ts` | Exact-composition 2v2 head-to-head: exports `computeH2HPairs` (pure fn, tested) + `useH2HPairs` hook; handles both normal and reversed team orientations |
-| `src/components/HeadToHeadTab.tsx` | Head to Head tab on RankingPage: 2-slot player picker per side, half-circle win-% gauge, win counts, match history |
+| `src/components/HeadToHeadTab.tsx` | "Compare Teams" UI rendered by `HeadToHeadPage` (`/players/:playerId/head-to-head`, reached via the ⋮ menu on `PlayerDetailPage`): 2-slot player picker per side, half-circle win-% gauge, win counts, match history (via `PlayerMatchHistoryItem`); accepts `initialPlayerId` to pre-fill Team A's first slot |
+| `src/pages/HeadToHeadPage.tsx` | `/players/:playerId/head-to-head` — full-page wrapper (`<AppBar>` + back action) around `HeadToHeadTab` |
 | `src/components/CalendarTab.tsx` | Calendar tab on SessionsPage: vertical timeline of completed sessions grouped by month/day; champion Avatar + card with BWF badge, match count, and champion win % footer |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
@@ -147,8 +149,9 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/PlayerCardImage.tsx` | Hero background art for `PlayerDetailPage`: 5:4 crop of the player's avatar fading into the page background, or a dim circular avatar watermark for default multiavatar icons / no avatar |
 | `src/components/PlayerOverviewCard.tsx` | Overview section on `PlayerDetailPage`: champion/runner-up session rows (tap to jump to that session in match history) grouped under "Champion" / "Runner-up" / "Awards" (record-holder badges via `badge-categories.ts`); `null` if the player has no achievements or badges |
 | `src/components/PlayerRankingChartContent.tsx` | Wraps `RatingChart` for the "Ranking Chart" bottom sheet on `PlayerDetailPage`; shows an empty state when fewer than 2 data points |
-| `src/components/PlayerVersusList.tsx` | Shared expandable list of win/loss records vs. other players (opponents or partners), each row expanding to per-match `PlayerMatchHistoryItem`s; used by `PlayerH2HContent` and `PlayerPartnersContent` |
-| `src/components/PlayerH2HContent.tsx` | Head-to-head bottom sheet content on `PlayerDetailPage`: wraps `useHeadToHead` + `PlayerVersusList` |
+| `src/components/PlayerVersusList.tsx` | Shared expandable list of win/loss records vs. other players (opponents or partners), each row expanding to per-match `PlayerMatchHistoryItem`s; used by `PlayerOpponentsContent` and `PlayerPartnersContent` |
+| `src/components/PlayerOpponentsContent.tsx` | "Opponents" bottom sheet content on `PlayerDetailPage`: wraps `useOpponents` + `PlayerVersusList` |
+| `src/hooks/useOpponents.ts` | Per-player win/loss record vs. each opponent faced (completed matches with a winner only); exports `useOpponents(playerId)` |
 | `src/components/PlayerPartnersContent.tsx` | Partners bottom sheet content on `PlayerDetailPage`: wraps `useBestPartner` + `PlayerVersusList` |
 | `src/components/PlayerMatchHistoryItem.tsx` | Single completed-match row (W/L badge, teammates/opponents, score, match-type) via `getMatchRow`; used in `PlayerDetailPage` match history and `PlayerVersusList` expanded rows |
 | `src/hooks/usePlayerRackets.ts` | CRUD for `player_rackets` (max `MAX_RACKETS_PER_PLAYER` = 4 per player, enforced at the app layer); `usePlayerRackets`, `useCreatePlayerRacket`, `useUpdatePlayerRacket`, `useDeletePlayerRacket` |

@@ -4,7 +4,7 @@ import type { MatchType } from './types/database'
 
 export type Locale = 'en' | 'vi'
 
-export const DEFAULT_LOCALE: Locale = 'en'
+export const DEFAULT_LOCALE: Locale = 'vi'
 export const LOCALE_STORAGE_KEY = 'badminton-tracker-locale'
 export const LOCALE_TAG: Record<Locale, string> = {
   en: 'en-US',
@@ -1273,8 +1273,7 @@ function detectInitialLocale(): Locale {
     // Storage can be unavailable in strict test/browser privacy contexts.
   }
 
-  const browserLocale = window.navigator.language.toLowerCase()
-  return browserLocale.startsWith('vi') ? 'vi' : DEFAULT_LOCALE
+  return DEFAULT_LOCALE
 }
 
 function interpolate(template: string, values?: TranslationValues): string {
