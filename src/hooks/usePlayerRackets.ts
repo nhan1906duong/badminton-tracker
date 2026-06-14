@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { PlayerRacket } from '../types/database'
 
 const PLAYER_RACKETS_KEY = 'player-rackets'
+const PLAYERS_KEY = 'players'
 
 export function usePlayerRackets(playerId: string) {
   return useQuery({
@@ -23,7 +24,7 @@ export function usePlayerRackets(playerId: string) {
 export function useCreatePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (racket: { player_id: string; brand: string; real_name: string; nickname?: string }) => {
+    mutationFn: async (racket: { player_id: string; brand: string; real_name: string; nickname?: string; mascot_id?: string | null }) => {
       const { data, error } = await supabase
         .from('player_rackets')
         .insert({
@@ -31,6 +32,7 @@ export function useCreatePlayerRacket() {
           brand: racket.brand,
           real_name: racket.real_name,
           nickname: racket.nickname || null,
+          mascot_id: racket.mascot_id ?? null,
         })
         .select()
         .single()
@@ -44,10 +46,10 @@ export function useCreatePlayerRacket() {
 export function useUpdatePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (racket: { id: string; brand: string; real_name: string; nickname?: string }) => {
+    mutationFn: async (racket: { id: string; brand: string; real_name: string; nickname?: string; mascot_id?: string | null }) => {
       const { data, error } = await supabase
         .from('player_rackets')
-        .update({ brand: racket.brand, real_name: racket.real_name, nickname: racket.nickname || null })
+        .update({ brand: racket.brand, real_name: racket.real_name, nickname: racket.nickname || null, mascot_id: racket.mascot_id ?? null })
         .eq('id', racket.id)
         .select()
         .single()
@@ -66,6 +68,9 @@ export function useDeletePlayerRacket() {
       if (error) throw error
       return racket
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] })
+      qc.invalidateQueries({ queryKey: [PLAYERS_KEY, data.player_id] })
+    },
   })
 }

@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { BottomSheet, SegmentedControl } from '../../design-system/components'
 import { Input, Button } from '../../design-system/components'
 import { useCreatePlayerRacket, useUpdatePlayerRacket } from '../hooks/usePlayerRackets'
 import { RACKET_BRANDS, type PlayerRacket, type RacketBrand } from '../types/database'
+import { getMascot, getMascotPreviewPath } from '../lib/mascots'
+import MascotPicker from './MascotPicker'
 import { useI18n } from '../i18n'
+
+const LottieMascot = lazy(() => import('./LottieMascot'))
 
 function initialBrandChoice(brand?: string): RacketBrand {
   if (brand && (RACKET_BRANDS as readonly string[]).includes(brand)) return brand as RacketBrand
@@ -24,16 +28,20 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
   const [customBrand, setCustomBrand] = useState(() => (initialBrandChoice(racket?.brand) === 'Other' ? racket?.brand ?? '' : ''))
   const [realName, setRealName] = useState(racket?.real_name ?? '')
   const [nickname, setNickname] = useState(racket?.nickname ?? '')
+  const [mascotId, setMascotId] = useState<string | null>(racket?.mascot_id ?? null)
+  const [showMascotPicker, setShowMascotPicker] = useState(false)
   const [error, setError] = useState('')
   const createRacket = useCreatePlayerRacket()
   const updateRacket = useUpdatePlayerRacket()
   const isPending = createRacket.isPending || updateRacket.isPending
+  const mascot = getMascot(mascotId)
 
   function handleClose() {
     setBrandChoice(initialBrandChoice(racket?.brand))
     setCustomBrand(initialBrandChoice(racket?.brand) === 'Other' ? racket?.brand ?? '' : '')
     setRealName(racket?.real_name ?? '')
     setNickname(racket?.nickname ?? '')
+    setMascotId(racket?.mascot_id ?? null)
     setError('')
     onClose()
   }
@@ -57,9 +65,9 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
     }
     try {
       if (racket) {
-        await updateRacket.mutateAsync({ id: racket.id, brand, real_name: trimmedName, nickname: nickname.trim() })
+        await updateRacket.mutateAsync({ id: racket.id, brand, real_name: trimmedName, nickname: nickname.trim(), mascot_id: mascotId })
       } else {
-        await createRacket.mutateAsync({ player_id: playerId, brand, real_name: trimmedName, nickname: nickname.trim() })
+        await createRacket.mutateAsync({ player_id: playerId, brand, real_name: trimmedName, nickname: nickname.trim(), mascot_id: mascotId })
         onCreated?.(`${brand} ${trimmedName}`)
       }
       handleClose()
@@ -128,10 +136,56 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
           placeholder={t('racketForm.nicknamePlaceholder')}
         />
 
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <label
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: 'var(--muted)',
+            }}
+          >
+            {t('racketForm.mascot')}
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowMascotPicker(true)}
+            className="flex items-center gap-3 active:opacity-70"
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-2) var(--space-3)',
+              background: 'transparent',
+              cursor: 'pointer',
+              touchAction: 'manipulation',
+            }}
+          >
+            {mascot ? (
+              <Suspense fallback={<span style={{ width: 32, height: 32 }} />}>
+                <LottieMascot src={getMascotPreviewPath(mascot)} size={32} />
+              </Suspense>
+            ) : (
+              <span style={{ fontSize: 24, lineHeight: 1, width: 32, textAlign: 'center' }}>🚫</span>
+            )}
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--fg)' }}>
+              {mascot ? mascot.name : t('mascotPicker.none')}
+            </span>
+          </button>
+        </div>
+
         <Button type="submit" variant="primary" size="block" disabled={isPending}>
           {isPending ? t('common.creating') : t('common.save')}
         </Button>
       </form>
+
+      <MascotPicker
+        open={showMascotPicker}
+        currentMascotId={mascotId}
+        onSelect={setMascotId}
+        onClose={() => setShowMascotPicker(false)}
+      />
     </BottomSheet>
   )
 }

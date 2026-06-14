@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
+import { usePlayerRackets } from '../hooks/usePlayerRackets'
 import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
 import { usePlayerPointsHistory } from '../hooks/usePlayerPointsHistory'
 import { type RatingChartPoint } from '../components/RatingChart'
@@ -12,6 +13,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useProfile } from '../hooks/useProfile'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import AvatarPicker from '../components/AvatarPicker'
+import { PlayerMascot } from '../components/PlayerMascot'
 import { PlayerCardImage } from '../components/PlayerCardImage'
 import { PlayerMatchHistoryItem } from '../components/PlayerMatchHistoryItem'
 import PlayerRecordLine from '../components/PlayerRecordLine'
@@ -34,6 +36,7 @@ export default function PlayerDetailPage() {
   const id = playerId ?? ''
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = usePlayer(id)
+  const { data: rackets = [] } = usePlayerRackets(id)
   const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
   const { history: pointsHistory } = usePlayerPointsHistory(id)
 
@@ -55,6 +58,9 @@ export default function PlayerDetailPage() {
       })
   }, [pointsHistory, achievements])
   const rankData = rankings?.find((r) => r.playerId === id)
+
+  const activeRacket = rackets.find((r) => r.id === player?.active_racket_id)
+  const displayMascotId = activeRacket?.mascot_id
 
   const hasOverview =
     !achievementsLoading &&
@@ -360,9 +366,9 @@ export default function PlayerDetailPage() {
       </div>
 
       <div className="px-4 pb-24 space-y-4">
-        {/* Rackets — header card with newest racket, tap to view all */}
+        {/* Rackets — header card with the active racket, tap to view all */}
         <div style={{ marginTop: hasOverview ? 0 : 'var(--space-2)' }}>
-          <PlayerRacketHeaderCard playerId={id} canEdit={canEdit} isMe={isMe} />
+          <PlayerRacketHeaderCard playerId={id} canEdit={canEdit} isMe={isMe} activeRacketId={player.active_racket_id} />
         </div>
 
         {/* ── History ── */}
@@ -446,6 +452,17 @@ export default function PlayerDetailPage() {
           </div>
 
       </div>
+
+      {displayMascotId && (
+        <div
+          className="fixed left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none"
+          style={{ bottom: `calc(4.5rem + env(safe-area-inset-bottom))` }}
+        >
+          <div className="flex justify-end pointer-events-auto">
+            <PlayerMascot mascotId={displayMascotId} size={112} speak playerId={id} />
+          </div>
+        </div>
+      )}
 
       <AvatarPicker
         open={showAvatarPicker}
