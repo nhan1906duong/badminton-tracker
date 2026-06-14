@@ -155,7 +155,7 @@ export default function PlayerDetailPage() {
         <img
           src={`/overview/${bgImage}`}
           alt=""
-          style={{ width: '100%', height: 'auto', objectFit: 'contain',  mixBlendMode: 'multiply' }}
+          style={{ width: '100%', height: 'auto', objectFit: 'contain', mixBlendMode: 'multiply', position: 'absolute', top: '30%' }}
         />
         <div
           className="absolute inset-0"
@@ -447,19 +447,18 @@ export default function PlayerDetailPage() {
 
       </div>
 
-      {showAvatarPicker && (
-        <AvatarPicker
-          currentAvatarUrl={player.avatar_url}
-          onSelect={(file) => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}
-          onSelectDefault={(url) =>
-            setDefaultAvatar.mutate({ url, entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
-          }
-          onRemove={() =>
-            removeAvatar.mutate({ entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
-          }
-          onClose={() => setShowAvatarPicker(false)}
-        />
-      )}
+      <AvatarPicker
+        open={showAvatarPicker}
+        currentAvatarUrl={player.avatar_url}
+        onSelect={(file) => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}
+        onSelectDefault={(url) =>
+          setDefaultAvatar.mutate({ url, entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
+        }
+        onRemove={() =>
+          removeAvatar.mutate({ entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
+        }
+        onClose={() => setShowAvatarPicker(false)}
+      />
 
       <BottomSheet open={sheet !== null} onClose={() => setSheet(null)}>
         {sheet === 'menu' && (
