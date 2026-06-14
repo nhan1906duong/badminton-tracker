@@ -69,7 +69,9 @@ After a match is created, tap it from session detail to open `MatchDetailPage`:
 
 ### Data Model
 
-Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users, includes `role: 'admin' | 'user'` and `player_id` FK linking the auth user to a player row), `bwf_tournaments`.
+Supabase PostgreSQL. Key tables: `players`, `sessions`, `matches`, `match_teams`, `match_participants`, `match_scores`, `profiles` (1:1 with auth.users, includes `role: 'admin' | 'user'` and `player_id` FK linking the auth user to a player row), `bwf_tournaments`, `player_rackets`, `player_quotes`.
+
+A player's `active_racket_id` (FK to `player_rackets`, settable via the star toggle on `PlayerRacketHeaderCard` / `PlayerRacketsCard`) determines which racket's `mascot_id` is shown as that player's mascot — see `src/lib/mascots.ts`.
 
 A match has:
 - 2 teams (`match_teams`: TEAM_A / TEAM_B, `is_winner` flag)
@@ -154,12 +156,21 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/hooks/useOpponents.ts` | Per-player win/loss record vs. each opponent faced (completed matches with a winner only); exports `useOpponents(playerId)` |
 | `src/components/PlayerPartnersContent.tsx` | Partners bottom sheet content on `PlayerDetailPage`: wraps `useBestPartner` + `PlayerVersusList` |
 | `src/components/PlayerMatchHistoryItem.tsx` | Single completed-match row (W/L badge, teammates/opponents, score, match-type) via `getMatchRow`; used in `PlayerDetailPage` match history and `PlayerVersusList` expanded rows |
-| `src/hooks/usePlayerRackets.ts` | CRUD for `player_rackets` (max `MAX_RACKETS_PER_PLAYER` = 4 per player, enforced at the app layer); `usePlayerRackets`, `useCreatePlayerRacket`, `useUpdatePlayerRacket`, `useDeletePlayerRacket` |
-| `src/components/PlayerRacketHeaderCard.tsx` | Rackets entry point on `PlayerDetailPage`: header-image card showing the newest racket, tap to open a bottom sheet listing all rackets with a "Manage rackets" link to `PlayerRacketsPage` (own profile only) |
-| `src/pages/PlayerRacketsPage.tsx` | `/players/:playerId/rackets` — full racket management page: `PlayerRacketsCard` list, add/edit via `RacketFormSheet`, FAB to add (own profile or admin, up to `MAX_RACKETS_PER_PLAYER`) |
-| `src/components/PlayerRacketsCard.tsx` | Rackets list on `PlayerRacketsPage`: lists a player's rackets, edit (via `RacketFormSheet`) and delete (via `Dialog` confirm) when `canEdit` |
-| `src/components/RacketFormSheet.tsx` | Bottom-sheet form to add/edit a `PlayerRacket` (brand `SegmentedControl` + real name + nickname); `onCreated` receives the new racket's `"{brand} {real_name}"` |
+| `src/hooks/usePlayerRackets.ts` | CRUD for `player_rackets` (max `MAX_RACKETS_PER_PLAYER` = 4 per player, enforced at the app layer); `usePlayerRackets`, `useCreatePlayerRacket`, `useUpdatePlayerRacket`, `useDeletePlayerRacket` — create/update also set the racket's `mascot_id`; delete invalidates the `players` query too (a deleted racket may have been the player's `active_racket_id`) |
+| `src/components/PlayerRacketHeaderCard.tsx` | Rackets entry point on `PlayerDetailPage`: header-image card showing the player's **active** racket (`active_racket_id`, falls back to newest), tap to open a bottom sheet listing all rackets — each row shows its mascot preview (via `LottieMascot`) and, when `canEdit`, a star toggle to set/unset it as active — with a "Manage rackets" link to `PlayerRacketsPage` (own profile only) |
+| `src/pages/PlayerRacketsPage.tsx` | `/players/:playerId/rackets` — full racket management page: `PlayerRacketsCard` list + `PlayerQuotesCard`, add/edit via `RacketFormSheet` / `QuoteFormSheet`, FAB to add a racket (own profile or admin, up to `MAX_RACKETS_PER_PLAYER`) |
+| `src/components/PlayerRacketsCard.tsx` | Rackets list on `PlayerRacketsPage`: lists a player's rackets with mascot preview (via `LottieMascot`), star toggle to set/unset `active_racket_id`, edit (via `RacketFormSheet`) and delete (via `Dialog` confirm) when `canEdit`; highlights the active racket |
+| `src/components/RacketFormSheet.tsx` | Bottom-sheet form to add/edit a `PlayerRacket` (brand `SegmentedControl` + real name + nickname + `MascotPicker` for `mascot_id`); `onCreated` receives the new racket's `"{brand} {real_name}"` |
 | `src/components/RacketAddedCelebration.tsx` | Full-screen celebration overlay shown after adding a racket on `PlayerRacketsPage`: looping firework Lottie animation + "Congrats {player}, you just added {racket}..." message; dismiss by tapping outside (no button) |
+| `src/lib/mascots.ts` | `MASCOTS` registry: each entry has `id`, `name`, `emoji` (fallback glyph) and `lottiePath` (single path or a collection of paths under `public/mascots/`); `getMascot(id)`, `getMascotPreviewPath` (stable, for pickers), `getMascotDisplayPath` (random pick from a collection) |
+| `src/lib/mascot-quotes.ts` | `pickMascotQuote(mood, locale, extraQuotes?)` — random idle/win/lose quote from a localized pool; for `idle`, a player's custom `player_quotes` are mixed into the pool |
+| `src/components/LottieMascot.tsx` | Renders a `.lottie` animation via `@lottiefiles/dotlottie-react`; renders nothing if the asset fails to load (lazy-loaded everywhere it's used) |
+| `src/components/PlayerMascot.tsx` | Renders a player's active mascot (looping Lottie). `speak` shows a `MascotSpeechBubble` with idle chatter (cycling every 6s, mixing in `playerId`'s custom quotes) or a `reaction` ('win'\|'lose') quote; tapping a multi-animation mascot cycles to another random clip |
+| `src/components/MascotSpeechBubble.tsx` | Typewriter-effect speech bubble anchored above its relatively-positioned parent |
+| `src/components/MascotPicker.tsx` | Bottom-sheet grid picker over `MASCOTS` (+ a "None" option); shows each mascot's preview animation via `LottieMascot` with `emoji` fallback |
+| `src/hooks/usePlayerQuotes.ts` | CRUD for `player_quotes` (max `MAX_QUOTES_PER_PLAYER` = 5 per player, `QUOTE_MAX_LENGTH` = 50, enforced at the app layer): `usePlayerQuotes`, `useCreatePlayerQuote`, `useUpdatePlayerQuote`, `useDeletePlayerQuote` |
+| `src/components/PlayerQuotesCard.tsx` | Quotes list on `PlayerRacketsPage`: lists a player's custom quotes, edit/delete (via `Dialog` confirm) when `canEdit`, "Add quote" button up to `MAX_QUOTES_PER_PLAYER` |
+| `src/components/QuoteFormSheet.tsx` | Bottom-sheet form to add/edit a `PlayerQuote` (single textarea, `QUOTE_MAX_LENGTH` cap with live counter) |
 | `src/hooks/useLeagueTeams.ts` | Fetches league teams + their players for a session |
 | `src/hooks/useLeagueStandings.ts` | Computes standings (W/L/Pts) from completed league matches |
 | `src/components/LeagueStandingsTable.tsx` | Standings table rendered at the top of a league session detail |

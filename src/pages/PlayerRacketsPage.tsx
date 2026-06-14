@@ -10,8 +10,10 @@ import { useIsAdmin } from '../hooks/useIsAdmin'
 import { PlayerRacketsCard } from '../components/PlayerRacketsCard'
 import { RacketFormSheet } from '../components/RacketFormSheet'
 import { RacketAddedCelebration } from '../components/RacketAddedCelebration'
+import { PlayerQuotesCard } from '../components/PlayerQuotesCard'
+import { QuoteFormSheet } from '../components/QuoteFormSheet'
 import FloatingActionButton from '../components/FloatingActionButton'
-import { MAX_RACKETS_PER_PLAYER, type PlayerRacket } from '../types/database'
+import { MAX_RACKETS_PER_PLAYER, type PlayerRacket, type PlayerQuote } from '../types/database'
 import { useI18n } from '../i18n'
 
 export default function PlayerRacketsPage() {
@@ -30,6 +32,8 @@ export default function PlayerRacketsPage() {
   const [isAdding, setIsAdding] = useState(false)
   const [editingRacket, setEditingRacket] = useState<PlayerRacket | null>(null)
   const [celebrationRacketName, setCelebrationRacketName] = useState<string | null>(null)
+  const [isAddingQuote, setIsAddingQuote] = useState(false)
+  const [editingQuote, setEditingQuote] = useState<PlayerQuote | null>(null)
   const canAddMore = rackets.length < MAX_RACKETS_PER_PLAYER
 
   if (isLoading) {
@@ -57,11 +61,19 @@ export default function PlayerRacketsPage() {
           onClick: () => navigate(-1),
         }}
       />
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 flex flex-col" style={{ gap: 'var(--space-6)' }}>
         <PlayerRacketsCard
           playerId={id}
           canEdit={canEdit}
+          activeRacketId={player.active_racket_id}
           onEdit={setEditingRacket}
+        />
+
+        <PlayerQuotesCard
+          playerId={id}
+          canEdit={canEdit}
+          onAdd={() => setIsAddingQuote(true)}
+          onEdit={setEditingQuote}
         />
       </div>
 
@@ -93,6 +105,18 @@ export default function PlayerRacketsPage() {
         playerName={player.name}
         racketName={celebrationRacketName ?? ''}
       />
+
+      {(isAddingQuote || editingQuote) && (
+        <QuoteFormSheet
+          open
+          onClose={() => {
+            setIsAddingQuote(false)
+            setEditingQuote(null)
+          }}
+          playerId={id}
+          quote={editingQuote ?? undefined}
+        />
+      )}
     </div>
   )
 }

@@ -22,6 +22,9 @@ export interface Player {
   name: string
   email?: string | null
   avatar_url?: string | null
+  active_racket_id?: string | null
+  /** Active racket's mascot, joined in by `useMatch`. */
+  active_racket?: { mascot_id: string | null } | null
   rating: number
   created_at: string
   created_by: string
@@ -163,6 +166,18 @@ export interface PlayerRacket {
   brand: string
   real_name: string
   nickname?: string | null
+  mascot_id?: string | null
+  created_at: string
+}
+
+export const MAX_QUOTES_PER_PLAYER = 5
+
+export const QUOTE_MAX_LENGTH = 50
+
+export interface PlayerQuote {
+  id: string
+  player_id: string
+  text: string
   created_at: string
 }
 

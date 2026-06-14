@@ -277,7 +277,7 @@ export function useMatch(id: string) {
         .select(`
           *,
           teams:match_teams(*),
-          participants:match_participants(*, player:players(*)),
+          participants:match_participants(*, player:players(*, active_racket:player_rackets!players_active_racket_id_fkey(mascot_id))),
           scores:match_scores(*)
         `)
         .eq('id', id)

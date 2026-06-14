@@ -65,7 +65,7 @@ describe('usePlayerRackets mutations', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(mockFrom).toHaveBeenCalledWith('player_rackets')
-    expect(builder.insert).toHaveBeenCalledWith({ player_id: 'player-1', brand: 'Yonex', real_name: 'Astrox 100ZZ', nickname: null })
+    expect(builder.insert).toHaveBeenCalledWith({ player_id: 'player-1', brand: 'Yonex', real_name: 'Astrox 100ZZ', nickname: null, mascot_id: null })
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['player-rackets', 'player-1'] })
   })
 
@@ -80,7 +80,7 @@ describe('usePlayerRackets mutations', () => {
     result.current.mutate({ id: 'racket-1', brand: 'Victor', real_name: 'Thruster K Falcon', nickname: 'Falcon' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(builder.update).toHaveBeenCalledWith({ brand: 'Victor', real_name: 'Thruster K Falcon', nickname: 'Falcon' })
+    expect(builder.update).toHaveBeenCalledWith({ brand: 'Victor', real_name: 'Thruster K Falcon', nickname: 'Falcon', mascot_id: null })
     expect(builder.eq).toHaveBeenCalledWith('id', 'racket-1')
   })
 
