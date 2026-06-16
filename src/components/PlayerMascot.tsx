@@ -71,7 +71,7 @@ export function PlayerMascot({ mascotId, size = 48, reaction, speak = false, pla
       onClick={handleTap}
     >
       <Suspense fallback={null}>
-        <LottieMascot key={src} src={src} size={size} className={className} />
+        <LottieMascot key={src} src={src} size={size} scale={mascot.scale} className={className} />
       </Suspense>
       {quote && <MascotSpeechBubble text={quote} />}
     </div>

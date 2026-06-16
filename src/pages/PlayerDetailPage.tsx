@@ -59,7 +59,7 @@ export default function PlayerDetailPage() {
   }, [pointsHistory, achievements])
   const rankData = rankings?.find((r) => r.playerId === id)
 
-  const activeRacket = rackets.find((r) => r.id === player?.active_racket_id)
+  const activeRacket = rackets.find((r) => r.id === player?.active_racket_id) ?? rackets[0]
   const displayMascotId = activeRacket?.mascot_id
 
   const hasOverview =

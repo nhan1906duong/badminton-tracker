@@ -164,7 +164,7 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
           >
             {mascot ? (
               <Suspense fallback={<span style={{ width: 32, height: 32 }} />}>
-                <LottieMascot src={getMascotPreviewPath(mascot)} size={32} />
+                <LottieMascot src={getMascotPreviewPath(mascot)} size={32} scale={mascot.scale} />
               </Suspense>
             ) : (
               <span style={{ fontSize: 24, lineHeight: 1, width: 32, textAlign: 'center' }}>🚫</span>

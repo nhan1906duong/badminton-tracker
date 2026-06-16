@@ -100,7 +100,7 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe, activeRacketId
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {mascot && (
                     <Suspense fallback={<span style={{ width: 32, height: 32 }} className="shrink-0" />}>
-                      <LottieMascot src={getMascotPreviewPath(mascot)} size={32} className="shrink-0" />
+                      <LottieMascot src={getMascotPreviewPath(mascot)} size={32} scale={mascot.scale} className="shrink-0" />
                     </Suspense>
                   )}
                   <div className="flex-1 min-w-0">
