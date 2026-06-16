@@ -17,13 +17,19 @@ export interface Mascot {
   /** Fallback glyph shown if the .lottie asset fails to load. */
   emoji: string
   lottiePath: string | string[]
+  /**
+   * Visual scale factor applied on top of the container size.
+   * Use values > 1 to zoom in on animations with a non-square canvas
+   * (letterboxing) or excess padding. Default: 1.
+   */
+  scale?: number
 }
 
 export const MASCOTS: Mascot[] = [
   { id: 'bird-knife', name: 'Bird Knife', emoji: '🐦', lottiePath: '/mascots/bird-knife.lottie' },
   { id: 'owl', name: 'Owl', emoji: '🦉', lottiePath: '/mascots/owl.lottie' },
-  { id: 'clap', name: 'Clap', emoji: '👏', lottiePath: '/mascots/clap.lottie' },
-  { id: 'kitty', name: 'Kitty', emoji: '🐱', lottiePath: '/mascots/kitty.lottie' },
+  { id: 'clap', name: 'Clap', emoji: '👏', lottiePath: '/mascots/clap.lottie', scale: 1.18 },
+  { id: 'kitty', name: 'Kitty', emoji: '🐱', lottiePath: '/mascots/kitty.lottie', scale: 1.5 },
   { id: 'chan', name: 'Chan', emoji: '🐼', lottiePath: '/mascots/chan.lottie' },
   { id: 'hamster', name: 'Hamster', emoji: '🐹', lottiePath: '/mascots/hamster.lottie' },
   { id: 'monster', name: 'Monster', emoji: '👹', lottiePath: '/mascots/monster.lottie' },
@@ -38,7 +44,7 @@ export const MASCOTS: Mascot[] = [
     lottiePath: ['/mascots/pigeon/pigeon01.lottie', '/mascots/pigeon/pigeon02.lottie'],
   },
   { id: 'peacock', name: 'Peacock', emoji: '🦚', lottiePath: '/mascots/peacock.lottie' },
-  { id: 'sea-star', name: 'Sea-star', emoji: '⭐', lottiePath: '/mascots/sea-star.lottie' },
+  { id: 'sea-star', name: 'Sea-star', emoji: '⭐', lottiePath: '/mascots/sea-star.lottie', scale: 1.38 },
   {
     id: 'jellyfish',
     name: 'Jellyfish',
@@ -49,10 +55,10 @@ export const MASCOTS: Mascot[] = [
       '/mascots/jellyfish/jellyfish03.lottie',
     ],
   },
-  { id: 'black-cat', name: 'Black Cat', emoji: '🐈‍⬛', lottiePath: '/mascots/black-cat.lottie' },
+  { id: 'black-cat', name: 'Black Cat', emoji: '🐈‍⬛', lottiePath: '/mascots/black-cat.lottie', scale: 1.4 },
   { id: 'chameleon', name: 'Chameleon', emoji: '🦎', lottiePath: '/mascots/chameleon.lottie' },
-  { id: 'dino', name: 'Dino', emoji: '🦖', lottiePath: '/mascots/dino.lottie' },
-  { id: 'sloth', name: 'Sloth', emoji: '🦥', lottiePath: '/mascots/sloth.lottie' },
+  { id: 'dino', name: 'Dino', emoji: '🦖', lottiePath: '/mascots/dino.lottie', scale: 1.19 },
+  { id: 'sloth', name: 'Sloth', emoji: '🦥', lottiePath: '/mascots/sloth.lottie', scale: 1.3 },
   { id: 'turkey', name: 'Turkey', emoji: '🦃', lottiePath: '/mascots/turkey.lottie' },
   { id: 'virus', name: 'Virus', emoji: '🦠', lottiePath: '/mascots/virus.lottie' },
   {
@@ -110,6 +116,7 @@ export const MASCOTS: Mascot[] = [
     id: 'fluffy',
     name: 'Fluffy',
     emoji: '🐶',
+    scale: 1.13,
     lottiePath: [
       '/mascots/fluffy/iddle.lottie',
       '/mascots/fluffy/hi.lottie',

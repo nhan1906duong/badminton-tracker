@@ -105,7 +105,7 @@ function MascotPreview({ mascot, size }: { mascot: Mascot; size: number }) {
 
   return (
     <Suspense fallback={fallback}>
-      <LottieMascot src={getMascotPreviewPath(mascot)} size={size} />
+      <LottieMascot src={getMascotPreviewPath(mascot)} size={size} scale={mascot.scale} />
     </Suspense>
   )
 }

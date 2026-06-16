@@ -558,7 +558,7 @@ export default function RankingPage() {
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
-                      {winRatePct}%
+                      {pair.totalPoints}
                     </span>
                     <span
                       style={{
@@ -570,7 +570,7 @@ export default function RankingPage() {
                         color: 'var(--muted)',
                       }}
                     >
-                      {t('ranking.rate')}
+                      {t('ranking.pts')}
                     </span>
                   </div>
                 </div>

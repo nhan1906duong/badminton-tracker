@@ -14,8 +14,8 @@ function session(id: string, ended = true): Session {
   }
 }
 
-function player(id: string) {
-  return { id, name: id, avatar_url: null, rating: 1000, created_at: '', created_by: 'u1' }
+function player(id: string, rating = 1000) {
+  return { id, name: id, avatar_url: null, rating, created_at: '', created_by: 'u1' }
 }
 
 function mdMatch(
@@ -25,6 +25,8 @@ function mdMatch(
   teamB: [string, string],
   winner: 'A' | 'B' | null,
   type: MatchWithDetails['match_type'] = 'MEN_DOUBLES',
+  scores: { set_number: number; team_a_score: number; team_b_score: number }[] = [],
+  ratings: Record<string, number> = {},
 ): MatchWithDetails {
   const makeParticipants = (players: string[], teamId: string) =>
     players.map((pid, i) => ({
@@ -32,7 +34,7 @@ function mdMatch(
       match_id: id,
       team_id: teamId,
       player_id: pid,
-      player: player(pid),
+      player: player(pid, ratings[pid] ?? 1000),
     }))
 
   return {
@@ -52,7 +54,7 @@ function mdMatch(
       ...makeParticipants(teamA, 'ta'),
       ...makeParticipants(teamB, 'tb'),
     ],
-    scores: [],
+    scores: scores.map((s) => ({ id: `sc-${id}-${s.set_number}`, match_id: id, ...s })),
   }
 }
 
@@ -74,7 +76,7 @@ describe('computeMenDoublesRankings', () => {
     expect(pair34?.losses).toBe(2)
   })
 
-  it('sorts by win rate descending', () => {
+  it('sorts by total points descending (winners rank above losers)', () => {
     const sessions = [session('s1')]
     const matches = [
       mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], 'B'), // p1/p2: 0/1
@@ -85,10 +87,10 @@ describe('computeMenDoublesRankings', () => {
     expect(rankings[1].key).toBe('p1:p2')
   })
 
-  it('uses total wins as tiebreaker when win rates are equal', () => {
-    // p1/p2: 1W 1L vs p5/p6 → 50% win rate, 1 win
-    // p3/p4: 2W 2L vs p7/p8 → 50% win rate, 2 wins
-    // p3/p4 should rank above p1/p2 on the wins tiebreaker
+  it('uses total wins as tiebreaker when avg points are equal', () => {
+    // p1/p2: 1W 1L — 50% win rate, 1 win
+    // p3/p4: 2W 2L — 50% win rate, 2 wins
+    // p3/p4 has more total points and should rank above p1/p2
     const sessions = [session('s1')]
     const matches = [
       mdMatch('m1', 's1', ['p1', 'p2'], ['p5', 'p6'], 'A'),
@@ -102,6 +104,36 @@ describe('computeMenDoublesRankings', () => {
     const pos12 = rankings.findIndex((r) => r.key === 'p1:p2')
     const pos34 = rankings.findIndex((r) => r.key === 'p3:p4')
     expect(pos34).toBeLessThan(pos12)
+  })
+
+  it('awards upset bonus: beating a much stronger pair earns more points', () => {
+    const sessions = [session('s1')]
+    // p1/p2 (avg 1000) beats p3/p4 (avg 1400) — big upset
+    // p5/p6 (avg 1000) beats p7/p8 (avg 1000) — even match
+    const matches = [
+      mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], 'A', 'MEN_DOUBLES', [], { p3: 1400, p4: 1400 }),
+      mdMatch('m2', 's1', ['p5', 'p6'], ['p7', 'p8'], 'A'),
+    ]
+    const rankings = computeMenDoublesRankings(matches, sessions)
+    const upset = rankings.find((r) => r.key === 'p1:p2')
+    const even = rankings.find((r) => r.key === 'p5:p6')
+    expect(upset!.totalPoints).toBeGreaterThan(even!.totalPoints)
+    expect(rankings[0].key).toBe('p1:p2')
+  })
+
+  it('uses score differential bonus via match scores', () => {
+    const sessions = [session('s1')]
+    // p1/p2 wins 21-5 (diff=16, bonus=3)
+    // p3/p4 wins 21-19 (diff=2, bonus=1)
+    const matches = [
+      mdMatch('m1', 's1', ['p1', 'p2'], ['p5', 'p6'], 'A', 'MEN_DOUBLES', [{ set_number: 1, team_a_score: 21, team_b_score: 5 }]),
+      mdMatch('m2', 's1', ['p3', 'p4'], ['p7', 'p8'], 'A', 'MEN_DOUBLES', [{ set_number: 1, team_a_score: 21, team_b_score: 19 }]),
+    ]
+    const rankings = computeMenDoublesRankings(matches, sessions)
+    const dominant = rankings.find((r) => r.key === 'p1:p2')
+    const close = rankings.find((r) => r.key === 'p3:p4')
+    expect(dominant!.totalPoints).toBeGreaterThan(close!.totalPoints)
+    expect(rankings[0].key).toBe('p1:p2')
   })
 
   it('excludes matches from live (non-ended) sessions', () => {
