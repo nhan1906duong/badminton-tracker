@@ -458,8 +458,10 @@ export default function PlayerDetailPage() {
           className="fixed left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none"
           style={{ bottom: `calc(4.5rem + env(safe-area-inset-bottom))` }}
         >
-          <div className="flex justify-end pointer-events-auto">
-            <PlayerMascot mascotId={displayMascotId} size={112} speak playerId={id} />
+          <div className="flex justify-end">
+            <div className="pointer-events-auto">
+              <PlayerMascot mascotId={displayMascotId} size={112} speak playerId={id} />
+            </div>
           </div>
         </div>
       )}
