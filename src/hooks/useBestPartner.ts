@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useMatches } from './useMatches'
+import { usePlayerMatches } from './usePlayerMatches'
 import type { MatchWithDetails, Player } from '../types/database'
 
 const DOUBLES_TYPES = ['MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES']
@@ -13,12 +13,13 @@ export interface PartnerEntry {
 }
 
 export function useBestPartner(playerId: string) {
-  const { data: matches, isLoading } = useMatches()
+  const { data, isLoading } = usePlayerMatches(playerId)
+  const allMatches = data?.pages.flatMap((p) => p.matches) ?? []
 
   const allPartners = useMemo<PartnerEntry[]>(() => {
-    if (!matches || !playerId) return []
+    if (!playerId || allMatches.length === 0) return []
 
-    const playerMatches = matches.filter((m) => {
+    const playerMatches = allMatches.filter((m) => {
       if (m.status !== 'COMPLETED') return false
       if (!m.teams.some((t) => t.is_winner)) return false
       if (!DOUBLES_TYPES.includes(m.match_type)) return false
@@ -40,7 +41,7 @@ export function useBestPartner(playerId: string) {
       const isWinner = match.teams.find((t) => t.id === playerTeamId)?.is_winner ?? false
 
       const teammates = match.participants.filter(
-        (p) => p.team_id === playerTeamId && p.player_id !== playerId
+        (p) => p.team_id === playerTeamId && p.player_id !== playerId,
       )
 
       for (const teammate of teammates) {
@@ -75,7 +76,7 @@ export function useBestPartner(playerId: string) {
         wins: s.wins,
         matches: s.matches,
       }))
-  }, [matches, playerId])
+  }, [allMatches, playerId])
 
   return { allPartners, isLoading }
 }

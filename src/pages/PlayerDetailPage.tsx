@@ -1,11 +1,12 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
 import { usePlayerRackets } from '../hooks/usePlayerRackets'
 import { usePlayerMatchHistory } from '../hooks/usePlayerMatchHistory'
 import { usePlayerPointsHistory } from '../hooks/usePlayerPointsHistory'
 import { type RatingChartPoint } from '../components/RatingChart'
-import { usePlayerRankings } from '../hooks/useRankings'
+import { usePlayerRankingSummary } from '../hooks/usePlayerRankingSummary'
 import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
 import { usePlayerBadges } from '../hooks/usePlayerBadges'
 import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
@@ -37,10 +38,10 @@ export default function PlayerDetailPage() {
 
   const { data: player, isLoading: playerLoading, refetch: refetchPlayer } = usePlayer(id)
   const { data: rackets = [] } = usePlayerRackets(id)
-  const { history, isLoading: historyLoading } = usePlayerMatchHistory(id)
+  const { history, isLoading: historyLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = usePlayerMatchHistory(id)
   const { history: pointsHistory } = usePlayerPointsHistory(id)
 
-  const { data: rankings } = usePlayerRankings()
+  const { data: rankData } = usePlayerRankingSummary(id)
   const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
   const { badges, isLoading: badgesLoading } = usePlayerBadges(id)
 
@@ -57,7 +58,7 @@ export default function PlayerDetailPage() {
         return [{ rating, date: session.started_at, isWin: winSessionIds.has(session.id) }]
       })
   }, [pointsHistory, achievements])
-  const rankData = rankings?.find((r) => r.playerId === id)
+  // rankData is now a direct RankingSummary from usePlayerRankingSummary
 
   const activeRacket = rackets.find((r) => r.id === player?.active_racket_id) ?? rackets[0]
   const displayMascotId = activeRacket?.mascot_id
@@ -73,7 +74,8 @@ export default function PlayerDetailPage() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set())
   const [isStuck, setIsStuck] = useState(false)
-  const sessionRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const historyListRef = useRef<HTMLDivElement>(null)
+  const [historyScrollMargin, setHistoryScrollMargin] = useState(0)
   const [bgImage] = useState(() => OVERVIEW_IMAGES[Math.floor(Math.random() * OVERVIEW_IMAGES.length)])
 
   const { user } = useAuth()
@@ -92,6 +94,18 @@ export default function PlayerDetailPage() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useLayoutEffect(() => {
+    if (!historyLoading && historyListRef.current)
+      setHistoryScrollMargin(historyListRef.current.offsetTop)
+  }, [historyLoading])
+
+  const historyVirtualizer = useWindowVirtualizer({
+    count: history.length,
+    estimateSize: () => 72,
+    overscan: 3,
+    scrollMargin: historyScrollMargin,
+  })
 
   const wins = rankData?.wins ?? 0
   const losses = rankData?.losses ?? 0
@@ -134,8 +148,9 @@ export default function PlayerDetailPage() {
   }
 
   function jumpToSession(sessionId: string) {
+    const idx = history.findIndex((h) => h.session.id === sessionId)
     setExpandedSessions((prev) => new Set(prev).add(sessionId))
-    sessionRefs.current.get(sessionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (idx !== -1) historyVirtualizer.scrollToIndex(idx, { behavior: 'smooth' })
   }
 
   if (playerLoading) {
@@ -393,60 +408,85 @@ export default function PlayerDetailPage() {
                   {t('players.sessionsCount', { count: history.length })}
                 </div>
 
-                {history.map(({ session, matches, wins: sWins, losses: sLosses }) => {
-                  const isExpanded = expandedSessions.has(session.id)
-                  const completedMatches = matches.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner))
-                  const sessionWinRate = completedMatches.length > 0 ? Math.round((sWins / completedMatches.length) * 100) : 0
-                  return (
-                    <div
-                      key={session.id}
-                      ref={(el) => {
-                        if (el) sessionRefs.current.set(session.id, el)
-                        else sessionRefs.current.delete(session.id)
-                      }}
-                      className="bg-[var(--surface)] overflow-hidden"
-                    >
-                      <button
-                        onClick={() => toggleSession(session.id)}
-                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
+                <div
+                  ref={historyListRef}
+                  style={{ position: 'relative', height: historyVirtualizer.getTotalSize() }}
+                >
+                  {historyVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const { session, matches, wins: sWins, losses: sLosses } = history[virtualRow.index]
+                    const isExpanded = expandedSessions.has(session.id)
+                    const completedMatches = matches.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner))
+                    const sessionWinRate = completedMatches.length > 0 ? Math.round((sWins / completedMatches.length) * 100) : 0
+                    return (
+                      <div
+                        key={virtualRow.key}
+                        data-index={virtualRow.index}
+                        ref={historyVirtualizer.measureElement}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          transform: `translateY(${virtualRow.start - historyVirtualizer.options.scrollMargin}px)`,
+                          paddingBottom: virtualRow.index < history.length - 1 ? 8 : 0,
+                        }}
                       >
-                        <div className="flex-1 min-w-0 text-left">
-                          <p
-                            className="text-[15px] font-semibold truncate"
-                            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                        <div className="bg-[var(--surface)] overflow-hidden">
+                          <button
+                            onClick={() => toggleSession(session.id)}
+                            className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
                           >
-                            {formatSessionLabel(session, locale)}
-                          </p>
-                          <PlayerRecordLine
-                            matchesPlayed={completedMatches.length}
-                            wins={sWins}
-                            losses={sLosses}
-                            winRate={sessionWinRate}
-                            marginTop={2}
-                          />
-                        </div>
-                        {isExpanded
-                          ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                          : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                        }
-                      </button>
-
-                      {isExpanded && (
-                        <div className="divide-y divide-[var(--border)]" style={{ borderTop: '1px solid var(--border)' }}>
-                          {completedMatches.length === 0 ? (
-                            <div className="px-4 py-3">
-                              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
+                            <div className="flex-1 min-w-0 text-left">
+                              <p
+                                className="text-[15px] font-semibold truncate"
+                                style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                              >
+                                {formatSessionLabel(session, locale)}
+                              </p>
+                              <PlayerRecordLine
+                                matchesPlayed={completedMatches.length}
+                                wins={sWins}
+                                losses={sLosses}
+                                winRate={sessionWinRate}
+                                marginTop={2}
+                              />
                             </div>
-                          ) : (
-                            completedMatches.map((match) => (
-                              <PlayerMatchHistoryItem key={match.id} match={match} playerId={id} />
-                            ))
+                            {isExpanded
+                              ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                              : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+                            }
+                          </button>
+
+                          {isExpanded && (
+                            <div className="divide-y divide-[var(--border)]" style={{ borderTop: '1px solid var(--border)' }}>
+                              {completedMatches.length === 0 ? (
+                                <div className="px-4 py-3">
+                                  <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noCompletedMatches')}</p>
+                                </div>
+                              ) : (
+                                completedMatches.map((match) => (
+                                  <PlayerMatchHistoryItem key={match.id} match={match} playerId={id} />
+                                ))
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  )
-                })}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Load more history pages */}
+                {hasNextPage && (
+                  <button
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="w-full py-3 text-[13px] font-medium"
+                    style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', opacity: isFetchingNextPage ? 0.5 : 1 }}
+                  >
+                    {isFetchingNextPage ? t('common.loadingEllipsis') : t('players.loadMoreSessions')}
+                  </button>
+                )}
               </>
             )}
           </div>

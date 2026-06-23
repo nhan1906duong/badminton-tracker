@@ -134,8 +134,8 @@ export function useCreateMatch() {
 
       return match as Match
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.session_id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
     },
   })
@@ -515,7 +515,7 @@ export function useUpdateMatchPlayers() {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
-      qc.invalidateQueries({ queryKey: ['player-rankings'] })
+      // player-rankings intentionally NOT invalidated — only stale after session end
     },
   })
 }
@@ -523,7 +523,7 @@ export function useUpdateMatchPlayers() {
 export function useDeleteMatch() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id }: { id: string; sessionId?: string }) => {
       // Explicitly delete child rows first to avoid RLS + CASCADE ordering issues
       const { error: scoresError } = await supabase.from('match_scores').delete().eq('match_id', id)
       if (scoresError) throw scoresError
@@ -537,8 +537,12 @@ export function useDeleteMatch() {
       const { error } = await supabase.from('matches').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+    onSuccess: (_, vars) => {
+      if (vars.sessionId) {
+        qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.sessionId] })
+      } else {
+        qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
+      }
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
     },
   })
@@ -691,7 +695,7 @@ export function useRecordResult() {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
-      qc.invalidateQueries({ queryKey: ['player-rankings'] })
+      // player-rankings intentionally NOT invalidated here — only stale after session end
     },
   })
 }
@@ -741,7 +745,7 @@ export function useEndMatchNoWinner() {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
-      qc.invalidateQueries({ queryKey: ['player-rankings'] })
+      // player-rankings intentionally NOT invalidated — only stale after session end
     },
   })
 }

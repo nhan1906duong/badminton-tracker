@@ -317,6 +317,10 @@ export function useEndSession() {
       qc.invalidateQueries({ queryKey: ['players'] })
       qc.invalidateQueries({ queryKey: ['player-rankings'] })
       qc.invalidateQueries({ queryKey: ['matches'] })
+      // Leaderboard and per-player ranking summaries are now stale after session end
+      qc.invalidateQueries({ queryKey: ['leaderboard'] })
+      qc.invalidateQueries({ queryKey: ['player-ranking-summary'] })
+      qc.invalidateQueries({ queryKey: ['completed-match-count'] })
     },
   })
 }
@@ -612,6 +616,10 @@ export function useRecalculateAllRatings() {
       qc.invalidateQueries({ queryKey: ['players'] })
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
       qc.invalidateQueries({ queryKey: ['matches'] })
+      // Leaderboard and per-player ranking summaries are stale after full recalculation
+      qc.invalidateQueries({ queryKey: ['leaderboard'] })
+      qc.invalidateQueries({ queryKey: ['player-ranking-summary'] })
+      qc.invalidateQueries({ queryKey: ['completed-match-count'] })
     },
   })
 }

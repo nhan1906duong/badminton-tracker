@@ -306,14 +306,11 @@ export function usePlayerRankings() {
 export function useCompletedMatchCount() {
   return useQuery({
     queryKey: ['completed-match-count'],
+    staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('player_match_results')
-        .select('match_id')
-
+      const { data, error } = await supabase.rpc('count_ranked_matches')
       if (error) throw error
-
-      return new Set((data ?? []).map(r => r.match_id)).size
+      return data as number
     },
   })
 }

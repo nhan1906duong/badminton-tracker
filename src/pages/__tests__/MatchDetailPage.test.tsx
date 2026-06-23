@@ -429,7 +429,7 @@ describe('MatchDetailPage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
       await waitFor(() => {
-        expect(mockDeleteMatch.mutateAsync).toHaveBeenCalledWith('match-1')
+        expect(mockDeleteMatch.mutateAsync).toHaveBeenCalledWith({ id: 'match-1', sessionId: 'sess-1' })
         expect(mockNavigate).toHaveBeenCalledWith(-1)
       })
     })

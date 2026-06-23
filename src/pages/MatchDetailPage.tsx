@@ -394,7 +394,7 @@ export default function MatchDetailPage() {
 
   async function handleDeleteMatch() {
     setSheet(null)
-    await deleteMatch.mutateAsync(matchId!)
+    await deleteMatch.mutateAsync({ id: matchId!, sessionId })
     setConfirmDeleteOpen(false)
     navigate(-1)
   }
