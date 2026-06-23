@@ -84,7 +84,7 @@ export function usePlayerBadges(playerId: string) {
     const result: PlayerBadge[] = []
 
     // ── Tier 1: player-local badges ──────────────────────────────────────────
-    const { matchesPlayed, bestWinStreak, matchesLost } = computeLocalStats(
+    const { bestWinStreak, matchesLost } = computeLocalStats(
       allMatches,
       playerId,
     )
@@ -130,7 +130,7 @@ export function usePlayerBadges(playerId: string) {
     // Dynasty and most_titles badges: deferred to Phase 4 (require session-ordered aggregation).
 
     return result
-  }, [allMatches, leaderRows, playerId, matchesLost])
+  }, [allMatches, leaderRows, playerId])
 
   // Expose matchesPlayed count for callers that previously used computeBadges directly.
   const localStats = useMemo(

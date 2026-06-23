@@ -15,20 +15,11 @@ import {
   getSessionName,
   getSessionStatus,
 } from '../lib/session-format'
-import type { MatchWithDetails, Session } from '../types/database'
+import type { Session } from '../types/database'
 import { useI18n } from '../i18n'
+import type { Locale, TFunction } from '../i18n'
 import { useSessionLeaderboard } from '../hooks/useRankings'
 import { useAuth } from '../hooks/useAuth'
-
-interface SessionStat {
-  matchCount: number
-  topPlayer?: {
-    name: string
-    avatarUrl?: string | null
-    record: string
-    winRate: number
-  }
-}
 
 /**
  * Per-session leaderboard card — fetches only when the session is in the list.
@@ -44,8 +35,8 @@ function SessionLeaderboardCard({
   session: Session
   matchCount: number
   onNavigate: () => void
-  locale: string
-  t: (key: string, opts?: Record<string, unknown>) => string
+  locale: Locale
+  t: TFunction
 }) {
   const { data: leaderboard } = useSessionLeaderboard(session.id)
   const leader = leaderboard?.leader
