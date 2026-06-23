@@ -5,6 +5,21 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthContext, type AuthContextValue } from '../../contexts/AuthContext'
 import LoginPage from '../LoginPage'
 
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+
+vi.mock('../../i18n', async () => {
+  const actual = await vi.importActual<typeof import('../../i18n')>('../../i18n')
+  return {
+    ...actual,
+    useI18n: () => ({
+      locale: 'en',
+      setLocale: () => undefined,
+      t: (key: string, values?: Record<string, string | number>) =>
+        actual.translate('en', key as never, values),
+    }),
+  }
+})
+
 // ------------------------------------------------------------------
 // Mocks
 // ------------------------------------------------------------------

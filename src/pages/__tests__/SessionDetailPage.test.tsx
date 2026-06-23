@@ -7,6 +7,19 @@ import type { Session, MatchWithDetails } from '../../types/database'
 
 // ─── Router mocks ─────────────────────────────────────────────────────────────
 
+vi.mock('../../i18n', async () => {
+  const actual = await vi.importActual<typeof import('../../i18n')>('../../i18n')
+  return {
+    ...actual,
+    useI18n: () => ({
+      locale: 'en',
+      setLocale: () => undefined,
+      t: (key: string, values?: Record<string, string | number>) =>
+        actual.translate('en', key as never, values),
+    }),
+  }
+})
+
 const mockNavigate = vi.fn()
 const mockLocation = { state: null as unknown, pathname: '/sessions/sess-1', search: '', hash: '', key: 'default' }
 

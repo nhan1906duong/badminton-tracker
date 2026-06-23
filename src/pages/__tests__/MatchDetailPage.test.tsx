@@ -7,6 +7,19 @@ import type { MatchWithDetails, MatchScore, Player } from '../../types/database'
 
 // ─── Router mocks ─────────────────────────────────────────────────────────────
 
+vi.mock('../../i18n', async () => {
+  const actual = await vi.importActual<typeof import('../../i18n')>('../../i18n')
+  return {
+    ...actual,
+    useI18n: () => ({
+      locale: 'en',
+      setLocale: () => undefined,
+      t: (key: string, values?: Record<string, string | number>) =>
+        actual.translate('en', key as never, values),
+    }),
+  }
+})
+
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
