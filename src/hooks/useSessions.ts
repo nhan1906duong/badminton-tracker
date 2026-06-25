@@ -303,6 +303,11 @@ export function useEndSession() {
         .select('*, bwf_tournaments(category_name, category_slug)')
         .single()
       if (error) throw error
+
+      // 8. Refresh materialized stats tables now that session is ended
+      await supabase.rpc('refresh_player_session_stats', { p_session_id: id })
+      await supabase.rpc('refresh_player_all_time_stats')
+
       return endedSession as Session
     },
     onSuccess: (session) => {
@@ -317,9 +322,9 @@ export function useEndSession() {
       qc.invalidateQueries({ queryKey: ['players'] })
       qc.invalidateQueries({ queryKey: ['player-rankings'] })
       qc.invalidateQueries({ queryKey: ['matches'] })
-      // Leaderboard and per-player ranking summaries are now stale after session end
       qc.invalidateQueries({ queryKey: ['leaderboard'] })
       qc.invalidateQueries({ queryKey: ['player-ranking-summary'] })
+      qc.invalidateQueries({ queryKey: ['player-session-stats'] })
       qc.invalidateQueries({ queryKey: ['completed-match-count'] })
     },
   })
@@ -372,9 +377,16 @@ export function useDeleteSession() {
 
       const { error } = await supabase.from('sessions').delete().eq('id', id)
       if (error) throw error
+
+      // player_session_stats rows are CASCADE deleted with the session;
+      // all-time stats still need a refresh since they aggregate across all sessions.
+      await supabase.rpc('refresh_player_all_time_stats')
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
+      qc.invalidateQueries({ queryKey: ['leaderboard'] })
+      qc.invalidateQueries({ queryKey: ['player-ranking-summary'] })
+      qc.invalidateQueries({ queryKey: ['player-session-stats'] })
     },
   })
 }
@@ -610,15 +622,21 @@ export function useRecalculateAllRatings() {
           supabase.from('players').update({ rating }).eq('id', playerId)
         )
       )
+
+      // 7. Refresh materialized stats tables for all sessions + all-time
+      for (const session of sessions ?? []) {
+        await supabase.rpc('refresh_player_session_stats', { p_session_id: session.id })
+      }
+      await supabase.rpc('refresh_player_all_time_stats')
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['player-rankings'] })
       qc.invalidateQueries({ queryKey: ['players'] })
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
       qc.invalidateQueries({ queryKey: ['matches'] })
-      // Leaderboard and per-player ranking summaries are stale after full recalculation
       qc.invalidateQueries({ queryKey: ['leaderboard'] })
       qc.invalidateQueries({ queryKey: ['player-ranking-summary'] })
+      qc.invalidateQueries({ queryKey: ['player-session-stats'] })
       qc.invalidateQueries({ queryKey: ['completed-match-count'] })
     },
   })

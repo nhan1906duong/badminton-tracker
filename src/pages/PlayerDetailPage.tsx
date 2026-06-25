@@ -42,7 +42,7 @@ export default function PlayerDetailPage() {
   const { history: pointsHistory } = usePlayerPointsHistory(id)
 
   const { data: rankData } = usePlayerRankingSummary(id)
-  const { achievements, isLoading: achievementsLoading } = usePlayerAchievements(id)
+  const { data: achievements = [], isLoading: achievementsLoading } = usePlayerAchievements(id)
   const { badges, isLoading: badgesLoading } = usePlayerBadges(id)
 
   const chartData = useMemo<RatingChartPoint[]>(() => {

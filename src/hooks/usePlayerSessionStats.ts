@@ -8,6 +8,9 @@ export interface PlayerSessionStat {
   wins: number
   losses: number
   sessionRank: number
+  weeklyPoints: number
+  pointDifference: number
+  ratingDelta: number
 }
 
 export const PLAYER_SESSION_STATS_KEY = 'player-session-stats'
@@ -22,6 +25,10 @@ export function usePlayerSessionStats(playerId: string) {
           total_matches,
           total_wins,
           session_rank,
+          total_weekly_points,
+          points_for,
+          points_against,
+          total_rating_delta,
           session:sessions!session_id(
             id, label, started_at, ended_at, type,
             bwf_tournament_id, league_match_type, league_total_rounds, created_at
@@ -40,12 +47,21 @@ export function usePlayerSessionStats(playerId: string) {
         )
         .map((row) => {
           const session = row.session as unknown as Session
+          const r = row as unknown as typeof row & {
+            total_weekly_points: number
+            points_for: number
+            points_against: number
+            total_rating_delta: number
+          }
           return {
             session,
-            matchCount: row.total_matches,
-            wins: row.total_wins,
-            losses: row.total_matches - row.total_wins,
-            sessionRank: row.session_rank,
+            matchCount: r.total_matches,
+            wins: r.total_wins,
+            losses: r.total_matches - r.total_wins,
+            sessionRank: r.session_rank,
+            weeklyPoints: r.total_weekly_points,
+            pointDifference: r.points_for - r.points_against,
+            ratingDelta: Number(r.total_rating_delta),
           }
         }) as PlayerSessionStat[]
     },
