@@ -1,13 +1,11 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { PlayerRankingStats } from './useRankings'
 
-interface LeaderboardRow {
-  player_id: string
-  name: string
-  avatar_url: string | null
-  rating: number
-  rank: number
+export const LEADERBOARD_KEY = 'leaderboard'
+
+interface AllTimeStatsRow {
+  all_time_rank: number
   matches_played: number
   wins: number
   losses: number
@@ -21,18 +19,24 @@ interface LeaderboardRow {
   last_session_delta: number
   rank_change: number
   top_one_week_streak: number
+  player: {
+    id: string
+    name: string
+    avatar_url: string | null
+    rating: number
+  }
 }
 
-function toPlayerRankingStats(row: LeaderboardRow): PlayerRankingStats {
+function toPlayerRankingStats(row: AllTimeStatsRow): PlayerRankingStats {
   return {
-    playerId: row.player_id,
-    name: row.name,
-    avatarUrl: row.avatar_url,
-    rating: row.rating,
-    rank: row.rank,
-    matchesPlayed: Number(row.matches_played),
-    wins: Number(row.wins),
-    losses: Number(row.losses),
+    playerId: row.player.id,
+    name: row.player.name,
+    avatarUrl: row.player.avatar_url,
+    rating: row.player.rating ?? 1000,
+    rank: row.all_time_rank,
+    matchesPlayed: row.matches_played,
+    wins: row.wins,
+    losses: row.losses,
     winRate: row.win_rate,
     totalWeeklyPoints: Number(row.total_weekly_points),
     averageWeeklyPoints: row.avg_weekly_points,
@@ -47,25 +51,41 @@ function toPlayerRankingStats(row: LeaderboardRow): PlayerRankingStats {
 }
 
 /**
- * Paginated leaderboard using the get_leaderboard_page RPC.
- * Replaces usePlayerRankings() on RankingPage.
- * usePlayerRankings() is kept for SessionDetailPage and other consumers.
+ * All-time leaderboard from player_all_time_stats materialized table.
+ * O(1) read — no aggregation at query time.
+ * Refreshed via refresh_player_all_time_stats() on every match state change.
  */
-export function useLeaderboard(pageSize = 50) {
-  return useInfiniteQuery({
-    queryKey: ['leaderboard'],
-    queryFn: async ({ pageParam }: { pageParam: number }) => {
-      const { data, error } = await supabase.rpc('get_leaderboard_page', {
-        p_limit: pageSize,
-        p_offset: pageParam,
-      })
+export function useLeaderboard() {
+  return useQuery({
+    queryKey: [LEADERBOARD_KEY],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_all_time_stats')
+        .select(`
+          all_time_rank,
+          matches_played,
+          wins,
+          losses,
+          win_rate,
+          total_weekly_points,
+          avg_weekly_points,
+          points_for,
+          points_against,
+          point_difference,
+          total_rating_delta,
+          last_session_delta,
+          rank_change,
+          top_one_week_streak,
+          player:players!player_id(id, name, avatar_url, rating)
+        `)
+        .order('all_time_rank', { ascending: true })
+
       if (error) throw error
-      const rows = ((data ?? []) as LeaderboardRow[]).map(toPlayerRankingStats)
-      return { rows, nextOffset: pageParam + pageSize }
+
+      return ((data ?? []) as unknown as AllTimeStatsRow[])
+        .filter((row) => row.player != null)
+        .map(toPlayerRankingStats)
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, _allPages, lastParam) =>
-      lastPage.rows.length === pageSize ? lastParam + pageSize : undefined,
     staleTime: 60_000,
   })
 }

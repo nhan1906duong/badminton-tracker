@@ -259,8 +259,7 @@ export default function RankingPage() {
   const { user } = useAuth()
   const { data: myProfile } = useProfile(user?.id)
   const myPlayerId = myProfile?.player_id
-  const { data: leaderboardData, isLoading, refetch } = useLeaderboard()
-  const rankings = leaderboardData?.pages.flatMap((p) => p.rows) ?? []
+  const { data: rankings = [], isLoading, refetch } = useLeaderboard()
   const { data: completedMatchCount = 0, refetch: refetchCompletedMatchCount } = useCompletedMatchCount()
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()

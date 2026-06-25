@@ -7,6 +7,7 @@ import { generateRoundRobin } from '../lib/round-robin'
 const MATCHES_KEY = 'matches'
 const PLAYER_MATCHES_KEY = 'player-matches'
 export const PLAYER_SESSION_STATS_KEY = 'player-session-stats'
+export const LEADERBOARD_KEY = 'leaderboard'
 
 // Recounts player_session_stats (stats + rank) for all players in the match's session.
 async function refreshSessionStatsForMatch(matchId: string): Promise<void> {
@@ -17,6 +18,11 @@ async function refreshSessionStatsForMatch(matchId: string): Promise<void> {
     .single()
   if (error || !data) return
   await supabase.rpc('refresh_player_session_stats', { p_session_id: data.session_id })
+}
+
+// Recounts player_all_time_stats for all players (global rank context required).
+async function refreshAllTimeStats(): Promise<void> {
+  await supabase.rpc('refresh_player_all_time_stats')
 }
 
 export interface CreateMatchInput {
@@ -707,13 +713,14 @@ export function useRecordResult() {
       await supabase.rpc('refresh_player_session_stats', {
         p_session_id: matchData.session_id as string,
       })
+      await refreshAllTimeStats()
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [PLAYER_SESSION_STATS_KEY] })
-      // player-rankings intentionally NOT invalidated here — only stale after session end
+      qc.invalidateQueries({ queryKey: [LEADERBOARD_KEY] })
     },
   })
 }
@@ -761,13 +768,14 @@ export function useEndMatchNoWinner() {
 
       // Refresh materialized session stats (no-winner match is not counted — recount clears it)
       await refreshSessionStatsForMatch(input.id)
+      await refreshAllTimeStats()
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, vars.id] })
       qc.invalidateQueries({ queryKey: [PLAYER_MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [PLAYER_SESSION_STATS_KEY] })
-      // player-rankings intentionally NOT invalidated — only stale after session end
+      qc.invalidateQueries({ queryKey: [LEADERBOARD_KEY] })
     },
   })
 }
@@ -784,11 +792,13 @@ export function useReopenMatch() {
 
       // Refresh materialized session stats (reopened match no longer counts as completed)
       await refreshSessionStatsForMatch(matchId)
+      await refreshAllTimeStats()
     },
     onSuccess: (_, matchId) => {
       qc.invalidateQueries({ queryKey: [MATCHES_KEY] })
       qc.invalidateQueries({ queryKey: [MATCHES_KEY, matchId] })
       qc.invalidateQueries({ queryKey: [PLAYER_SESSION_STATS_KEY] })
+      qc.invalidateQueries({ queryKey: [LEADERBOARD_KEY] })
     },
   })
 }
