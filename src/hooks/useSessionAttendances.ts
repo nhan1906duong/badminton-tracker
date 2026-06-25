@@ -28,15 +28,11 @@ export function useUpsertAttendance() {
       playerId: string
       status: AttendanceStatus
     }) => {
-      const { error } = await supabase.from('session_attendances').upsert(
-        {
-          session_id: input.sessionId,
-          player_id: input.playerId,
-          status: input.status,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'session_id,player_id' }
-      )
+      const { error } = await supabase.rpc('upsert_attendance', {
+        p_session_id: input.sessionId,
+        p_player_id: input.playerId,
+        p_status: input.status,
+      })
       if (error) throw error
     },
     onSuccess: (_, vars) => {
@@ -49,11 +45,10 @@ export function useDeleteAttendance() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: { sessionId: string; playerId: string }) => {
-      const { error } = await supabase
-        .from('session_attendances')
-        .delete()
-        .eq('session_id', input.sessionId)
-        .eq('player_id', input.playerId)
+      const { error } = await supabase.rpc('delete_attendance', {
+        p_session_id: input.sessionId,
+        p_player_id: input.playerId,
+      })
       if (error) throw error
     },
     onSuccess: (_, vars) => {

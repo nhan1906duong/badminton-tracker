@@ -25,19 +25,15 @@ export function useCreatePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (racket: { player_id: string; brand: string; real_name: string; nickname?: string; mascot_id?: string | null }) => {
-      const { data, error } = await supabase
-        .from('player_rackets')
-        .insert({
-          player_id: racket.player_id,
-          brand: racket.brand,
-          real_name: racket.real_name,
-          nickname: racket.nickname || null,
-          mascot_id: racket.mascot_id ?? null,
-        })
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc('create_player_racket', {
+        p_player_id: racket.player_id,
+        p_brand: racket.brand,
+        p_real_name: racket.real_name,
+        p_nickname: racket.nickname || null,
+        p_mascot_id: racket.mascot_id ?? null,
+      })
       if (error) throw error
-      return data as PlayerRacket
+      return data[0] as PlayerRacket
     },
     onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
   })
@@ -47,14 +43,15 @@ export function useUpdatePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (racket: { id: string; brand: string; real_name: string; nickname?: string; mascot_id?: string | null }) => {
-      const { data, error } = await supabase
-        .from('player_rackets')
-        .update({ brand: racket.brand, real_name: racket.real_name, nickname: racket.nickname || null, mascot_id: racket.mascot_id ?? null })
-        .eq('id', racket.id)
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc('update_player_racket', {
+        p_id: racket.id,
+        p_brand: racket.brand,
+        p_real_name: racket.real_name,
+        p_nickname: racket.nickname || null,
+        p_mascot_id: racket.mascot_id ?? null,
+      })
       if (error) throw error
-      return data as PlayerRacket
+      return data[0] as PlayerRacket
     },
     onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
   })
@@ -64,7 +61,7 @@ export function useDeletePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (racket: { id: string; player_id: string }) => {
-      const { error } = await supabase.from('player_rackets').delete().eq('id', racket.id)
+      const { error } = await supabase.rpc('delete_player_racket', { p_id: racket.id })
       if (error) throw error
       return racket
     },

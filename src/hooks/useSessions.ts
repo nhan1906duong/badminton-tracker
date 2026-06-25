@@ -1,13 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Session, SessionType, MatchType } from '../types/database'
-import {
-  teamAvgRating,
-  calculateExpectedWinRate,
-  calculateRatingDelta,
-  calculateMatchPoints,
-  SCORING_CONFIG,
-} from '../lib/rating'
 
 const SESSIONS_KEY = 'sessions'
 
@@ -69,41 +62,21 @@ export function useCreateSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: CreateSessionInput) => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      // Guard: reject if a session with the same tournament already exists
-      if (input.bwf_tournament_id) {
-        const { data: existing } = await supabase
-          .from('sessions')
-          .select('id')
-          .eq('bwf_tournament_id', input.bwf_tournament_id)
-          .limit(1)
-          .maybeSingle()
-        if (existing) throw new DuplicateTournamentError()
+      const { data, error } = await supabase.rpc('create_session', {
+        p_type: input.type,
+        p_label: input.label || null,
+        p_started_at: input.started_at ?? new Date().toISOString(),
+        p_bwf_tournament_id: input.bwf_tournament_id || null,
+        p_league_match_type: input.league_match_type || null,
+        p_league_total_rounds: input.league_total_rounds || null,
+      })
+      if (error) {
+        if (error.message?.includes('A session for this tournament already exists')) {
+          throw new DuplicateTournamentError()
+        }
+        throw error
       }
-
-      // Validate league fields
-      if (input.type === 'league' && (!input.league_match_type || !input.league_total_rounds)) {
-        throw new Error('League session requires match type and round count')
-      }
-
-      // Create new session
-      const { data, error } = await supabase
-        .from('sessions')
-        .insert({
-          type: input.type,
-          label: input.label || null,
-          started_at: input.started_at ?? new Date().toISOString(),
-          bwf_tournament_id: input.bwf_tournament_id || null,
-          league_match_type: input.type === 'league' ? input.league_match_type : null,
-          league_total_rounds: input.type === 'league' ? input.league_total_rounds : null,
-          created_by: user.id,
-        })
-        .select()
-        .single()
-      if (error) throw error
-      return data as Session
+      return data[0] as Session
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
@@ -131,20 +104,10 @@ export function useStartSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from('sessions')
-        .update({ started_at: new Date().toISOString() })
-        .eq('id', id)
-        .select('*, bwf_tournaments(category_name, category_slug)')
-        .single()
+      const { error } = await supabase.rpc('start_session', { p_id: id })
       if (error) throw error
-      return data as Session
     },
-    onSuccess: (session) => {
-      qc.setQueryData([SESSIONS_KEY, session.id], session)
-      qc.setQueryData<Session[] | undefined>([SESSIONS_KEY], (sessions) =>
-        sessions?.map((s) => (s.id === session.id ? session : s))
-      )
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
     },
   })
@@ -154,10 +117,10 @@ export function useUpdateSessionStartTime() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, started_at }: { id: string; started_at: string }) => {
-      const { error } = await supabase
-        .from('sessions')
-        .update({ started_at })
-        .eq('id', id)
+      const { error } = await supabase.rpc('update_session_start_time', {
+        p_id: id,
+        p_started_at: started_at,
+      })
       if (error) throw error
     },
     onSuccess: (_, vars) => {
@@ -171,10 +134,7 @@ export function useRenameSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, label }: { id: string; label: string }) => {
-      const { error } = await supabase
-        .from('sessions')
-        .update({ label: label.trim() || null })
-        .eq('id', id)
+      const { error } = await supabase.rpc('rename_session', { p_id: id, p_label: label })
       if (error) throw error
     },
     onSuccess: (_, vars) => {
@@ -188,127 +148,9 @@ export function useEndSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      // 1. Fetch all completed matches in this session, ordered chronologically
-      type TeamRow = { id: string; team_label: string; is_winner: boolean }
-      type ParticipantRow = { player_id: string; team_id: string }
-
-      const { data: matches, error: matchesError } = await supabase
-        .from('matches')
-        .select(`
-          id, played_at,
-          teams:match_teams(id, team_label, is_winner),
-          participants:match_participants(player_id, team_id)
-        `)
-        .eq('session_id', id)
-        .eq('status', 'COMPLETED')
-        .order('played_at', { ascending: true })
-      if (matchesError) throw matchesError
-
-      const sessionMatches = (matches ?? []) as unknown as Array<{
-        id: string
-        played_at: string
-        teams: TeamRow[]
-        participants: ParticipantRow[]
-      }>
-
-      // 2. Collect all unique player IDs in this session
-      const allPlayerIds = [
-        ...new Set(sessionMatches.flatMap(m => m.participants.map(p => p.player_id))),
-      ]
-
-      if (allPlayerIds.length > 0) {
-        // 3. Fetch current ratings as the starting point for this session
-        const { data: players, error: playersError } = await supabase
-          .from('players')
-          .select('id, rating')
-          .in('id', allPlayerIds)
-        if (playersError) throw playersError
-
-        const ratingMap = new Map<string, number>(
-          (players ?? []).map(p => [p.id, p.rating ?? SCORING_CONFIG.initialRating])
-        )
-
-        // 4. Process matches in chronological order, tracking running Elo changes
-        const ratingUpdates: Array<{
-          player_id: string
-          match_id: string
-          rating_before: number
-          rating_after: number
-          rating_delta: number
-        }> = []
-
-        for (const match of sessionMatches) {
-          const winnerTeam = match.teams.find(t => t.is_winner)
-          if (!winnerTeam) continue
-
-          const teamARow = match.teams.find(t => t.team_label === 'TEAM_A')!
-          const teamBRow = match.teams.find(t => t.team_label === 'TEAM_B')!
-          const teamAParticipants = match.participants.filter(p => p.team_id === teamARow.id)
-          const teamBParticipants = match.participants.filter(p => p.team_id === teamBRow.id)
-
-          const teamARating = teamAvgRating(
-            teamAParticipants.map(p => ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating)
-          )
-          const teamBRating = teamAvgRating(
-            teamBParticipants.map(p => ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating)
-          )
-
-          const isTeamAWinner = winnerTeam.team_label === 'TEAM_A'
-          const expectedA = calculateExpectedWinRate(teamARating, teamBRating)
-          const deltaA = calculateRatingDelta(expectedA, isTeamAWinner ? 1 : 0)
-          const deltaB = calculateRatingDelta(1 - expectedA, isTeamAWinner ? 0 : 1)
-
-          for (const p of teamAParticipants) {
-            const before = ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating
-            const after = before + deltaA
-            ratingMap.set(p.player_id, after)
-            ratingUpdates.push({ player_id: p.player_id, match_id: match.id, rating_before: before, rating_after: after, rating_delta: deltaA })
-          }
-          for (const p of teamBParticipants) {
-            const before = ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating
-            const after = before + deltaB
-            ratingMap.set(p.player_id, after)
-            ratingUpdates.push({ player_id: p.player_id, match_id: match.id, rating_before: before, rating_after: after, rating_delta: deltaB })
-          }
-        }
-
-        // 5. Write rating history into player_match_results rows
-        const ratingHistoryResults = await Promise.all(
-          ratingUpdates.map(u =>
-            supabase
-              .from('player_match_results')
-              .update({ rating_before: u.rating_before, rating_after: u.rating_after, rating_delta: u.rating_delta })
-              .eq('player_id', u.player_id)
-              .eq('match_id', u.match_id)
-          )
-        )
-        const ratingHistoryError = ratingHistoryResults.find((r) => r.error)?.error
-        if (ratingHistoryError) throw ratingHistoryError
-
-        // 6. Persist updated ratings to players table
-        const playerRatingResults = await Promise.all(
-          Array.from(ratingMap.entries()).map(([playerId, rating]) =>
-            supabase.from('players').update({ rating }).eq('id', playerId)
-          )
-        )
-        const playerRatingError = playerRatingResults.find((r) => r.error)?.error
-        if (playerRatingError) throw playerRatingError
-      }
-
-      // 7. Mark session as ended
-      const { data: endedSession, error } = await supabase
-        .from('sessions')
-        .update({ ended_at: new Date().toISOString() })
-        .eq('id', id)
-        .select('*, bwf_tournaments(category_name, category_slug)')
-        .single()
+      const { data, error } = await supabase.rpc('end_session', { p_id: id })
       if (error) throw error
-
-      // 8. Refresh materialized stats tables now that session is ended
-      await supabase.rpc('refresh_player_session_stats', { p_session_id: id })
-      await supabase.rpc('refresh_player_all_time_stats')
-
-      return endedSession as Session
+      return data[0] as Session
     },
     onSuccess: (session) => {
       qc.setQueryData([SESSIONS_KEY, session.id], session)
@@ -334,53 +176,8 @@ export function useDeleteSession() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      // Find all matches in this session to clean up children explicitly
-      const { data: matchRows, error: listError } = await supabase
-        .from('matches')
-        .select('id')
-        .eq('session_id', id)
-      if (listError) throw listError
-
-      const matchIds = (matchRows ?? []).map((m) => m.id)
-
-      if (matchIds.length > 0) {
-        const { error: scoresError } = await supabase
-          .from('match_scores')
-          .delete()
-          .in('match_id', matchIds)
-        if (scoresError) throw scoresError
-
-        const { error: partsError } = await supabase
-          .from('match_participants')
-          .delete()
-          .in('match_id', matchIds)
-        if (partsError) throw partsError
-
-        const { error: teamsError } = await supabase
-          .from('match_teams')
-          .delete()
-          .in('match_id', matchIds)
-        if (teamsError) throw teamsError
-
-        const { error: pmrError } = await supabase
-          .from('player_match_results')
-          .delete()
-          .in('match_id', matchIds)
-        if (pmrError) throw pmrError
-
-        const { error: matchesError } = await supabase
-          .from('matches')
-          .delete()
-          .in('id', matchIds)
-        if (matchesError) throw matchesError
-      }
-
-      const { error } = await supabase.from('sessions').delete().eq('id', id)
+      const { error } = await supabase.rpc('delete_session', { p_id: id })
       if (error) throw error
-
-      // player_session_stats rows are CASCADE deleted with the session;
-      // all-time stats still need a refresh since they aggregate across all sessions.
-      await supabase.rpc('refresh_player_all_time_stats')
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
@@ -395,41 +192,20 @@ export function useClearAllData() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      // 1. Delete all uploaded avatars from storage
+      // 1. Delete uploaded avatars from storage (MUST stay client-side — PL/pgSQL can't call Storage API)
       const { data: userFiles } = await supabase.storage.from('avatars').list('users')
       const { data: playerFiles } = await supabase.storage.from('avatars').list('players')
 
       const toDelete: string[] = []
-      if (userFiles) {
-        toDelete.push(...userFiles.map(f => `users/${f.name}`))
-      }
-      if (playerFiles) {
-        toDelete.push(...playerFiles.map(f => `players/${f.name}`))
-      }
+      if (userFiles) toDelete.push(...userFiles.map(f => `users/${f.name}`))
+      if (playerFiles) toDelete.push(...playerFiles.map(f => `players/${f.name}`))
       if (toDelete.length > 0) {
         await supabase.storage.from('avatars').remove(toDelete)
       }
 
-      // 2. Delete child tables first, then parents (cascade handles most,
-      // but explicit ordering avoids relying solely on DB config)
-      await supabase.from('match_scores').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('match_participants').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('match_teams').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('player_match_results').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('league_team_players').delete().neq('league_team_id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('league_teams').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-
-      // 3. Clear player avatars + reset ratings in DB, then delete players
-      await supabase.from('players').update({ avatar_url: null, rating: 1000 }).neq('id', '00000000-0000-0000-0000-000000000000')
-      await supabase.from('players').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-
-      // 4. Clear user profile avatars (keep profiles row, just remove avatar_url)
-      await supabase.from('profiles').update({ avatar_url: null }).neq('id', '00000000-0000-0000-0000-000000000000')
+      // 2. DB cleanup via RPC (handles all table deletions + profile avatar reset)
+      const { error } = await supabase.rpc('clear_all_data')
+      if (error) throw error
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
@@ -456,178 +232,8 @@ export function useRecalculateAllRatings() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      type TeamRow = { id: string; team_label: string; is_winner: boolean }
-      type ParticipantRow = { player_id: string; team_id: string }
-
-      // 1. Fetch all sessions in chronological order
-      const { data: sessions, error: sessionsError } = await supabase
-        .from('sessions')
-        .select('id, started_at, ended_at')
-        .order('started_at', { ascending: true })
-      if (sessionsError) throw sessionsError
-
-      // 2. Fetch all players and reset ratings
-      const { data: players, error: playersError } = await supabase
-        .from('players')
-        .select('id')
-      if (playersError) throw playersError
-
-      const playerIds = (players ?? []).map(p => p.id)
-      if (playerIds.length > 0) {
-        const { error: resetError } = await supabase
-          .from('players')
-          .update({ rating: SCORING_CONFIG.initialRating })
-          .in('id', playerIds)
-        if (resetError) throw resetError
-      }
-
-      // 3. Wipe existing player_match_results (clean slate)
-      await supabase
-        .from('player_match_results')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000')
-
-      // 4. Running rating map — starts at 1000 for all players
-      const ratingMap = new Map<string, number>(
-        playerIds.map(id => [id, SCORING_CONFIG.initialRating])
-      )
-
-      // 5. Process sessions chronologically
-      for (const session of sessions ?? []) {
-        const isEnded = session.ended_at != null
-
-        const { data: matches, error: matchesError } = await supabase
-          .from('matches')
-          .select(`
-            id, played_at,
-            teams:match_teams(id, team_label, is_winner),
-            participants:match_participants(player_id, team_id)
-          `)
-          .eq('session_id', session.id)
-          .eq('status', 'COMPLETED')
-          .order('played_at', { ascending: true })
-        if (matchesError) throw matchesError
-
-        const matchList = matches ?? []
-        if (matchList.length === 0) continue
-
-        // Fetch scores for all matches in this session at once
-        const { data: scores } = await supabase
-          .from('match_scores')
-          .select('match_id, team_a_score, team_b_score')
-          .in('match_id', matchList.map(m => m.id))
-
-        const scoreMap = new Map<string, { team_a_score: number; team_b_score: number }>()
-        for (const s of scores ?? []) {
-          scoreMap.set(s.match_id, { team_a_score: s.team_a_score, team_b_score: s.team_b_score })
-        }
-
-        const resultRows: object[] = []
-
-        for (const match of matchList) {
-          const teams = match.teams as unknown as TeamRow[]
-          const participants = match.participants as unknown as ParticipantRow[]
-
-          const winnerTeam = teams.find(t => t.is_winner)
-          if (!winnerTeam) continue
-
-          const teamARow = teams.find(t => t.team_label === 'TEAM_A')!
-          const teamBRow = teams.find(t => t.team_label === 'TEAM_B')!
-          const teamAParticipants = participants.filter(p => p.team_id === teamARow.id)
-          const teamBParticipants = participants.filter(p => p.team_id === teamBRow.id)
-
-          const teamARating = teamAvgRating(
-            teamAParticipants.map(p => ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating)
-          )
-          const teamBRating = teamAvgRating(
-            teamBParticipants.map(p => ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating)
-          )
-
-          const isTeamAWinner = winnerTeam.team_label === 'TEAM_A'
-          const score = scoreMap.get(match.id)
-          const teamAScore = score?.team_a_score ?? 0
-          const teamBScore = score?.team_b_score ?? 0
-
-          // Elo deltas (only apply for ended sessions)
-          let deltaA = 0, deltaB = 0
-          if (isEnded) {
-            const expectedA = calculateExpectedWinRate(teamARating, teamBRating)
-            deltaA = calculateRatingDelta(expectedA, isTeamAWinner ? 1 : 0)
-            deltaB = calculateRatingDelta(1 - expectedA, isTeamAWinner ? 0 : 1)
-          }
-
-          const buildRow = (
-            p: ParticipantRow,
-            isWinner: boolean,
-            myScore: number,
-            oppScore: number,
-            myRating: number,
-            oppRating: number,
-            delta: number
-          ) => {
-            const before = ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating
-            const breakdown = calculateMatchPoints({
-              isWinner, teamScore: myScore, opponentScore: oppScore,
-              teamRating: myRating, opponentTeamRating: oppRating,
-            })
-            return {
-              player_id: p.player_id,
-              match_id: match.id,
-              session_id: session.id,
-              is_winner: isWinner,
-              team_score: myScore,
-              opponent_score: oppScore,
-              base_points: breakdown.basePoints,
-              attendance_points: breakdown.attendancePoints,
-              score_bonus: breakdown.scoreBonus,
-              strength_bonus: breakdown.strengthBonus,
-              total_weekly_points: breakdown.total,
-              rating_before: isEnded ? before : null,
-              rating_after: isEnded ? before + delta : null,
-              rating_delta: isEnded ? delta : null,
-            }
-          }
-
-          resultRows.push(
-            ...teamAParticipants.map(p =>
-              buildRow(p, isTeamAWinner, teamAScore, teamBScore, teamARating, teamBRating, deltaA)
-            ),
-            ...teamBParticipants.map(p =>
-              buildRow(p, !isTeamAWinner, teamBScore, teamAScore, teamBRating, teamARating, deltaB)
-            )
-          )
-
-          // Update running ratings (ended sessions only — open sessions don't commit Elo yet)
-          if (isEnded) {
-            for (const p of teamAParticipants) {
-              ratingMap.set(p.player_id, (ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating) + deltaA)
-            }
-            for (const p of teamBParticipants) {
-              ratingMap.set(p.player_id, (ratingMap.get(p.player_id) ?? SCORING_CONFIG.initialRating) + deltaB)
-            }
-          }
-        }
-
-        if (resultRows.length > 0) {
-          const { error: insertError } = await supabase
-            .from('player_match_results')
-            .insert(resultRows)
-          if (insertError) throw insertError
-        }
-      }
-
-      // 6. Persist final ratings (reflects all ended sessions' Elo history)
-      await Promise.all(
-        Array.from(ratingMap.entries()).map(([playerId, rating]) =>
-          supabase.from('players').update({ rating }).eq('id', playerId)
-        )
-      )
-
-      // 7. Refresh materialized stats tables for all sessions + all-time
-      for (const session of sessions ?? []) {
-        await supabase.rpc('refresh_player_session_stats', { p_session_id: session.id })
-      }
-      await supabase.rpc('refresh_player_all_time_stats')
+      const { error } = await supabase.rpc('recalculate_all_ratings')
+      if (error) throw error
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['player-rankings'] })
@@ -646,10 +252,10 @@ export function useUpdateLeagueTotalRounds() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id, league_total_rounds }: { id: string; league_total_rounds: number }) => {
-      const { error } = await supabase
-        .from('sessions')
-        .update({ league_total_rounds })
-        .eq('id', id)
+      const { error } = await supabase.rpc('update_league_total_rounds', {
+        p_id: id,
+        p_rounds: league_total_rounds,
+      })
       if (error) throw error
     },
     onSuccess: (_, vars) => {

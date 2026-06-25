@@ -7,10 +7,12 @@ import { useRenameSession } from '../useSessions'
 // ─── Supabase mock ────────────────────────────────────────────────────────────
 
 const mockFrom = vi.fn()
+const mockRpc = vi.fn()
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     from: (table: string) => mockFrom(table),
+    rpc: (name: string, params: unknown) => mockRpc(name, params),
   },
 }))
 
@@ -25,16 +27,6 @@ function makeWrapper() {
   }
 }
 
-/** Build a builder where .eq() is the terminal (awaitable) call. */
-function makeUpdateBuilder(resolve: { data: unknown; error: unknown }) {
-  const builder: Record<string, unknown> = {}
-  for (const m of ['select', 'insert', 'update', 'delete', 'is', 'limit', 'order', 'maybeSingle', 'single']) {
-    builder[m] = vi.fn(() => builder)
-  }
-  builder['eq'] = vi.fn(() => Promise.resolve(resolve))
-  return builder
-}
-
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('useRenameSession', () => {
@@ -42,9 +34,20 @@ describe('useRenameSession', () => {
     vi.clearAllMocks()
   })
 
-  it('updates label with trimmed value', async () => {
-    const builder = makeUpdateBuilder({ data: null, error: null })
-    mockFrom.mockReturnValue(builder)
+  it('updates label with the provided value', async () => {
+    mockRpc.mockResolvedValueOnce({ data: null, error: null } as any)
+
+    const { wrapper } = makeWrapper()
+    const { result } = renderHook(() => useRenameSession(), { wrapper })
+
+    result.current.mutate({ id: 'sess-1', label: 'Friday Night' })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(mockRpc).toHaveBeenCalledWith('rename_session', { p_id: 'sess-1', p_label: 'Friday Night' })
+  })
+
+  it('updates label with the provided value including whitespace', async () => {
+    mockRpc.mockResolvedValueOnce({ data: null, error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useRenameSession(), { wrapper })
@@ -52,26 +55,11 @@ describe('useRenameSession', () => {
     result.current.mutate({ id: 'sess-1', label: '  Friday Night  ' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(builder.update).toHaveBeenCalledWith({ label: 'Friday Night' })
-    expect(builder.eq).toHaveBeenCalledWith('id', 'sess-1')
-  })
-
-  it('saves null when label is blank after trimming', async () => {
-    const builder = makeUpdateBuilder({ data: null, error: null })
-    mockFrom.mockReturnValue(builder)
-
-    const { wrapper } = makeWrapper()
-    const { result } = renderHook(() => useRenameSession(), { wrapper })
-
-    result.current.mutate({ id: 'sess-1', label: '   ' })
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(builder.update).toHaveBeenCalledWith({ label: null })
+    expect(mockRpc).toHaveBeenCalledWith('rename_session', { p_id: 'sess-1', p_label: '  Friday Night  ' })
   })
 
   it('throws when supabase returns an error', async () => {
-    const builder = makeUpdateBuilder({ data: null, error: { message: 'DB error' } })
-    mockFrom.mockReturnValue(builder)
+    mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'DB error' } } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useRenameSession(), { wrapper })
@@ -83,8 +71,7 @@ describe('useRenameSession', () => {
   })
 
   it('invalidates sessions list and single-session queries on success', async () => {
-    const builder = makeUpdateBuilder({ data: null, error: null })
-    mockFrom.mockReturnValue(builder)
+    mockRpc.mockResolvedValueOnce({ data: null, error: null } as any)
 
     const { wrapper, qc } = makeWrapper()
     const invalidateSpy = vi.spyOn(qc, 'invalidateQueries')
