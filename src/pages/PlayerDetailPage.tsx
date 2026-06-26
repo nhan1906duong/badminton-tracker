@@ -147,7 +147,22 @@ export default function PlayerDetailPage() {
     })
   }
 
+  const pendingJump = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (historyLoading || !pendingJump.current) return
+    const sessionId = pendingJump.current
+    pendingJump.current = null
+    const idx = sessionStats.findIndex((s) => s.session.id === sessionId)
+    setExpandedSessions((prev) => new Set(prev).add(sessionId))
+    if (idx !== -1) historyVirtualizer.scrollToIndex(idx, { behavior: 'smooth' })
+  }, [historyLoading, sessionStats, historyVirtualizer])
+
   function jumpToSession(sessionId: string) {
+    if (historyLoading) {
+      pendingJump.current = sessionId
+      return
+    }
     const idx = sessionStats.findIndex((s) => s.session.id === sessionId)
     setExpandedSessions((prev) => new Set(prev).add(sessionId))
     if (idx !== -1) historyVirtualizer.scrollToIndex(idx, { behavior: 'smooth' })

@@ -17,7 +17,7 @@ export function SessionMatchList({ playerId, sessionId }: Props) {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="h-10 rounded animate-pulse"
+            className="h-10 rounded animate-pulse opacity-40"
             style={{ background: 'var(--border)' }}
           />
         ))}
@@ -29,7 +29,7 @@ export function SessionMatchList({ playerId, sessionId }: Props) {
 
   if (withWinner.length === 0) {
     return (
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 fade-in">
         <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
           {t('players.noCompletedMatches')}
         </p>
@@ -38,7 +38,7 @@ export function SessionMatchList({ playerId, sessionId }: Props) {
   }
 
   return (
-    <div className="divide-y divide-[var(--border)]">
+    <div className="divide-y divide-[var(--border)] fade-in">
       {withWinner.map((match) => (
         <PlayerMatchHistoryItem key={match.id} match={match} playerId={playerId} />
       ))}
