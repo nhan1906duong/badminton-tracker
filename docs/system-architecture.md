@@ -96,6 +96,20 @@ Match list display order (client-side, via `sortMatches` in `MatchesContent.tsx`
 2. **SCHEDULED / queue** — middle, by queue_position asc (nulls last)
 3. **COMPLETED** — bottom, most recently ended first (ended_at desc, falls back to created_at)
 
+## Scalability Architecture
+
+Player-facing pages avoid global table scans. Aggregation is pushed into Postgres RPCs; client hooks use cursor pagination or paginated offsets.
+
+**Postgres RPCs** (in `supabase/migrations/20260623000001_scalability_rpcs.sql`):
+- `count_ranked_matches()` → `bigint` — distinct match count from `player_match_results`
+- `get_player_ranking_summary(p_player_id)` → `json` — one player's rank/stats from ended sessions only; `rankChange`/`lastSessionRatingDelta`/`topOneWeekStreak` stubbed as 0 (Phase 4)
+- `get_leaderboard_page(p_limit, p_offset)` → ranked table — paginated all-time leaderboard; same tie-breaker order as client sort (rating → avg weekly pts → win rate → point diff); `rank_change`/`last_session_delta`/`top_one_week_streak` stubbed as 0
+- `get_badge_leaders()` → rows of `(badge_type, leader_id, leader_count)` for `most_played` and `most_donated` only; streak/dynasty deferred to Phase 4
+
+**Player-scoped pagination**: `usePlayerMatches(playerId)` is the single source of truth for a player's completed match history. It uses keyset cursor pagination (`played_at desc, id desc`, page size 20) with a dual-alias PostgREST select so the participant filter doesn't strip other players from the result set. `usePlayerMatchHistory`, `useOpponents`, `useBestPartner`, and `usePlayerBadges` all derive their data from this hook rather than loading all matches globally.
+
+**Leaderboard pagination**: `useLeaderboard()` uses `useInfiniteQuery` against `get_leaderboard_page`. `usePlayerRankings()` is kept for session-scoped consumers (SessionDetailPage, SessionStatsPage) that already scope to a session and don't need the RPC.
+
 ## Ranking & Session Leaderboards
 
 `player_match_results` is the canonical source for weekly/session rankings. `useRecordResult()` creates or updates those rows when a winner is recorded. `useEndMatchNoWinner()` completes a match, clears team winners, deletes any result rows for that match, and saves non-empty score rows so invalid/stopped matches do not affect standings.
@@ -114,7 +128,7 @@ Only **ended sessions** (`ended_at IS NOT NULL`) count toward player achievement
 
 The all-time ranking rows (Player tab) also show a current weekly Top 1 streak when a player has led more than one consecutive active calendar week. This is derived client-side from ended sessions and `player_match_results`: sessions are grouped by local calendar week from `started_at`, player `total_weekly_points` are summed across all sessions in that week, and the weekly leader is chosen by points, wins, point difference, then name. Empty calendar weeks are ignored, and duplicate result rows are de-duplicated by `player_id + match_id`.
 
-`RankingPage` has four tabs: **Singles** (all-time Elo), **Doubles** (MD doubles pair rankings sorted by win rate → wins → matches played, using `useMenDoublesRankings`), **Current session** (latest ended session leaderboard), and **Head to Head** (interactive 2v2 comparison: select up to 2 players per side, shows win counts, a win-% gauge, and match history). The Doubles tab only counts MEN_DOUBLES matches from ended sessions. The Head to Head tab uses `computeH2HPairs` (exported pure function from `useH2HPairs.ts`) which matches on exact team composition and handles both normal and reversed orientations.
+`RankingPage` has four tabs: **Singles** (all-time Elo via paginated `useLeaderboard()`), **Doubles** (MD doubles pair rankings sorted by win rate → wins → matches played, using `useMenDoublesRankings`), **Current session** (latest ended session leaderboard), and **Head to Head** (interactive 2v2 comparison: select up to 2 players per side, shows win counts, a win-% gauge, and match history). The Doubles tab only counts MEN_DOUBLES matches from ended sessions. The Head to Head tab uses `computeH2HPairs` (exported pure function from `useH2HPairs.ts`) which matches on exact team composition and handles both normal and reversed orientations.
 
 ## Authentication Flow
 
