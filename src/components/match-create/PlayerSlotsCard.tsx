@@ -18,9 +18,11 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
   const { t } = useI18n()
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onTap}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap() } }}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -109,7 +111,7 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
       ) : (
         <ChevronRight style={{ width: 16, height: 16, color: 'var(--muted)', flexShrink: 0 }} />
       )}
-    </button>
+    </div>
   )
 }
 

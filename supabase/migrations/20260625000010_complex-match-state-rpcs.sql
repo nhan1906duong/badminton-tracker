@@ -77,7 +77,7 @@ begin
 
   -- Update match basic fields
   update matches
-  set match_type = p_match_type::match_type,
+  set match_type = p_match_type,
       played_at  = p_played_at
   where id = p_id;
 

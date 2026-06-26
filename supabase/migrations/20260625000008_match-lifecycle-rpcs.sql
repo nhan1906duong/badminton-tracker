@@ -7,17 +7,17 @@
 -- Returns the created matches row.
 -- ---------------------------------------------------------------------------
 create or replace function create_match(
-  p_session_id      uuid,
-  p_match_type      text,
-  p_played_at       timestamptz,
-  p_notes           text default null,
-  p_status          text default 'SCHEDULED',
-  p_queue_position  int  default null,
-  p_league_round    int  default null,
+  p_session_id        uuid,
+  p_match_type        text,
+  p_played_at         timestamptz,
   p_team_a_player_ids uuid[],
   p_team_b_player_ids uuid[],
-  p_winner_team     text default null,   -- 'TEAM_A' | 'TEAM_B' | null
-  p_scores          jsonb default null   -- array of {set_number, team_a_score, team_b_score}
+  p_notes             text  default null,
+  p_status            text  default 'SCHEDULED',
+  p_queue_position    int   default null,
+  p_league_round      int   default null,
+  p_winner_team       text  default null,   -- 'TEAM_A' | 'TEAM_B' | null
+  p_scores            jsonb default null    -- array of {set_number, team_a_score, team_b_score}
 )
 returns setof matches
 language plpgsql
@@ -79,7 +79,7 @@ begin
 end;
 $$;
 
-grant execute on function create_match(uuid, text, timestamptz, text, text, int, int, uuid[], uuid[], text, jsonb) to authenticated;
+grant execute on function create_match(uuid, text, timestamptz, uuid[], uuid[], text, text, int, int, text, jsonb) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 2. create_league_schedule

@@ -136,11 +136,11 @@ begin
       created_by
     )
     values (
-      p_type::session_type,
+      p_type,
       p_label,
       coalesce(p_started_at, now()),
       p_bwf_tournament_id,
-      p_league_match_type::match_type,
+      p_league_match_type,
       p_league_total_rounds,
       auth.uid()
     )
