@@ -8,11 +8,13 @@ import { useCreateSession, DuplicateTournamentError } from '../useSessions'
 
 const mockGetUser = vi.fn()
 const mockFrom = vi.fn()
+const mockRpc = vi.fn()
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     auth: { getUser: () => mockGetUser() },
     from: (table: string) => mockFrom(table),
+    rpc: (name: string, params: unknown) => mockRpc(name, params),
   },
 }))
 
@@ -42,24 +44,6 @@ function mockAuthenticatedUser() {
   mockGetUser.mockResolvedValue({ data: { user: MOCK_USER } })
 }
 
-function mockUnauthenticated() {
-  mockGetUser.mockResolvedValue({ data: { user: null } })
-}
-
-/** Build a fluent Supabase query builder mock. Each method returns the same
- *  object so calls can be chained; `resolveWith` sets the final resolved value. */
-function makeQueryBuilder(resolve: { data: unknown; error: unknown }) {
-  const builder: Record<string, unknown> = {}
-  const methods = ['select', 'insert', 'update', 'delete', 'eq', 'is', 'limit', 'order', 'maybeSingle', 'single']
-  for (const m of methods) {
-    builder[m] = vi.fn(() => builder)
-  }
-  // Terminal calls resolve the promise
-  ;(builder.maybeSingle as ReturnType<typeof vi.fn>).mockResolvedValue(resolve)
-  ;(builder.single as ReturnType<typeof vi.fn>).mockResolvedValue(resolve)
-  return builder
-}
-
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('useCreateSession', () => {
@@ -70,9 +54,7 @@ describe('useCreateSession', () => {
   it('creates session with label and now as started_at when no date provided', async () => {
     mockAuthenticatedUser()
 
-    // No bwf_tournament_id — guard check is skipped, only insert runs
-    const insertBuilder = makeQueryBuilder({ data: MOCK_SESSION, error: null })
-    mockFrom.mockReturnValue(insertBuilder)
+    mockRpc.mockResolvedValueOnce({ data: [MOCK_SESSION], error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
@@ -83,11 +65,10 @@ describe('useCreateSession', () => {
     expect(result.current.data).toEqual(MOCK_SESSION)
   })
 
-  it('creates session without bwf_tournament_id and skips duplicate guard', async () => {
+  it('creates session without bwf_tournament_id', async () => {
     mockAuthenticatedUser()
 
-    const insertBuilder = makeQueryBuilder({ data: MOCK_SESSION, error: null })
-    mockFrom.mockReturnValue(insertBuilder)
+    mockRpc.mockResolvedValueOnce({ data: [MOCK_SESSION], error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
@@ -95,20 +76,23 @@ describe('useCreateSession', () => {
     result.current.mutate({ type: 'regular', label: 'Casual Session' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    // With no bwf_tournament_id the guard query is skipped — `from` is only
-    // called once for the insert.
-    const sessionCalls = (mockFrom as ReturnType<typeof vi.fn>).mock.calls.filter(
-      (c: string[]) => c[0] === 'sessions'
-    )
-    expect(sessionCalls).toHaveLength(1)
+    expect(mockRpc).toHaveBeenCalledWith('create_session', {
+      p_type: 'regular',
+      p_label: 'Casual Session',
+      p_started_at: expect.any(String),
+      p_bwf_tournament_id: null,
+      p_league_match_type: null,
+      p_league_total_rounds: null,
+    })
   })
 
-  it('throws DuplicateTournamentError when tournament already has a session', async () => {
+  it('throws DuplicateTournamentError when RPC returns duplicate tournament error', async () => {
     mockAuthenticatedUser()
 
-    const existingBuilder = makeQueryBuilder({ data: { id: 'existing-session' }, error: null })
-    mockFrom.mockReturnValue(existingBuilder)
+    mockRpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'A session for this tournament already exists' },
+    } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
@@ -120,8 +104,13 @@ describe('useCreateSession', () => {
     expect((result.current.error as Error).message).toBe('A session for this tournament already exists.')
   })
 
-  it('throws error when user is not authenticated', async () => {
-    mockUnauthenticated()
+  it('throws error when RPC returns authentication error', async () => {
+    mockAuthenticatedUser()
+
+    mockRpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Not authenticated' },
+    } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
@@ -129,14 +118,13 @@ describe('useCreateSession', () => {
     result.current.mutate({ type: 'regular', label: 'Test' })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as Error).message).toBe('Not authenticated')
+    expect((result.current.error as { message: string }).message).toBe('Not authenticated')
   })
 
-  it('throws error when supabase insert fails', async () => {
+  it('throws error when RPC fails', async () => {
     mockAuthenticatedUser()
 
-    const failBuilder = makeQueryBuilder({ data: null, error: { message: 'DB error', code: '23505' } })
-    mockFrom.mockReturnValue(failBuilder)
+    mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'DB error', code: '23505' } } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
@@ -152,8 +140,7 @@ describe('useCreateSession', () => {
 
     const scheduledAt = '2026-05-24T19:00:00.000Z'
     const scheduledSession = { ...MOCK_SESSION, started_at: scheduledAt }
-    const insertBuilder = makeQueryBuilder({ data: scheduledSession, error: null })
-    mockFrom.mockReturnValue(insertBuilder)
+    mockRpc.mockResolvedValueOnce({ data: [scheduledSession], error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
@@ -167,8 +154,7 @@ describe('useCreateSession', () => {
   it('invalidates sessions query on success', async () => {
     mockAuthenticatedUser()
 
-    const insertBuilder = makeQueryBuilder({ data: MOCK_SESSION, error: null })
-    mockFrom.mockReturnValue(insertBuilder)
+    mockRpc.mockResolvedValueOnce({ data: [MOCK_SESSION], error: null } as any)
 
     const { wrapper, qc } = makeWrapper()
     const invalidateSpy = vi.spyOn(qc, 'invalidateQueries')

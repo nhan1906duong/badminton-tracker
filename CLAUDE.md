@@ -26,6 +26,20 @@ Badminton Match Tracker — a PWA for tracking badminton matches, players, and r
    - `src/stores/session-store.ts` — empty module (active player filter removed).
 3. **React useState** — local UI state only.
 
+### Scalability Architecture
+
+Player-facing pages avoid global table scans. Aggregation is pushed into Postgres RPCs; client hooks use cursor pagination or paginated offsets.
+
+**Postgres RPCs** (in `supabase/migrations/20260623000001_scalability_rpcs.sql`):
+- `count_ranked_matches()` → `bigint` — distinct match count from `player_match_results`
+- `get_player_ranking_summary(p_player_id)` → `json` — one player's rank/stats from ended sessions only; `rankChange`/`lastSessionRatingDelta`/`topOneWeekStreak` stubbed as 0 (Phase 4)
+- `get_leaderboard_page(p_limit, p_offset)` → ranked table — paginated all-time leaderboard; same tie-breaker order as client sort (rating → avg weekly pts → win rate → point diff); `rank_change`/`last_session_delta`/`top_one_week_streak` stubbed as 0
+- `get_badge_leaders()` → rows of `(badge_type, leader_id, leader_count)` for `most_played` and `most_donated` only; streak/dynasty deferred to Phase 4
+
+**Player-scoped pagination**: `usePlayerMatches(playerId)` is the single source of truth for a player's completed match history. It uses keyset cursor pagination (`played_at desc, id desc`, page size 20) with a dual-alias PostgREST select so the participant filter doesn't strip other players from the result set. `usePlayerMatchHistory`, `useOpponents`, `useBestPartner`, and `usePlayerBadges` all derive their data from this hook rather than loading all matches globally.
+
+**Leaderboard pagination**: `useLeaderboard()` uses `useInfiniteQuery` against `get_leaderboard_page`. `usePlayerRankings()` is kept for session-scoped consumers (SessionDetailPage, SessionStatsPage) that already scope to a session and don't need the RPC.
+
 ### Auth
 
 Email + password via `src/contexts/AuthContext.tsx` (`supabase.auth.signInWithPassword`). `RequireAuth` guard in `src/components/AnimatedRoutes.tsx` redirects unauthenticated users to `/login`. After login, user returns to original route via `location.state`.
@@ -112,6 +126,16 @@ export function Component({ ... }: Props) {
 - The dev-only `/settings/design-system` route renders all tokens for preview
 - **Every new or restyled page must use `<AppBar>` from `design-system/components` for its top navigation — never build a custom nav bar.** Only tab routes (`/sessions`, `/ranking`, `/settings`) omit AppBar.
 
+### List Virtualization
+`@tanstack/react-virtual` is a dependency. Use it (`useWindowVirtualizer` / `useVirtualizer`) when a list's item count grows with data that accumulates over time — all players, all sessions, full match history — and can realistically exceed ~50 rendered rows. Don't bother for lists bounded by a single session/match (a session's roster, one session's leaderboard) since those stay small regardless of how much data the app accumulates.
+
+- **Window-scrolled pages** (most pages here — no fixed-height scroll container) → `useWindowVirtualizer`. **Fixed-height `overflow-y-auto` containers** → `useVirtualizer` with a ref to that container.
+- Set `scrollMargin` to the list container's `offsetTop` (measure via `useLayoutEffect` + a ref + `useState`, since it depends on layout above the list and can shift on data load).
+- **Critical gotcha**: in the row's `transform`, you must use `translateY(${virtualRow.start - virtualizer.options.scrollMargin}px)` — not `virtualRow.start` alone. Omitting the subtraction shifts every row down by `scrollMargin` px, producing a phantom gap above the list and making the last rows unreachable by scroll.
+- Variable-height rows (e.g. a collapsible row that expands to show nested items) need `measureElement` + `data-index={virtualRow.index}` on the row instead of relying on a fixed `estimateSize`.
+- Mixed row kinds in one list (e.g. section headers interleaved with item cards) — flatten into a single discriminated-union row array first, then vary `estimateSize` by row type.
+- Reference implementations: `src/pages/RankingPage.tsx` (All/Doubles tabs), `src/pages/PlayerDetailPage.tsx` (match history, variable height), `src/pages/SessionsListPage.tsx` (mixed header/card rows).
+
 ### Environment Variables
 ```env
 VITE_SUPABASE_URL=<project-url>
@@ -133,7 +157,10 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/LoginAffordance.tsx` | Pill-shaped "Sign in" chip rendered next to the page title on tab routes when the user is unauthenticated. Single source for the login entry point — do not re-implement inline. |
 | `src/hooks/useSessions.ts` | Session CRUD + open session query; `useRenameSession` (admin-only, blocked for BWF-linked sessions by `trg_restrict_bwf_session_label` trigger); `useUpdateLeagueTotalRounds` (increments round count for league sessions, available to all authenticated users) |
 | `src/hooks/useBwfTournaments.ts` | Read BWF tournament cache from Supabase; filter by date window |
-| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers; exports `computeSessionRankingHistory` (pure fn, tested) + `useSessionMatchResults` — computes per-match cumulative ranking history used by `SessionRankingChart` |
+| `src/hooks/useRankings.ts` | Elo-based player rankings + shared per-session leaderboard hooks; session leaderboard sorts by `weeklyPoints` (total) then `averageWeeklyPoints` as tiebreaker; exports `computeRankChanges` (pure fn, tested) — computes per-player rank-change vs previous session using all 4 sort criteria as tiebreakers; exports `computeSessionRankingHistory` (pure fn, tested) + `useSessionMatchResults` — computes per-match cumulative ranking history used by `SessionRankingChart`; `usePlayerRankings()` is kept for SessionDetailPage/SessionStatsPage (session-scoped) but **not** used on RankingPage (replaced by `useLeaderboard`) |
+| `src/hooks/useLeaderboard.ts` | Paginated all-time leaderboard via `get_leaderboard_page` RPC; `useInfiniteQuery`, page size 50, `staleTime: 60_000`; maps snake_case RPC rows to `PlayerRankingStats`; used by RankingPage instead of `usePlayerRankings()` |
+| `src/hooks/usePlayerRankingSummary.ts` | Single-player ranking snapshot via `get_player_ranking_summary` RPC; avoids loading the full leaderboard on PlayerDetailPage; `staleTime: 60_000` |
+| `src/hooks/usePlayerMatches.ts` | Cursor-paginated completed matches for one player (`PAGE_SIZE = 20`, keyset on `played_at desc, id desc`); exports `PlayerMatchCursor` interface; dual-alias PostgREST select preserves all participants while filtering by `player_id`; used by `usePlayerMatchHistory`, `useOpponents`, `useBestPartner`, `usePlayerBadges` |
 | `src/hooks/useMenDoublesRankings.ts` | Computes MD pair rankings (win rate → wins → matches played) from ended sessions only; exports `computeMenDoublesRankings` (pure fn, tested) |
 | `src/hooks/useH2HPairs.ts` | Exact-composition 2v2 head-to-head: exports `computeH2HPairs` (pure fn, tested) + `useH2HPairs` hook; handles both normal and reversed team orientations |
 | `src/components/HeadToHeadTab.tsx` | "Compare Teams" UI rendered by `HeadToHeadPage` (`/players/:playerId/head-to-head`, reached via the ⋮ menu on `PlayerDetailPage`): 2-slot player picker per side, half-circle win-% gauge, win counts, match history (via `PlayerMatchHistoryItem`); accepts `initialPlayerId` to pre-fill Team A's first slot |
@@ -141,11 +168,11 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/CalendarTab.tsx` | Calendar tab on SessionsPage: vertical timeline of completed sessions grouped by month/day; champion Avatar + card with BWF badge, match count, and champion win % footer |
 | `src/hooks/useIsAdmin.ts` | Returns `true` if the current user's profile role is `'admin'` |
 | `src/hooks/useProfile.ts` | Fetch user profile (`avatar_url`, `role`, `player_id`); `useUpdatePlayerLink` mutation to link/unlink a player |
-| `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins — only shown when count > 1), most donated. Each badge is only awarded to the current leader(s) across all players. |
+| `src/hooks/usePlayerBadges.ts` | Computes record-holder badges for a player across 5 categories: world titles (BWF sessions only), most played, best streak, dynasty (consecutive session wins — only shown when count > 1), most donated. `most_played` and `most_donated` are determined by comparing against `get_badge_leaders()` RPC results; streak/dynasty global leader checks are deferred (Phase 4). Player-local inputs (streak, matches played) derived from `usePlayerMatches(playerId)`. |
 | `src/lib/badge-categories.ts` | `CATEGORY_ICON` / `CATEGORY_COLOR` maps from `BadgeCategory` to a lucide icon + color token; shared by `PlayerOverviewCard` |
 | `src/lib/player-match-row.ts` | `getMatchRow(match, playerId)` — derives win/loss, teammates, opponents, score string, and short match-type label for a completed match from `playerId`'s perspective |
 | `src/lib/session-label.ts` | `formatSessionLabel(session, locale)` — session's `label`, or its `started_at` date formatted for the given locale |
-| `src/hooks/usePlayerPointsHistory.ts` | Fetches `player_match_results` for a player and groups them into `SessionPointsHistory[]` (session + `MatchPointsEntry[]` with match + points). Used for rating history chart and match points display. |
+| `src/hooks/usePlayerPointsHistory.ts` | Fetches `player_match_results` for a player with nested match/session/team/participant/score selects; groups into `SessionPointsHistory[]` (session + `MatchPointsEntry[]` with match + points); derives session from embedded `result.match.session` — no global sessions lookup; used for rating history chart and match points display. |
 | `src/components/RatingChart.tsx` | SVG line chart showing Elo rating over sessions, with a filled area under the line. Dots for each session; filled + star marker (★) for sessions the player won. Rendered via `PlayerRankingChartContent` in the ranking-chart bottom sheet on `PlayerDetailPage`. |
 | `src/components/SessionRankingChart.tsx` | Multi-player ranking progression chart on `SessionStatsPage` (Chart tab). Smooth Catmull-Rom lines, Pantone color palette, player avatars with gradient glow at latest rank-1 point. Filter buttons (L5/L10/All) and focus/dim legend chips. Uses `computeSessionRankingHistory` data. |
 | `src/components/PlayerCardImage.tsx` | Hero background art for `PlayerDetailPage`: 5:4 crop of the player's avatar fading into the page background, or a dim circular avatar watermark for default multiavatar icons / no avatar |
@@ -153,7 +180,7 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/components/PlayerRankingChartContent.tsx` | Wraps `RatingChart` for the "Ranking Chart" bottom sheet on `PlayerDetailPage`; shows an empty state when fewer than 2 data points |
 | `src/components/PlayerVersusList.tsx` | Shared expandable list of win/loss records vs. other players (opponents or partners), each row expanding to per-match `PlayerMatchHistoryItem`s; used by `PlayerOpponentsContent` and `PlayerPartnersContent` |
 | `src/components/PlayerOpponentsContent.tsx` | "Opponents" bottom sheet content on `PlayerDetailPage`: wraps `useOpponents` + `PlayerVersusList` |
-| `src/hooks/useOpponents.ts` | Per-player win/loss record vs. each opponent faced (completed matches with a winner only); exports `useOpponents(playerId)` |
+| `src/hooks/useOpponents.ts` | Per-player win/loss record vs. each opponent faced (completed matches with a winner only); exports `useOpponents(playerId)`; derives data from `usePlayerMatches(playerId)` — no global match scan |
 | `src/components/PlayerPartnersContent.tsx` | Partners bottom sheet content on `PlayerDetailPage`: wraps `useBestPartner` + `PlayerVersusList` |
 | `src/components/PlayerMatchHistoryItem.tsx` | Single completed-match row (W/L badge, teammates/opponents, score, match-type) via `getMatchRow`; used in `PlayerDetailPage` match history and `PlayerVersusList` expanded rows |
 | `src/hooks/usePlayerRackets.ts` | CRUD for `player_rackets` (max `MAX_RACKETS_PER_PLAYER` = 4 per player, enforced at the app layer); `usePlayerRackets`, `useCreatePlayerRacket`, `useUpdatePlayerRacket`, `useDeletePlayerRacket` — create/update also set the racket's `mascot_id`; delete invalidates the `players` query too (a deleted racket may have been the player's `active_racket_id`) |
@@ -179,6 +206,8 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 | `src/lib/fair-shuffle.ts` | Cycle-based fair shuffle: `enumerateSplits` (all C(N,4)×3 splits), `generateNextMatch` (cycle filter + 4-tier ranking), `applyMatchResult` (advances cycle + win/play tracking) |
 | `src/lib/bwf-api.ts` | BWF category constants + priority order |
 | `src/lib/rating.ts` | Elo rating algorithm + SCORING_CONFIG |
+| `supabase/migrations/20260623000000_scalability_indexes.sql` | Phase 2 DB indexes: composite/partial indexes on `matches`, `match_participants`, `player_match_results`, `players` to support scoped queries without full table scans |
+| `supabase/migrations/20260623000001_scalability_rpcs.sql` | Scalability RPCs: `count_ranked_matches`, `get_player_ranking_summary`, `get_leaderboard_page`, `get_badge_leaders` |
 | `src/stores/new-match-store.ts` | Match creation flow state |
 | `src/types/database.ts` | TypeScript types for all DB tables |
 | `docs/design-guidelines.md` | Design system reference |

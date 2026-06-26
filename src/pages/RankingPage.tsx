@@ -1,7 +1,9 @@
-import { useCallback, useState, useMemo } from 'react'
+import { useCallback, useState, useMemo, useRef, useLayoutEffect } from 'react'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { useNavigate } from 'react-router-dom'
 import { Medal, UserPlus, Crown } from 'lucide-react'
-import { useCompletedMatchCount, usePlayerRankings, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useCompletedMatchCount, useSessionLeaderboard, type SessionWeeklyStats } from '../hooks/useRankings'
+import { useLeaderboard } from '../hooks/useLeaderboard'
 import { useMenDoublesRankings } from '../hooks/useMenDoublesRankings'
 import { useSessions } from '../hooks/useSessions'
 import Avatar from '../components/Avatar'
@@ -257,7 +259,7 @@ export default function RankingPage() {
   const { user } = useAuth()
   const { data: myProfile } = useProfile(user?.id)
   const myPlayerId = myProfile?.player_id
-  const { data: rankings = [], isLoading, refetch } = usePlayerRankings()
+  const { data: rankings = [], isLoading, refetch } = useLeaderboard()
   const { data: completedMatchCount = 0, refetch: refetchCompletedMatchCount } = useCompletedMatchCount()
   const { data: sessions = [] } = useSessions()
   const isAdmin = useIsAdmin()
@@ -285,6 +287,32 @@ export default function RankingPage() {
   const TAB_ALL = t('ranking.tabAll')
   const TAB_DOUBLES = t('ranking.tabDoubles')
   const TAB_SESSION = t('ranking.tabSession')
+
+  const allListRef = useRef<HTMLDivElement>(null)
+  const doublesListRef = useRef<HTMLDivElement>(null)
+  const [allScrollMargin, setAllScrollMargin] = useState(0)
+  const [doublesScrollMargin, setDoublesScrollMargin] = useState(0)
+
+  useLayoutEffect(() => {
+    if (activeTab === 'all' && allListRef.current)
+      setAllScrollMargin(allListRef.current.offsetTop)
+    if (activeTab === 'doubles' && doublesListRef.current)
+      setDoublesScrollMargin(doublesListRef.current.offsetTop)
+  }, [activeTab, isLoading, doublesLoading])
+
+  const allVirtualizer = useWindowVirtualizer({
+    count: activeTab === 'all' ? rankings.length : 0,
+    estimateSize: () => 72,
+    overscan: 5,
+    scrollMargin: allScrollMargin,
+  })
+
+  const doublesVirtualizer = useWindowVirtualizer({
+    count: activeTab === 'doubles' ? doublesRankings.length : 0,
+    estimateSize: () => 72,
+    overscan: 5,
+    scrollMargin: doublesScrollMargin,
+  })
 
   return (
     <>
@@ -338,16 +366,25 @@ export default function RankingPage() {
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{t('ranking.noData')}</p>
           </div>
         ) : (
-          <div style={{ margin: '0 var(--space-5)' }}>
-            {rankings.map((s, i) => {
+          <div
+            ref={allListRef}
+            style={{ position: 'relative', height: allVirtualizer.getTotalSize(), margin: '0 var(--space-5)' }}
+          >
+            {allVirtualizer.getVirtualItems().map((virtualRow) => {
+              const s = rankings[virtualRow.index]
               const winRate = s.matchesPlayed > 0 ? Math.round((s.wins / s.matchesPlayed) * 100) : 0
-              const isLast = i === rankings.length - 1
+              const isLast = virtualRow.index === rankings.length - 1
               const isNew = s.matchesPlayed === 0
               return (
                 <button
-                  key={s.playerId}
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  ref={allVirtualizer.measureElement}
                   onClick={() => navigate(`/players/${s.playerId}`)}
                   style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
                     width: '100%',
                     textAlign: 'left',
                     display: 'flex',
@@ -359,6 +396,7 @@ export default function RankingPage() {
                     borderBottom: isLast ? 'none' : '1px solid var(--border)',
                     cursor: 'pointer',
                     WebkitTapHighlightColor: 'transparent',
+                    transform: `translateY(${virtualRow.start - allVirtualizer.options.scrollMargin}px)`,
                   }}
                   className="active:opacity-60"
                 >
@@ -504,78 +542,91 @@ export default function RankingPage() {
             >
               {t('ranking.pairCount', { count: doublesRankings.length })}
             </p>
-            {doublesRankings.map((pair, i) => {
-              const isLast = i === doublesRankings.length - 1
-              const winRatePct = Math.round(pair.winRate * 100)
-              return (
-                <div
-                  key={pair.key}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-3)',
-                    padding: 'var(--space-3) 0',
-                    borderBottom: isLast ? 'none' : '1px solid var(--border)',
-                  }}
-                >
-                  <GhostRank rank={i + 1} />
+            <div
+              ref={doublesListRef}
+              style={{ position: 'relative', height: doublesVirtualizer.getTotalSize() }}
+            >
+              {doublesVirtualizer.getVirtualItems().map((virtualRow) => {
+                const pair = doublesRankings[virtualRow.index]
+                const isLast = virtualRow.index === doublesRankings.length - 1
+                const winRatePct = Math.round(pair.winRate * 100)
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={doublesVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-3)',
+                      padding: 'var(--space-3) 0',
+                      borderBottom: isLast ? 'none' : '1px solid var(--border)',
+                      transform: `translateY(${virtualRow.start - doublesVirtualizer.options.scrollMargin}px)`,
+                    }}
+                  >
+                    <GhostRank rank={virtualRow.index + 1} />
 
-                  <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-                    <Avatar src={pair.player1.avatar_url} name={pair.player1.name} size={20} />
-                    <Avatar src={pair.player2.avatar_url} name={pair.player2.name} size={20} />
-                  </div>
-
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 15,
-                        fontWeight: 800,
-                        color: 'var(--fg)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {formatShortPlayerName(pair.player1.name)} / {formatShortPlayerName(pair.player2.name)}
+                    <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                      <Avatar src={pair.player1.avatar_url} name={pair.player1.name} size={20} />
+                      <Avatar src={pair.player2.avatar_url} name={pair.player2.name} size={20} />
                     </div>
-                    <PlayerRecordLine
-                      matchesPlayed={pair.matchesPlayed}
-                      wins={pair.wins}
-                      losses={pair.losses}
-                      winRate={winRatePct}
-                    />
-                  </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 48 }}>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'var(--text-xl)',
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        color: 'var(--fg)',
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {pair.totalPoints}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        color: 'var(--muted)',
-                      }}
-                    >
-                      {t('ranking.pts')}
-                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 15,
+                          fontWeight: 800,
+                          color: 'var(--fg)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {formatShortPlayerName(pair.player1.name)} / {formatShortPlayerName(pair.player2.name)}
+                      </div>
+                      <PlayerRecordLine
+                        matchesPlayed={pair.matchesPlayed}
+                        wins={pair.wins}
+                        losses={pair.losses}
+                        winRate={winRatePct}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0, minWidth: 48 }}>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-xl)',
+                          fontWeight: 900,
+                          lineHeight: 1,
+                          color: 'var(--fg)',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        {pair.totalPoints}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          color: 'var(--muted)',
+                        }}
+                      >
+                        {t('ranking.pts')}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         )
       )}

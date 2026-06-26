@@ -33,8 +33,11 @@ src/
 | 423 | pages/SessionStatsPage.tsx | Per-session weekly stats: points, wins, losses per player, champion badge |
 | 300 | components/PodiumChart.tsx | SVG podium chart for top-5 rankings with avatars |
 | 309 | hooks/useRankings.ts | usePlayerRankings (Elo + weekly Top 1 streak) + per-session leaderboard hooks |
-| 517 | pages/RankingPage.tsx | Four-tab ranking page: Singles (Elo all-time), Doubles (MD pairs win rate), Current session, Head to Head (`/ranking`) |
+| 517 | pages/RankingPage.tsx | Four-tab ranking page: Singles (paginated Elo all-time via useLeaderboard), Doubles (MD pairs win rate), Current session, Head to Head (`/ranking`) |
+| 91 | hooks/useLeaderboard.ts | Paginated all-time leaderboard via `get_leaderboard_page` RPC; useInfiniteQuery, page size 50 |
+| 80 | hooks/usePlayerRankingSummary.ts | Single-player ranking snapshot via `get_player_ranking_summary` RPC; avoids loading full leaderboard |
 | 80 | hooks/useMenDoublesRankings.ts | Compute MD pair rankings (win rate, wins, matches) from ended sessions only |
+| 58 | hooks/usePlayerMatches.ts | Cursor-paginated completed matches for one player (page size 20, keyset on played_at desc, id desc) |
 | 215 | components/firework-effect.tsx | Canvas firework overlay for champion celebration |
 | 210 | pages/PointSystemPage.tsx | Point system explanation (`/settings/points`) |
 | 338 | pages/SettingsPage.tsx | Profile, player link/unlink, change password, logout, dev tools |
@@ -51,7 +54,7 @@ src/
 | 8 | hooks/useIsAdmin.ts | Returns true if the current user's profile role is 'admin' |
 | 111 | hooks/usePlayerStats.ts | Player win/loss statistics + useSessionDonationStats |
 | 189 | types/database.ts | TypeScript types for all entities including MatchStatus, PlayerMatchResult, SessionAttendance, and league entities |
-| 81 | hooks/useBestPartner.ts | Compute all doubles partners sorted by win rate desc, with per-partner match list |
+| 90 | hooks/useOpponents.ts | Per-player win/loss record vs. each opponent (derived from usePlayerMatches) |
 | 100 | lib/rating.ts | Elo rating algorithm + SCORING_CONFIG constants |
 | 91 | components/PlayerSelector.tsx | Bottom-sheet player picker with search |
 | 90 | hooks/usePlayers.ts | Player CRUD hooks |
@@ -63,18 +66,15 @@ src/
 | 68 | hooks/useBwfTournaments.ts | Read BWF tournament cache from Supabase; filter by date window |
 | 63 | hooks/useSessionAttendances.ts | Query/upsert/delete hooks for `session_attendances` |
 | 57 | design-system/components/bwf-category-badge.tsx | Tiered color badge for BWF tournament categories (S1000/S750/S500/S300/S100/Finals) |
-| 90 | hooks/usePlayerAchievements.ts | Compute player achievements per ended session only (champion/runner-up ranking) |
+| 178 | hooks/usePlayerBadges.ts | Computes record-holder badges: most_played/most_donated from `get_badge_leaders()` RPC, streak/dynasty from player matches |
 | 78 | hooks/usePlayerPointsHistory.ts | Group a player's `player_match_results` by session for future point-history UI |
 | 61 | stores/new-match-store.ts | Zustand store for match creation flow (matchType, teamA/B, mode, scheduledAt) |
-| 65 | hooks/usePlayerMatchHistory.ts | Paginated match history for a player (cursor-based) |
 | 54 | hooks/useBackup.ts | Admin-only JSON export of core Supabase tables |
 | 50 | lib/image.ts | Canvas-based image compression utility (center-crop → square → JPEG) |
 | 47 | lib/session-format.ts | `formatSessionDuration` utility |
 | 46 | components/DonorListItem.tsx | Row for SessionDonatedListPage (avatar + losses + match count) |
-| 45 | hooks/usePlayerMatches.ts | Paginated match history for a player (infinite scroll) |
-| 66 | hooks/useHeadToHead.ts | Head-to-head stats vs each opponent, with per-opponent match list |
-| 75 | hooks/useH2HPairs.ts | `computeH2HPairs` (pure, tested) + hook: exact-composition 2v2 head-to-head wins/losses |
-| — | components/HeadToHeadTab.tsx | H2H tab UI: 2-slot player pickers per side, win-% gauge, win counts, match history |
+| 66 | hooks/useH2HPairs.ts | `computeH2HPairs` (pure, tested) + hook: exact-composition 2v2 head-to-head wins/losses |
+| 511 | components/HeadToHeadTab.tsx | H2H tab UI: 2-slot player pickers per side, win-% gauge, win counts, match history |
 | — | design-system/components/avatar.tsx | Rectangle avatar: accent bg, 2-letter initials, image support |
 | 2 | components/Avatar.tsx | Re-export shim → design-system/components/avatar.tsx |
 | 13 | lib/supabase.ts | Supabase client initialization |
@@ -84,15 +84,15 @@ src/
 | 8 | lib/player-name.ts | Player display-name formatter (`Danh Nguyen` → `Danh N.`) |
 | 125 | components/PlayerRacketHeaderCard.tsx | Rackets entry point on PlayerDetailPage: header-image card for the newest racket, opens a bottom sheet with all rackets + "Manage rackets" link |
 | 111 | components/PlayerRacketsCard.tsx | Rackets list on PlayerRacketsPage: add/edit/delete a player's rackets when `canEdit` |
-| 109 | components/PlayerOverviewCard.tsx | PlayerDetailPage overview: champion/runner-up session rows + record-holder award badges |
-| 109 | components/PlayerVersusList.tsx | Shared expandable win/loss list vs. opponents or partners, used by PlayerH2HContent and PlayerPartnersContent |
+| 113 | components/PlayerOverviewCard.tsx | PlayerDetailPage overview: champion/runner-up session rows + record-holder award badges |
+| 109 | components/PlayerVersusList.tsx | Shared expandable win/loss list vs. opponents or partners, used by PlayerOpponentsContent and PlayerPartnersContent |
 | 98 | pages/PlayerRacketsPage.tsx | `/players/:playerId/rackets` — full racket management page |
 | 71 | hooks/usePlayerRackets.ts | CRUD for `player_rackets` (max 4 per player) |
 | 56 | components/PlayerCardImage.tsx | PlayerDetailPage hero background art from the player's avatar |
 | 42 | components/PlayerMatchHistoryItem.tsx | Single completed-match row (W/L, teammates/opponents, score, type) via `getMatchRow` |
 | 41 | lib/player-match-row.ts | `getMatchRow` (pure, tested) — derives win/loss, teammates, opponents, score, type for a completed match |
 | 31 | components/PlayerRankingChartContent.tsx | Wraps RatingChart for the "Ranking Chart" bottom sheet on PlayerDetailPage |
-| 29 | components/PlayerH2HContent.tsx | Head-to-head bottom sheet content on PlayerDetailPage |
+| 29 | components/PlayerOpponentsContent.tsx | Opponents bottom sheet content on PlayerDetailPage |
 | 29 | components/PlayerPartnersContent.tsx | Partners bottom sheet content on PlayerDetailPage |
 | 19 | lib/badge-categories.ts | `CATEGORY_ICON` / `CATEGORY_COLOR` maps for `BadgeCategory` |
 | 13 | lib/session-label.ts | `formatSessionLabel` (pure, tested) — session label or formatted start date |
@@ -172,31 +172,43 @@ User Action → Hook (useMatches/usePlayers) → TanStack Query
 
 ## Hooks
 
+**Scalability (Postgres RPCs)**:
 ```
-hooks/
+├── useLeaderboard.ts               # Paginated all-time leaderboard via get_leaderboard_page RPC
+├── usePlayerRankingSummary.ts      # Single-player ranking snapshot via get_player_ranking_summary RPC
+├── usePlayerMatches.ts             # Cursor-paginated match history for one player (page size 20, keyset pagination)
+├── usePlayerBadges.ts              # Record-holder badges via get_badge_leaders RPC + player-scoped data
+```
+
+**Other hooks**:
+```
 ├── useAuth.ts              # Supabase auth state
 ├── useAvatarUpload.ts      # Upload/delete/set-default avatar to Supabase Storage
 ├── useBackup.ts            # Admin JSON export of core Supabase tables
-├── useBestPartner.ts       # Compute all doubles partners sorted by win rate desc, with per-partner match list
 ├── useBwfTournaments.ts    # Read BWF tournament cache; filter by date window
-├── useHeadToHead.ts        # Head-to-head stats vs each opponent, with per-opponent match list
 ├── useMatches.ts           # Match CRUD: useMatches, useMatch, useCreateMatch,
 │                           #   useUpdateMatch, useDeleteMatch, useStartMatch,
 │                           #   useRecordResult, useEndMatchNoWinner,
 │                           #   useReorderQueue, useReopenMatch, useUpdateMatchPlayers
 ├── useMatchPlayerResults.ts # Fetch `player_match_results` rows for a match
-├── usePlayerMatchHistory.ts # Cursor-based paginated match history for a player
-├── usePlayerMatches.ts     # Infinite-scroll paginated match history for a player
+├── useOpponents.ts         # Per-player win/loss record vs each opponent (derived from usePlayerMatches)
+├── useBestPartner.ts       # Best doubles partner from player match history
+├── useH2HPairs.ts          # Exact-composition 2v2 head-to-head stats
+├── useMenDoublesRankings.ts # Compute MD pair rankings from ended sessions only
 ├── usePlayerPointsHistory.ts # Group player point rows by session for future point-history UI
 ├── usePlayers.ts           # Player CRUD operations
 ├── usePlayerStats.ts       # Player win/loss statistics + useSessionDonationStats
 ├── usePlayerAchievements.ts # Compute player achievements per session (champion/runner-up)
+├── usePlayerRackets.ts     # Player racket CRUD (max 4 per player)
+├── usePlayerQuotes.ts      # Player custom quotes CRUD (max 5 per player, 50 chars each)
+├── usePlayerSessionStats.ts # Per-session player stats (aggregated points, rating deltas)
 ├── useIsAdmin.ts           # Returns true if the current user's profile role is 'admin'
 ├── useProfile.ts           # useProfile (fetch avatar_url, role, player_id) + useUpdatePlayerLink (link/unlink player)
 ├── useRankings.ts          # Overall Elo rankings + weekly Top 1 streak + session weekly rankings/leaderboards
 ├── useSessionAttendances.ts # Fetch/upsert/delete session RSVP rows
+├── useLeagueTeams.ts       # Fetch league teams + players for a session
+├── useLeagueStandings.ts   # Compute standings from completed league matches
 ├── useSessions.ts          # Session CRUD + useOpenSession(); cached start/end/rename mutations
-├── useTopJoinedPlayers.ts  # Top-N players by matchesPlayed (default selection)
 ```
 
 ## Lib

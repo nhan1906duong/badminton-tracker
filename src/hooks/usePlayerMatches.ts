@@ -1,45 +1,67 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, Player } from '../types/database'
+import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, Player, Session } from '../types/database'
 
-const PAGE_SIZE = 10
-const PLAYER_MATCHES_KEY = 'player-matches'
+const PAGE_SIZE = 20
+
+export interface PlayerMatchCursor {
+  played_at: string
+  id: string
+}
 
 export function usePlayerMatches(playerId: string) {
   return useInfiniteQuery({
-    queryKey: [PLAYER_MATCHES_KEY, playerId],
-    queryFn: async ({ pageParam }) => {
-      const from = pageParam * PAGE_SIZE
-      const to = from + PAGE_SIZE - 1
-
-      const { data, error } = await supabase
+    queryKey: ['player-matches', playerId],
+    queryFn: async ({ pageParam }: { pageParam: PlayerMatchCursor | null }) => {
+      // Dual-alias select:
+      //   player_filter: inner join used only for filtering — keeps PostgREST from
+      //     stripping other participants out of the `participants` alias.
+      //   participants: returns the full participant list including all players.
+      let query = supabase
         .from('matches')
         .select(`
           *,
+          session:sessions(*),
           teams:match_teams(*),
-          participants:match_participants!inner(*, player:players(*)),
+          participants:match_participants(*, player:players(*)),
+          player_filter:match_participants!inner(player_id),
           scores:match_scores(*)
         `)
-        .eq('match_participants.player_id', playerId)
+        .eq('player_filter.player_id', playerId)
+        .eq('status', 'COMPLETED')
         .order('played_at', { ascending: false })
         .order('id', { ascending: false })
-        .range(from, to)
+        .limit(PAGE_SIZE)
 
+      if (pageParam) {
+        query = query.or(
+          `played_at.lt.${pageParam.played_at},` +
+            `and(played_at.eq.${pageParam.played_at},id.lt.${pageParam.id})`,
+        )
+      }
+
+      const { data, error } = await query
       if (error) throw error
 
       const matches = (data ?? []).map((m) => ({
         ...(m as Match),
+        session: m.session as Session | null,
         teams: (m.teams ?? []) as MatchTeam[],
         participants: (m.participants ?? []) as (MatchParticipant & { player: Player })[],
         scores: ((m.scores ?? []) as MatchScore[]).sort((a, b) => a.set_number - b.set_number),
-      })) as MatchWithDetails[]
+      })) as (MatchWithDetails & { session: Session | null })[]
 
-      return { matches, hasMore: matches.length === PAGE_SIZE }
+      const last = matches[matches.length - 1]
+      const nextCursor: PlayerMatchCursor | null =
+        matches.length === PAGE_SIZE && last
+          ? { played_at: last.played_at, id: last.id }
+          : null
+
+      return { matches, nextCursor }
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, _allPages, lastPageParam) => {
-      return lastPage.hasMore ? lastPageParam + 1 : undefined
-    },
+    initialPageParam: null as PlayerMatchCursor | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!playerId,
+    staleTime: 5 * 60_000,
   })
 }

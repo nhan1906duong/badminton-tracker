@@ -3,6 +3,21 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { SessionAttendancePanel } from '../SessionAttendancePanel'
 import type { Player, SessionAttendance } from '../../types/database'
 
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+
+vi.mock('../../i18n', async () => {
+  const actual = await vi.importActual<typeof import('../../i18n')>('../../i18n')
+  return {
+    ...actual,
+    useI18n: () => ({
+      locale: 'en',
+      setLocale: () => undefined,
+      t: (key: string, values?: Record<string, string | number>) =>
+        actual.translate('en', key as never, values),
+    }),
+  }
+})
+
 const PLAYERS: Player[] = [
   { id: 'p1', name: 'Alice Smith', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
   { id: 'p2', name: 'Bob Jones', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },

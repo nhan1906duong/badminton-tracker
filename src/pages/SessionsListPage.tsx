@@ -1,4 +1,5 @@
-import { useMemo, useCallback, useState } from 'react'
+import { useMemo, useCallback, useState, useRef, useLayoutEffect } from 'react'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import { useNavigate } from 'react-router-dom'
 import { useSessions } from '../hooks/useSessions'
 import { useMatches } from '../hooks/useMatches'
@@ -14,19 +15,63 @@ import {
   getSessionName,
   getSessionStatus,
 } from '../lib/session-format'
-import type { MatchWithDetails, Session } from '../types/database'
+import type { Session } from '../types/database'
 import { useI18n } from '../i18n'
-import { useSessionLeaderboards } from '../hooks/useRankings'
+import type { Locale, TFunction } from '../i18n'
+import { useSessionLeaderboard } from '../hooks/useRankings'
 import { useAuth } from '../hooks/useAuth'
 
-interface SessionStat {
+/**
+ * Per-session leaderboard card — fetches only when the session is in the list.
+ * This replaces useSessionLeaderboards() which fetched all result rows for all sessions.
+ */
+function SessionLeaderboardCard({
+  session,
+  matchCount,
+  onNavigate,
+  locale,
+  t,
+}: {
+  session: Session
   matchCount: number
-  topPlayer?: {
-    name: string
-    avatarUrl?: string | null
-    record: string
-    winRate: number
-  }
+  onNavigate: () => void
+  locale: Locale
+  t: TFunction
+}) {
+  const { data: leaderboard } = useSessionLeaderboard(session.id)
+  const leader = leaderboard?.leader
+
+  const topPlayer =
+    leader && leader.matchesPlayed > 0
+      ? {
+          name: leader.name,
+          avatarUrl: leader.avatarUrl,
+          record: t('units.winLossPlayed', { wins: leader.wins, losses: leader.losses, played: leader.matchesPlayed }),
+          winRate: Math.round((leader.wins / leader.matchesPlayed) * 100),
+        }
+      : undefined
+
+  return (
+    <button
+      onClick={onNavigate}
+      className="w-full text-left active:scale-[0.98] transition-transform"
+      style={{ borderRadius: 'var(--radius-lg)' }}
+    >
+      <SessionCard
+        status={getSessionStatus(session)}
+        name={getSessionName(session, locale)}
+        dateTime={formatSessionDateTime(session.started_at, locale)}
+        duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
+        matchCount={matchCount}
+        topPlayer={topPlayer}
+        compact
+        tournamentCategory={session.bwf_tournaments ? {
+          categoryName: session.bwf_tournaments.category_name,
+          categorySlug: session.bwf_tournaments.category_slug,
+        } : null}
+      />
+    </button>
+  )
 }
 
 export default function SessionsListPage() {
@@ -46,46 +91,17 @@ export default function SessionsListPage() {
     isError: matchesError,
     refetch: refetchMatches,
   } = useMatches()
-  const {
-    data: sessionLeaderboards,
-    isLoading: leaderboardsLoading,
-    isError: leaderboardsError,
-    refetch: refetchLeaderboards,
-  } = useSessionLeaderboards()
 
-  const sessionStats = useMemo(() => {
-    if (!allMatches) return new Map<string, SessionStat>()
-
-    const stats = new Map<string, SessionStat>()
-    const matchesBySession = new Map<string, MatchWithDetails[]>()
-
-    for (const match of allMatches) {
-      const list = matchesBySession.get(match.session_id) ?? []
-      list.push(match)
-      matchesBySession.set(match.session_id, list)
+  // matchCountBySession built from session-scoped match data (already cached per session)
+  const matchCountBySession = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const match of allMatches ?? []) {
+      map.set(match.session_id, (map.get(match.session_id) ?? 0) + 1)
     }
+    return map
+  }, [allMatches])
 
-    for (const [sessionId, matches] of matchesBySession) {
-      const leader = sessionLeaderboards?.get(sessionId)?.leader
-
-      const topPlayer =
-        leader && leader.matchesPlayed > 0
-          ? {
-              name: leader.name,
-              avatarUrl: leader.avatarUrl,
-              record: t('units.winLossPlayed', { wins: leader.wins, losses: leader.losses, played: leader.matchesPlayed }),
-              winRate: Math.round((leader.wins / leader.matchesPlayed) * 100),
-            }
-          : undefined
-
-      stats.set(sessionId, { matchCount: matches.length, topPlayer })
-    }
-
-    return stats
-  }, [allMatches, sessionLeaderboards, t])
-
-  // Group sessions: Live → Upcoming → Recent. Within each group the
-  // existing reverse-chronological order (from the query) is preserved.
+  // Group sessions: Live → Upcoming → Recent.
   const sessionGroups = useMemo(() => {
     const live: Session[] = []
     const scheduled: Session[] = []
@@ -104,9 +120,38 @@ export default function SessionsListPage() {
   }, [sessions, t])
 
   const showGroupHeaders = sessionGroups.length > 1
+  const isLoading = sessionsLoading || matchesLoading
+  const isError = sessionsError || matchesError
 
-  const isLoading = sessionsLoading || matchesLoading || leaderboardsLoading
-  const isError = sessionsError || matchesError || leaderboardsError
+  type FlatRow =
+    | { type: 'header'; key: string; label: string }
+    | { type: 'session'; key: string; session: Session }
+
+  const flatRows = useMemo<FlatRow[]>(() => {
+    const rows: FlatRow[] = []
+    for (const group of sessionGroups) {
+      if (showGroupHeaders) rows.push({ type: 'header', key: `header-${group.key}`, label: group.label })
+      for (const session of group.items) {
+        rows.push({ type: 'session', key: session.id, session })
+      }
+    }
+    return rows
+  }, [sessionGroups, showGroupHeaders])
+
+  const listRef = useRef<HTMLDivElement>(null)
+  const [listScrollMargin, setListScrollMargin] = useState(0)
+
+  useLayoutEffect(() => {
+    if (activeTabKey === 'list' && !isLoading && listRef.current)
+      setListScrollMargin(listRef.current.offsetTop)
+  }, [activeTabKey, isLoading])
+
+  const listVirtualizer = useWindowVirtualizer({
+    count: activeTabKey === 'list' ? flatRows.length : 0,
+    estimateSize: (index) => (flatRows[index]?.type === 'header' ? 40 : 100),
+    overscan: 5,
+    scrollMargin: listScrollMargin,
+  })
 
   const activeCount = sessions?.filter((s) => getSessionStatus(s) === 'active').length ?? 0
   const scheduledCount = sessions?.filter((s) => getSessionStatus(s) === 'scheduled').length ?? 0
@@ -121,8 +166,8 @@ export default function SessionsListPage() {
     : null
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([refetchSessions(), refetchMatches(), refetchLeaderboards()])
-  }, [refetchSessions, refetchMatches, refetchLeaderboards])
+    await Promise.all([refetchSessions(), refetchMatches()])
+  }, [refetchSessions, refetchMatches])
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -171,40 +216,41 @@ export default function SessionsListPage() {
               }}
             />
           ) : sessionGroups.length > 0 ? (
-            sessionGroups.map((group) => (
-              <div key={group.key} className="space-y-[var(--space-3)]">
-                {showGroupHeaders && (
-                  <SectionLabel className="px-[var(--space-1)] pt-[var(--space-2)]">
-                    {group.label}
-                  </SectionLabel>
-                )}
-                {group.items.map((session) => {
-                  const stat = sessionStats.get(session.id)
-                  return (
-                    <button
-                      key={session.id}
-                      onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
-                      className="w-full text-left active:scale-[0.98] transition-transform"
-                      style={{ borderRadius: 'var(--radius-lg)' }}
-                    >
-                      <SessionCard
-                        status={getSessionStatus(session)}
-                        name={getSessionName(session, locale)}
-                        dateTime={formatSessionDateTime(session.started_at, locale)}
-                        duration={formatSessionDuration(session.started_at, session.ended_at, locale)}
-                        matchCount={stat?.matchCount ?? 0}
-                        topPlayer={stat?.topPlayer}
-                        compact
-                        tournamentCategory={session.bwf_tournaments ? {
-                          categoryName: session.bwf_tournaments.category_name,
-                          categorySlug: session.bwf_tournaments.category_slug,
-                        } : null}
+            <div ref={listRef} style={{ position: 'relative', height: listVirtualizer.getTotalSize() }}>
+              {listVirtualizer.getVirtualItems().map((virtualRow) => {
+                const row = flatRows[virtualRow.index]
+                const isLast = virtualRow.index === flatRows.length - 1
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={listVirtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start - listVirtualizer.options.scrollMargin}px)`,
+                      paddingBottom: isLast ? 0 : 12,
+                    }}
+                  >
+                    {row.type === 'header' ? (
+                      <SectionLabel className="px-[var(--space-1)] pt-[var(--space-2)]">
+                        {row.label}
+                      </SectionLabel>
+                    ) : (
+                      <SessionLeaderboardCard
+                        session={row.session}
+                        matchCount={matchCountBySession.get(row.session.id) ?? 0}
+                        onNavigate={() => navigate(`/sessions/${row.session.id}`, { state: { from: '/sessions' } })}
+                        locale={locale}
+                        t={t}
                       />
-                    </button>
-                  )
-                })}
-              </div>
-            ))
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           ) : (
             <EmptyState
               icon={<Trophy className="w-9 h-9 mx-auto" />}

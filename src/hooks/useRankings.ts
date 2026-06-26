@@ -306,14 +306,11 @@ export function usePlayerRankings() {
 export function useCompletedMatchCount() {
   return useQuery({
     queryKey: ['completed-match-count'],
+    staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('player_match_results')
-        .select('match_id')
-
+      const { data, error } = await supabase.rpc('count_ranked_matches')
       if (error) throw error
-
-      return new Set((data ?? []).map(r => r.match_id)).size
+      return data as number
     },
   })
 }
@@ -348,19 +345,56 @@ export function useSessionLeaderboard(sessionId: string | undefined) {
     queryKey: ['player-rankings', 'session-leaderboard', sessionId],
     enabled: !!sessionId,
     queryFn: async () => {
-      const [{ data: players, error: playersError }, { data: results, error: resultsError }] =
-        await Promise.all([
-          supabase.from('players').select('id, name, avatar_url'),
-          supabase
-            .from('player_match_results')
-            .select('session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
-            .eq('session_id', sessionId!),
-        ])
+      // One row per player from the materialized table — no per-match fan-out.
+      const { data, error } = await supabase
+        .from('player_session_stats')
+        .select(`
+          player_id,
+          total_matches,
+          total_wins,
+          total_weekly_points,
+          points_for,
+          points_against,
+          total_rating_delta,
+          player:players!player_id(id, name, avatar_url)
+        `)
+        .eq('session_id', sessionId!)
 
-      if (playersError) throw playersError
-      if (resultsError) throw resultsError
+      if (error) throw error
 
-      const rankings = buildSessionWeeklyRankings(players as PlayerRow[] | null, results as SessionResultRow[] | null)
+      type StatRow = {
+        player_id: string
+        total_matches: number
+        total_wins: number
+        total_weekly_points: number
+        points_for: number
+        points_against: number
+        total_rating_delta: number
+        player: { id: string; name: string; avatar_url: string | null }
+      }
+
+      const rankings: SessionWeeklyStats[] = ((data ?? []) as unknown as StatRow[])
+        .filter(r => r.player != null)
+        .map(r => ({
+          playerId: r.player.id,
+          name: r.player.name,
+          avatarUrl: r.player.avatar_url,
+          weeklyPoints: r.total_weekly_points,
+          averageWeeklyPoints: r.total_matches > 0 ? Math.round(r.total_weekly_points / r.total_matches) : 0,
+          wins: r.total_wins,
+          losses: r.total_matches - r.total_wins,
+          matchesPlayed: r.total_matches,
+          pointDifference: r.points_for - r.points_against,
+          ratingDelta: Number(r.total_rating_delta),
+        }))
+        .sort((a, b) => {
+          if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
+          if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
+          if (b.wins !== a.wins) return b.wins - a.wins
+          if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference
+          return a.name.localeCompare(b.name)
+        })
+
       return { rankings, leader: rankings[0] } satisfies SessionLeaderboard
     },
   })

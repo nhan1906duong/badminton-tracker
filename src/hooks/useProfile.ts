@@ -22,12 +22,14 @@ export function useProfile(userId?: string) {
 export function useUpdatePlayerLink() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ userId, playerId }: { userId: string; playerId: string | null }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ player_id: playerId })
-        .eq('id', userId)
-      if (error) throw error
+    mutationFn: async ({ userId: _userId, playerId }: { userId: string; playerId: string | null }) => {
+      if (playerId) {
+        const { error } = await supabase.rpc('update_player_link', { p_player_id: playerId })
+        if (error) throw error
+      } else {
+        const { error } = await supabase.rpc('clear_player_link')
+        if (error) throw error
+      }
     },
     onSuccess: (_, { userId }) => {
       qc.invalidateQueries({ queryKey: ['profiles', userId] })

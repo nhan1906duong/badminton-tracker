@@ -1,0 +1,2 @@
+- [Elo PL/pgSQL port constraints](project_elo_plpgsql_port.md) — rounding/order gotchas when porting src/lib/rating.ts to RPCs
+- [RPC conventions](project_rpc_conventions.md) — SECURITY DEFINER, in-RPC auth checks, grants, jsonb params

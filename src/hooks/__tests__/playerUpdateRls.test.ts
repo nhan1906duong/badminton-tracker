@@ -17,11 +17,13 @@ import { useAvatarUpload, useSetDefaultAvatar, useAvatarDelete } from '../useAva
 // ─── Supabase mock ────────────────────────────────────────────────────────────
 
 const mockFrom = vi.fn()
+const mockRpc = vi.fn()
 const mockStorageFrom = vi.fn()
 
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     from: (table: string) => mockFrom(table),
+    rpc: (name: string, params: unknown) => mockRpc(name, params),
     storage: { from: (bucket: string) => mockStorageFrom(bucket) },
   },
 }))
@@ -60,19 +62,6 @@ function makeWrapper() {
 }
 
 /**
- * Builder for useUpdatePlayer: chain is .update().eq().select().single()
- * The terminal call is .single() which returns a promise.
- */
-function makeSelectBuilder(resolve: { data: unknown; error: unknown }) {
-  const b: Record<string, unknown> = {}
-  for (const m of ['update', 'eq', 'select', 'single', 'maybeSingle']) {
-    b[m] = vi.fn(() => b)
-  }
-  ;(b.single as ReturnType<typeof vi.fn>).mockResolvedValue(resolve)
-  return b
-}
-
-/**
  * Builder for avatar mutations: chain is .update().eq()
  * The terminal call is .eq() which returns a promise.
  */
@@ -105,8 +94,8 @@ describe('useUpdatePlayer – RLS: players_update_linked_or_admin', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('admin: update succeeds for any player', async () => {
-    // DB returns the updated row — admin passes the RLS check.
-    mockFrom.mockReturnValue(makeSelectBuilder({ data: { ...PLAYER, name: 'Alice Edited' }, error: null }))
+    // RPC returns an array with the updated row — admin passes the RLS check.
+    mockRpc.mockResolvedValueOnce({ data: [{ ...PLAYER, name: 'Alice Edited' }], error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useUpdatePlayer(), { wrapper })
@@ -119,7 +108,7 @@ describe('useUpdatePlayer – RLS: players_update_linked_or_admin', () => {
 
   it('linked user: update succeeds for own player', async () => {
     // profiles.player_id === player.id — RLS allows the update.
-    mockFrom.mockReturnValue(makeSelectBuilder({ data: { ...PLAYER, name: 'Alice New' }, error: null }))
+    mockRpc.mockResolvedValueOnce({ data: [{ ...PLAYER, name: 'Alice New' }], error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useUpdatePlayer(), { wrapper })
@@ -131,8 +120,8 @@ describe('useUpdatePlayer – RLS: players_update_linked_or_admin', () => {
   })
 
   it('unlinked regular user: update is rejected with RLS error', async () => {
-    // No matching profiles row — RLS blocks the UPDATE and returns 42501.
-    mockFrom.mockReturnValue(makeSelectBuilder({ data: null, error: RLS_ERROR }))
+    // No matching profiles row — RLS blocks the RPC and returns 42501.
+    mockRpc.mockResolvedValueOnce({ data: null, error: RLS_ERROR } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useUpdatePlayer(), { wrapper })

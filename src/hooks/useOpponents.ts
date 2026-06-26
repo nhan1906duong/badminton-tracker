@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useMatches } from './useMatches'
+import { usePlayerMatches } from './usePlayerMatches'
 import type { MatchWithDetails, Player } from '../types/database'
 
 export interface OpponentEntry {
@@ -11,10 +11,11 @@ export interface OpponentEntry {
 }
 
 export function useOpponents(playerId: string) {
-  const { data: allMatches, isLoading } = useMatches()
+  const { data, isLoading } = usePlayerMatches(playerId)
+  const allMatches = data?.pages.flatMap((p) => p.matches) ?? []
 
   const entries = useMemo<OpponentEntry[]>(() => {
-    if (!allMatches || !playerId) return []
+    if (!playerId || allMatches.length === 0) return []
 
     const map = new Map<
       string,

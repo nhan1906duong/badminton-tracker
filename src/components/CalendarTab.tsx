@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
 import { useSessions } from '../hooks/useSessions'
-import { useSessionLeaderboards } from '../hooks/useRankings'
+import { useSessionLeaderboard } from '../hooks/useRankings'
 import { useMatches } from '../hooks/useMatches'
 import { BwfCategoryBadge } from '../../design-system/components/bwf-category-badge'
 import { Avatar } from '../../design-system/components/avatar'
@@ -36,11 +36,230 @@ const DOT = (
   />
 )
 
+/**
+ * A single session entry in the calendar timeline.
+ * Calls useSessionLeaderboard only once it becomes visible in the viewport.
+ * This replaces the global useSessionLeaderboards() fetch.
+ */
+function CalendarSessionEntry({
+  session,
+  matchCount,
+  onNavigate,
+}: {
+  session: Session
+  matchCount: number
+  onNavigate: () => void
+}) {
+  const entryRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  // Start fetching as soon as the element enters the viewport
+  useEffect(() => {
+    const el = entryRef.current
+    if (!el) return
+
+    // If IntersectionObserver isn't available (test env), default to visible
+    if (typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px' }, // start fetching slightly before it scrolls into view
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  const { data: leaderboard } = useSessionLeaderboard(isVisible ? session.id : undefined)
+  const champion = leaderboard?.leader
+  const playerCount = leaderboard?.rankings.length ?? 0
+
+  const winRate =
+    champion && champion.matchesPlayed > 0
+      ? Math.round((champion.wins / champion.matchesPlayed) * 100)
+      : null
+
+  return (
+    <div
+      ref={entryRef}
+      className="relative grid items-start cursor-pointer"
+      style={{
+        gridTemplateColumns: `${TL_COL}px 1fr`,
+        columnGap: 'var(--space-4)',
+        padding: 'var(--space-2) 0',
+        zIndex: 2,
+      }}
+      onClick={onNavigate}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onNavigate()
+        }
+      }}
+    >
+      {/* Champion avatar = timeline node */}
+      <div style={{ justifySelf: 'center', position: 'relative' }}>
+        {champion ? (
+          <div style={{ borderRadius: '50%', boxShadow: '0 0 0 5px var(--bg)', overflow: 'hidden', flexShrink: 0, display: 'inline-flex' }}>
+            <Avatar
+              src={champion.avatarUrl}
+              name={champion.name}
+              size={TL_AVATAR}
+              className="!rounded-full"
+            />
+          </div>
+        ) : (
+          <div
+            style={{
+              width: TL_AVATAR,
+              height: TL_AVATAR,
+              background: 'var(--border)',
+              borderRadius: '50%',
+              boxShadow: '0 0 0 5px var(--bg)',
+            }}
+          />
+        )}
+      </div>
+
+      {/* Session card */}
+      <SessionCardContent
+        session={session}
+        champion={champion}
+        playerCount={playerCount}
+        matchCount={matchCount}
+        winRate={winRate}
+      />
+    </div>
+  )
+}
+
+/**
+ * Pure presentational card content — extracted so it can be tested without
+ * needing the intersection observer.
+ */
+function SessionCardContent({
+  session,
+  champion,
+  playerCount,
+  matchCount,
+  winRate,
+}: {
+  session: Session
+  champion: { name: string; avatarUrl: string | null; wins: number; losses: number } | undefined
+  playerCount: number
+  matchCount: number
+  winRate: number | null
+}) {
+  const { locale } = useI18n()
+  const localeTag = LOCALE_TAG[locale]
+  const name = getDisplayName(session, localeTag)
+  const duration = formatSessionDuration(session.started_at, session.ended_at, locale)
+
+  return (
+    <article
+      className="min-w-0"
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-4)',
+      }}
+    >
+      {/* Name + BWF tier badge */}
+      <div className="flex items-start gap-3">
+        <h3
+          className="flex-1 font-extrabold leading-snug"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 18,
+            letterSpacing: '-0.02em',
+            color: 'var(--fg)',
+            textWrap: 'balance',
+          } as React.CSSProperties}
+        >
+          {name}
+        </h3>
+        {session.bwf_tournaments && (
+          <div className="flex-shrink-0 mt-0.5">
+            <BwfCategoryBadge
+              categoryName={session.bwf_tournaments.category_name}
+              categorySlug={session.bwf_tournaments.category_slug}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Meta row */}
+      {(matchCount > 0 || playerCount > 0) && (
+        <div
+          className="flex items-center flex-wrap gap-2 mt-3"
+          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)' }}
+        >
+          {matchCount > 0 && (
+            <span><b style={{ color: 'var(--fg)', fontWeight: 600 }}>{matchCount}</b> matches</span>
+          )}
+          {matchCount > 0 && duration && <>{DOT}<span>{duration}</span></>}
+          {playerCount > 0 && (
+            <>{DOT}<span><b style={{ color: 'var(--fg)', fontWeight: 600 }}>{playerCount}</b> players</span></>
+          )}
+        </div>
+      )}
+
+      {/* Champion footer */}
+      {champion && (
+        <div
+          className="flex items-center gap-3 mt-3 pt-3"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
+          <div className="flex-1 min-w-0">
+            <div
+              className="flex items-center gap-1 font-bold uppercase"
+              style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent)', letterSpacing: '0.1em' }}
+            >
+              <Trophy style={{ width: 11, height: 11 }} />
+              Champion
+            </div>
+            <div
+              className="font-bold truncate"
+              style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--fg)', lineHeight: 1.2, marginTop: 3 }}
+            >
+              {champion.name}
+            </div>
+          </div>
+          {winRate !== null && (
+            <div className="flex-shrink-0 text-right">
+              <div
+                className="font-extrabold leading-none"
+                style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}
+              >
+                {winRate}%
+              </div>
+              <div
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.04em', marginTop: 3 }}
+              >
+                {champion.wins}W · {champion.losses}L
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </article>
+  )
+}
+
 export function CalendarTab() {
   const navigate = useNavigate()
   const { locale, t } = useI18n()
   const { data: sessions } = useSessions()
-  const { data: leaderboards } = useSessionLeaderboards()
   const { data: allMatches } = useMatches()
   const localeTag = LOCALE_TAG[locale]
 
@@ -164,153 +383,14 @@ export function CalendarTab() {
               </div>
 
               {/* ── Session entries ── */}
-              {daySessions.map((session) => {
-                const leaderboard = leaderboards?.get(session.id)
-                const champion = leaderboard?.leader
-                const playerCount = leaderboard?.rankings.length ?? 0
-                const matchCount = matchCountBySession.get(session.id) ?? 0
-                const duration = formatSessionDuration(session.started_at, session.ended_at, locale)
-                const name = getDisplayName(session, localeTag)
-                const winRate = champion && champion.matchesPlayed > 0
-                  ? Math.round((champion.wins / champion.matchesPlayed) * 100)
-                  : null
-
-                return (
-                  <div
-                    key={session.id}
-                    className="relative grid items-start cursor-pointer"
-                    style={{
-                      gridTemplateColumns: `${TL_COL}px 1fr`,
-                      columnGap: 'var(--space-4)',
-                      padding: 'var(--space-2) 0',
-                      zIndex: 2,
-                    }}
-                    onClick={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
-                    role="link"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })
-                      }
-                    }}
-                  >
-                    {/* Champion avatar = timeline node */}
-                    <div style={{ justifySelf: 'center', position: 'relative' }}>
-                      {champion ? (
-                        <div style={{ borderRadius: '50%', boxShadow: '0 0 0 5px var(--bg)', overflow: 'hidden', flexShrink: 0, display: 'inline-flex' }}>
-                          <Avatar
-                            src={champion.avatarUrl}
-                            name={champion.name}
-                            size={TL_AVATAR}
-                            className="!rounded-full"
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          style={{
-                            width: TL_AVATAR,
-                            height: TL_AVATAR,
-                            background: 'var(--border)',
-                            borderRadius: '50%',
-                            boxShadow: '0 0 0 5px var(--bg)',
-                          }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Session card */}
-                    <article
-                      className="min-w-0"
-                      style={{
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        borderRadius: 'var(--radius-lg)',
-                        padding: 'var(--space-4)',
-                      }}
-                    >
-                      {/* Name + BWF tier badge */}
-                      <div className="flex items-start gap-3">
-                        <h3
-                          className="flex-1 font-extrabold leading-snug"
-                          style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 18,
-                            letterSpacing: '-0.02em',
-                            color: 'var(--fg)',
-                            textWrap: 'balance',
-                          } as React.CSSProperties}
-                        >
-                          {name}
-                        </h3>
-                        {session.bwf_tournaments && (
-                          <div className="flex-shrink-0 mt-0.5">
-                            <BwfCategoryBadge
-                              categoryName={session.bwf_tournaments.category_name}
-                              categorySlug={session.bwf_tournaments.category_slug}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Meta row */}
-                      {(matchCount > 0 || playerCount > 0) && (
-                        <div
-                          className="flex items-center flex-wrap gap-2 mt-3"
-                          style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)' }}
-                        >
-                          {matchCount > 0 && (
-                            <span><b style={{ color: 'var(--fg)', fontWeight: 600 }}>{matchCount}</b> matches</span>
-                          )}
-                          {matchCount > 0 && duration && <>{DOT}<span>{duration}</span></>}
-                          {playerCount > 0 && (
-                            <>{DOT}<span><b style={{ color: 'var(--fg)', fontWeight: 600 }}>{playerCount}</b> players</span></>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Champion footer */}
-                      {champion && (
-                        <div
-                          className="flex items-center gap-3 mt-3 pt-3"
-                          style={{ borderTop: '1px solid var(--border)' }}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div
-                              className="flex items-center gap-1 font-bold uppercase"
-                              style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent)', letterSpacing: '0.1em' }}
-                            >
-                              <Trophy style={{ width: 11, height: 11 }} />
-                              Champion
-                            </div>
-                            <div
-                              className="font-bold truncate"
-                              style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--fg)', lineHeight: 1.2, marginTop: 3 }}
-                            >
-                              {champion.name}
-                            </div>
-                          </div>
-                          {winRate !== null && (
-                            <div className="flex-shrink-0 text-right">
-                              <div
-                                className="font-extrabold leading-none"
-                                style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}
-                              >
-                                {winRate}%
-                              </div>
-                              <div
-                                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.04em', marginTop: 3 }}
-                              >
-                                {champion.wins}W · {champion.losses}L
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </article>
-                  </div>
-                )
-              })}
+              {daySessions.map((session) => (
+                <CalendarSessionEntry
+                  key={session.id}
+                  session={session}
+                  matchCount={matchCountBySession.get(session.id) ?? 0}
+                  onNavigate={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
+                />
+              ))}
             </div>
           ))}
         </div>

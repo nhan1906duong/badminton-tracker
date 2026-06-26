@@ -36,9 +36,12 @@ vi.mock('../../hooks/useSessions', () => ({
   useSessions: () => ({ data: mockSessions }),
 }))
 
-let mockLeaderboards: Map<string, SessionLeaderboard> = new Map()
+// Per-session leaderboard map. useSessionLeaderboard(id) looks up from here.
+let mockLeaderboardMap: Map<string, SessionLeaderboard> = new Map()
 vi.mock('../../hooks/useRankings', () => ({
-  useSessionLeaderboards: () => ({ data: mockLeaderboards }),
+  useSessionLeaderboard: (sessionId: string | undefined) => ({
+    data: sessionId ? mockLeaderboardMap.get(sessionId) : undefined,
+  }),
 }))
 
 let mockMatches: Partial<MatchWithDetails>[] = []
@@ -110,7 +113,7 @@ function makeLeaderboard(champion: SessionWeeklyStats | undefined): SessionLeade
 beforeEach(() => {
   mockNavigate.mockReset()
   mockSessions = []
-  mockLeaderboards = new Map()
+  mockLeaderboardMap = new Map()
   mockMatches = []
 })
 
@@ -191,7 +194,7 @@ describe('CalendarTab', () => {
     it('shows champion name in the card footer', () => {
       const session = makeSession()
       mockSessions = [session]
-      mockLeaderboards.set(session.id, makeLeaderboard(makeChampion({ name: 'Jane Smith' })))
+      mockLeaderboardMap.set(session.id, makeLeaderboard(makeChampion({ name: 'Jane Smith' })))
       renderTab()
       // name appears in both Avatar mock and the card footer
       expect(screen.getAllByText('Jane Smith').length).toBeGreaterThanOrEqual(1)
@@ -201,7 +204,7 @@ describe('CalendarTab', () => {
       // 7 wins / 8 played = 87.5% → rounds to 88%
       const session = makeSession()
       mockSessions = [session]
-      mockLeaderboards.set(session.id, makeLeaderboard(makeChampion({ wins: 7, losses: 1, matchesPlayed: 8 })))
+      mockLeaderboardMap.set(session.id, makeLeaderboard(makeChampion({ wins: 7, losses: 1, matchesPlayed: 8 })))
       renderTab()
       expect(screen.getByText('88%')).toBeDefined()
     })
@@ -209,7 +212,7 @@ describe('CalendarTab', () => {
     it('shows W/L record for the champion', () => {
       const session = makeSession()
       mockSessions = [session]
-      mockLeaderboards.set(session.id, makeLeaderboard(makeChampion({ wins: 6, losses: 2 })))
+      mockLeaderboardMap.set(session.id, makeLeaderboard(makeChampion({ wins: 6, losses: 2 })))
       renderTab()
       expect(screen.getByText('6W · 2L')).toBeDefined()
     })
@@ -217,7 +220,7 @@ describe('CalendarTab', () => {
     it('shows champion Avatar with their name', () => {
       const session = makeSession()
       mockSessions = [session]
-      mockLeaderboards.set(session.id, makeLeaderboard(makeChampion({ name: 'Ana Torres' })))
+      mockLeaderboardMap.set(session.id, makeLeaderboard(makeChampion({ name: 'Ana Torres' })))
       renderTab()
       expect(screen.getByTestId('avatar').textContent).toBe('Ana Torres')
     })
@@ -225,7 +228,7 @@ describe('CalendarTab', () => {
     it('renders without champion footer when leaderboard is empty', () => {
       const session = makeSession()
       mockSessions = [session]
-      mockLeaderboards.set(session.id, makeLeaderboard(undefined))
+      mockLeaderboardMap.set(session.id, makeLeaderboard(undefined))
       renderTab()
       // session still renders (its label should appear)
       expect(screen.getByText('Weekend Session')).toBeDefined()

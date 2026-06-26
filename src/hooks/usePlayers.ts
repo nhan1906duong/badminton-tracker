@@ -38,13 +38,12 @@ export function useCreatePlayer() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (player: Pick<Player, 'name' | 'email'>) => {
-      const { data, error } = await supabase
-        .from('players')
-        .insert({ name: player.name, email: player.email || null })
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc('create_player', {
+        p_name: player.name,
+        p_email: player.email || null,
+      })
       if (error) throw error
-      return data as Player
+      return data[0] as Player
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [PLAYERS_KEY] }),
   })
@@ -54,14 +53,16 @@ export function useUpdatePlayer() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (player: Partial<Player> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('players')
-        .update(player)
-        .eq('id', player.id)
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc('update_player', {
+        p_id: player.id,
+        p_name: player.name ?? null,
+        p_email: player.email ?? null,
+        p_avatar_url: player.avatar_url !== undefined && player.avatar_url !== null ? player.avatar_url : null,
+        p_active_racket_id: player.active_racket_id ?? null,
+        p_clear_avatar: player.avatar_url === null,
+      })
       if (error) throw error
-      return data as Player
+      return data[0] as Player
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: [PLAYERS_KEY] })
@@ -74,15 +75,7 @@ export function useDeletePlayer() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      // match_participants.player_id has no ON DELETE CASCADE —
-      // delete participation records first to avoid FK violation.
-      const { error: partsError } = await supabase
-        .from('match_participants')
-        .delete()
-        .eq('player_id', id)
-      if (partsError) throw partsError
-
-      const { error } = await supabase.from('players').delete().eq('id', id)
+      const { error } = await supabase.rpc('delete_player', { p_id: id })
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [PLAYERS_KEY] }),

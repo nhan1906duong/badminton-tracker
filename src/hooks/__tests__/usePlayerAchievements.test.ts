@@ -7,6 +7,7 @@ function session(id: string, startedAt: string, bwfTournamentId?: string): Sessi
     id,
     type: 'regular',
     started_at: startedAt,
+    ended_at: startedAt, // computeAchievements requires ended_at to be set
     created_by: 'u1',
     created_at: startedAt,
     bwf_tournament_id: bwfTournamentId ?? null,

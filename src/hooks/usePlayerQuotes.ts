@@ -24,13 +24,12 @@ export function useCreatePlayerQuote() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (quote: { player_id: string; text: string }) => {
-      const { data, error } = await supabase
-        .from('player_quotes')
-        .insert({ player_id: quote.player_id, text: quote.text })
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc('create_player_quote', {
+        p_player_id: quote.player_id,
+        p_text: quote.text,
+      })
       if (error) throw error
-      return data as PlayerQuote
+      return data[0] as PlayerQuote
     },
     onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
   })
@@ -40,14 +39,12 @@ export function useUpdatePlayerQuote() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (quote: { id: string; text: string }) => {
-      const { data, error } = await supabase
-        .from('player_quotes')
-        .update({ text: quote.text })
-        .eq('id', quote.id)
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc('update_player_quote', {
+        p_id: quote.id,
+        p_text: quote.text,
+      })
       if (error) throw error
-      return data as PlayerQuote
+      return data[0] as PlayerQuote
     },
     onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
   })
@@ -57,7 +54,7 @@ export function useDeletePlayerQuote() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (quote: { id: string; player_id: string }) => {
-      const { error } = await supabase.from('player_quotes').delete().eq('id', quote.id)
+      const { error } = await supabase.rpc('delete_player_quote', { p_id: quote.id })
       if (error) throw error
       return quote
     },

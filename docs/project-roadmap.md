@@ -21,8 +21,10 @@
 | 10 | PWA Enhancement | ✅ Done | Service worker, manifest, offline cache |
 | 11 | Session Types Expansion | ✅ Done | Regular / Tournament / League with round-robin, team standings, schedule grid |
 | 12 | Session Attendance RSVP | ✅ Done | Linked players/admins confirm or decline regular/tournament attendance; declined players are filtered from match creation |
-| 13 | Testing | 🚧 In Progress | Unit and component tests exist; E2E/CI remain open |
-| 14 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
+| 13 | Scalability (Phase 1) | ✅ Done | Cursor pagination for player matches, paginated leaderboard via RPC, player-scoped badges, materialized player_session_stats table |
+| 14 | Testing | 🚧 In Progress | Unit and component tests exist; E2E/CI remain open |
+| 15 | Scalability (Phase 2) | ⏳ Pending | Materialized player_all_time_stats table, rank/streak calculations, delegation to Phase 4 |
+| 16 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
 
 ## Phase Details
 
@@ -154,7 +156,18 @@
 - [x] Show attendance inline for scheduled regular/tournament sessions and in the live session menu
 - [x] Filter declined players out of regular/tournament match creation and shuffle pools
 
-### Phase 13: Testing 🚧
+### Phase 13: Scalability (Phase 1) ✅
+- [x] Add Postgres RPCs for scoped queries: `count_ranked_matches()`, `get_player_ranking_summary(p_player_id)`, `get_leaderboard_page(p_limit, p_offset)`, `get_badge_leaders()`
+- [x] Implement cursor-based pagination for `usePlayerMatches(playerId)` (page size 20, keyset on played_at desc, id desc)
+- [x] Create `useLeaderboard()` hook using `useInfiniteQuery` against `get_leaderboard_page` RPC (page size 50)
+- [x] Create `usePlayerRankingSummary(playerId)` hook for single-player snapshot without loading full leaderboard
+- [x] Derive `usePlayerBadges()`, `useOpponents()`, `useBestPartner()` from scoped `usePlayerMatches()` instead of global matches
+- [x] Add database indexes for scalability: composite/partial indexes on matches, match_participants, player_match_results, players
+- [x] Create `player_session_stats` materialized view: per-player per-session aggregated points, rating deltas, base stats
+- [x] Backfill `player_session_stats` from `player_match_results`
+- [x] Add columns to `player_session_stats` for aggregated points/rating: `total_points`, `average_weekly_points`, `rating_before`, `rating_after`, `rating_delta`
+
+### Phase 14: Testing 🚧
 - [x] Unit tests (Vitest)
 - [x] Component tests
 - [ ] E2E tests (Playwright)
@@ -174,4 +187,6 @@
 | Core Features (Phases 5-7) | ✅ Done | Dashboard + match history |
 | Avatar & Rankings (Phase 8) | ✅ Done | Avatar upload + leaderboard |
 | Player Detail Page (Phase 9) | ✅ Done | Avatar/name edit + stats + all partners |
-| Release (Phase 10-11) | Q3 2026 | In progress |
+| Release (Phases 10-12) | Q3 2026 | Done |
+| Scalability Phase 1 (Phase 13) | ✅ Done | Cursor pagination, RPC leaderboard, player-scoped data |
+| Scalability Phase 2 (Phase 15) | Q4 2026 | Pending |
