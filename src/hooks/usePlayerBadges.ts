@@ -112,6 +112,25 @@ export function usePlayerBadges(playerId: string) {
             count: matchesLost,
           })
         }
+
+        if (row.badge_type === 'most_titles' && Number(row.leader_count) > 1) {
+          result.push({
+            id: 'most_titles',
+            labelKey: 'badges.mostTitles',
+            category: 'titles',
+            count: Number(row.leader_count),
+          })
+        }
+
+        // dynasty RPC only emits a row when streak > 1 — no extra guard needed here
+        if (row.badge_type === 'dynasty' && Number(row.leader_count) > 1) {
+          result.push({
+            id: 'dynasty',
+            labelKey: 'badges.dynasty',
+            category: 'dynasty',
+            count: Number(row.leader_count),
+          })
+        }
       }
     }
 
@@ -126,8 +145,6 @@ export function usePlayerBadges(playerId: string) {
         count: bestWinStreak,
       })
     }
-
-    // Dynasty and most_titles badges: deferred to Phase 4 (require session-ordered aggregation).
 
     return result
   }, [allMatches, leaderRows, playerId])
