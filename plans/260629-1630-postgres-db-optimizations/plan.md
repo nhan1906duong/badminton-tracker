@@ -1,9 +1,9 @@
 ---
 title: "Postgres DB Optimizations"
-description: "Fix RLS performance anti-patterns, SECURITY DEFINER safety gaps, redundant materialized-stat refreshes, and per-row loop queries. Phases 1–4 complete; phases 5–6 cover missed tables from the same anti-patterns."
+description: "Fix RLS performance anti-patterns, SECURITY DEFINER safety gaps, redundant materialized-stat refreshes, and per-row loop queries. All 10 phases complete."
 status: completed
 priority: P1
-effort: 7.5h
+effort: 12h
 branch: feature/supabase-enhance
 tags: [supabase, postgres, rls, security, performance, optimization]
 created: 2026-06-29
@@ -37,6 +37,10 @@ Four phases of targeted DB fixes identified by a Supabase Postgres best-practice
 | 4 | Batch `reorder_queue` + optimize session rating loops | 2.5h | completed | [phase-04-batch-updates-query-optimization.md](./phase-04-batch-updates-query-optimization.md) |
 | 5 | Fix per-row `auth.uid()` / `is_admin()` on `player_rackets`, `player_quotes`, `profiles` | 0.5h | completed | `supabase/migrations/20260630000005_fix-rls-missed-tables.sql` |
 | 6 | Index `players.rating` for rank subquery + document `pmr` write policies | 0.5h | completed | `supabase/migrations/20260630000006_players-rating-index-and-pmr-policy-doc.sql` |
+| 7 | Fix authorization bypass in SECURITY DEFINER racket/quote CRUD RPCs | 1h | completed | `supabase/migrations/20260701000001_fix-secdef-racket-quote-authz.sql` |
+| 8 | Fix `SET search_path = public` → `''` in all remaining SECURITY DEFINER functions | 1.5h | completed | `supabase/migrations/20260701000002_fix-secdef-search-path.sql` |
+| 9 | Wire `useLeaderboard` + `usePlayerRankingSummary` to `player_all_time_stats` table | 0h | completed | already done — hooks read materialized table directly |
+| 10 | Add partial index on `sessions` for ended sessions + fix EXISTS→JOIN in session stats | 0.5h | completed | `supabase/migrations/20260701000003_sessions-ended-index.sql` (JOIN fix in Phase 8) |
 
 ## Dependencies
 
@@ -64,6 +68,42 @@ Additional low-priority findings for Phase 6:
 - `get_player_ranking_summary` computes rank via a correlated full-scan of `players` — a functional index on `coalesce(rating, 1000) DESC` would future-proof it.
 - `pmr_insert`/`pmr_update` use `WITH CHECK (true)` — any authenticated user can write `player_match_results` directly via PostgREST, bypassing SECURITY DEFINER RPC scoring logic. Phase 6 adds a clear comment documenting the intentional trade-off; a proper fix (revoke direct write access) is out of scope.
 
+## Second Audit Findings (2026-06-29)
+
+Full re-audit against all 8 Supabase best-practice categories after phases 1–6 shipped.
+
+### CRITICAL
+
+| Finding | Tables / Functions | Fix |
+|---------|--------------------|-----|
+| Authorization bypass in SECURITY DEFINER racket/quote RPCs | `create_player_racket`, `update_player_racket`, `delete_player_racket`, `create_player_quote`, `update_player_quote`, `delete_player_quote` | Add ownership check (`profiles.player_id` match or `is_admin()`) inside function body — Phase 7 |
+| `SET search_path = public` in SECURITY DEFINER functions | All CRUD + session + rating RPCs except `is_admin()` | Change to `SET search_path = ''` and qualify all object refs as `public.xxx` — Phase 8 |
+
+**Why #1 is critical:** SECURITY DEFINER bypasses RLS. The ownership policies on `player_rackets` / `player_quotes` (own-player or admin) are skipped entirely. Any authenticated user can call `delete_player_racket(any_id)` via PostgREST RPC and delete anyone's racket.
+
+**Why #2 matters:** A user who can CREATE in the `public` schema can shadow `public.profiles` or `public.players` with a hijacked version, causing `is_admin()` checks inside those functions to consult the shadow table instead of the real one.
+
+### HIGH
+
+| Finding | Impact | Fix |
+|---------|--------|-----|
+| `player_all_time_stats` table populated but never read | Every leaderboard page load runs a full multi-CTE aggregation over `player_match_results` instead of an O(1) table read | Update `useLeaderboard` + `usePlayerRankingSummary` hooks — Phase 9 |
+| Missing partial index on `sessions(id) WHERE ended_at IS NOT NULL` | All leaderboard/badge/stats RPCs do a full sessions scan for this filter | New migration — Phase 10 |
+
+### MEDIUM
+
+| Finding | Impact | Fix |
+|---------|--------|-----|
+| Correlated EXISTS subquery in `refresh_player_session_stats` | Per-match EXISTS lookup; rewrite as INNER JOIN to `match_teams WHERE is_winner = true` | Phase 10 |
+| Open INSERT/UPDATE on `player_match_results` (accepted risk) | Any authenticated user can write PMR directly, bypassing scoring RPC logic | Document only (done in Phase 6); proper fix = revoke direct write access; deferred |
+
+### LOW
+
+| Finding | Fix |
+|---------|-----|
+| `recalculate_all_ratings` uses `DROP TABLE IF EXISTS + CREATE TEMP TABLE` inside session loop | Replace with `TRUNCATE + INSERT` to avoid DDL-in-loop schema locks |
+
 ## Unresolved Questions
 
 - Phase 3 assumes all-time stats are ONLY needed for ended sessions. Confirm no UI currently shows all-time stats for players mid-session (leaderboard reads `player_all_time_stats` which by definition only has ended-session data — confirmed safe).
+- Phase 9: confirm `player_all_time_stats` schema matches the `PlayerRankingStats` TypeScript type expected by `useLeaderboard` before removing the `get_leaderboard_page` RPC call.
