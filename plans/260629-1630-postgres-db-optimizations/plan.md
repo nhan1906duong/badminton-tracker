@@ -1,7 +1,7 @@
 ---
 title: "Postgres DB Optimizations"
 description: "Fix RLS performance anti-patterns, SECURITY DEFINER safety gaps, redundant materialized-stat refreshes, and per-row loop queries across 4 focused phases."
-status: pending
+status: completed
 priority: P1
 effort: 6h
 branch: feature/postgres-db-optimizations
@@ -31,10 +31,10 @@ Four phases of targeted DB fixes identified by a Supabase Postgres best-practice
 
 | # | Phase | Effort | Status | File |
 |---|-------|--------|--------|------|
-| 1 | Fix RLS `auth.uid()` per-row anti-pattern | 1h | pending | [phase-01](./phase-01-rls-auth-uid-fix.md) |
-| 2 | Harden `is_admin()` + fix per-row policy calls | 1h | pending | [phase-02-is-admin-security-fix.md](./phase-02-is-admin-security-fix.md) |
-| 3 | Eliminate redundant `refresh_player_all_time_stats` calls | 1.5h | pending | [phase-03-eliminate-redundant-all-time-stats-refresh.md](./phase-03-eliminate-redundant-all-time-stats-refresh.md) |
-| 4 | Batch `reorder_queue` + optimize session rating loops | 2.5h | pending | [phase-04-batch-updates-query-optimization.md](./phase-04-batch-updates-query-optimization.md) |
+| 1 | Fix RLS `auth.uid()` per-row anti-pattern | 1h | completed | [phase-01](./phase-01-rls-auth-uid-fix.md) |
+| 2 | Harden `is_admin()` + fix per-row policy calls | 1h | completed | [phase-02-is-admin-security-fix.md](./phase-02-is-admin-security-fix.md) |
+| 3 | Eliminate redundant `refresh_player_all_time_stats` calls | 1.5h | completed | [phase-03-eliminate-redundant-all-time-stats-refresh.md](./phase-03-eliminate-redundant-all-time-stats-refresh.md) |
+| 4 | Batch `reorder_queue` + optimize session rating loops | 2.5h | completed | [phase-04-batch-updates-query-optimization.md](./phase-04-batch-updates-query-optimization.md) |
 
 ## Dependencies
 
