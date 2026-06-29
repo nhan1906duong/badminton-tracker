@@ -17,16 +17,11 @@ export function Button({
     'inline-flex items-center justify-center gap-2 font-semibold leading-none cursor-pointer active:opacity-70 transition-opacity duration-[var(--duration-fast)] select-none'
 
   const variantStyles: Record<string, string> = {
-    primary:
-      'bg-[var(--fg)] text-[var(--surface)] border-2 border-[var(--fg)]',
-    secondary:
-      'bg-transparent text-[var(--fg)] border-2 border-[var(--fg)]',
-    ghost:
-      'bg-transparent text-[var(--muted)] border border-[var(--border)]',
-    accent:
-      'bg-[var(--accent)] text-[var(--surface)] border-2 border-[var(--accent)]',
-    danger:
-      'bg-[var(--danger)] text-[var(--surface)] border-2 border-[var(--danger)]',
+    primary: 'bg-[var(--fg)] text-[var(--surface)] border-2 border-[var(--fg)]',
+    secondary: 'bg-transparent text-[var(--fg)] border-2 border-[var(--fg)]',
+    ghost: 'bg-transparent text-[var(--muted)] border border-[var(--border)]',
+    accent: 'bg-[var(--accent)] text-[var(--surface)] border-2 border-[var(--accent)]',
+    danger: 'bg-[var(--danger)] text-[var(--surface)] border-2 border-[var(--danger)]',
   }
 
   const sizeStyles: Record<string, string> = {

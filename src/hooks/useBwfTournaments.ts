@@ -1,13 +1,13 @@
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { useMemo } from 'react'
 import { BWF_GRADE_2_CATEGORIES } from '../lib/bwf-api'
+import { supabase } from '../lib/supabase'
 
 export interface BwfTournament {
   id: string
   name: string
-  startDate: string  // YYYY-MM-DD
-  endDate: string    // YYYY-MM-DD
+  startDate: string // YYYY-MM-DD
+  endDate: string // YYYY-MM-DD
   categorySlug: string
   categoryName: string
   venue?: string | null
@@ -24,7 +24,7 @@ export function useBwfTournaments() {
 
       if (error) throw error
 
-      return (data ?? []).map((row) => ({
+      return (data ?? []).map(row => ({
         id: row.id as string,
         name: row.name as string,
         startDate: row.start_date as string,
@@ -34,7 +34,7 @@ export function useBwfTournaments() {
         venue: row.venue as string | null,
       })) satisfies BwfTournament[]
     },
-    staleTime: 60 * 60 * 1000,   // 1 hour
+    staleTime: 60 * 60 * 1000, // 1 hour
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
   })
 }
@@ -51,14 +51,16 @@ export function useNearbyBwfTournaments(dayRange = 14) {
     windowEnd.setDate(windowEnd.getDate() + dayRange)
 
     return data
-      .filter((t) => {
+      .filter(t => {
         const start = new Date(t.startDate)
         const end = new Date(t.endDate)
         return start <= windowEnd && end >= windowStart
       })
       .sort((a, b) => {
-        const pa = BWF_GRADE_2_CATEGORIES.find((c) => c.categorySlug === a.categorySlug)?.priority ?? 0
-        const pb = BWF_GRADE_2_CATEGORIES.find((c) => c.categorySlug === b.categorySlug)?.priority ?? 0
+        const pa =
+          BWF_GRADE_2_CATEGORIES.find(c => c.categorySlug === a.categorySlug)?.priority ?? 0
+        const pb =
+          BWF_GRADE_2_CATEGORIES.find(c => c.categorySlug === b.categorySlug)?.priority ?? 0
         if (pb !== pa) return pb - pa
         return a.startDate.localeCompare(b.startDate)
       })

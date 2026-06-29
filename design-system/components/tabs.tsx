@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, type ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 
 export interface TabItem {
   key: string
@@ -38,7 +38,7 @@ export function Tabs({ tabs, activeTab, onTabChange, className = '' }: TabsProps
       style={{ borderColor: 'var(--border)', paddingBottom: 'var(--space-2)' }}
       role="tablist"
     >
-      {tabs.map((rawTab) => {
+      {tabs.map(rawTab => {
         const tab = normalize(rawTab)
         const isActive = tab.key === activeTab
         return (

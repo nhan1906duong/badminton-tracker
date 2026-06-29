@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { BadgeLeaderRowSchema, parseRpcResult } from '../lib/schemas/rpc-schemas'
 import { supabase } from '../lib/supabase'
-import { usePlayerMatches } from './usePlayerMatches'
 import type { MatchWithDetails } from '../types/database'
+import { usePlayerMatches } from './usePlayerMatches'
 
 export type BadgeCategory = 'played' | 'streak' | 'dynasty' | 'titles' | 'donated'
 export type BadgeLabelKey =
@@ -19,11 +20,7 @@ export interface PlayerBadge {
   count: number
 }
 
-interface BadgeLeaderRow {
-  badge_type: string
-  leader_id: string
-  leader_count: number
-}
+import type { BadgeLeaderRow } from '../lib/schemas/rpc-schemas'
 
 /**
  * Compute player-local badge inputs from the player's own scoped match list.
@@ -43,10 +40,10 @@ function computeLocalStats(
   const chronological = [...matches].reverse()
 
   for (const match of chronological) {
-    if (!match.teams.some((t) => t.is_winner)) continue
-    const pp = match.participants.find((p) => p.player_id === playerId)
+    if (!match.teams.some(t => t.is_winner)) continue
+    const pp = match.participants.find(p => p.player_id === playerId)
     if (!pp) continue
-    const team = match.teams.find((t) => t.id === pp.team_id)
+    const team = match.teams.find(t => t.id === pp.team_id)
     if (!team) continue
 
     matchesPlayed++
@@ -65,7 +62,7 @@ function computeLocalStats(
 export function usePlayerBadges(playerId: string) {
   // Tier 1: player-local data from scoped match pages (already in cache from PlayerDetailPage)
   const { data: matchData, isLoading: matchesLoading } = usePlayerMatches(playerId)
-  const allMatches = matchData?.pages.flatMap((p) => p.matches) ?? []
+  const allMatches = matchData?.pages.flatMap(p => p.matches) ?? []
 
   // Tier 2: global leader data via RPC (tiny payload — one row per badge type)
   const { data: leaderRows, isLoading: leadersLoading } = useQuery({
@@ -74,7 +71,7 @@ export function usePlayerBadges(playerId: string) {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_badge_leaders')
       if (error) throw error
-      return (data ?? []) as BadgeLeaderRow[]
+      return parseRpcResult(BadgeLeaderRowSchema.array(), data ?? [], 'usePlayerBadges')
     },
   })
 
@@ -84,10 +81,7 @@ export function usePlayerBadges(playerId: string) {
     const result: PlayerBadge[] = []
 
     // ── Tier 1: player-local badges ──────────────────────────────────────────
-    const { bestWinStreak, matchesLost } = computeLocalStats(
-      allMatches,
-      playerId,
-    )
+    const { bestWinStreak, matchesLost } = computeLocalStats(allMatches, playerId)
 
     // ── Tier 2: global leader badges ─────────────────────────────────────────
     if (leaderRows) {
@@ -174,22 +168,38 @@ export function computeBadges(
 ): PlayerBadge[] {
   if (!playerId) return []
   const result: PlayerBadge[] = []
-  const { matchesPlayed: _mp, bestWinStreak, matchesLost } = computeLocalStats(
-    playerMatches,
-    playerId,
-  )
+  const {
+    matchesPlayed: _mp,
+    bestWinStreak,
+    matchesLost,
+  } = computeLocalStats(playerMatches, playerId)
 
   for (const row of leaderRows) {
     if (row.leader_id !== playerId) continue
     if (row.badge_type === 'most_played' && Number(row.leader_count) > 0) {
-      result.push({ id: 'most_played', labelKey: 'badges.mostPlayed', category: 'played', count: Number(row.leader_count) })
+      result.push({
+        id: 'most_played',
+        labelKey: 'badges.mostPlayed',
+        category: 'played',
+        count: Number(row.leader_count),
+      })
     }
     if (row.badge_type === 'most_donated' && Number(row.leader_count) > 0) {
-      result.push({ id: 'most_donated', labelKey: 'badges.mostDonated', category: 'donated', count: matchesLost })
+      result.push({
+        id: 'most_donated',
+        labelKey: 'badges.mostDonated',
+        category: 'donated',
+        count: matchesLost,
+      })
     }
   }
   if (bestWinStreak >= 3) {
-    result.push({ id: 'best_streak', labelKey: 'badges.mostStreak', category: 'streak', count: bestWinStreak })
+    result.push({
+      id: 'best_streak',
+      labelKey: 'badges.mostStreak',
+      category: 'streak',
+      count: bestWinStreak,
+    })
   }
   return result
 }

@@ -1,25 +1,32 @@
-import { useMemo, useCallback, useState, useRef, useLayoutEffect } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { useNavigate } from 'react-router-dom'
-import { useSessions } from '../hooks/useSessions'
-import { useMatches } from '../hooks/useMatches'
-import { SessionCard, EmptyState, ErrorState, PullToRefresh, Tabs, SectionLabel } from '../../design-system/components'
-import { ShuttleLoading } from '../components/ShuttleLoading'
-import { CalendarTab } from '../components/CalendarTab'
 import { Plus, Trophy } from 'lucide-react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  EmptyState,
+  ErrorState,
+  PullToRefresh,
+  SectionLabel,
+  SessionCard,
+  Tabs,
+} from '../../design-system/components'
+import { CalendarTab } from '../components/CalendarTab'
 import FloatingActionButton from '../components/FloatingActionButton'
 import LoginAffordance from '../components/LoginAffordance'
+import { ShuttleLoading } from '../components/ShuttleLoading'
+import { useAuth } from '../hooks/useAuth'
+import { useMatches } from '../hooks/useMatches'
+import { useSessionLeaderboard } from '../hooks/useRankings'
+import { useSessions } from '../hooks/useSessions'
+import type { Locale, TFunction } from '../i18n'
+import { useI18n } from '../i18n'
 import {
-  formatSessionDuration,
   formatSessionDateTime,
+  formatSessionDuration,
   getSessionName,
   getSessionStatus,
 } from '../lib/session-format'
 import type { Session } from '../types/database'
-import { useI18n } from '../i18n'
-import type { Locale, TFunction } from '../i18n'
-import { useSessionLeaderboard } from '../hooks/useRankings'
-import { useAuth } from '../hooks/useAuth'
 
 /**
  * Per-session leaderboard card — fetches only when the session is in the list.
@@ -46,7 +53,11 @@ function SessionLeaderboardCard({
       ? {
           name: leader.name,
           avatarUrl: leader.avatarUrl,
-          record: t('units.winLossPlayed', { wins: leader.wins, losses: leader.losses, played: leader.matchesPlayed }),
+          record: t('units.winLossPlayed', {
+            wins: leader.wins,
+            losses: leader.losses,
+            played: leader.matchesPlayed,
+          }),
           winRate: Math.round((leader.wins / leader.matchesPlayed) * 100),
         }
       : undefined
@@ -65,10 +76,14 @@ function SessionLeaderboardCard({
         matchCount={matchCount}
         topPlayer={topPlayer}
         compact
-        tournamentCategory={session.bwf_tournaments ? {
-          categoryName: session.bwf_tournaments.category_name,
-          categorySlug: session.bwf_tournaments.category_slug,
-        } : null}
+        tournamentCategory={
+          session.bwf_tournaments
+            ? {
+                categoryName: session.bwf_tournaments.category_name,
+                categorySlug: session.bwf_tournaments.category_slug,
+              }
+            : null
+        }
       />
     </button>
   )
@@ -116,7 +131,7 @@ export default function SessionsListPage() {
       { key: 'live', label: t('sessions.groupLive'), items: live },
       { key: 'scheduled', label: t('sessions.groupUpcoming'), items: scheduled },
       { key: 'completed', label: t('sessions.groupRecent'), items: completed },
-    ].filter((g) => g.items.length > 0)
+    ].filter(g => g.items.length > 0)
   }, [sessions, t])
 
   const showGroupHeaders = sessionGroups.length > 1
@@ -130,7 +145,8 @@ export default function SessionsListPage() {
   const flatRows = useMemo<FlatRow[]>(() => {
     const rows: FlatRow[] = []
     for (const group of sessionGroups) {
-      if (showGroupHeaders) rows.push({ type: 'header', key: `header-${group.key}`, label: group.label })
+      if (showGroupHeaders)
+        rows.push({ type: 'header', key: `header-${group.key}`, label: group.label })
       for (const session of group.items) {
         rows.push({ type: 'session', key: session.id, session })
       }
@@ -148,13 +164,13 @@ export default function SessionsListPage() {
 
   const listVirtualizer = useWindowVirtualizer({
     count: activeTabKey === 'list' ? flatRows.length : 0,
-    estimateSize: (index) => (flatRows[index]?.type === 'header' ? 40 : 100),
+    estimateSize: index => (flatRows[index]?.type === 'header' ? 40 : 100),
     overscan: 5,
     scrollMargin: listScrollMargin,
   })
 
-  const activeCount = sessions?.filter((s) => getSessionStatus(s) === 'active').length ?? 0
-  const scheduledCount = sessions?.filter((s) => getSessionStatus(s) === 'scheduled').length ?? 0
+  const activeCount = sessions?.filter(s => getSessionStatus(s) === 'active').length ?? 0
+  const scheduledCount = sessions?.filter(s => getSessionStatus(s) === 'scheduled').length ?? 0
   const subtitle = sessions
     ? [
         t('units.session', { count: sessions.length }),
@@ -171,117 +187,135 @@ export default function SessionsListPage() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-    <div className="min-h-svh bg-[var(--bg)]">
-      {/* Page Header */}
-      <div
-        className="px-[var(--space-5)] pb-[var(--space-4)]"
-        style={{ paddingTop: 'var(--space-6)' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-          <h1
-            className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em]"
-            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+      <div className="min-h-svh bg-[var(--bg)]">
+        {/* Page Header */}
+        <div
+          className="px-[var(--space-5)] pb-[var(--space-4)]"
+          style={{ paddingTop: 'var(--space-6)' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              marginBottom: 'var(--space-2)',
+            }}
           >
-            {t('sessions.title')}
-          </h1>
-          {!user && <LoginAffordance />}
-        </div>
-        {subtitle && (
-          <p className="text-[13px]" style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-            {subtitle}
-          </p>
-        )}
-      </div>
-
-      {/* Tab switcher */}
-      <div className="px-[var(--space-5)]">
-        <Tabs
-          tabs={[t('sessions.tabList'), t('sessions.tabCalendar')]}
-          activeTab={activeTabKey === 'list' ? t('sessions.tabList') : t('sessions.tabCalendar')}
-          onTabChange={(tab) => setActiveTabKey(tab === t('sessions.tabList') ? 'list' : 'calendar')}
-        />
-      </div>
-
-      {/* List */}
-      {activeTabKey === 'list' && (
-        <div className="px-[var(--space-5)] space-y-[var(--space-3)] pt-[var(--space-4)] pb-32">
-          {isLoading ? (
-            <ShuttleLoading compact />
-          ) : isError ? (
-            <ErrorState
-              message={t('sessions.loadError')}
-              onRetry={() => {
-                refetchSessions()
-                refetchMatches()
-              }}
-            />
-          ) : sessionGroups.length > 0 ? (
-            <div ref={listRef} style={{ position: 'relative', height: listVirtualizer.getTotalSize() }}>
-              {listVirtualizer.getVirtualItems().map((virtualRow) => {
-                const row = flatRows[virtualRow.index]
-                const isLast = virtualRow.index === flatRows.length - 1
-                return (
-                  <div
-                    key={virtualRow.key}
-                    data-index={virtualRow.index}
-                    ref={listVirtualizer.measureElement}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start - listVirtualizer.options.scrollMargin}px)`,
-                      paddingBottom: isLast ? 0 : 12,
-                    }}
-                  >
-                    {row.type === 'header' ? (
-                      <SectionLabel className="px-[var(--space-1)] pt-[var(--space-2)]">
-                        {row.label}
-                      </SectionLabel>
-                    ) : (
-                      <SessionLeaderboardCard
-                        session={row.session}
-                        matchCount={matchCountBySession.get(row.session.id) ?? 0}
-                        onNavigate={() => navigate(`/sessions/${row.session.id}`, { state: { from: '/sessions' } })}
-                        locale={locale}
-                        t={t}
-                      />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Trophy className="w-9 h-9 mx-auto" />}
-              title={t('sessions.noneYet')}
-              description={t('sessions.emptyDescription')}
-            />
+            <h1
+              className="text-[48px] font-extrabold leading-[1.05] tracking-[-0.03em]"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+            >
+              {t('sessions.title')}
+            </h1>
+            {!user && <LoginAffordance />}
+          </div>
+          {subtitle && (
+            <p
+              className="text-[13px]"
+              style={{ color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}
+            >
+              {subtitle}
+            </p>
           )}
         </div>
-      )}
 
-      {/* Calendar */}
-      {activeTabKey === 'calendar' && (
-        isLoading ? (
-          <div className="px-[var(--space-5)] pt-[var(--space-4)]">
-            <ShuttleLoading compact />
-          </div>
-        ) : (
-          <div className="pt-[var(--space-4)]">
-            <CalendarTab />
-          </div>
-        )
-      )}
+        {/* Tab switcher */}
+        <div className="px-[var(--space-5)]">
+          <Tabs
+            tabs={[t('sessions.tabList'), t('sessions.tabCalendar')]}
+            activeTab={activeTabKey === 'list' ? t('sessions.tabList') : t('sessions.tabCalendar')}
+            onTabChange={tab =>
+              setActiveTabKey(tab === t('sessions.tabList') ? 'list' : 'calendar')
+            }
+          />
+        </div>
 
-      {user && (
-        <FloatingActionButton
-          onClick={() => navigate('/sessions/new')}
-          icon={<Plus className="w-6 h-6" />}
-          ariaLabel={t('sessions.createNew')}
-        />
-      )}
-    </div>
+        {/* List */}
+        {activeTabKey === 'list' && (
+          <div className="px-[var(--space-5)] space-y-[var(--space-3)] pt-[var(--space-4)] pb-32">
+            {isLoading ? (
+              <ShuttleLoading compact />
+            ) : isError ? (
+              <ErrorState
+                message={t('sessions.loadError')}
+                onRetry={() => {
+                  refetchSessions()
+                  refetchMatches()
+                }}
+              />
+            ) : sessionGroups.length > 0 ? (
+              <div
+                ref={listRef}
+                style={{ position: 'relative', height: listVirtualizer.getTotalSize() }}
+              >
+                {listVirtualizer.getVirtualItems().map(virtualRow => {
+                  const row = flatRows[virtualRow.index]
+                  const isLast = virtualRow.index === flatRows.length - 1
+                  return (
+                    <div
+                      key={virtualRow.key}
+                      data-index={virtualRow.index}
+                      ref={listVirtualizer.measureElement}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualRow.start - listVirtualizer.options.scrollMargin}px)`,
+                        paddingBottom: isLast ? 0 : 12,
+                      }}
+                    >
+                      {row.type === 'header' ? (
+                        <SectionLabel className="px-[var(--space-1)] pt-[var(--space-2)]">
+                          {row.label}
+                        </SectionLabel>
+                      ) : (
+                        <SessionLeaderboardCard
+                          session={row.session}
+                          matchCount={matchCountBySession.get(row.session.id) ?? 0}
+                          onNavigate={() =>
+                            navigate(`/sessions/${row.session.id}`, {
+                              state: { from: '/sessions' },
+                            })
+                          }
+                          locale={locale}
+                          t={t}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Trophy className="w-9 h-9 mx-auto" />}
+                title={t('sessions.noneYet')}
+                description={t('sessions.emptyDescription')}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Calendar */}
+        {activeTabKey === 'calendar' &&
+          (isLoading ? (
+            <div className="px-[var(--space-5)] pt-[var(--space-4)]">
+              <ShuttleLoading compact />
+            </div>
+          ) : (
+            <div className="pt-[var(--space-4)]">
+              <CalendarTab />
+            </div>
+          ))}
+
+        {user && (
+          <FloatingActionButton
+            onClick={() => navigate('/sessions/new')}
+            icon={<Plus className="w-6 h-6" />}
+            ariaLabel={t('sessions.createNew')}
+          />
+        )}
+      </div>
     </PullToRefresh>
   )
 }

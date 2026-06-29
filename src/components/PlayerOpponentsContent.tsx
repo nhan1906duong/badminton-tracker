@@ -1,6 +1,6 @@
 import { useOpponents } from '../hooks/useOpponents'
-import { PlayerVersusList } from './PlayerVersusList'
 import { useI18n } from '../i18n'
+import { PlayerVersusList } from './PlayerVersusList'
 
 interface Props {
   playerId: string
@@ -10,7 +10,7 @@ export function PlayerOpponentsContent({ playerId }: Props) {
   const { t } = useI18n()
   const { entries, isLoading } = useOpponents(playerId)
 
-  const versusEntries = entries.map((entry) => ({
+  const versusEntries = entries.map(entry => ({
     person: entry.opponent,
     wins: entry.wins,
     losses: entry.losses,

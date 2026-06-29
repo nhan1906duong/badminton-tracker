@@ -1,7 +1,7 @@
-import { Suspense, lazy } from 'react'
-import { MASCOTS, getMascotPreviewPath, type Mascot } from '../lib/mascots'
-import { useI18n } from '../i18n'
+import { lazy, Suspense } from 'react'
 import { BottomSheet } from '../../design-system/components'
+import { useI18n } from '../i18n'
+import { getMascotPreviewPath, MASCOTS, type Mascot } from '../lib/mascots'
 
 const LottieMascot = lazy(() => import('./LottieMascot'))
 
@@ -12,7 +12,12 @@ interface MascotPickerProps {
   onClose: () => void
 }
 
-export default function MascotPicker({ open, currentMascotId, onSelect, onClose }: MascotPickerProps) {
+export default function MascotPicker({
+  open,
+  currentMascotId,
+  onSelect,
+  onClose,
+}: MascotPickerProps) {
   const { t } = useI18n()
 
   const handleSelect = (mascotId: string | null) => {
@@ -57,12 +62,19 @@ export default function MascotPicker({ open, currentMascotId, onSelect, onClose 
           className="active:opacity-70"
         >
           <span style={{ fontSize: 32, lineHeight: 1 }}>🚫</span>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <span
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
             {t('mascotPicker.none')}
           </span>
         </button>
 
-        {MASCOTS.map((mascot) => {
+        {MASCOTS.map(mascot => {
           const isSelected = currentMascotId === mascot.id
           return (
             <button
@@ -85,7 +97,14 @@ export default function MascotPicker({ open, currentMascotId, onSelect, onClose 
               className="active:opacity-70"
             >
               <MascotPreview mascot={mascot} size={40} />
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--fg)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <span
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--fg)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
                 {mascot.name}
               </span>
             </button>
@@ -98,7 +117,12 @@ export default function MascotPicker({ open, currentMascotId, onSelect, onClose 
 
 function MascotPreview({ mascot, size }: { mascot: Mascot; size: number }) {
   const fallback = (
-    <div role="img" aria-label={mascot.name} style={{ width: size, height: size, fontSize: size * 0.7 }} className="flex items-center justify-center shrink-0">
+    <div
+      role="img"
+      aria-label={mascot.name}
+      style={{ width: size, height: size, fontSize: size * 0.7 }}
+      className="flex items-center justify-center shrink-0"
+    >
       {mascot.emoji}
     </div>
   )

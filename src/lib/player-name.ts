@@ -3,6 +3,6 @@ export function formatShortPlayerName(name: string): string {
   if (parts.length <= 1) return parts[0] ?? ''
 
   const [firstName, ...rest] = parts
-  const initials = rest.map((part) => `${part[0].toUpperCase()}.`)
+  const initials = rest.map(part => `${part[0].toUpperCase()}.`)
   return [firstName, ...initials].join(' ')
 }

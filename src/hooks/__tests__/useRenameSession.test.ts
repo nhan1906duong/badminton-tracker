@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, waitFor } from '@testing-library/react'
 import { createElement } from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useRenameSession } from '../useSessions'
 
 // ─── Supabase mock ────────────────────────────────────────────────────────────
@@ -19,7 +19,9 @@ vi.mock('../../lib/supabase', () => ({
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makeWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return {
     wrapper: ({ children }: { children: React.ReactNode }) =>
       createElement(QueryClientProvider, { client: qc }, children),
@@ -43,7 +45,10 @@ describe('useRenameSession', () => {
     result.current.mutate({ id: 'sess-1', label: 'Friday Night' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(mockRpc).toHaveBeenCalledWith('rename_session', { p_id: 'sess-1', p_label: 'Friday Night' })
+    expect(mockRpc).toHaveBeenCalledWith('rename_session', {
+      p_id: 'sess-1',
+      p_label: 'Friday Night',
+    })
   })
 
   it('updates label with the provided value including whitespace', async () => {
@@ -55,7 +60,10 @@ describe('useRenameSession', () => {
     result.current.mutate({ id: 'sess-1', label: '  Friday Night  ' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(mockRpc).toHaveBeenCalledWith('rename_session', { p_id: 'sess-1', p_label: '  Friday Night  ' })
+    expect(mockRpc).toHaveBeenCalledWith('rename_session', {
+      p_id: 'sess-1',
+      p_label: '  Friday Night  ',
+    })
   })
 
   it('throws when supabase returns an error', async () => {

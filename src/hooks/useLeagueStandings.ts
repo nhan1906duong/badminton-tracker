@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
+import type { TeamStanding } from '../types/database'
 import { useLeagueTeams } from './useLeagueTeams'
 import { useMatches } from './useMatches'
-import type { TeamStanding } from '../types/database'
 
 export function useLeagueStandings(sessionId: string | undefined): TeamStanding[] | null {
   const { data: teams } = useLeagueTeams(sessionId)
@@ -35,20 +35,20 @@ export function useLeagueStandings(sessionId: string | undefined): TeamStanding[
     for (const match of matches ?? []) {
       if (match.status !== 'COMPLETED') continue
 
-      const winnerTeam = match.teams.find((t) => t.is_winner)
+      const winnerTeam = match.teams.find(t => t.is_winner)
       if (!winnerTeam) continue
 
-      const loserTeam = match.teams.find((t) => !t.is_winner)
+      const loserTeam = match.teams.find(t => !t.is_winner)
       if (!loserTeam) continue
 
       // Get players on each match team
       const winnerPlayerIds = match.participants
-        .filter((p) => p.team_id === winnerTeam.id)
-        .map((p) => p.player_id)
+        .filter(p => p.team_id === winnerTeam.id)
+        .map(p => p.player_id)
 
       const loserPlayerIds = match.participants
-        .filter((p) => p.team_id === loserTeam.id)
-        .map((p) => p.player_id)
+        .filter(p => p.team_id === loserTeam.id)
+        .map(p => p.player_id)
 
       if (winnerPlayerIds.length === 0 || loserPlayerIds.length === 0) continue
 

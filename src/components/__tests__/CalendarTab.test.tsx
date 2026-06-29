@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { CalendarTab } from '../CalendarTab'
-import type { Session, MatchWithDetails } from '../../types/database'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SessionLeaderboard, SessionWeeklyStats } from '../../hooks/useRankings'
+import type { MatchWithDetails, Session } from '../../types/database'
+import { CalendarTab } from '../CalendarTab'
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ function renderTab() {
       <MemoryRouter>
         <CalendarTab />
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -182,7 +182,11 @@ describe('CalendarTab', () => {
     it('excludes active sessions and only renders completed ones', () => {
       mockSessions = [
         makeSession({ id: 'sess-active', label: 'Active Session', ended_at: null }),
-        makeSession({ id: 'sess-done', label: 'Done Session', ended_at: '2026-05-27T10:00:00.000Z' }),
+        makeSession({
+          id: 'sess-done',
+          label: 'Done Session',
+          ended_at: '2026-05-27T10:00:00.000Z',
+        }),
       ]
       renderTab()
       expect(screen.queryByText('Active Session')).toBeNull()
@@ -204,7 +208,10 @@ describe('CalendarTab', () => {
       // 7 wins / 8 played = 87.5% → rounds to 88%
       const session = makeSession()
       mockSessions = [session]
-      mockLeaderboardMap.set(session.id, makeLeaderboard(makeChampion({ wins: 7, losses: 1, matchesPlayed: 8 })))
+      mockLeaderboardMap.set(
+        session.id,
+        makeLeaderboard(makeChampion({ wins: 7, losses: 1, matchesPlayed: 8 })),
+      )
       renderTab()
       expect(screen.getByText('88%')).toBeDefined()
     })
@@ -269,8 +276,18 @@ describe('CalendarTab', () => {
   describe('grouping', () => {
     it('shows a month header for sessions in the same month', () => {
       mockSessions = [
-        makeSession({ id: 'sess-1', label: 'Morning', started_at: '2026-05-27T08:00:00.000Z', ended_at: '2026-05-27T10:00:00.000Z' }),
-        makeSession({ id: 'sess-2', label: 'Evening', started_at: '2026-05-28T18:00:00.000Z', ended_at: '2026-05-28T20:00:00.000Z' }),
+        makeSession({
+          id: 'sess-1',
+          label: 'Morning',
+          started_at: '2026-05-27T08:00:00.000Z',
+          ended_at: '2026-05-27T10:00:00.000Z',
+        }),
+        makeSession({
+          id: 'sess-2',
+          label: 'Evening',
+          started_at: '2026-05-28T18:00:00.000Z',
+          ended_at: '2026-05-28T20:00:00.000Z',
+        }),
       ]
       renderTab()
       // 2 sessions in May 2026 — month header should say "2 sessions"
@@ -279,8 +296,18 @@ describe('CalendarTab', () => {
 
     it('renders two month headers for sessions in different months', () => {
       mockSessions = [
-        makeSession({ id: 'sess-1', label: 'May Session', started_at: '2026-05-27T08:00:00.000Z', ended_at: '2026-05-27T10:00:00.000Z' }),
-        makeSession({ id: 'sess-2', label: 'June Session', started_at: '2026-06-10T08:00:00.000Z', ended_at: '2026-06-10T10:00:00.000Z' }),
+        makeSession({
+          id: 'sess-1',
+          label: 'May Session',
+          started_at: '2026-05-27T08:00:00.000Z',
+          ended_at: '2026-05-27T10:00:00.000Z',
+        }),
+        makeSession({
+          id: 'sess-2',
+          label: 'June Session',
+          started_at: '2026-06-10T08:00:00.000Z',
+          ended_at: '2026-06-10T10:00:00.000Z',
+        }),
       ]
       renderTab()
       const sessionCountLabels = screen.getAllByText('1 sessions')
@@ -295,7 +322,9 @@ describe('CalendarTab', () => {
       renderTab()
       const card = screen.getByText('Weekend Session').closest('[role="link"]')!
       fireEvent.click(card)
-      expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-42', { state: { from: '/sessions' } })
+      expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-42', {
+        state: { from: '/sessions' },
+      })
     })
 
     it('navigates on Enter key press', () => {
@@ -304,7 +333,9 @@ describe('CalendarTab', () => {
       renderTab()
       const card = screen.getByText('Weekend Session').closest('[role="link"]')!
       fireEvent.keyDown(card, { key: 'Enter' })
-      expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-42', { state: { from: '/sessions' } })
+      expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-42', {
+        state: { from: '/sessions' },
+      })
     })
   })
 })

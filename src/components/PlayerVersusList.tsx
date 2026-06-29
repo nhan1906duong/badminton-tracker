@@ -1,10 +1,10 @@
-import { useState } from 'react'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { useI18n } from '../i18n'
+import type { MatchWithDetails, Player } from '../types/database'
 import Avatar from './Avatar'
 import { PlayerMatchHistoryItem } from './PlayerMatchHistoryItem'
 import PlayerRecordLine from './PlayerRecordLine'
-import type { MatchWithDetails, Player } from '../types/database'
-import { useI18n } from '../i18n'
 
 export interface VersusEntry {
   person: Player
@@ -39,7 +39,9 @@ export function PlayerVersusList({ entries, playerId, isLoading, countLabel }: P
         className="bg-[var(--bg)] border border-[var(--border)] p-4"
         style={{ borderRadius: 'var(--radius-lg)' }}
       >
-        <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noDoublesYet')}</p>
+        <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
+          {t('players.noDoublesYet')}
+        </p>
       </div>
     )
   }
@@ -52,9 +54,11 @@ export function PlayerVersusList({ entries, playerId, isLoading, countLabel }: P
       >
         {countLabel}
       </div>
-      {entries.map((entry) => {
+      {entries.map(entry => {
         const isExpanded = expanded.has(entry.person.id)
-        const winRate = Math.round(entry.totalMatches > 0 ? (entry.wins / entry.totalMatches) * 100 : 0)
+        const winRate = Math.round(
+          entry.totalMatches > 0 ? (entry.wins / entry.totalMatches) * 100 : 0,
+        )
         return (
           <div
             key={entry.person.id}
@@ -63,7 +67,7 @@ export function PlayerVersusList({ entries, playerId, isLoading, countLabel }: P
           >
             <button
               onClick={() =>
-                setExpanded((prev) => {
+                setExpanded(prev => {
                   const next = new Set(prev)
                   if (next.has(entry.person.id)) next.delete(entry.person.id)
                   else next.add(entry.person.id)
@@ -88,15 +92,19 @@ export function PlayerVersusList({ entries, playerId, isLoading, countLabel }: P
                   marginTop={2}
                 />
               </div>
-              {isExpanded
-                ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-              }
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+              ) : (
+                <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
+              )}
             </button>
 
             {isExpanded && (
-              <div className="divide-y divide-[var(--border)]" style={{ borderTop: '1px solid var(--border)' }}>
-                {entry.matches.map((match) => (
+              <div
+                className="divide-y divide-[var(--border)]"
+                style={{ borderTop: '1px solid var(--border)' }}
+              >
+                {entry.matches.map(match => (
                   <PlayerMatchHistoryItem key={match.id} match={match} playerId={playerId} />
                 ))}
               </div>

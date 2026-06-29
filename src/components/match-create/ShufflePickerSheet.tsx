@@ -1,15 +1,15 @@
-import { useState } from 'react'
 import { Shuffle } from 'lucide-react'
+import { useState } from 'react'
 import { BottomSheet } from '../../../design-system/components/bottom-sheet'
-import { formatShortPlayerName } from '../../lib/player-name'
 import { useI18n } from '../../i18n'
-import { generateNextMatch, enumerateSplits, makeSplitKey } from '../../lib/fair-shuffle'
 import type { ShufflePlayer } from '../../lib/fair-shuffle'
+import { enumerateSplits, generateNextMatch, makeSplitKey } from '../../lib/fair-shuffle'
+import { formatShortPlayerName } from '../../lib/player-name'
 import type { MatchWithDetails, Player } from '../../types/database'
 
 function buildSessionHistory(
   sessionMatches: MatchWithDetails[],
-  pool: ShufflePlayer[]
+  pool: ShufflePlayer[],
 ): {
   splitRecord: Map<string, { team1Wins: number; team2Wins: number }>
   cycleUsedSplits: Set<string>
@@ -129,18 +129,36 @@ export function ShufflePickerSheet({
     if (pool.length < teamSize * 2) return
 
     if (teamSize === 2) {
-      const { splitRecord, cycleUsedSplits: historyCycle, playerWins, playerPlayed } = buildSessionHistory(matches ?? [], pool)
+      const {
+        splitRecord,
+        cycleUsedSplits: historyCycle,
+        playerWins,
+        playerPlayed,
+      } = buildSessionHistory(matches ?? [], pool)
 
-      const poolKey = pool.map(p => p.id).sort().join(',')
+      const poolKey = pool
+        .map(p => p.id)
+        .sort()
+        .join(',')
       // On first shuffle or pool change: sync from history. Otherwise continue the in-memory cycle.
-      const currentCycle = (shuffleCycle === null || poolKey !== lastShufflePoolKey)
-        ? new Set(historyCycle)
-        : shuffleCycle
+      const currentCycle =
+        shuffleCycle === null || poolKey !== lastShufflePoolKey
+          ? new Set(historyCycle)
+          : shuffleCycle
 
-      const result = generateNextMatch({ selectedPlayers: pool, splitRecord, cycleUsedSplits: currentCycle, playerWins, playerPlayed })
+      const result = generateNextMatch({
+        selectedPlayers: pool,
+        splitRecord,
+        cycleUsedSplits: currentCycle,
+        playerWins,
+        playerPlayed,
+      })
 
       // Advance the in-memory cycle
-      const usedKey = makeSplitKey([result.team1[0].id, result.team1[1].id], [result.team2[0].id, result.team2[1].id])
+      const usedKey = makeSplitKey(
+        [result.team1[0].id, result.team1[1].id],
+        [result.team2[0].id, result.team2[1].id],
+      )
       const nextCycle = new Set(currentCycle)
       nextCycle.add(usedKey)
       setShuffleCycle(nextCycle.size >= enumerateSplits(pool).length ? new Set() : nextCycle)
@@ -168,20 +186,35 @@ export function ShufflePickerSheet({
   return (
     <BottomSheet open={open} onClose={onClose}>
       {/* Header */}
-      <div style={{ padding: '0 var(--space-5) var(--space-3)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div
+        style={{
+          padding: '0 var(--space-5) var(--space-3)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+        }}
+      >
         <div>
           <div style={{ marginBottom: 'var(--space-1)' }}>
-            <span style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-lg)',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              color: 'var(--fg)',
-            }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-lg)',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: 'var(--fg)',
+              }}
+            >
               {t('shuffle.title')}
             </span>
           </div>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-xs)',
+              color: 'var(--muted)',
+            }}
+          >
             {selCount === 0
               ? t('shuffle.selectPlayers')
               : t('shuffle.selectedCount', { count: selCount })}
@@ -235,30 +268,41 @@ export function ShufflePickerSheet({
                 minHeight: 44,
               }}
             >
-              <div style={{
-                width: 20,
-                height: 20,
-                borderRadius: 4,
-                border: `2px solid ${isSel ? 'var(--accent)' : 'var(--muted)'}`,
-                background: isSel ? 'var(--accent)' : 'transparent',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-                transition: 'background 0.12s, border-color 0.12s',
-              }}>
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  border: `2px solid ${isSel ? 'var(--accent)' : 'var(--muted)'}`,
+                  background: isSel ? 'var(--accent)' : 'transparent',
+                  display: 'grid',
+                  placeItems: 'center',
+                  flexShrink: 0,
+                  transition: 'background 0.12s, border-color 0.12s',
+                }}
+              >
                 {isSel && (
-                  <svg width="12" height="12" fill="none" viewBox="0 0 12 12" stroke="white" strokeWidth={2.5}>
+                  <svg
+                    width="12"
+                    height="12"
+                    fill="none"
+                    viewBox="0 0 12 12"
+                    stroke="white"
+                    strokeWidth={2.5}
+                  >
                     <path d="M2 6l3 3 5-5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
               </div>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-base)',
-                fontWeight: 700,
-                letterSpacing: '-0.01em',
-                color: 'var(--fg)',
-              }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 700,
+                  letterSpacing: '-0.01em',
+                  color: 'var(--fg)',
+                }}
+              >
                 {formatShortPlayerName(p.name)}
               </span>
             </button>

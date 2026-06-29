@@ -1,7 +1,7 @@
-import { useCallback } from 'react'
-import type { SetScore } from '../types/database'
 import { Plus, Trash2 } from 'lucide-react'
+import { useCallback } from 'react'
 import { useI18n } from '../i18n'
+import type { SetScore } from '../types/database'
 
 interface ScoreEntryProps {
   scores: SetScore[]
@@ -26,20 +26,20 @@ function calculateWinner(scores: SetScore[]): 'TEAM_A' | 'TEAM_B' | null {
 
 export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }: ScoreEntryProps) {
   const { t } = useI18n()
-  const applyScores = useCallback((newScores: SetScore[]) => {
-    onChange(newScores)
-    const autoWinner = calculateWinner(newScores)
-    if (autoWinner && autoWinner !== winner) {
-      onWinnerChange(autoWinner)
-    }
-  }, [onChange, onWinnerChange, winner])
+  const applyScores = useCallback(
+    (newScores: SetScore[]) => {
+      onChange(newScores)
+      const autoWinner = calculateWinner(newScores)
+      if (autoWinner && autoWinner !== winner) {
+        onWinnerChange(autoWinner)
+      }
+    },
+    [onChange, onWinnerChange, winner],
+  )
 
   function addSet() {
     if (scores.length >= 5) return
-    applyScores([
-      ...scores,
-      { set_number: scores.length + 1, team_a_score: 0, team_b_score: 0 },
-    ])
+    applyScores([...scores, { set_number: scores.length + 1, team_a_score: 0, team_b_score: 0 }])
   }
 
   function updateSet(index: number, field: 'team_a_score' | 'team_b_score', rawValue: string) {
@@ -51,7 +51,9 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
   }
 
   function removeSet(index: number) {
-    const updated = scores.filter((_, i) => i !== index).map((s, i) => ({ ...s, set_number: i + 1 }))
+    const updated = scores
+      .filter((_, i) => i !== index)
+      .map((s, i) => ({ ...s, set_number: i + 1 }))
     applyScores(updated)
   }
 
@@ -81,8 +83,13 @@ export default function ScoreEntry({ scores, onChange, winner, onWinnerChange }:
         ) : (
           <div className="space-y-2">
             {scores.map((set, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3">
-                <span className="text-xs font-bold text-gray-400 w-10 shrink-0">{t('scoreEntry.setNumber', { number: set.set_number })}</span>
+              <div
+                key={i}
+                className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-4 py-3"
+              >
+                <span className="text-xs font-bold text-gray-400 w-10 shrink-0">
+                  {t('scoreEntry.setNumber', { number: set.set_number })}
+                </span>
 
                 <div className="flex items-center gap-2 flex-1 justify-center">
                   <input

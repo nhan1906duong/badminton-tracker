@@ -1,8 +1,8 @@
-import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
-import { AuthProvider } from './contexts/AuthContext'
+import { Medal, Settings, Trophy } from 'lucide-react'
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom'
 import AnimatedRoutes from './components/AnimatedRoutes'
-import { Trophy, Medal, Settings } from 'lucide-react'
+import { AuthProvider } from './contexts/AuthContext'
 import { LocaleProvider, useI18n } from './i18n'
 import './index.css'
 
@@ -24,15 +24,30 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="min-h-dvh bg-[var(--bg)] max-w-lg mx-auto relative"
-      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
       <main>{children}</main>
       {isTabRoute && (
         <nav className="fixed bottom-0 left-0 right-0 bg-[var(--surface)] border-t border-[var(--border)] max-w-lg mx-auto z-40">
           <div className="flex items-center justify-around py-2 pb-[env(safe-area-inset-bottom)]">
-            <NavButton to="/sessions" icon={<Trophy className="w-5 h-5" />} label={t('nav.sessions')} />
-            <NavButton to="/ranking" icon={<Medal className="w-5 h-5" />} label={t('nav.ranking')} />
-            <NavButton to="/settings" icon={<Settings className="w-5 h-5" />} label={t('nav.settings')} />
+            <NavButton
+              to="/sessions"
+              icon={<Trophy className="w-5 h-5" />}
+              label={t('nav.sessions')}
+            />
+            <NavButton
+              to="/ranking"
+              icon={<Medal className="w-5 h-5" />}
+              label={t('nav.ranking')}
+            />
+            <NavButton
+              to="/settings"
+              icon={<Settings className="w-5 h-5" />}
+              label={t('nav.settings')}
+            />
           </div>
         </nav>
       )}

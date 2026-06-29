@@ -1,7 +1,11 @@
+import { LOCALE_TAG, type Locale, translate } from '../i18n'
 import type { Session } from '../types/database'
-import { LOCALE_TAG, translate, type Locale } from '../i18n'
 
-export function formatSessionDuration(startedAt: string, endedAt?: string | null, locale: Locale = 'en'): string {
+export function formatSessionDuration(
+  startedAt: string,
+  endedAt?: string | null,
+  locale: Locale = 'en',
+): string {
   const start = new Date(startedAt)
   const now = new Date()
   if (!endedAt && start.getTime() > now.getTime()) {

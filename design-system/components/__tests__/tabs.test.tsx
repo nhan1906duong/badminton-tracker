@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import { Tabs } from '../tabs'
 
 describe('Tabs', () => {
@@ -28,7 +28,7 @@ describe('Tabs', () => {
           ]}
           activeTab="session"
           onTabChange={() => {}}
-        />
+        />,
       )
       const activeTab = screen.getByRole('tab', { name: /latest session/i })
       expect(activeTab).toHaveAttribute('aria-selected', 'true')
@@ -44,7 +44,7 @@ describe('Tabs', () => {
           ]}
           activeTab="all"
           onTabChange={onTabChange}
-        />
+        />,
       )
       fireEvent.click(screen.getByRole('tab', { name: /latest session/i }))
       expect(onTabChange).toHaveBeenCalledWith('session')

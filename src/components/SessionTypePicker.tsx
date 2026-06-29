@@ -1,13 +1,18 @@
-import type { SessionType } from '../types/database'
-import { useI18n, type TranslationKey } from '../i18n'
 import { Calendar, Trophy, Users } from 'lucide-react'
+import { type TranslationKey, useI18n } from '../i18n'
+import type { SessionType } from '../types/database'
 
 interface SessionTypePickerProps {
   value: SessionType
   onChange: (type: SessionType) => void
 }
 
-const TYPES: { type: SessionType; icon: React.ReactNode; titleKey: TranslationKey; descKey: TranslationKey }[] = [
+const TYPES: {
+  type: SessionType
+  icon: React.ReactNode
+  titleKey: TranslationKey
+  descKey: TranslationKey
+}[] = [
   {
     type: 'tournament',
     icon: <Trophy className="w-4 h-4" />,

@@ -32,9 +32,7 @@ export function SectionLabel({ children, action, className = '' }: SectionLabelP
   }
 
   return (
-    <div
-      className={`flex items-baseline justify-between ${className}`}
-    >
+    <div className={`flex items-baseline justify-between ${className}`}>
       {label}
       {action}
     </div>

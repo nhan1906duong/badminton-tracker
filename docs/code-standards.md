@@ -70,6 +70,43 @@ export function useCreateMatch() {
 - React useState for local UI state
 - Context for auth state only
 
+## Form Validation
+
+All forms use **react-hook-form** with a **Zod resolver**. Manual `useState` form fields and ad-hoc validation handlers are not used in new forms.
+
+```tsx
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+
+const MySchema = z.object({ name: z.string().min(1) })
+type MyValues = z.infer<typeof MySchema>
+
+const { register, handleSubmit, formState: { errors } } = useForm<MyValues>({
+  resolver: zodResolver(MySchema),
+})
+```
+
+- Form schemas live in `src/lib/schemas/form-schemas.ts`
+- Error messages are rendered via `errors.fieldName?.message`
+- `reset(defaultValues)` is called in `useEffect` when a sheet opens in edit mode
+
+## Runtime Validation (Zod RPC schemas)
+
+Supabase RPC responses are parsed with Zod at the query boundary to catch shape drift. Schemas live in `src/lib/schemas/rpc-schemas.ts`. Parse once per query result (in the `select` transformer) — never inside render loops.
+
+## Linting & Formatting
+
+**Biome** is the single lint + format tool (`@biomejs/biome`). ESLint is not used.
+
+| Script | Command |
+|--------|---------|
+| `lint` | `biome check .` |
+| `lint:fix` | `biome check --write .` |
+| `format` | `biome format --write .` |
+
+Config: `biome.json` at the project root. Indent: 2 spaces, line width: 100, single quotes, semicolons as needed.
+
 ## Styling
 
 - Tailwind CSS utility classes

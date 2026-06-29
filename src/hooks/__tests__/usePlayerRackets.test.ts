@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, waitFor } from '@testing-library/react'
 import { createElement } from 'react'
-import { useCreatePlayerRacket, useUpdatePlayerRacket, useDeletePlayerRacket } from '../usePlayerRackets'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  useCreatePlayerRacket,
+  useDeletePlayerRacket,
+  useUpdatePlayerRacket,
+} from '../usePlayerRackets'
 
 // ─── Supabase mock ────────────────────────────────────────────────────────────
 
@@ -19,7 +23,9 @@ vi.mock('../../lib/supabase', () => ({
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makeWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return {
     wrapper: ({ children }: { children: React.ReactNode }) =>
       createElement(QueryClientProvider, { client: qc }, children),
@@ -35,7 +41,14 @@ describe('usePlayerRackets mutations', () => {
   })
 
   it('creates a racket and invalidates the player rackets query', async () => {
-    const racket = { id: 'racket-1', player_id: 'player-1', brand: 'Yonex', real_name: 'Astrox 100ZZ', nickname: null, created_at: '2026-01-01' }
+    const racket = {
+      id: 'racket-1',
+      player_id: 'player-1',
+      brand: 'Yonex',
+      real_name: 'Astrox 100ZZ',
+      nickname: null,
+      created_at: '2026-01-01',
+    }
     mockRpc.mockResolvedValueOnce({ data: [racket], error: null } as any)
 
     const { wrapper, qc } = makeWrapper()
@@ -56,13 +69,25 @@ describe('usePlayerRackets mutations', () => {
   })
 
   it('updates a racket', async () => {
-    const racket = { id: 'racket-1', player_id: 'player-1', brand: 'Victor', real_name: 'Thruster K Falcon', nickname: 'Falcon', created_at: '2026-01-01' }
+    const racket = {
+      id: 'racket-1',
+      player_id: 'player-1',
+      brand: 'Victor',
+      real_name: 'Thruster K Falcon',
+      nickname: 'Falcon',
+      created_at: '2026-01-01',
+    }
     mockRpc.mockResolvedValueOnce({ data: [racket], error: null } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useUpdatePlayerRacket(), { wrapper })
 
-    result.current.mutate({ id: 'racket-1', brand: 'Victor', real_name: 'Thruster K Falcon', nickname: 'Falcon' })
+    result.current.mutate({
+      id: 'racket-1',
+      brand: 'Victor',
+      real_name: 'Thruster K Falcon',
+      nickname: 'Falcon',
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(mockRpc).toHaveBeenCalledWith('update_player_racket', {

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { MatchScore, MatchWithDetails, Player } from '../../types/database'
 import MatchDetailPage from '../MatchDetailPage'
-import type { MatchWithDetails, MatchScore, Player } from '../../types/database'
 
 // ─── Router mocks ─────────────────────────────────────────────────────────────
 
@@ -76,9 +76,7 @@ vi.mock('../../../design-system/components', () => ({
   }) => (
     <header>
       {titleVisible && <h1>{title}</h1>}
-      {leftAction && (
-        <button onClick={leftAction.onClick}>Session</button>
-      )}
+      {leftAction && <button onClick={leftAction.onClick}>Session</button>}
       {rightAction && (
         <button aria-label={rightAction.ariaLabel ?? 'More'} onClick={rightAction.onClick} />
       )}
@@ -87,13 +85,8 @@ vi.mock('../../../design-system/components', () => ({
 }))
 
 vi.mock('../../../design-system/components/bottom-sheet', () => ({
-  BottomSheet: ({
-    open,
-    children,
-  }: {
-    open: boolean
-    children: React.ReactNode
-  }) => (open ? <div role="dialog">{children}</div> : null),
+  BottomSheet: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+    open ? <div role="dialog">{children}</div> : null,
   BottomSheetItem: ({
     label,
     onClick,
@@ -159,9 +152,21 @@ function makeMatch(overrides: Partial<MatchWithDetails> = {}): MatchWithDetails 
       { id: 'team-b-1', match_id: 'match-1', team_label: 'TEAM_B', is_winner: false },
     ],
     participants: [
-      { id: 'mp1', match_id: 'match-1', team_id: 'team-a-1', player_id: 'p1', player: PLAYER_ALICE },
+      {
+        id: 'mp1',
+        match_id: 'match-1',
+        team_id: 'team-a-1',
+        player_id: 'p1',
+        player: PLAYER_ALICE,
+      },
       { id: 'mp2', match_id: 'match-1', team_id: 'team-a-1', player_id: 'p2', player: PLAYER_BOB },
-      { id: 'mp3', match_id: 'match-1', team_id: 'team-b-1', player_id: 'p3', player: PLAYER_CAROL },
+      {
+        id: 'mp3',
+        match_id: 'match-1',
+        team_id: 'team-b-1',
+        player_id: 'p3',
+        player: PLAYER_CAROL,
+      },
       { id: 'mp4', match_id: 'match-1', team_id: 'team-b-1', player_id: 'p4', player: PLAYER_DAN },
     ],
     scores: [],
@@ -179,7 +184,7 @@ function renderPage() {
       <MemoryRouter initialEntries={['/sessions/sess-1/matches/match-1']}>
         <MatchDetailPage />
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -321,7 +326,7 @@ describe('MatchDetailPage', () => {
           expect.objectContaining({
             id: 'match-1',
             winner_team: 'TEAM_A',
-          })
+          }),
         )
       })
     })
@@ -442,7 +447,10 @@ describe('MatchDetailPage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
       await waitFor(() => {
-        expect(mockDeleteMatch.mutateAsync).toHaveBeenCalledWith({ id: 'match-1', sessionId: 'sess-1' })
+        expect(mockDeleteMatch.mutateAsync).toHaveBeenCalledWith({
+          id: 'match-1',
+          sessionId: 'sess-1',
+        })
         expect(mockNavigate).toHaveBeenCalledWith(-1)
       })
     })
@@ -476,7 +484,9 @@ describe('MatchDetailPage', () => {
           { id: 'team-a-1', match_id: 'match-1', team_label: 'TEAM_A', is_winner: true },
           { id: 'team-b-1', match_id: 'match-1', team_label: 'TEAM_B', is_winner: false },
         ],
-        scores: [{ id: 's1', match_id: 'match-1', set_number: 1, team_a_score: 21, team_b_score: 15 }],
+        scores: [
+          { id: 's1', match_id: 'match-1', set_number: 1, team_a_score: 21, team_b_score: 15 },
+        ],
       })
       mockAllMatchesData = [mockMatchData]
       renderPage()

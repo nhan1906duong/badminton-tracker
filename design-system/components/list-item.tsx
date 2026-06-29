@@ -47,10 +47,7 @@ export function ListItem({
           {title}
         </div>
         {subtitle && (
-          <div
-            className="text-[13px] leading-[1.3]"
-            style={{ color: 'var(--muted)' }}
-          >
+          <div className="text-[13px] leading-[1.3]" style={{ color: 'var(--muted)' }}>
             {subtitle}
           </div>
         )}

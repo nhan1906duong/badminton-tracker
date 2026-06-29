@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isMultiavatarUrl, getMultiavatarSvgUrl } from '../../src/lib/avatar'
+import { getMultiavatarSvgUrl, isMultiavatarUrl } from '../../src/lib/avatar'
 
 export interface AvatarProps {
   src?: string | null

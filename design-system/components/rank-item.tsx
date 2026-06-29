@@ -49,19 +49,13 @@ export function RankItem({ rank, avatar, name, stats, winRate }: RankItemProps) 
         >
           {name}
         </div>
-        <div
-          className="text-[13px] leading-[1.3]"
-          style={{ color: 'var(--muted)' }}
-        >
+        <div className="text-[13px] leading-[1.3]" style={{ color: 'var(--muted)' }}>
           {stats}
         </div>
       </div>
 
       {/* Win rate */}
-      <div
-        className="text-[13px]"
-        style={{ color: 'var(--muted)' }}
-      >
+      <div className="text-[13px]" style={{ color: 'var(--muted)' }}>
         {winRate}%
       </div>
     </div>

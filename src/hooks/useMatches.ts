@@ -1,13 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
-import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, SetScore, MatchType, MatchStatus, Player } from '../types/database'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { generateRoundRobin } from '../lib/round-robin'
+import { supabase } from '../lib/supabase'
+import type {
+  Match,
+  MatchParticipant,
+  MatchScore,
+  MatchStatus,
+  MatchTeam,
+  MatchType,
+  MatchWithDetails,
+  Player,
+  SetScore,
+} from '../types/database'
 
 const MATCHES_KEY = 'matches'
 const PLAYER_MATCHES_KEY = 'player-matches'
 export const PLAYER_SESSION_STATS_KEY = 'player-session-stats'
 export const LEADERBOARD_KEY = 'leaderboard'
-
 
 export interface CreateMatchInput {
   session_id: string
@@ -55,18 +64,20 @@ export function useMatches(sessionId?: string) {
       const { data, error } = await query
       if (error) throw error
 
-      return (data ?? []).filter((match: unknown) => {
-        const m = match as Record<string, unknown>
-        return m.session_id != null
-      }).map((match) => {
-        const m = match as unknown as Record<string, unknown>
-        return {
-          ...(m as unknown as Match),
-          teams: (m.teams ?? []) as MatchTeam[],
-          participants: (m.participants ?? []) as (MatchParticipant & { player: Player })[],
-          scores: ((m.scores ?? []) as MatchScore[]).sort((a, b) => a.set_number - b.set_number),
-        } as MatchWithDetails
-      })
+      return (data ?? [])
+        .filter((match: unknown) => {
+          const m = match as Record<string, unknown>
+          return m.session_id != null
+        })
+        .map(match => {
+          const m = match as unknown as Record<string, unknown>
+          return {
+            ...(m as unknown as Match),
+            teams: (m.teams ?? []) as MatchTeam[],
+            participants: (m.participants ?? []) as (MatchParticipant & { player: Player })[],
+            scores: ((m.scores ?? []) as MatchScore[]).sort((a, b) => a.set_number - b.set_number),
+          } as MatchWithDetails
+        })
     },
   })
 }
@@ -120,7 +131,11 @@ export function useCreateLeagueSchedule() {
         participants: Array<{ player_id: string; team_id: string }>
       }
 
-      const fixtureMatchesTeam = (match: ExistingMatch, teamAIds: Set<string>, teamBIds: Set<string>) => {
+      const fixtureMatchesTeam = (
+        match: ExistingMatch,
+        teamAIds: Set<string>,
+        teamBIds: Set<string>,
+      ) => {
         const teamAMatch = match.teams.find(team => team.team_label === 'TEAM_A')
         const teamBMatch = match.teams.find(team => team.team_label === 'TEAM_B')
         if (!teamAMatch || !teamBMatch) return false
@@ -158,8 +173,9 @@ export function useCreateLeagueSchedule() {
 
         const teamAIds = new Set(teamA.playerIds)
         const teamBIds = new Set(teamB.playerIds)
-        const alreadyExists = existing.some(match =>
-          match.league_round === fixture.round && fixtureMatchesTeam(match, teamAIds, teamBIds)
+        const alreadyExists = existing.some(
+          match =>
+            match.league_round === fixture.round && fixtureMatchesTeam(match, teamAIds, teamBIds),
         )
         if (alreadyExists) continue
 

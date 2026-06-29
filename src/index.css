@@ -41,13 +41,17 @@ body::before {
 }
 
 /* Prevent text selection on interactive elements for native app feel */
-button, [role="button"] {
+button,
+[role="button"] {
   user-select: none;
   -webkit-user-select: none;
 }
 
 /* Disable double-tap zoom on buttons */
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   touch-action: manipulation;
 }
 
@@ -114,34 +118,83 @@ input[type="password"]::-ms-clear {
 */
 @keyframes shuttleFlight {
   /* ── outbound (left → right, scaleX 1) ── */
-  0%    { transform: translate(32px,  108px) rotate(-25deg) scaleX(1);  }
-  6.25% { transform: translate(48px,   91px) rotate(-20deg) scaleX(1);  }
-  12.5% { transform: translate(64px,   76px) rotate(-14deg) scaleX(1);  }
-  18.75%{ transform: translate(80px,   63px) rotate(-9deg)  scaleX(1);  }
-  25%   { transform: translate(96px,   55px) rotate(-4deg)  scaleX(1);  }
-  31.25%{ transform: translate(128px,  44px) rotate(2deg)   scaleX(1);  }
-  37.5% { transform: translate(160px,  38px) rotate(0deg)   scaleX(1);  }
-  43.75%{ transform: translate(224px,  44px) rotate(9deg)   scaleX(1);  }
-  50%   { transform: translate(288px, 108px) rotate(25deg)  scaleX(1);  }
+  0% {
+    transform: translate(32px, 108px) rotate(-25deg) scaleX(1);
+  }
+  6.25% {
+    transform: translate(48px, 91px) rotate(-20deg) scaleX(1);
+  }
+  12.5% {
+    transform: translate(64px, 76px) rotate(-14deg) scaleX(1);
+  }
+  18.75% {
+    transform: translate(80px, 63px) rotate(-9deg) scaleX(1);
+  }
+  25% {
+    transform: translate(96px, 55px) rotate(-4deg) scaleX(1);
+  }
+  31.25% {
+    transform: translate(128px, 44px) rotate(2deg) scaleX(1);
+  }
+  37.5% {
+    transform: translate(160px, 38px) rotate(0deg) scaleX(1);
+  }
+  43.75% {
+    transform: translate(224px, 44px) rotate(9deg) scaleX(1);
+  }
+  50% {
+    transform: translate(288px, 108px) rotate(25deg) scaleX(1);
+  }
   /* instant flip — scaleX -1 mirrors the icon so cork leads on return leg */
-  50.01%{ transform: translate(288px, 108px) rotate(-25deg) scaleX(-1); }
+  50.01% {
+    transform: translate(288px, 108px) rotate(-25deg) scaleX(-1);
+  }
   /* ── return (right → left, scaleX -1) ── */
-  56.25%{ transform: translate(224px,  44px) rotate(-9deg)  scaleX(-1); }
-  62.5% { transform: translate(160px,  38px) rotate(0deg)   scaleX(-1); }
-  68.75%{ transform: translate(128px,  44px) rotate(-2deg)  scaleX(-1); }
-  75%   { transform: translate(96px,   55px) rotate(4deg)   scaleX(-1); }
-  81.25%{ transform: translate(80px,   63px) rotate(9deg)   scaleX(-1); }
-  87.5% { transform: translate(64px,   76px) rotate(14deg)  scaleX(-1); }
-  93.75%{ transform: translate(48px,   91px) rotate(20deg)  scaleX(-1); }
-  100%  { transform: translate(32px,  108px) rotate(25deg)  scaleX(-1); }
+  56.25% {
+    transform: translate(224px, 44px) rotate(-9deg) scaleX(-1);
+  }
+  62.5% {
+    transform: translate(160px, 38px) rotate(0deg) scaleX(-1);
+  }
+  68.75% {
+    transform: translate(128px, 44px) rotate(-2deg) scaleX(-1);
+  }
+  75% {
+    transform: translate(96px, 55px) rotate(4deg) scaleX(-1);
+  }
+  81.25% {
+    transform: translate(80px, 63px) rotate(9deg) scaleX(-1);
+  }
+  87.5% {
+    transform: translate(64px, 76px) rotate(14deg) scaleX(-1);
+  }
+  93.75% {
+    transform: translate(48px, 91px) rotate(20deg) scaleX(-1);
+  }
+  100% {
+    transform: translate(32px, 108px) rotate(25deg) scaleX(-1);
+  }
 }
 
 @keyframes shuttleShadow {
   /* shadow X tracks the shuttle; opacity/scale reflect altitude */
-  0%, 100% { transform: translateX(32px)  scaleX(0.8);  opacity: 0.18; }
-  37.5%    { transform: translateX(160px) scaleX(0.45); opacity: 0.07; }
-  50%      { transform: translateX(288px) scaleX(0.8);  opacity: 0.18; }
-  62.5%    { transform: translateX(160px) scaleX(0.45); opacity: 0.07; }
+  0%,
+  100% {
+    transform: translateX(32px) scaleX(0.8);
+    opacity: 0.18;
+  }
+  37.5% {
+    transform: translateX(160px) scaleX(0.45);
+    opacity: 0.07;
+  }
+  50% {
+    transform: translateX(288px) scaleX(0.8);
+    opacity: 0.18;
+  }
+  62.5% {
+    transform: translateX(160px) scaleX(0.45);
+    opacity: 0.07;
+  }
 }
 
 .shuttle-flight {
@@ -151,7 +204,7 @@ input[type="password"]::-ms-clear {
 }
 
 .shuttle-icon {
-  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.20));
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / 0.2));
 }
 
 .shuttle-shadow {
@@ -177,8 +230,12 @@ input[type="password"]::-ms-clear {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .fade-in {

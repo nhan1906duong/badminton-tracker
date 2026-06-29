@@ -1,5 +1,5 @@
-import { formatCurrency } from './currency'
 import type { Session } from '../types/database'
+import { formatCurrency } from './currency'
 
 export interface ShareCardPlayer {
   name: string
@@ -8,7 +8,7 @@ export interface ShareCardPlayer {
 
 export interface ShareCardData {
   session: Session
-  players: ShareCardPlayer[]   // sorted by losses desc, all who played
+  players: ShareCardPlayer[] // sorted by losses desc, all who played
   totalDonatedVnd: number
   matchCount: number
 }
@@ -34,24 +34,31 @@ const FONT = 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
 
 // Date-pill fallback palette (amber, same as S1000)
 const DATE_BADGE_COLOR = '#926B10'
-const DATE_BADGE_BG    = 'rgba(146, 107, 16, 0.12)'
+const DATE_BADGE_BG = 'rgba(146, 107, 16, 0.12)'
 
 // BWF category badge colours — mirrors bwf-category-badge.tsx (oklch → hex approx)
 const CATEGORY_META: Record<string, { label: string; color: string; bg: string }> = {
   'grade-2-level-1': { label: 'Finals', color: '#6A3EC0', bg: 'rgba(106, 62, 192, 0.12)' },
-  'grade-2-level-2': { label: 'S1000',  color: '#926B10', bg: 'rgba(146, 107, 16, 0.12)' },
-  'grade-2-level-3': { label: 'S750',   color: '#C03820', bg: 'rgba(192, 56, 32, 0.12)'  },
-  'grade-2-level-4': { label: 'S500',   color: '#3050B8', bg: 'rgba(48, 80, 184, 0.12)'  },
-  'grade-2-level-5': { label: 'S300',   color: '#22763A', bg: 'rgba(34, 118, 58, 0.12)'  },
-  'grade-2-level-6': { label: 'S100',   color: '#706858', bg: 'rgba(112, 104, 88, 0.12)' },
+  'grade-2-level-2': { label: 'S1000', color: '#926B10', bg: 'rgba(146, 107, 16, 0.12)' },
+  'grade-2-level-3': { label: 'S750', color: '#C03820', bg: 'rgba(192, 56, 32, 0.12)' },
+  'grade-2-level-4': { label: 'S500', color: '#3050B8', bg: 'rgba(48, 80, 184, 0.12)' },
+  'grade-2-level-5': { label: 'S300', color: '#22763A', bg: 'rgba(34, 118, 58, 0.12)' },
+  'grade-2-level-6': { label: 'S100', color: '#706858', bg: 'rgba(112, 104, 88, 0.12)' },
 }
 
 // Column right-edges
-const COL_AMT_R  = W - PAD
+const COL_AMT_R = W - PAD
 const COL_LOSS_R = COL_AMT_R - 115
 const COL_NAME_MAX_W = COL_LOSS_R - PAD - 16
 
-function pill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function pill(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
   ctx.lineTo(x + w - r, y)
@@ -73,19 +80,19 @@ function clamp(ctx: CanvasRenderingContext2D, text: string, maxW: number): strin
 }
 
 function computeHeight(playerCount: number): number {
-  let H = PAD         // top padding
-  H += 14 + 16       // eyebrow + gap
-  H += 30 + 6        // title + gap
-  H += 22 + 24       // date badge + gap-to-divider
-  H += 1 + 20        // divider + gap
-  H += 12 + 10       // column headers + gap
-  H += 1 + 6         // header separator + gap
-  H += playerCount * 36  // player rows
-  H += 1 + 6         // footer separator + gap
-  H += 36            // total row
-  H += 20 + 1 + 16   // gap + divider + gap
-  H += 14            // footer text
-  H += PAD           // bottom padding
+  let H = PAD // top padding
+  H += 14 + 16 // eyebrow + gap
+  H += 30 + 6 // title + gap
+  H += 22 + 24 // date badge + gap-to-divider
+  H += 1 + 20 // divider + gap
+  H += 12 + 10 // column headers + gap
+  H += 1 + 6 // header separator + gap
+  H += playerCount * 36 // player rows
+  H += 1 + 6 // footer separator + gap
+  H += 36 // total row
+  H += 20 + 1 + 16 // gap + divider + gap
+  H += 14 // footer text
+  H += PAD // bottom padding
   return H
 }
 
@@ -94,7 +101,7 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
   const H = computeHeight(players.length)
 
   const canvas = document.createElement('canvas')
-  canvas.width  = W * SCALE
+  canvas.width = W * SCALE
   canvas.height = H * SCALE
   const ctx = canvas.getContext('2d')!
   ctx.scale(SCALE, SCALE)
@@ -113,7 +120,11 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
   ctx.textAlign = 'left'
   ctx.fillText('TỔNG KẾT ĐÓNG GÓP', PAD, y)
 
-  const dateLabel = new Date(session.started_at).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' })
+  const dateLabel = new Date(session.started_at).toLocaleDateString('vi-VN', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
   ctx.fillStyle = C.muted
   ctx.textAlign = 'right'
   ctx.fillText(dateLabel, W - PAD, y)
@@ -129,7 +140,11 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
   y += 30 + 6
 
   // ── Session date + duration ───────────────────────────────────
-  let dateStr = new Date(session.started_at).toLocaleDateString('vi-VN', { month: 'long', day: 'numeric', year: 'numeric' })
+  let dateStr = new Date(session.started_at).toLocaleDateString('vi-VN', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
   if (session.ended_at) {
     const totalMin = Math.floor(
       (new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 60000,
@@ -144,12 +159,14 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
     : null
   const badgeLabel = bwfMeta ? bwfMeta.label : dateStr
   const badgeColor = bwfMeta ? bwfMeta.color : DATE_BADGE_COLOR
-  const badgeBg    = bwfMeta ? bwfMeta.bg    : DATE_BADGE_BG
+  const badgeBg = bwfMeta ? bwfMeta.bg : DATE_BADGE_BG
 
   ctx.font = `700 10px ${FONT}`
   ctx.textBaseline = 'middle'
   const pillTextW = ctx.measureText(badgeLabel).width
-  const pillH = 22, pillPadX = 8, pillR = 5
+  const pillH = 22,
+    pillPadX = 8,
+    pillR = 5
   const pillW = pillTextW + pillPadX * 2
 
   ctx.fillStyle = badgeBg
@@ -203,7 +220,7 @@ export function generateSessionShareCard(data: ShareCardData): ShareCardResult {
 
   // ── Player rows ───────────────────────────────────────────────
   for (const player of players) {
-    const rowCy = y + 18  // vertical center of 36px row
+    const rowCy = y + 18 // vertical center of 36px row
 
     ctx.font = `500 14px ${FONT}`
     ctx.fillStyle = C.fg

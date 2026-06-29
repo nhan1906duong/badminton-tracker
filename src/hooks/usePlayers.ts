@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Player } from '../types/database'
 
@@ -8,10 +8,7 @@ export function usePlayers() {
   return useQuery({
     queryKey: [PLAYERS_KEY],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .order('name')
+      const { data, error } = await supabase.from('players').select('*').order('name')
       if (error) throw error
       return data as Player[]
     },
@@ -22,11 +19,7 @@ export function usePlayer(id: string) {
   return useQuery({
     queryKey: [PLAYERS_KEY, id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await supabase.from('players').select('*').eq('id', id).single()
       if (error) throw error
       return data as Player
     },
@@ -57,14 +50,15 @@ export function useUpdatePlayer() {
         p_id: player.id,
         p_name: player.name ?? null,
         p_email: player.email ?? null,
-        p_avatar_url: player.avatar_url !== undefined && player.avatar_url !== null ? player.avatar_url : null,
+        p_avatar_url:
+          player.avatar_url !== undefined && player.avatar_url !== null ? player.avatar_url : null,
         p_active_racket_id: player.active_racket_id ?? null,
         p_clear_avatar: player.avatar_url === null,
       })
       if (error) throw error
       return data[0] as Player
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       qc.invalidateQueries({ queryKey: [PLAYERS_KEY] })
       qc.invalidateQueries({ queryKey: [PLAYERS_KEY, data.id] })
     },

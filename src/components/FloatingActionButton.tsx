@@ -7,7 +7,12 @@ interface FloatingActionButtonProps {
   bottomOffset?: string
 }
 
-export default function FloatingActionButton({ onClick, icon, ariaLabel, bottomOffset = '4.5rem' }: FloatingActionButtonProps) {
+export default function FloatingActionButton({
+  onClick,
+  icon,
+  ariaLabel,
+  bottomOffset = '4.5rem',
+}: FloatingActionButtonProps) {
   return (
     <div
       className="fixed left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none"
@@ -39,10 +44,10 @@ export default function FloatingActionButton({ onClick, icon, ariaLabel, bottomO
             WebkitTapHighlightColor: 'transparent',
           }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
+            ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.transform = ''
+            ;(e.currentTarget as HTMLButtonElement).style.transform = ''
           }}
           onMouseDown={e => {
             const el = e.currentTarget as HTMLButtonElement

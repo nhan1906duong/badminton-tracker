@@ -1,21 +1,39 @@
-import { useMemo, useCallback, useState, useEffect } from 'react'
+import { Activity, ChevronLeft, Crown, LineChart, Medal } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Activity, ChevronLeft, Medal, Crown, LineChart } from 'lucide-react'
-import { AppBar, Avatar, Badge, BottomSheet, BottomSheetCancel, EmptyState, StatRow, PullToRefresh, SegmentedControl } from '../../design-system/components'
-import { ShuttleLoading } from '../components/ShuttleLoading'
-import { useMatches } from '../hooks/useMatches'
-import { useSession } from '../hooks/useSessions'
-import { useSessionLeaderboard, useSessionMatchResults, computeSessionRankingHistory, type SessionWeeklyStats } from '../hooks/useRankings'
-import { SessionRankingChart } from '../components/SessionRankingChart'
-import { useI18n } from '../i18n'
-import { useAuth } from '../hooks/useAuth'
-import { useProfile } from '../hooks/useProfile'
+import {
+  AppBar,
+  Avatar,
+  Badge,
+  BottomSheet,
+  BottomSheetCancel,
+  EmptyState,
+  PullToRefresh,
+  SegmentedControl,
+  StatRow,
+} from '../../design-system/components'
 import { FireworkEffect } from '../components/firework-effect'
 import PlayerRecordLine from '../components/PlayerRecordLine'
+import { SessionRankingChart } from '../components/SessionRankingChart'
+import { ShuttleLoading } from '../components/ShuttleLoading'
+import { useAuth } from '../hooks/useAuth'
+import { useMatches } from '../hooks/useMatches'
+import { useProfile } from '../hooks/useProfile'
+import {
+  computeSessionRankingHistory,
+  type SessionWeeklyStats,
+  useSessionLeaderboard,
+  useSessionMatchResults,
+} from '../hooks/useRankings'
+import { useSession } from '../hooks/useSessions'
+import { useI18n } from '../i18n'
 
 const MATCH_TYPE_SHORT: Record<string, string> = {
-  MEN_SINGLES: 'MS', WOMEN_SINGLES: 'WS',
-  MEN_DOUBLES: 'MD', WOMEN_DOUBLES: 'WD', MIXED_DOUBLES: 'XD',
+  MEN_SINGLES: 'MS',
+  WOMEN_SINGLES: 'WS',
+  MEN_DOUBLES: 'MD',
+  WOMEN_DOUBLES: 'WD',
+  MIXED_DOUBLES: 'XD',
 }
 
 function formatShortName(name: string): string {
@@ -32,11 +50,13 @@ function formatSigned(value: number): string {
 function SessionRank({ rank }: { rank: number }) {
   const { t } = useI18n()
   const isFirst = rank === 1
-  const color =
-    isFirst ? 'var(--accent)'
-    : rank === 2 ? 'color-mix(in oklch, var(--accent) 70%, var(--muted))'
-    : rank === 3 ? 'color-mix(in oklch, var(--accent) 45%, var(--muted))'
-    : 'var(--muted)'
+  const color = isFirst
+    ? 'var(--accent)'
+    : rank === 2
+      ? 'color-mix(in oklch, var(--accent) 70%, var(--muted))'
+      : rank === 3
+        ? 'color-mix(in oklch, var(--accent) 45%, var(--muted))'
+        : 'var(--muted)'
 
   return (
     <div
@@ -57,9 +77,7 @@ function SessionRank({ rank }: { rank: number }) {
         color,
       }}
     >
-      {isFirst && (
-        <Crown size={14} fill="var(--accent)" stroke="var(--accent)" />
-      )}
+      {isFirst && <Crown size={14} fill="var(--accent)" stroke="var(--accent)" />}
       <span>{rank}</span>
     </div>
   )
@@ -199,15 +217,23 @@ export default function SessionStatsPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: session } = useSession(sessionId)
-  const { data: matches, isLoading: matchesLoading, refetch: refetchMatches } = useMatches(sessionId)
-  const { data: leaderboard, isLoading: rankingsLoading, refetch: refetchRankings } = useSessionLeaderboard(sessionId)
+  const {
+    data: matches,
+    isLoading: matchesLoading,
+    refetch: refetchMatches,
+  } = useMatches(sessionId)
+  const {
+    data: leaderboard,
+    isLoading: rankingsLoading,
+    refetch: refetchRankings,
+  } = useSessionLeaderboard(sessionId)
   const { user } = useAuth()
   const { data: profile } = useProfile(user?.id)
   const rankings = useMemo(() => leaderboard?.rankings ?? [], [leaderboard])
 
   const completedMatches = useMemo(
-    () => matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? [],
-    [matches]
+    () => matches?.filter(m => m.status === 'COMPLETED' && m.teams.some(t => t.is_winner)) ?? [],
+    [matches],
   )
 
   const { data: matchResults } = useSessionMatchResults(sessionId)
@@ -223,22 +249,21 @@ export default function SessionStatsPage() {
 
   const selectedStat = useMemo(
     () => rankings.find(r => r.playerId === selectedPlayerId) ?? null,
-    [rankings, selectedPlayerId]
+    [rankings, selectedPlayerId],
   )
 
   const playerMatchEntries = useMemo(() => {
     if (!selectedPlayerId || !matches || !matchResults) return []
     const resultMap = new Map(
-      matchResults
-        .filter(r => r.player_id === selectedPlayerId)
-        .map(r => [r.match_id, r])
+      matchResults.filter(r => r.player_id === selectedPlayerId).map(r => [r.match_id, r]),
     )
     return matches
-      .filter(m =>
-        m.status === 'COMPLETED' &&
-        m.teams.some(t => t.is_winner) &&
-        m.participants.some(p => p.player_id === selectedPlayerId) &&
-        resultMap.has(m.id)
+      .filter(
+        m =>
+          m.status === 'COMPLETED' &&
+          m.teams.some(t => t.is_winner) &&
+          m.participants.some(p => p.player_id === selectedPlayerId) &&
+          resultMap.has(m.id),
       )
       .sort((a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime())
       .map(match => {
@@ -287,9 +312,8 @@ export default function SessionStatsPage() {
   }, [session?.ended_at, rankings, profile?.player_id])
 
   // Show firework once per session+player via localStorage
-  const storageKey = sessionId && profile?.player_id
-    ? `champion-firework:${sessionId}:${profile.player_id}`
-    : ''
+  const storageKey =
+    sessionId && profile?.player_id ? `champion-firework:${sessionId}:${profile.player_id}` : ''
 
   const [dismissedFireworkKey, setDismissedFireworkKey] = useState<string | null>(null)
 
@@ -324,92 +348,33 @@ export default function SessionStatsPage() {
   if (!sessionId) {
     return (
       <div className="min-h-[100dvh] bg-[var(--bg)] px-[var(--space-5)] py-[var(--space-5)]">
-        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>{t('sessionDetail.notFound')}</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+          {t('sessionDetail.notFound')}
+        </p>
       </div>
     )
   }
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-    <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
-      {shouldShowFirework && <FireworkEffect />}
+      <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
+        {shouldShowFirework && <FireworkEffect />}
 
-      <AppBar
-        title=""
-        leftAction={{
-          icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
-          onClick: () => navigate(`/sessions/${sessionId}`),
-        }}
-      />
+        <AppBar
+          title=""
+          leftAction={{
+            icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
+            onClick: () => navigate(`/sessions/${sessionId}`),
+          }}
+        />
 
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain"
-        style={{ paddingBottom: 'max(48px, calc(env(safe-area-inset-bottom) + 32px))' }}
-      >
-        <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-6)' }}>
-          <div
-            className="inline-flex items-center gap-[var(--space-2)]"
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 11,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              color: 'var(--accent)',
-              marginBottom: 'var(--space-3)',
-            }}
-          >
-            <Activity size={14} aria-hidden="true" />
-            {t('sessionStats.eyebrow')}
-          </div>
-          <h1
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-3xl)',
-              fontWeight: 900,
-              lineHeight: 1,
-              letterSpacing: 0,
-              color: 'var(--fg)',
-              marginBottom: 'var(--space-2)',
-            }}
-          >
-            {t('sessionStats.title')}
-          </h1>
-          <p
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-sm)',
-              color: 'var(--muted)',
-            }}
-          >
-            {session?.label ?? t('common.session')} · {t('units.completedMatches', { count: completedMatches.length })}
-          </p>
-          {isChampion && (
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{ paddingBottom: 'max(48px, calc(env(safe-area-inset-bottom) + 32px))' }}
+        >
+          <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-6)' }}>
             <div
-              className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-3)]"
-              style={{
-                padding: 'var(--space-2) var(--space-3)',
-                background: 'color-mix(in oklch, var(--accent) 12%, transparent)',
-                border: '1px solid color-mix(in oklch, var(--accent) 30%, transparent)',
-                borderRadius: 'var(--radius-md)',
-              }}
-            >
-              <Crown size={16} fill="var(--accent)" stroke="var(--accent)" />
-              <span
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 800,
-                  color: 'var(--accent)',
-                }}
-              >
-                {t('sessionStats.champion')}
-              </span>
-            </div>
-          )}
-          {session && !session.ended_at && (
-            <div
-              className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-2)]"
+              className="inline-flex items-center gap-[var(--space-2)]"
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: 11,
@@ -417,170 +382,298 @@ export default function SessionStatsPage() {
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
                 color: 'var(--accent)',
+                marginBottom: 'var(--space-3)',
               }}
             >
-              <span
-                className="rounded-full animate-pulse flex-shrink-0"
-                style={{ width: 7, height: 7, background: 'var(--accent)' }}
-              />
-              {t('common.liveInProgress')}
+              <Activity size={14} aria-hidden="true" />
+              {t('sessionStats.eyebrow')}
             </div>
-          )}
-        </header>
-
-        <main className="px-[var(--space-5)]">
-          {isLoading ? (
-            <ShuttleLoading compact />
-          ) : rankings.length === 0 ? (
-            <EmptyState
-              icon={<Medal className="w-10 h-10 mx-auto" />}
-              title={t('sessionStats.emptyTitle')}
-              description={t('sessionStats.emptyDescription')}
-            />
-          ) : (
-            <>
-              <section
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-3xl)',
+                fontWeight: 900,
+                lineHeight: 1,
+                letterSpacing: 0,
+                color: 'var(--fg)',
+                marginBottom: 'var(--space-2)',
+              }}
+            >
+              {t('sessionStats.title')}
+            </h1>
+            <p
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-sm)',
+                color: 'var(--muted)',
+              }}
+            >
+              {session?.label ?? t('common.session')} ·{' '}
+              {t('units.completedMatches', { count: completedMatches.length })}
+            </p>
+            {isChampion && (
+              <div
+                className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-3)]"
                 style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '0 var(--space-4)',
-                  marginBottom: 'var(--space-4)',
+                  padding: 'var(--space-2) var(--space-3)',
+                  background: 'color-mix(in oklch, var(--accent) 12%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--accent) 30%, transparent)',
+                  borderRadius: 'var(--radius-md)',
                 }}
               >
-                <StatRow label={t('sessionStats.completedMatches')} value={completedMatches.length} />
-                <StatRow label={t('sessionStats.rankedPlayers')} value={rankings.length} />
-                <StatRow label={t('sessionStats.averagePoints')} value={averagePoints} />
-              </section>
-
-              <div style={{ marginBottom: 'var(--space-4)' }}>
-                <SegmentedControl
-                  tabs={statsTabs}
-                  value={activeTab}
-                  onChange={setActiveTab}
-                />
+                <Crown size={16} fill="var(--accent)" stroke="var(--accent)" />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 800,
+                    color: 'var(--accent)',
+                  }}
+                >
+                  {t('sessionStats.champion')}
+                </span>
               </div>
+            )}
+            {session && !session.ended_at && (
+              <div
+                className="inline-flex items-center gap-[var(--space-2)] mt-[var(--space-2)]"
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  color: 'var(--accent)',
+                }}
+              >
+                <span
+                  className="rounded-full animate-pulse flex-shrink-0"
+                  style={{ width: 7, height: 7, background: 'var(--accent)' }}
+                />
+                {t('common.liveInProgress')}
+              </div>
+            )}
+          </header>
 
-              {activeTab === 'rankings' && (
-                <section>
-                  <div className="flex items-baseline justify-between gap-[var(--space-3)] mb-[var(--space-3)]">
-                    <h2
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'var(--text-xl)',
-                        fontWeight: 900,
-                        lineHeight: 1.1,
-                        letterSpacing: 0,
-                        color: 'var(--fg)',
-                      }}
-                    >
-                      {t('sessionStats.ranking')}
-                    </h2>
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        color: 'var(--muted)',
-                      }}
-                    >
-                      {t('sessionStats.weeklyPoints')}
-                    </span>
-                  </div>
-                  <div>
-                    {rankings.map((stat, index) => (
-                      <PlayerStatsRow
-                        key={stat.playerId}
-                        stat={stat}
-                        rank={index + 1}
-                        isLast={index === rankings.length - 1}
-                        onClick={() => setSelectedPlayerId(stat.playerId)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {activeTab === 'chart' && (
+          <main className="px-[var(--space-5)]">
+            {isLoading ? (
+              <ShuttleLoading compact />
+            ) : rankings.length === 0 ? (
+              <EmptyState
+                icon={<Medal className="w-10 h-10 mx-auto" />}
+                title={t('sessionStats.emptyTitle')}
+                description={t('sessionStats.emptyDescription')}
+              />
+            ) : (
+              <>
                 <section
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
                     borderRadius: 'var(--radius-lg)',
-                    padding: 'var(--space-4)',
+                    padding: '0 var(--space-4)',
+                    marginBottom: 'var(--space-4)',
                   }}
                 >
-                  {rankingHistories.length > 0 && completedMatches.length > 0 ? (
-                    <SessionRankingChart
-                      histories={rankingHistories}
-                      totalMatches={completedMatches.length}
-                    />
-                  ) : (
-                    <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', textAlign: 'center', padding: 'var(--space-6) 0' }}>
-                      {t('sessionStats.emptyDescription')}
-                    </p>
-                  )}
+                  <StatRow
+                    label={t('sessionStats.completedMatches')}
+                    value={completedMatches.length}
+                  />
+                  <StatRow label={t('sessionStats.rankedPlayers')} value={rankings.length} />
+                  <StatRow label={t('sessionStats.averagePoints')} value={averagePoints} />
                 </section>
-              )}
-            </>
-          )}
-        </main>
-      </div>
-      <BottomSheet open={!!selectedPlayerId} onClose={() => setSelectedPlayerId(null)}>
-        {selectedStat && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: '0 var(--space-3) var(--space-4)' }}>
-              <Avatar src={selectedStat.avatarUrl} name={selectedStat.name} size={40} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--fg)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {selectedStat.name}
+
+                <div style={{ marginBottom: 'var(--space-4)' }}>
+                  <SegmentedControl tabs={statsTabs} value={activeTab} onChange={setActiveTab} />
                 </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {selectedStat.weeklyPoints} {t('sessionStats.points')} · {t('units.match', { count: selectedStat.matchesPlayed })}
+
+                {activeTab === 'rankings' && (
+                  <section>
+                    <div className="flex items-baseline justify-between gap-[var(--space-3)] mb-[var(--space-3)]">
+                      <h2
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-xl)',
+                          fontWeight: 900,
+                          lineHeight: 1.1,
+                          letterSpacing: 0,
+                          color: 'var(--fg)',
+                        }}
+                      >
+                        {t('sessionStats.ranking')}
+                      </h2>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          color: 'var(--muted)',
+                        }}
+                      >
+                        {t('sessionStats.weeklyPoints')}
+                      </span>
+                    </div>
+                    <div>
+                      {rankings.map((stat, index) => (
+                        <PlayerStatsRow
+                          key={stat.playerId}
+                          stat={stat}
+                          rank={index + 1}
+                          isLast={index === rankings.length - 1}
+                          onClick={() => setSelectedPlayerId(stat.playerId)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {activeTab === 'chart' && (
+                  <section
+                    style={{
+                      background: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: 'var(--space-4)',
+                    }}
+                  >
+                    {rankingHistories.length > 0 && completedMatches.length > 0 ? (
+                      <SessionRankingChart
+                        histories={rankingHistories}
+                        totalMatches={completedMatches.length}
+                      />
+                    ) : (
+                      <p
+                        style={{
+                          color: 'var(--muted)',
+                          fontSize: 'var(--text-sm)',
+                          textAlign: 'center',
+                          padding: 'var(--space-6) 0',
+                        }}
+                      >
+                        {t('sessionStats.emptyDescription')}
+                      </p>
+                    )}
+                  </section>
+                )}
+              </>
+            )}
+          </main>
+        </div>
+        <BottomSheet open={!!selectedPlayerId} onClose={() => setSelectedPlayerId(null)}>
+          {selectedStat && (
+            <>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                  padding: '0 var(--space-3) var(--space-4)',
+                }}
+              >
+                <Avatar src={selectedStat.avatarUrl} name={selectedStat.name} size={40} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-lg)',
+                      fontWeight: 800,
+                      color: 'var(--fg)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {selectedStat.name}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: 'var(--muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    {selectedStat.weeklyPoints} {t('sessionStats.points')} ·{' '}
+                    {t('units.match', { count: selectedStat.matchesPlayed })}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={{ margin: '0 calc(-1 * var(--space-3))', maxHeight: '52vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
-              {playerMatchEntries.length === 0 ? (
-                <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', textAlign: 'center', padding: 'var(--space-5)' }}>
-                  {t('sessionStats.emptyDescription')}
-                </p>
-              ) : playerMatchEntries.map((entry, idx) => (
-                <div
-                  key={entry.matchId}
-                  className="flex items-center gap-3 px-4 py-2.5"
-                  style={{ borderBottom: idx === playerMatchEntries.length - 1 ? 'none' : '1px solid var(--border)' }}
-                >
-                  <Badge variant={entry.isWin ? 'win' : 'loss'}>
-                    {entry.isWin ? 'W' : 'L'}
-                  </Badge>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
-                      {entry.teammates
-                        ? t('players.withOpponent', { teammates: entry.teammates, opponents: entry.opponents || '—' })
-                        : t('players.vsOpponent', { opponents: entry.opponents || '—' })}
-                    </p>
-                    <p className="text-[11px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
-                      {entry.scoreStr}
-                    </p>
-                  </div>
-                  <span
-                    className="shrink-0"
-                    style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', fontWeight: 900, color: 'var(--fg)', fontVariantNumeric: 'tabular-nums' }}
+              <div
+                style={{
+                  margin: '0 calc(-1 * var(--space-3))',
+                  maxHeight: '52vh',
+                  overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                }}
+              >
+                {playerMatchEntries.length === 0 ? (
+                  <p
+                    style={{
+                      color: 'var(--muted)',
+                      fontSize: 'var(--text-sm)',
+                      textAlign: 'center',
+                      padding: 'var(--space-5)',
+                    }}
                   >
-                    +{entry.points}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        <BottomSheetCancel onClick={() => setSelectedPlayerId(null)} />
-      </BottomSheet>
-    </div>
+                    {t('sessionStats.emptyDescription')}
+                  </p>
+                ) : (
+                  playerMatchEntries.map((entry, idx) => (
+                    <div
+                      key={entry.matchId}
+                      className="flex items-center gap-3 px-4 py-2.5"
+                      style={{
+                        borderBottom:
+                          idx === playerMatchEntries.length - 1
+                            ? 'none'
+                            : '1px solid var(--border)',
+                      }}
+                    >
+                      <Badge variant={entry.isWin ? 'win' : 'loss'}>
+                        {entry.isWin ? 'W' : 'L'}
+                      </Badge>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
+                          {entry.teammates
+                            ? t('players.withOpponent', {
+                                teammates: entry.teammates,
+                                opponents: entry.opponents || '—',
+                              })
+                            : t('players.vsOpponent', { opponents: entry.opponents || '—' })}
+                        </p>
+                        <p
+                          className="text-[11px]"
+                          style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                        >
+                          {entry.scoreStr}
+                        </p>
+                      </div>
+                      <span
+                        className="shrink-0"
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-xl)',
+                          fontWeight: 900,
+                          color: 'var(--fg)',
+                          fontVariantNumeric: 'tabular-nums',
+                        }}
+                      >
+                        +{entry.points}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+          <BottomSheetCancel onClick={() => setSelectedPlayerId(null)} />
+        </BottomSheet>
+      </div>
     </PullToRefresh>
   )
 }

@@ -17,8 +17,8 @@ export interface PlayerRankingStats {
   pointsAgainst: number
   pointDifference: number
   totalRatingDelta: number
-  lastSessionRatingDelta: number  // Elo change from the most recently ended session
-  rankChange: number              // positive = moved up, negative = moved down, 0 = no change
+  lastSessionRatingDelta: number // Elo change from the most recently ended session
+  rankChange: number // positive = moved up, negative = moved down, 0 = no change
   rank: number
   topOneWeekStreak: number
 }
@@ -75,9 +75,24 @@ export function computeRankChanges(
   prevResults: PrevResult[],
   lastSessionDeltaMap: Map<string, number>,
 ): Map<string, number> {
-  const prevStatsMap = new Map<string, { matchesPlayed: number; wins: number; totalWeeklyPoints: number; pointsFor: number; pointsAgainst: number }>()
+  const prevStatsMap = new Map<
+    string,
+    {
+      matchesPlayed: number
+      wins: number
+      totalWeeklyPoints: number
+      pointsFor: number
+      pointsAgainst: number
+    }
+  >()
   for (const r of prevResults) {
-    const s = prevStatsMap.get(r.player_id) ?? { matchesPlayed: 0, wins: 0, totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0 }
+    const s = prevStatsMap.get(r.player_id) ?? {
+      matchesPlayed: 0,
+      wins: 0,
+      totalWeeklyPoints: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    }
     s.matchesPlayed += 1
     s.wins += r.is_winner ? 1 : 0
     s.totalWeeklyPoints += r.total_weekly_points
@@ -92,42 +107,71 @@ export function computeRankChanges(
   const prevSorted = [...rankings].sort((a, b) => {
     const rDiff = prevRatingOf(b) - prevRatingOf(a)
     if (rDiff !== 0) return rDiff
-    const psA = prevStatsMap.get(a.playerId) ?? { matchesPlayed: 0, wins: 0, totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0 }
-    const psB = prevStatsMap.get(b.playerId) ?? { matchesPlayed: 0, wins: 0, totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0 }
+    const psA = prevStatsMap.get(a.playerId) ?? {
+      matchesPlayed: 0,
+      wins: 0,
+      totalWeeklyPoints: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    }
+    const psB = prevStatsMap.get(b.playerId) ?? {
+      matchesPlayed: 0,
+      wins: 0,
+      totalWeeklyPoints: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    }
     const avgA = psA.matchesPlayed > 0 ? psA.totalWeeklyPoints / psA.matchesPlayed : 0
     const avgB = psB.matchesPlayed > 0 ? psB.totalWeeklyPoints / psB.matchesPlayed : 0
     if (avgB !== avgA) return avgB - avgA
     const wrA = psA.matchesPlayed > 0 ? psA.wins / psA.matchesPlayed : 0
     const wrB = psB.matchesPlayed > 0 ? psB.wins / psB.matchesPlayed : 0
     if (wrB !== wrA) return wrB - wrA
-    return (psB.pointsFor - psB.pointsAgainst) - (psA.pointsFor - psA.pointsAgainst)
+    return psB.pointsFor - psB.pointsAgainst - (psA.pointsFor - psA.pointsAgainst)
   })
 
   const prevRankMap = new Map(prevSorted.map((r, i) => [r.playerId, i + 1]))
   return new Map(rankings.map(r => [r.playerId, (prevRankMap.get(r.playerId) ?? r.rank) - r.rank]))
 }
 
-function uniquePlayerMatchResults<T extends { player_id: string; match_id: string }>(results: T[] | null | undefined): T[] {
+function uniquePlayerMatchResults<T extends { player_id: string; match_id: string }>(
+  results: T[] | null | undefined,
+): T[] {
   return Array.from(
-    new Map((results ?? []).map(result => [`${result.player_id}:${result.match_id}`, result])).values()
+    new Map(
+      (results ?? []).map(result => [`${result.player_id}:${result.match_id}`, result]),
+    ).values(),
   )
 }
 
 export function buildSessionWeeklyRankings(
   players: PlayerRow[] | null | undefined,
-  results: SessionResultRow[] | null | undefined
+  results: SessionResultRow[] | null | undefined,
 ): SessionWeeklyStats[] {
   const playerMap = new Map((players ?? []).map(p => [p.id, p]))
 
-  const statsMap = new Map<string, {
-    weeklyPoints: number; wins: number; losses: number
-    matchesPlayed: number; pointsFor: number; pointsAgainst: number; ratingDelta: number
-  }>()
+  const statsMap = new Map<
+    string,
+    {
+      weeklyPoints: number
+      wins: number
+      losses: number
+      matchesPlayed: number
+      pointsFor: number
+      pointsAgainst: number
+      ratingDelta: number
+    }
+  >()
 
   for (const r of uniquePlayerMatchResults(results)) {
     const s = statsMap.get(r.player_id) ?? {
-      weeklyPoints: 0, wins: 0, losses: 0,
-      matchesPlayed: 0, pointsFor: 0, pointsAgainst: 0, ratingDelta: 0,
+      weeklyPoints: 0,
+      wins: 0,
+      losses: 0,
+      matchesPlayed: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      ratingDelta: 0,
     }
     s.matchesPlayed += 1
     s.wins += r.is_winner ? 1 : 0
@@ -157,7 +201,8 @@ export function buildSessionWeeklyRankings(
     })
     .sort((a, b) => {
       if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
-      if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
+      if (b.averageWeeklyPoints !== a.averageWeeklyPoints)
+        return b.averageWeeklyPoints - a.averageWeeklyPoints
       if (b.wins !== a.wins) return b.wins - a.wins
       if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference
       return a.name.localeCompare(b.name)
@@ -175,12 +220,12 @@ export function usePlayerRankings() {
         { data: lastSession },
         { data: endedSessions, error: endedSessionsError },
       ] = await Promise.all([
-        supabase
-          .from('players')
-          .select('id, name, avatar_url, rating'),
+        supabase.from('players').select('id, name, avatar_url, rating'),
         supabase
           .from('player_match_results')
-          .select('session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta'),
+          .select(
+            'session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta',
+          ),
         supabase
           .from('sessions')
           .select('id')
@@ -188,10 +233,7 @@ export function usePlayerRankings() {
           .order('ended_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
-        supabase
-          .from('sessions')
-          .select('id, started_at, ended_at')
-          .not('ended_at', 'is', null),
+        supabase.from('sessions').select('id, started_at, ended_at').not('ended_at', 'is', null),
       ])
 
       if (playersError) throw playersError
@@ -210,19 +252,33 @@ export function usePlayerRankings() {
       }
 
       // Aggregate all-time stats per player
-      const statsMap = new Map<string, {
-        matchesPlayed: number; wins: number; losses: number
-        totalWeeklyPoints: number; pointsFor: number; pointsAgainst: number; totalRatingDelta: number
-      }>()
+      const statsMap = new Map<
+        string,
+        {
+          matchesPlayed: number
+          wins: number
+          losses: number
+          totalWeeklyPoints: number
+          pointsFor: number
+          pointsAgainst: number
+          totalRatingDelta: number
+        }
+      >()
 
       const endedSessionIds = new Set((endedSessions ?? []).map(s => s.id))
-      const uniqueResults = uniquePlayerMatchResults((results ?? []) as ResultRow[])
-        .filter(r => endedSessionIds.has(r.session_id))
+      const uniqueResults = uniquePlayerMatchResults((results ?? []) as ResultRow[]).filter(r =>
+        endedSessionIds.has(r.session_id),
+      )
 
       for (const r of uniqueResults) {
         const s = statsMap.get(r.player_id) ?? {
-          matchesPlayed: 0, wins: 0, losses: 0,
-          totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0, totalRatingDelta: 0,
+          matchesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          totalWeeklyPoints: 0,
+          pointsFor: 0,
+          pointsAgainst: 0,
+          totalRatingDelta: 0,
         }
         s.matchesPlayed += 1
         s.wins += r.is_winner ? 1 : 0
@@ -243,22 +299,32 @@ export function usePlayerRankings() {
           .eq('session_id', lastSession.id)
           .not('rating_delta', 'is', null)
 
-        for (const r of uniquePlayerMatchResults((lsd ?? []) as { match_id: string; player_id: string; rating_delta: number }[])) {
-          lastSessionDeltaMap.set(r.player_id, (lastSessionDeltaMap.get(r.player_id) ?? 0) + r.rating_delta)
+        for (const r of uniquePlayerMatchResults(
+          (lsd ?? []) as { match_id: string; player_id: string; rating_delta: number }[],
+        )) {
+          lastSessionDeltaMap.set(
+            r.player_id,
+            (lastSessionDeltaMap.get(r.player_id) ?? 0) + r.rating_delta,
+          )
         }
       }
 
       const topOneWeekStreakMap = calculateCurrentTopOneWeekStreaks(
         endedSessions as { id: string; started_at: string; ended_at: string | null }[] | null,
         uniqueResults,
-        (players ?? []).map(p => ({ id: p.id, name: p.name }))
+        (players ?? []).map(p => ({ id: p.id, name: p.name })),
       )
 
       // Build rankings
       const rankings: PlayerRankingStats[] = (players ?? []).map(p => {
         const s = statsMap.get(p.id) ?? {
-          matchesPlayed: 0, wins: 0, losses: 0,
-          totalWeeklyPoints: 0, pointsFor: 0, pointsAgainst: 0, totalRatingDelta: 0,
+          matchesPlayed: 0,
+          wins: 0,
+          losses: 0,
+          totalWeeklyPoints: 0,
+          pointsFor: 0,
+          pointsAgainst: 0,
+          totalRatingDelta: 0,
         }
         return {
           playerId: p.id,
@@ -285,18 +351,23 @@ export function usePlayerRankings() {
       // Sort by primary ranking order
       rankings.sort((a, b) => {
         if (b.rating !== a.rating) return b.rating - a.rating
-        if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
+        if (b.averageWeeklyPoints !== a.averageWeeklyPoints)
+          return b.averageWeeklyPoints - a.averageWeeklyPoints
         if (b.winRate !== a.winRate) return b.winRate - a.winRate
         return b.pointDifference - a.pointDifference
       })
-      rankings.forEach((r, i) => { r.rank = i + 1 })
+      rankings.forEach((r, i) => {
+        r.rank = i + 1
+      })
 
       // Compute previous rank (before the last session's contribution)
       const prevResultsForRank = lastSession?.id
         ? uniqueResults.filter(r => r.session_id !== lastSession.id)
         : uniqueResults
       const rankChangeMap = computeRankChanges(rankings, prevResultsForRank, lastSessionDeltaMap)
-      rankings.forEach(r => { r.rankChange = rankChangeMap.get(r.playerId) ?? 0 })
+      rankings.forEach(r => {
+        r.rankChange = rankChangeMap.get(r.playerId) ?? 0
+      })
 
       return rankings
     },
@@ -325,7 +396,9 @@ export function useSessionWeeklyRankings(sessionId: string | undefined) {
           supabase.from('players').select('id, name, avatar_url'),
           supabase
             .from('player_match_results')
-            .select('match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
+            .select(
+              'match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta',
+            )
             .eq('session_id', sessionId!),
         ])
 
@@ -334,7 +407,10 @@ export function useSessionWeeklyRankings(sessionId: string | undefined) {
 
       return buildSessionWeeklyRankings(
         players as PlayerRow[] | null,
-        (results ?? []).map(r => ({ ...(r as Omit<SessionResultRow, 'session_id'>), session_id: sessionId! }))
+        (results ?? []).map(r => ({
+          ...(r as Omit<SessionResultRow, 'session_id'>),
+          session_id: sessionId!,
+        })),
       )
     },
   })
@@ -380,7 +456,8 @@ export function useSessionLeaderboard(sessionId: string | undefined) {
           name: r.player.name,
           avatarUrl: r.player.avatar_url,
           weeklyPoints: r.total_weekly_points,
-          averageWeeklyPoints: r.total_matches > 0 ? Math.round(r.total_weekly_points / r.total_matches) : 0,
+          averageWeeklyPoints:
+            r.total_matches > 0 ? Math.round(r.total_weekly_points / r.total_matches) : 0,
           wins: r.total_wins,
           losses: r.total_matches - r.total_wins,
           matchesPlayed: r.total_matches,
@@ -389,7 +466,8 @@ export function useSessionLeaderboard(sessionId: string | undefined) {
         }))
         .sort((a, b) => {
           if (b.weeklyPoints !== a.weeklyPoints) return b.weeklyPoints - a.weeklyPoints
-          if (b.averageWeeklyPoints !== a.averageWeeklyPoints) return b.averageWeeklyPoints - a.averageWeeklyPoints
+          if (b.averageWeeklyPoints !== a.averageWeeklyPoints)
+            return b.averageWeeklyPoints - a.averageWeeklyPoints
           if (b.wins !== a.wins) return b.wins - a.wins
           if (b.pointDifference !== a.pointDifference) return b.pointDifference - a.pointDifference
           return a.name.localeCompare(b.name)
@@ -414,7 +492,12 @@ export interface PlayerRankingHistory {
 }
 
 export function computeSessionRankingHistory(
-  matches: Array<{ id: string; status: string; played_at: string | null; teams: Array<{ is_winner: boolean }> }>,
+  matches: Array<{
+    id: string
+    status: string
+    played_at: string | null
+    teams: Array<{ is_winner: boolean }>
+  }>,
   results: SessionResultRow[],
   players: Array<{ id: string; name: string; avatar_url: string | null }>,
 ): PlayerRankingHistory[] {
@@ -462,7 +545,9 @@ export function useSessionMatchResults(sessionId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('player_match_results')
-        .select('session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta')
+        .select(
+          'session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta',
+        )
         .eq('session_id', sessionId!)
       if (error) throw error
       return (data ?? []) as SessionResultRow[]
@@ -479,7 +564,9 @@ export function useSessionLeaderboards() {
           supabase.from('players').select('id, name, avatar_url'),
           supabase
             .from('player_match_results')
-            .select('session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta'),
+            .select(
+              'session_id, match_id, player_id, is_winner, team_score, opponent_score, total_weekly_points, rating_delta',
+            ),
         ])
 
       if (playersError) throw playersError

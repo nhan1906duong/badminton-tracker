@@ -1,9 +1,36 @@
+import { Activity, Pencil, Plus, Share2, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { AppBar, Button, Input, Badge, Card as DSCard, Tabs, MatchCard, SessionCard, ScoreBlock, ListItem, RankItem, StatRow, SectionHeader, SectionLabel, StatNumber, EyebrowBadge, MetaRow, EmptyState, LoadingState, ErrorState, Dialog, BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel, BwfCategoryBadge } from '../../design-system/components'
+import {
+  AppBar,
+  Badge,
+  BottomSheet,
+  BottomSheetCancel,
+  BottomSheetDivider,
+  BottomSheetItem,
+  Button,
+  BwfCategoryBadge,
+  Dialog,
+  Card as DSCard,
+  EmptyState,
+  ErrorState,
+  EyebrowBadge,
+  Input,
+  ListItem,
+  LoadingState,
+  MatchCard,
+  MetaRow,
+  RankItem,
+  ScoreBlock,
+  SectionHeader,
+  SectionLabel,
+  SessionCard,
+  StatNumber,
+  StatRow,
+  Tabs,
+} from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
-import { Plus, Activity, Share2, Pencil, Trash2 } from 'lucide-react'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -144,7 +171,16 @@ function AppBarSection() {
             title=""
             leftAction={{
               icon: (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               ),
@@ -152,7 +188,16 @@ function AppBarSection() {
             }}
             rightAction={{
               icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
                   <circle cx="12" cy="12" r="1" />
                   <circle cx="19" cy="12" r="1" />
                   <circle cx="5" cy="12" r="1" />
@@ -182,7 +227,10 @@ function ColorTokensSection() {
           <ColorSwatch label="Border" token="--border" />
           <ColorSwatch label="Accent (Vermilion)" token="--accent" />
         </div>
-        <div className="grid grid-cols-4 gap-3 mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+        <div
+          className="grid grid-cols-4 gap-3 mt-4 pt-4"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
           <ColorSwatch label="Success" token="--success" />
           <ColorSwatch label="Danger" token="--danger" />
           <ColorSwatch label="Warning" token="--warn" />
@@ -215,7 +263,10 @@ function TypeSample({
 
   return (
     <div className="pb-3 mb-3" style={{ borderBottom: '1px solid var(--border)' }}>
-      <div className="text-[11px] uppercase tracking-[0.08em] mb-1" style={{ color: 'var(--muted)' }}>
+      <div
+        className="text-[11px] uppercase tracking-[0.08em] mb-1"
+        style={{ color: 'var(--muted)' }}
+      >
         {name}
       </div>
       <div style={{ fontFamily, fontSize: size }}>{children}</div>
@@ -228,7 +279,10 @@ function TypographyTokensSection() {
     <Section title="Typography">
       <Card>
         <TypeSample name="Display 3xl · 48px · Serif" size="var(--text-3xl)">
-          <span className="font-extrabold leading-[1.05] tracking-[-0.03em]" style={{ color: 'var(--fg)' }}>
+          <span
+            className="font-extrabold leading-[1.05] tracking-[-0.03em]"
+            style={{ color: 'var(--fg)' }}
+          >
             Match History
           </span>
         </TypeSample>
@@ -238,7 +292,10 @@ function TypographyTokensSection() {
           </span>
         </TypeSample>
         <TypeSample name="Display xl · 24px · Serif" size="var(--text-xl)">
-          <span className="font-extrabold leading-[1.15] tracking-[-0.02em]" style={{ color: 'var(--fg)' }}>
+          <span
+            className="font-extrabold leading-[1.15] tracking-[-0.02em]"
+            style={{ color: 'var(--fg)' }}
+          >
             Player Profile
           </span>
         </TypeSample>
@@ -327,7 +384,11 @@ function RadiusBox({ label, value }: { label: string; value: string }) {
           {label}
         </p>
         <p className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
-          {value === '0px' ? 'Buttons, inputs, badges' : value === '4px' ? 'Avatars, small containers' : 'Cards, modals, panels'}
+          {value === '0px'
+            ? 'Buttons, inputs, badges'
+            : value === '4px'
+              ? 'Avatars, small containers'
+              : 'Cards, modals, panels'}
         </p>
       </div>
     </div>
@@ -372,7 +433,9 @@ function ButtonSection() {
           <Button size="default">Default</Button>
           <Button size="lg">Large</Button>
         </div>
-        <Button size="block" className="mt-2">Block</Button>
+        <Button size="block" className="mt-2">
+          Block
+        </Button>
       </DSCard>
     </Section>
   )
@@ -417,7 +480,16 @@ function FabInteractionHandlers() {
 }
 
 const PlusIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+  <svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.4"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
@@ -430,11 +502,15 @@ function FABSection() {
     <Section title="Floating Action Button">
       <DSCard>
         <p className="text-[13px] mb-5" style={{ color: 'var(--muted)' }}>
-          Hanko-style square stamp (56×56, 8px radius) anchored bottom-right within the screen. One per screen, reserved for the primary creation action. Vermilion accent with tinted shadow.
+          Hanko-style square stamp (56×56, 8px radius) anchored bottom-right within the screen. One
+          per screen, reserved for the primary creation action. Vermilion accent with tinted shadow.
         </p>
 
         {/* Default variant */}
-        <div className="flex items-center gap-5 pb-5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="flex items-center gap-5 pb-5"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
           <button
             type="button"
             aria-label="Create new"
@@ -457,13 +533,20 @@ function FABSection() {
             <PlusIcon />
           </button>
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>Default · 56×56</p>
-            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--muted)' }}>border-radius: var(--radius-lg) · 8px square stamp</p>
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>
+              Default · 56×56
+            </p>
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--muted)' }}>
+              border-radius: var(--radius-lg) · 8px square stamp
+            </p>
           </div>
         </div>
 
         {/* Extended variant */}
-        <div className="flex items-center gap-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="flex items-center gap-5 py-5"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
           <button
             type="button"
             aria-label="New session"
@@ -488,27 +571,59 @@ function FABSection() {
             }}
             {...handlers}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             <span>New session</span>
           </button>
           <div>
-            <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>Extended · with label</p>
-            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--muted)' }}>border-radius: 999px · use when icon alone is ambiguous</p>
+            <p className="text-[13px] font-semibold" style={{ color: 'var(--fg)' }}>
+              Extended · with label
+            </p>
+            <p className="text-[11px] font-mono mt-1" style={{ color: 'var(--muted)' }}>
+              border-radius: 999px · use when icon alone is ambiguous
+            </p>
           </div>
         </div>
 
         {/* Rules */}
         <div className="mt-4">
-          <p className="text-[11px] font-bold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--muted)' }}>Rules of use</p>
-          <ul className="space-y-2 text-[13px] list-disc pl-4" style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+          <p
+            className="text-[11px] font-bold uppercase tracking-[0.06em] mb-3"
+            style={{ color: 'var(--muted)' }}
+          >
+            Rules of use
+          </p>
+          <ul
+            className="space-y-2 text-[13px] list-disc pl-4"
+            style={{ color: 'var(--muted)', lineHeight: 1.6 }}
+          >
             <li>One FAB per screen — reserved for the primary creation action.</li>
-            <li>Fixed bottom-right, pinned inside max-w-lg container (never drifts on wide screens).</li>
-            <li>Respects <code className="font-mono text-[12px]">env(safe-area-inset-bottom)</code> for notched devices.</li>
-            <li>Use the extended variant only when the icon alone is ambiguous (multiple create surfaces).</li>
-            <li>Fade + scale to 0.9 when a bottom sheet or modal opens so it doesn't compete with the backdrop.</li>
+            <li>
+              Fixed bottom-right, pinned inside max-w-lg container (never drifts on wide screens).
+            </li>
+            <li>
+              Respects <code className="font-mono text-[12px]">env(safe-area-inset-bottom)</code>{' '}
+              for notched devices.
+            </li>
+            <li>
+              Use the extended variant only when the icon alone is ambiguous (multiple create
+              surfaces).
+            </li>
+            <li>
+              Fade + scale to 0.9 when a bottom sheet or modal opens so it doesn't compete with the
+              backdrop.
+            </li>
           </ul>
         </div>
       </DSCard>
@@ -532,7 +647,7 @@ function InputSection() {
           label="Player Name"
           placeholder="e.g. Nguyen Van A"
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={e => setText(e.target.value)}
           hint="Enter the full name of the player."
         />
         <div className="mt-4">
@@ -541,7 +656,7 @@ function InputSection() {
             type="number"
             placeholder="0"
             value={number}
-            onChange={(e) => setNumber(e.target.value)}
+            onChange={e => setNumber(e.target.value)}
           />
         </div>
         <div className="mt-4">
@@ -588,10 +703,22 @@ function BwfCategoryBadgeSection() {
         </p>
         <div className="flex flex-wrap gap-2">
           <BwfCategoryBadge categoryName="BWF World Tour Finals" categorySlug="grade-2-level-1" />
-          <BwfCategoryBadge categoryName="BWF World Tour Super 1000" categorySlug="grade-2-level-2" />
-          <BwfCategoryBadge categoryName="BWF World Tour Super 750" categorySlug="grade-2-level-3" />
-          <BwfCategoryBadge categoryName="BWF World Tour Super 500" categorySlug="grade-2-level-4" />
-          <BwfCategoryBadge categoryName="BWF World Tour Super 300" categorySlug="grade-2-level-5" />
+          <BwfCategoryBadge
+            categoryName="BWF World Tour Super 1000"
+            categorySlug="grade-2-level-2"
+          />
+          <BwfCategoryBadge
+            categoryName="BWF World Tour Super 750"
+            categorySlug="grade-2-level-3"
+          />
+          <BwfCategoryBadge
+            categoryName="BWF World Tour Super 500"
+            categorySlug="grade-2-level-4"
+          />
+          <BwfCategoryBadge
+            categoryName="BWF World Tour Super 300"
+            categorySlug="grade-2-level-5"
+          />
           <BwfCategoryBadge categoryName="BWF Tour Super 100" categorySlug="grade-2-level-6" />
         </div>
       </DSCard>
@@ -648,7 +775,10 @@ function TabsSection() {
           onTabChange={setActiveTab}
         />
         <p className="text-[13px] mt-4" style={{ color: 'var(--muted)' }}>
-          Active tab: <span className="font-semibold" style={{ color: 'var(--fg)' }}>{activeTab}</span>
+          Active tab:{' '}
+          <span className="font-semibold" style={{ color: 'var(--fg)' }}>
+            {activeTab}
+          </span>
         </p>
       </DSCard>
     </Section>
@@ -660,7 +790,9 @@ function TabsSection() {
 function MatchCardSection() {
   return (
     <Section title="Match Card">
-      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Live</p>
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>
+        Live
+      </p>
       <MatchCard
         status="LIVE"
         teamAPlayers={['Minh', 'Tuan']}
@@ -671,7 +803,9 @@ function MatchCardSection() {
         duration="32 min"
         type="Men's Doubles"
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed — Team A wins</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Completed — Team A wins
+      </p>
       <MatchCard
         status="COMPLETED"
         teamAWon
@@ -683,7 +817,9 @@ function MatchCardSection() {
         duration="48 min"
         type="Men's Doubles"
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed — Team B wins</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Completed — Team B wins
+      </p>
       <MatchCard
         status="COMPLETED"
         teamAWon={false}
@@ -695,7 +831,9 @@ function MatchCardSection() {
         duration="35 min"
         type="Men's Doubles"
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Scheduled</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Scheduled
+      </p>
       <MatchCard
         status="SCHEDULED"
         teamAPlayers={['Minh', 'Tuan']}
@@ -712,7 +850,9 @@ function MatchCardSection() {
 function SessionCardSection() {
   return (
     <Section title="Session Card">
-      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Active — with BWF tournament</p>
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>
+        Active — with BWF tournament
+      </p>
       <SessionCard
         status="active"
         name="Singapore Open 2025"
@@ -720,9 +860,14 @@ function SessionCardSection() {
         duration="1h 42m"
         matchCount={5}
         topPlayer={{ name: 'Tuan', record: '3W – 1L · played 4', winRate: 75 }}
-        tournamentCategory={{ categoryName: 'BWF World Tour Super 750', categorySlug: 'grade-2-level-3' }}
+        tournamentCategory={{
+          categoryName: 'BWF World Tour Super 750',
+          categorySlug: 'grade-2-level-3',
+        }}
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Active</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Active
+      </p>
       <SessionCard
         status="active"
         name="Friday Night Session"
@@ -731,7 +876,9 @@ function SessionCardSection() {
         matchCount={5}
         topPlayer={{ name: 'Tuan', record: '3W – 1L · played 4', winRate: 75 }}
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Active — no matches yet</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Active — no matches yet
+      </p>
       <SessionCard
         status="active"
         name="Friday Night Session"
@@ -739,7 +886,9 @@ function SessionCardSection() {
         duration="0m"
         matchCount={0}
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Scheduled</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Scheduled
+      </p>
       <SessionCard
         status="scheduled"
         name="Saturday Session"
@@ -747,7 +896,9 @@ function SessionCardSection() {
         duration="Not started"
         matchCount={0}
       />
-      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>Completed</p>
+      <p className="text-[13px] px-1 mt-2" style={{ color: 'var(--muted)' }}>
+        Completed
+      </p>
       <SessionCard
         status="completed"
         name="Wednesday Session"
@@ -791,7 +942,13 @@ function RankItemSection() {
     <Section title="Rank Item">
       <DSCard style={{ padding: 0 }}>
         <RankItem rank={1} avatar="MT" name="Minh Tran" stats="24 matches · 18 wins" winRate={75} />
-        <RankItem rank={2} avatar="TN" name="Tuan Nguyen" stats="24 matches · 16 wins" winRate={67} />
+        <RankItem
+          rank={2}
+          avatar="TN"
+          name="Tuan Nguyen"
+          stats="24 matches · 16 wins"
+          winRate={67}
+        />
         <RankItem rank={3} avatar="HL" name="Huy Le" stats="20 matches · 12 wins" winRate={60} />
       </DSCard>
     </Section>
@@ -880,10 +1037,20 @@ function EyebrowBadgeSection() {
     <Section title="Eyebrow Badge">
       <DSCard>
         <div className="space-y-2">
-          <div><EyebrowBadge tone="live" pulse>Live</EyebrowBadge></div>
-          <div><EyebrowBadge tone="scheduled">Scheduled</EyebrowBadge></div>
-          <div><EyebrowBadge tone="completed">Completed</EyebrowBadge></div>
-          <div><EyebrowBadge tone="neutral">Draft</EyebrowBadge></div>
+          <div>
+            <EyebrowBadge tone="live" pulse>
+              Live
+            </EyebrowBadge>
+          </div>
+          <div>
+            <EyebrowBadge tone="scheduled">Scheduled</EyebrowBadge>
+          </div>
+          <div>
+            <EyebrowBadge tone="completed">Completed</EyebrowBadge>
+          </div>
+          <div>
+            <EyebrowBadge tone="neutral">Draft</EyebrowBadge>
+          </div>
         </div>
       </DSCard>
     </Section>
@@ -913,27 +1080,51 @@ function MetaRowSection() {
 function PatternSection() {
   return (
     <Section title="Patterns">
-      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>Empty State</p>
+      <p className="text-[13px] px-1" style={{ color: 'var(--muted)' }}>
+        Empty State
+      </p>
       <EmptyState
         icon={<span className="text-[32px]">🏸</span>}
         title="No matches yet"
         description="Create your first session to start tracking scores and player stats."
         action={{ label: 'Create Match', onClick: () => {}, variant: 'accent' }}
       />
-      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Loading State</p>
-      <DSCard><LoadingState message="Loading sessions..." /></DSCard>
-      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Shuttle Loading — compact</p>
-      <DSCard><ShuttleLoading compact /></DSCard>
-      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Shuttle Loading — small (MatchCard LIVE score center)</p>
-      <DSCard className="flex justify-center py-4"><ShuttleLoading small /></DSCard>
-      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Shuttle Loading — tiny (inline use)</p>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>
+        Loading State
+      </p>
+      <DSCard>
+        <LoadingState message="Loading sessions..." />
+      </DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>
+        Shuttle Loading — compact
+      </p>
+      <DSCard>
+        <ShuttleLoading compact />
+      </DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>
+        Shuttle Loading — small (MatchCard LIVE score center)
+      </p>
+      <DSCard className="flex justify-center py-4">
+        <ShuttleLoading small />
+      </DSCard>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>
+        Shuttle Loading — tiny (inline use)
+      </p>
       <DSCard className="flex items-center gap-3 px-4 py-3">
         <ShuttleLoading tiny />
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+          }}
+        >
           Inline tiny example
         </span>
       </DSCard>
-      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>Error State</p>
+      <p className="text-[13px] px-1 mt-4" style={{ color: 'var(--muted)' }}>
+        Error State
+      </p>
       <ErrorState
         message="Failed to load player data. Please check your connection."
         onRetry={() => {}}
@@ -945,7 +1136,9 @@ function PatternSection() {
 /* ---------- Dialog ---------- */
 
 function DialogSection() {
-  const [openKind, setOpenKind] = useState<'info' | 'warning' | 'danger' | 'two-actions' | null>(null)
+  const [openKind, setOpenKind] = useState<'info' | 'warning' | 'danger' | 'two-actions' | null>(
+    null,
+  )
 
   return (
     <Section title="Dialog">
@@ -954,10 +1147,18 @@ function DialogSection() {
           Bottom-sheet overlay for errors, warnings, and confirmations. Backdrop click dismisses.
         </p>
         <div className="flex flex-col gap-2">
-          <Button variant="ghost" onClick={() => setOpenKind('info')}>Info dialog</Button>
-          <Button variant="ghost" onClick={() => setOpenKind('warning')}>Warning dialog</Button>
-          <Button variant="danger" onClick={() => setOpenKind('danger')}>Danger dialog</Button>
-          <Button variant="secondary" onClick={() => setOpenKind('two-actions')}>Two actions</Button>
+          <Button variant="ghost" onClick={() => setOpenKind('info')}>
+            Info dialog
+          </Button>
+          <Button variant="ghost" onClick={() => setOpenKind('warning')}>
+            Warning dialog
+          </Button>
+          <Button variant="danger" onClick={() => setOpenKind('danger')}>
+            Danger dialog
+          </Button>
+          <Button variant="secondary" onClick={() => setOpenKind('two-actions')}>
+            Two actions
+          </Button>
         </div>
       </DSCard>
 
@@ -1006,12 +1207,18 @@ function BottomSheetSection() {
     <Section title="Bottom Sheet">
       <DSCard>
         <p className="text-[13px] mb-1" style={{ color: 'var(--muted)' }}>
-          Context-menu sheet composed of four primitives: <code className="font-mono text-[12px]">BottomSheet</code>, <code className="font-mono text-[12px]">BottomSheetItem</code>, <code className="font-mono text-[12px]">BottomSheetDivider</code>, <code className="font-mono text-[12px]">BottomSheetCancel</code>.
+          Context-menu sheet composed of four primitives:{' '}
+          <code className="font-mono text-[12px]">BottomSheet</code>,{' '}
+          <code className="font-mono text-[12px]">BottomSheetItem</code>,{' '}
+          <code className="font-mono text-[12px]">BottomSheetDivider</code>,{' '}
+          <code className="font-mono text-[12px]">BottomSheetCancel</code>.
         </p>
         <p className="text-[13px] mb-4" style={{ color: 'var(--muted)' }}>
           Panel slides up from the bottom with a backdrop. Tap the backdrop or Cancel to dismiss.
         </p>
-        <Button variant="ghost" onClick={() => setDemoOpen(true)}>Open demo sheet</Button>
+        <Button variant="ghost" onClick={() => setDemoOpen(true)}>
+          Open demo sheet
+        </Button>
       </DSCard>
 
       {/* Anatomy preview — static inline layout mirroring the actual sheet */}
@@ -1026,17 +1233,16 @@ function BottomSheetSection() {
         {/* Handle */}
         <div className="pt-4 pb-2 flex flex-col items-center gap-2">
           <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2 }} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--muted)' }}>
+          <span
+            className="text-[11px] font-bold uppercase tracking-[0.06em]"
+            style={{ color: 'var(--muted)' }}
+          >
             Sheet anatomy (static)
           </span>
         </div>
 
         {/* Regular items */}
-        <BottomSheetItem
-          icon={<Plus className="w-5 h-5" />}
-          label="New match"
-          onClick={() => {}}
-        />
+        <BottomSheetItem icon={<Plus className="w-5 h-5" />} label="New match" onClick={() => {}} />
         <BottomSheetItem
           icon={<Activity className="w-5 h-5" />}
           label="View player stats"
@@ -1047,11 +1253,7 @@ function BottomSheetSection() {
           label="Share session"
           onClick={() => {}}
         />
-        <BottomSheetItem
-          icon={<Pencil className="w-5 h-5" />}
-          label="Rename"
-          onClick={() => {}}
-        />
+        <BottomSheetItem icon={<Pencil className="w-5 h-5" />} label="Rename" onClick={() => {}} />
 
         {/* Divider + danger items */}
         <BottomSheetDivider />
@@ -1080,36 +1282,53 @@ function BottomSheetSection() {
 
       {/* Spec table */}
       <DSCard>
-        <p className="text-[11px] font-bold uppercase tracking-[0.06em] mb-3" style={{ color: 'var(--muted)' }}>
+        <p
+          className="text-[11px] font-bold uppercase tracking-[0.06em] mb-3"
+          style={{ color: 'var(--muted)' }}
+        >
           Spec
         </p>
         <div className="space-y-2 text-[13px]" style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Panel bg</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              Panel bg
+            </span>
             <span>var(--surface)</span>
           </div>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Radius</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              Radius
+            </span>
             <span>var(--radius-lg) var(--radius-lg) 0 0</span>
           </div>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Backdrop</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              Backdrop
+            </span>
             <span>oklch(0% 0 0 / 0.45) + blur(2px)</span>
           </div>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Open easing</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              Open easing
+            </span>
             <span>0.3s cubic-bezier(0.32, 0, 0.15, 1)</span>
           </div>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Item height</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              Item height
+            </span>
             <span>52px min</span>
           </div>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>Danger color</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              Danger color
+            </span>
             <span>var(--danger)</span>
           </div>
           <div className="flex gap-3">
-            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>z-index</span>
+            <span className="shrink-0 font-mono text-[12px] w-28" style={{ color: 'var(--fg)' }}>
+              z-index
+            </span>
             <span>backdrop 100 · panel 101</span>
           </div>
         </div>

@@ -1,17 +1,29 @@
-import { Suspense, lazy, useState } from 'react'
-import { BottomSheet, SegmentedControl } from '../../design-system/components'
-import { Input, Button } from '../../design-system/components'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { BottomSheet, Button, Input, SegmentedControl } from '../../design-system/components'
 import { useCreatePlayerRacket, useUpdatePlayerRacket } from '../hooks/usePlayerRackets'
-import { RACKET_BRANDS, type PlayerRacket, type RacketBrand } from '../types/database'
-import { getMascot, getMascotPreviewPath } from '../lib/mascots'
-import MascotPicker from './MascotPicker'
 import { useI18n } from '../i18n'
+import { getMascot, getMascotPreviewPath } from '../lib/mascots'
+import { RacketFormSchema, type RacketFormValues } from '../lib/schemas/form-schemas'
+import { type PlayerRacket, RACKET_BRANDS, type RacketBrand } from '../types/database'
+import MascotPicker from './MascotPicker'
 
 const LottieMascot = lazy(() => import('./LottieMascot'))
 
 function initialBrandChoice(brand?: string): RacketBrand {
   if (brand && (RACKET_BRANDS as readonly string[]).includes(brand)) return brand as RacketBrand
   return brand ? 'Other' : RACKET_BRANDS[0]
+}
+
+function buildDefaultValues(racket?: PlayerRacket): RacketFormValues {
+  return {
+    brandChoice: initialBrandChoice(racket?.brand),
+    customBrand: initialBrandChoice(racket?.brand) === 'Other' ? (racket?.brand ?? '') : '',
+    real_name: racket?.real_name ?? '',
+    nickname: racket?.nickname ?? '',
+    mascot_id: racket?.mascot_id ?? null,
+  }
 }
 
 interface RacketFormSheetProps {
@@ -22,63 +34,90 @@ interface RacketFormSheetProps {
   onCreated?: (racketName: string) => void
 }
 
-export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: RacketFormSheetProps) {
+export function RacketFormSheet({
+  open,
+  onClose,
+  playerId,
+  racket,
+  onCreated,
+}: RacketFormSheetProps) {
   const { t } = useI18n()
-  const [brandChoice, setBrandChoice] = useState<RacketBrand>(() => initialBrandChoice(racket?.brand))
-  const [customBrand, setCustomBrand] = useState(() => (initialBrandChoice(racket?.brand) === 'Other' ? racket?.brand ?? '' : ''))
-  const [realName, setRealName] = useState(racket?.real_name ?? '')
-  const [nickname, setNickname] = useState(racket?.nickname ?? '')
-  const [mascotId, setMascotId] = useState<string | null>(racket?.mascot_id ?? null)
   const [showMascotPicker, setShowMascotPicker] = useState(false)
-  const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
   const createRacket = useCreatePlayerRacket()
   const updateRacket = useUpdatePlayerRacket()
   const isPending = createRacket.isPending || updateRacket.isPending
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    control,
+    formState: { errors },
+  } = useForm<RacketFormValues>({
+    resolver: zodResolver(RacketFormSchema),
+    defaultValues: buildDefaultValues(racket),
+  })
+
+  useEffect(() => {
+    reset(buildDefaultValues(racket))
+  }, [open, racket, reset])
+
+  const brandChoice = watch('brandChoice') as RacketBrand
+  const mascotId = watch('mascot_id')
   const mascot = getMascot(mascotId)
 
   function handleClose() {
-    setBrandChoice(initialBrandChoice(racket?.brand))
-    setCustomBrand(initialBrandChoice(racket?.brand) === 'Other' ? racket?.brand ?? '' : '')
-    setRealName(racket?.real_name ?? '')
-    setNickname(racket?.nickname ?? '')
-    setMascotId(racket?.mascot_id ?? null)
-    setError('')
+    reset(buildDefaultValues(racket))
+    setSubmitError('')
     onClose()
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    const trimmedName = realName.trim()
-    if (!trimmedName) {
-      setError(t('racketForm.nameRequired'))
-      return
-    }
-    if (trimmedName.length > 60) {
-      setError(t('racketForm.nameTooLong'))
-      return
-    }
-    const brand = brandChoice === 'Other' ? customBrand.trim() : brandChoice
+  async function onSubmit(data: RacketFormValues) {
+    setSubmitError('')
+    const brand = data.brandChoice === 'Other' ? (data.customBrand?.trim() ?? '') : data.brandChoice
     if (!brand) {
-      setError(t('racketForm.brandRequired'))
+      setSubmitError(t('racketForm.brandRequired'))
       return
     }
+    const trimmedName = data.real_name.trim()
     try {
       if (racket) {
-        await updateRacket.mutateAsync({ id: racket.id, brand, real_name: trimmedName, nickname: nickname.trim(), mascot_id: mascotId })
+        await updateRacket.mutateAsync({
+          id: racket.id,
+          brand,
+          real_name: trimmedName,
+          nickname: data.nickname?.trim() ?? '',
+          mascot_id: data.mascot_id,
+        })
       } else {
-        await createRacket.mutateAsync({ player_id: playerId, brand, real_name: trimmedName, nickname: nickname.trim(), mascot_id: mascotId })
+        await createRacket.mutateAsync({
+          player_id: playerId,
+          brand,
+          real_name: trimmedName,
+          nickname: data.nickname?.trim() ?? '',
+          mascot_id: data.mascot_id,
+        })
         onCreated?.(`${brand} ${trimmedName}`)
       }
       handleClose()
     } catch {
-      setError(t('racketForm.failedSave'))
+      setSubmitError(t('racketForm.failedSave'))
     }
   }
 
   return (
     <BottomSheet open={open} onClose={handleClose}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: '0 var(--space-2)' }}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-4)',
+          padding: '0 var(--space-2)',
+        }}
+      >
         <h3
           style={{
             fontFamily: 'var(--font-display)',
@@ -104,36 +143,40 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
           >
             {t('racketForm.brand')}
           </label>
-          <SegmentedControl
-            tabs={RACKET_BRANDS.map((b) => ({ id: b, label: b }))}
-            value={brandChoice}
-            onChange={setBrandChoice}
+          <Controller
+            name="brandChoice"
+            control={control}
+            render={({ field }) => (
+              <SegmentedControl
+                tabs={RACKET_BRANDS.map(b => ({ id: b, label: b }))}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
 
         {brandChoice === 'Other' && (
           <Input
             label={t('racketForm.customBrand')}
-            value={customBrand}
-            onChange={(e) => setCustomBrand(e.target.value)}
             placeholder={t('racketForm.customBrandPlaceholder')}
+            error={submitError && !watch('customBrand')?.trim() ? submitError : undefined}
+            {...register('customBrand')}
           />
         )}
 
         <Input
           label={t('racketForm.realName')}
-          value={realName}
-          onChange={(e) => setRealName(e.target.value)}
           placeholder={t('racketForm.realNamePlaceholder')}
           autoFocus
-          error={error}
+          error={errors.real_name?.message}
+          {...register('real_name')}
         />
 
         <Input
           label={t('racketForm.nickname')}
-          value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
           placeholder={t('racketForm.nicknamePlaceholder')}
+          {...register('nickname')}
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
@@ -149,43 +192,65 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
           >
             {t('racketForm.mascot')}
           </label>
-          <button
-            type="button"
-            onClick={() => setShowMascotPicker(true)}
-            className="flex items-center gap-3 active:opacity-70"
-            style={{
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)',
-              padding: 'var(--space-2) var(--space-3)',
-              background: 'transparent',
-              cursor: 'pointer',
-              touchAction: 'manipulation',
-            }}
-          >
-            {mascot ? (
-              <Suspense fallback={<span style={{ width: 32, height: 32 }} />}>
-                <LottieMascot src={getMascotPreviewPath(mascot)} size={32} scale={mascot.scale} />
-              </Suspense>
-            ) : (
-              <span style={{ fontSize: 24, lineHeight: 1, width: 32, textAlign: 'center' }}>🚫</span>
+          <Controller
+            name="mascot_id"
+            control={control}
+            render={({ field }) => (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowMascotPicker(true)}
+                  className="flex items-center gap-3 active:opacity-70"
+                  style={{
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: 'var(--space-2) var(--space-3)',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation',
+                  }}
+                >
+                  {mascot ? (
+                    <Suspense fallback={<span style={{ width: 32, height: 32 }} />}>
+                      <LottieMascot
+                        src={getMascotPreviewPath(mascot)}
+                        size={32}
+                        scale={mascot.scale}
+                      />
+                    </Suspense>
+                  ) : (
+                    <span style={{ fontSize: 24, lineHeight: 1, width: 32, textAlign: 'center' }}>
+                      🚫
+                    </span>
+                  )}
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--fg)' }}>
+                    {mascot ? mascot.name : t('mascotPicker.none')}
+                  </span>
+                </button>
+                <MascotPicker
+                  open={showMascotPicker}
+                  currentMascotId={field.value}
+                  onSelect={id => {
+                    field.onChange(id)
+                    setShowMascotPicker(false)
+                  }}
+                  onClose={() => setShowMascotPicker(false)}
+                />
+              </>
             )}
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--fg)' }}>
-              {mascot ? mascot.name : t('mascotPicker.none')}
-            </span>
-          </button>
+          />
         </div>
+
+        {submitError && (
+          <p style={{ fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--font-body)' }}>
+            {submitError}
+          </p>
+        )}
 
         <Button type="submit" variant="primary" size="block" disabled={isPending}>
           {isPending ? t('common.creating') : t('common.save')}
         </Button>
       </form>
-
-      <MascotPicker
-        open={showMascotPicker}
-        currentMascotId={mascotId}
-        onSelect={setMascotId}
-        onClose={() => setShowMascotPicker(false)}
-      />
     </BottomSheet>
   )
 }

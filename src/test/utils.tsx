@@ -1,7 +1,7 @@
-import { type ReactNode } from 'react'
-import { render as rtlRender, type RenderOptions } from '@testing-library/react'
-import { MemoryRouter, Routes, Route, type MemoryRouterProps } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { type RenderOptions, render as rtlRender } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { MemoryRouter, type MemoryRouterProps, Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { AuthContext, type AuthContextValue } from '../contexts/AuthContext'
 
@@ -27,7 +27,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 
 export function renderWithRouter(
   ui: ReactNode,
-  { routerProps, auth, ...options }: CustomRenderOptions = {}
+  { routerProps, auth, ...options }: CustomRenderOptions = {},
 ) {
   const mockAuth = createMockAuth(auth)
 
@@ -53,7 +53,7 @@ export function renderRoute(
     initialEntries = [path],
     auth,
     ...options
-  }: CustomRenderOptions & { initialEntries?: string[] } = {}
+  }: CustomRenderOptions & { initialEntries?: string[] } = {},
 ) {
   return renderWithRouter(
     <Routes>
@@ -63,17 +63,32 @@ export function renderRoute(
       <Route path="/sessions" element={<div data-testid="sessions-page">Sessions</div>} />
       <Route path="/settings" element={<div data-testid="settings-page">Settings</div>} />
       <Route path="/sessions/new" element={<div data-testid="create-session">New Session</div>} />
-      <Route path="/sessions/:id" element={<div data-testid="session-detail">Session Detail</div>} />
+      <Route
+        path="/sessions/:id"
+        element={<div data-testid="session-detail">Session Detail</div>}
+      />
       <Route path="/sessions/:id/donated" element={<div data-testid="donated-list">Donated</div>} />
-      <Route path="/sessions/:id/matches/new" element={<div data-testid="match-players">Select Players</div>} />
-      <Route path="/sessions/:id/matches/new/result" element={<div data-testid="match-result">Final Result</div>} />
-      <Route path="/sessions/:id/matches/:matchId/players/edit" element={<div data-testid="edit-players">Edit Players</div>} />
-      <Route path="/players/:playerId" element={<div data-testid="player-detail">Player Detail</div>} />
+      <Route
+        path="/sessions/:id/matches/new"
+        element={<div data-testid="match-players">Select Players</div>}
+      />
+      <Route
+        path="/sessions/:id/matches/new/result"
+        element={<div data-testid="match-result">Final Result</div>}
+      />
+      <Route
+        path="/sessions/:id/matches/:matchId/players/edit"
+        element={<div data-testid="edit-players">Edit Players</div>}
+      />
+      <Route
+        path="/players/:playerId"
+        element={<div data-testid="player-detail">Player Detail</div>}
+      />
     </Routes>,
     {
       routerProps: { initialEntries },
       auth,
       ...options,
-    }
+    },
   )
 }

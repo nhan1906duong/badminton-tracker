@@ -25,17 +25,14 @@ export function ScoreBlock({
     >
       {/* Team A */}
       <div className="flex-1 text-center">
-        <div
-          className="text-[13px]"
-          style={{ color: 'var(--muted)' }}
-        >
+        <div className="text-[13px]" style={{ color: 'var(--muted)' }}>
           {teamAName}
         </div>
         {editable ? (
           <input
             type="number"
             value={scoreA}
-            onChange={(e) => onScoreChange?.(parseInt(e.target.value) || 0, scoreB)}
+            onChange={e => onScoreChange?.(parseInt(e.target.value, 10) || 0, scoreB)}
             className="w-20 h-11 text-center bg-[var(--bg)] border border-[var(--border)] text-[32px] font-extrabold outline-none focus:border-[var(--fg)]"
             style={{
               fontFamily: 'var(--font-display)',
@@ -63,17 +60,14 @@ export function ScoreBlock({
 
       {/* Team B */}
       <div className="flex-1 text-center">
-        <div
-          className="text-[13px]"
-          style={{ color: 'var(--muted)' }}
-        >
+        <div className="text-[13px]" style={{ color: 'var(--muted)' }}>
           {teamBName}
         </div>
         {editable ? (
           <input
             type="number"
             value={scoreB}
-            onChange={(e) => onScoreChange?.(scoreA, parseInt(e.target.value) || 0)}
+            onChange={e => onScoreChange?.(scoreA, parseInt(e.target.value, 10) || 0)}
             className="w-20 h-11 text-center bg-[var(--bg)] border border-[var(--border)] text-[32px] font-extrabold outline-none focus:border-[var(--fg)]"
             style={{
               fontFamily: 'var(--font-display)',

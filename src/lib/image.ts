@@ -2,10 +2,7 @@
  * Compress and resize an image file to a square of maxSize pixels.
  * Center-crops to square, outputs JPEG at 0.85 quality.
  */
-export async function compressImage(
-  file: File,
-  maxSize: number = 200,
-): Promise<Blob> {
+export async function compressImage(file: File, maxSize: number = 200): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
@@ -31,7 +28,7 @@ export async function compressImage(
       ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, maxSize, maxSize)
 
       canvas.toBlob(
-        (blob) => {
+        blob => {
           if (blob) resolve(blob)
           else reject(new Error('Canvas toBlob failed'))
         },

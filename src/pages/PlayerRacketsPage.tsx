@@ -1,20 +1,20 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppBar } from '../../design-system/components'
-import { usePlayer } from '../hooks/usePlayers'
-import { usePlayerRackets } from '../hooks/usePlayerRackets'
-import { useAuth } from '../hooks/useAuth'
-import { useProfile } from '../hooks/useProfile'
-import { useIsAdmin } from '../hooks/useIsAdmin'
-import { PlayerRacketsCard } from '../components/PlayerRacketsCard'
-import { RacketFormSheet } from '../components/RacketFormSheet'
-import { RacketAddedCelebration } from '../components/RacketAddedCelebration'
-import { PlayerQuotesCard } from '../components/PlayerQuotesCard'
-import { QuoteFormSheet } from '../components/QuoteFormSheet'
 import FloatingActionButton from '../components/FloatingActionButton'
-import { MAX_RACKETS_PER_PLAYER, type PlayerRacket, type PlayerQuote } from '../types/database'
+import { PlayerQuotesCard } from '../components/PlayerQuotesCard'
+import { PlayerRacketsCard } from '../components/PlayerRacketsCard'
+import { QuoteFormSheet } from '../components/QuoteFormSheet'
+import { RacketAddedCelebration } from '../components/RacketAddedCelebration'
+import { RacketFormSheet } from '../components/RacketFormSheet'
+import { useAuth } from '../hooks/useAuth'
+import { useIsAdmin } from '../hooks/useIsAdmin'
+import { usePlayerRackets } from '../hooks/usePlayerRackets'
+import { usePlayer } from '../hooks/usePlayers'
+import { useProfile } from '../hooks/useProfile'
 import { useI18n } from '../i18n'
+import { MAX_RACKETS_PER_PLAYER, type PlayerQuote, type PlayerRacket } from '../types/database'
 
 export default function PlayerRacketsPage() {
   const { t } = useI18n()
@@ -47,7 +47,9 @@ export default function PlayerRacketsPage() {
   if (!player) {
     return (
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center">
-        <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.notFound')}</span>
+        <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
+          {t('players.notFound')}
+        </span>
       </div>
     )
   }
@@ -55,7 +57,7 @@ export default function PlayerRacketsPage() {
   return (
     <div className="min-h-svh bg-[var(--bg)]">
       <AppBar
-        title=''
+        title=""
         leftAction={{
           icon: <ChevronLeft className="w-5 h-5" />,
           onClick: () => navigate(-1),
@@ -95,7 +97,7 @@ export default function PlayerRacketsPage() {
           }}
           playerId={id}
           racket={editingRacket ?? undefined}
-          onCreated={(racketName) => setCelebrationRacketName(racketName)}
+          onCreated={racketName => setCelebrationRacketName(racketName)}
         />
       )}
 

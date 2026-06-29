@@ -1,11 +1,17 @@
-import { Suspense, lazy, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { ChevronRight, Settings2, Star } from 'lucide-react'
-import { BottomSheet, BottomSheetCancel, BottomSheetDivider, BottomSheetItem, SectionLabel } from '../../design-system/components'
+import { lazy, Suspense, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  BottomSheet,
+  BottomSheetCancel,
+  BottomSheetDivider,
+  BottomSheetItem,
+  SectionLabel,
+} from '../../design-system/components'
 import { usePlayerRackets } from '../hooks/usePlayerRackets'
 import { useUpdatePlayer } from '../hooks/usePlayers'
-import { getMascot, getMascotPreviewPath } from '../lib/mascots'
 import { useI18n } from '../i18n'
+import { getMascot, getMascotPreviewPath } from '../lib/mascots'
 
 const LottieMascot = lazy(() => import('./LottieMascot'))
 
@@ -26,7 +32,7 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe, activeRacketId
   if (isLoading) return null
   if (!canEdit && rackets.length === 0) return null
 
-  const featured = rackets.find((r) => r.id === activeRacketId) ?? rackets[0]
+  const featured = rackets.find(r => r.id === activeRacketId) ?? rackets[0]
 
   return (
     <>
@@ -77,10 +83,15 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe, activeRacketId
                 </p>
               </>
             ) : (
-              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noRackets')}</p>
+              <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
+                {t('players.noRackets')}
+              </p>
             )}
           </div>
-          <ChevronRight className="w-4 h-4 shrink-0 mr-3 self-center" style={{ color: 'var(--muted)' }} />
+          <ChevronRight
+            className="w-4 h-4 shrink-0 mr-3 self-center"
+            style={{ color: 'var(--muted)' }}
+          />
         </button>
       </div>
 
@@ -88,19 +99,29 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe, activeRacketId
         <SectionLabel className="mb-2 px-[var(--space-2)]">{t('players.rackets')}</SectionLabel>
 
         {rackets.length === 0 ? (
-          <p className="text-[13px] px-[var(--space-2)] py-[var(--space-2)]" style={{ color: 'var(--muted)' }}>
+          <p
+            className="text-[13px] px-[var(--space-2)] py-[var(--space-2)]"
+            style={{ color: 'var(--muted)' }}
+          >
             {t('players.noRackets')}
           </p>
         ) : (
           <div className="flex flex-col">
-            {rackets.map((racket) => {
+            {rackets.map(racket => {
               const isActive = activeRacketId === racket.id
               const mascot = getMascot(racket.mascot_id)
               const row = (
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {mascot && (
-                    <Suspense fallback={<span style={{ width: 32, height: 32 }} className="shrink-0" />}>
-                      <LottieMascot src={getMascotPreviewPath(mascot)} size={32} scale={mascot.scale} className="shrink-0" />
+                    <Suspense
+                      fallback={<span style={{ width: 32, height: 32 }} className="shrink-0" />}
+                    >
+                      <LottieMascot
+                        src={getMascotPreviewPath(mascot)}
+                        size={32}
+                        scale={mascot.scale}
+                        className="shrink-0"
+                      />
                     </Suspense>
                   )}
                   <div className="flex-1 min-w-0">
@@ -120,7 +141,11 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe, activeRacketId
               )
               if (!canEdit) {
                 return (
-                  <div key={racket.id} className="flex items-center" style={{ padding: 'var(--space-2) var(--space-2)', minHeight: 52 }}>
+                  <div
+                    key={racket.id}
+                    className="flex items-center"
+                    style={{ padding: 'var(--space-2) var(--space-2)', minHeight: 52 }}
+                  >
                     {row}
                   </div>
                 )
@@ -129,12 +154,26 @@ export function PlayerRacketHeaderCard({ playerId, canEdit, isMe, activeRacketId
                 <button
                   key={racket.id}
                   type="button"
-                  onClick={() => updatePlayer.mutate({ id: playerId, active_racket_id: isActive ? null : racket.id })}
+                  onClick={() =>
+                    updatePlayer.mutate({
+                      id: playerId,
+                      active_racket_id: isActive ? null : racket.id,
+                    })
+                  }
                   className="flex items-center gap-3 w-full text-left active:bg-[var(--bg)]"
-                  style={{ padding: 'var(--space-2) var(--space-2)', minHeight: 52, borderRadius: 'var(--radius-md)' }}
+                  style={{
+                    padding: 'var(--space-2) var(--space-2)',
+                    minHeight: 52,
+                    borderRadius: 'var(--radius-md)',
+                  }}
                 >
                   {row}
-                  <Star size={16} className="shrink-0" style={{ color: isActive ? 'var(--accent)' : 'var(--muted)' }} fill={isActive ? 'currentColor' : 'none'} />
+                  <Star
+                    size={16}
+                    className="shrink-0"
+                    style={{ color: isActive ? 'var(--accent)' : 'var(--muted)' }}
+                    fill={isActive ? 'currentColor' : 'none'}
+                  />
                 </button>
               )
             })}

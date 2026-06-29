@@ -23,6 +23,7 @@
 | 12 | Session Attendance RSVP | ✅ Done | Linked players/admins confirm or decline regular/tournament attendance; declined players are filtered from match creation |
 | 13 | Scalability (Phase 1) | ✅ Done | Cursor pagination for player matches, paginated leaderboard via RPC, player-scoped badges, materialized player_session_stats table |
 | 14 | Testing | 🚧 In Progress | Unit and component tests exist; E2E/CI remain open |
+| 14a | DX Improvements | ✅ Done | Biome (lint+format), Zod RPC validation, react-hook-form on all forms |
 | 15 | Scalability (Phase 2) | ⏳ Pending | Materialized player_all_time_stats table, rank/streak calculations, delegation to Phase 4 |
 | 16 | Persistent Point Log | ⏳ Pending | Store point-by-point scoring events in the database and restore/display them on match detail |
 
@@ -166,6 +167,12 @@
 - [x] Create `player_session_stats` materialized view: per-player per-session aggregated points, rating deltas, base stats
 - [x] Backfill `player_session_stats` from `player_match_results`
 - [x] Add columns to `player_session_stats` for aggregated points/rating: `total_points`, `average_weekly_points`, `rating_before`, `rating_after`, `rating_delta`
+
+### Phase 14a: DX Improvements ✅
+- [x] Replace ESLint with Biome — unified lint + format, ~10× faster, single config (`biome.json`)
+- [x] Add `zod` runtime validation on Supabase RPC responses (`src/lib/schemas/rpc-schemas.ts`): `LeaderboardRowSchema`, `PlayerRankingSummarySchema`, `BadgeLeaderSchema`
+- [x] Migrate all 5 forms to react-hook-form + zodResolver (`src/lib/schemas/form-schemas.ts`): LoginPage, ChangePasswordPage, PlayerForm, QuoteFormSheet, RacketFormSheet
+- [x] Remove manual `useState` form fields and ad-hoc validation handlers from all migrated forms
 
 ### Phase 14: Testing 🚧
 - [x] Unit tests (Vitest)

@@ -1,7 +1,7 @@
 import { Activity } from 'lucide-react'
+import { useI18n } from '../../src/i18n'
 import { Avatar } from './avatar'
 import { StatNumber } from './stat-number'
-import { useI18n } from '../../src/i18n'
 
 export interface SessionStatsPanelProps {
   matchCount: number
@@ -27,7 +27,9 @@ export function SessionStatsPanel({
   onPress,
 }: SessionStatsPanelProps) {
   const { t } = useI18n()
-  const resolvedFooterMeta = footerMeta ?? `${t('sessionStats.ranking')} · ${t('sessions.winRate')} · ${t('sessionStats.streaks')}`
+  const resolvedFooterMeta =
+    footerMeta ??
+    `${t('sessionStats.ranking')} · ${t('sessions.winRate')} · ${t('sessionStats.streaks')}`
 
   return (
     <button
@@ -104,7 +106,15 @@ interface StatCellProps {
   avatarName?: string
 }
 
-function StatCell({ value, label, accent = false, mvp = false, divider = false, avatarUrl, avatarName }: StatCellProps) {
+function StatCell({
+  value,
+  label,
+  accent = false,
+  mvp = false,
+  divider = false,
+  avatarUrl,
+  avatarName,
+}: StatCellProps) {
   const showAvatar = mvp && avatarName && value !== '—'
   return (
     <div

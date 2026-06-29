@@ -45,7 +45,9 @@ export default function PlayerRecordLine({
           {separator}
         </>
       )}
-      <span>{wins}W {losses}L</span>
+      <span>
+        {wins}W {losses}L
+      </span>
       {separator}
       <span>{winRate}%</span>
       {extra && (

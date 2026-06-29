@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { Profile } from '../types/database'
 
@@ -22,7 +22,13 @@ export function useProfile(userId?: string) {
 export function useUpdatePlayerLink() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ userId: _userId, playerId }: { userId: string; playerId: string | null }) => {
+    mutationFn: async ({
+      userId: _userId,
+      playerId,
+    }: {
+      userId: string
+      playerId: string | null
+    }) => {
       if (playerId) {
         const { error } = await supabase.rpc('update_player_link', { p_player_id: playerId })
         if (error) throw error

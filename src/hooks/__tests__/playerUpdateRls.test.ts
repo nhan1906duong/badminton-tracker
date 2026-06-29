@@ -7,12 +7,13 @@
  *
  * Supabase surfaces an RLS violation as error code '42501'.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, waitFor } from '@testing-library/react'
 import { createElement } from 'react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useAvatarDelete, useAvatarUpload, useSetDefaultAvatar } from '../useAvatarUpload'
 import { useUpdatePlayer } from '../usePlayers'
-import { useAvatarUpload, useSetDefaultAvatar, useAvatarDelete } from '../useAvatarUpload'
 
 // ─── Supabase mock ────────────────────────────────────────────────────────────
 
@@ -95,7 +96,10 @@ describe('useUpdatePlayer – RLS: players_update_linked_or_admin', () => {
 
   it('admin: update succeeds for any player', async () => {
     // RPC returns an array with the updated row — admin passes the RLS check.
-    mockRpc.mockResolvedValueOnce({ data: [{ ...PLAYER, name: 'Alice Edited' }], error: null } as any)
+    mockRpc.mockResolvedValueOnce({
+      data: [{ ...PLAYER, name: 'Alice Edited' }],
+      error: null,
+    } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useUpdatePlayer(), { wrapper })
@@ -146,7 +150,11 @@ describe('useAvatarUpload – RLS: players_update_linked_or_admin', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useAvatarUpload(), { wrapper })
 
-    result.current.mutate({ file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }), entity: 'players', id: PLAYER_ID })
+    result.current.mutate({
+      file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }),
+      entity: 'players',
+      id: PLAYER_ID,
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(bucket.upload).toHaveBeenCalledOnce()
@@ -160,7 +168,11 @@ describe('useAvatarUpload – RLS: players_update_linked_or_admin', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useAvatarUpload(), { wrapper })
 
-    result.current.mutate({ file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }), entity: 'players', id: PLAYER_ID })
+    result.current.mutate({
+      file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }),
+      entity: 'players',
+      id: PLAYER_ID,
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
   })
@@ -174,7 +186,11 @@ describe('useAvatarUpload – RLS: players_update_linked_or_admin', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useAvatarUpload(), { wrapper })
 
-    result.current.mutate({ file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }), entity: 'players', id: PLAYER_ID })
+    result.current.mutate({
+      file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }),
+      entity: 'players',
+      id: PLAYER_ID,
+    })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expectErrorCode(result.current.error, '42501')
@@ -190,7 +206,11 @@ describe('useAvatarUpload – RLS: players_update_linked_or_admin', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useAvatarUpload(), { wrapper })
 
-    result.current.mutate({ file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }), entity: 'players', id: PLAYER_ID })
+    result.current.mutate({
+      file: new File(['img'], 'a.jpg', { type: 'image/jpeg' }),
+      entity: 'players',
+      id: PLAYER_ID,
+    })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect((result.current.error as { message: string }).message).toBe('storage quota exceeded')

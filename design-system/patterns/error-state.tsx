@@ -1,5 +1,5 @@
-import { Button } from '../components/button'
 import { useI18n } from '../../src/i18n'
+import { Button } from '../components/button'
 
 interface ErrorStateProps {
   title?: string
@@ -13,7 +13,11 @@ export function ErrorState({ title, message, onRetry }: ErrorStateProps) {
   return (
     <div
       className="text-center py-12 px-4"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+      }}
     >
       <div
         className="text-[32px] font-extrabold mb-2"

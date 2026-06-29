@@ -1,11 +1,11 @@
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import type { Session } from '../types/database'
-import { LOCALE_TAG, useI18n, type Locale, type TFunction, matchTypeLabel } from '../i18n'
-import { useLeagueTeams } from '../hooks/useLeagueTeams'
-import { useLeagueStandings } from '../hooks/useLeagueStandings'
-import LeagueStandingsTable from '../components/LeagueStandingsTable'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import LeagueScheduleGrid from '../components/LeagueScheduleGrid'
+import LeagueStandingsTable from '../components/LeagueStandingsTable'
 import LeagueTeamEditor from '../components/LeagueTeamEditor'
+import { useLeagueStandings } from '../hooks/useLeagueStandings'
+import { useLeagueTeams } from '../hooks/useLeagueTeams'
+import { LOCALE_TAG, type Locale, matchTypeLabel, type TFunction, useI18n } from '../i18n'
+import type { Session } from '../types/database'
 
 // ── Date / duration helpers ────────────────────────────────────────────────
 
@@ -35,34 +35,75 @@ function formatDurationMs(ms: number): string {
   return `${h}h ${m}m`
 }
 
-function getSessionMeta(session: Session, status: 'scheduled' | 'live' | 'ended', t: TFunction): string {
+function getSessionMeta(
+  session: Session,
+  status: 'scheduled' | 'live' | 'ended',
+  t: TFunction,
+): string {
   const startedAt = new Date(session.started_at).getTime()
-  if (status === 'live') return t('units.elapsed', { duration: formatDurationMs(Date.now() - startedAt) })
-  if (status === 'scheduled') return t('date.startsIn', { duration: formatDurationMs(startedAt - Date.now()) })
+  if (status === 'live')
+    return t('units.elapsed', { duration: formatDurationMs(Date.now() - startedAt) })
+  if (status === 'scheduled')
+    return t('date.startsIn', { duration: formatDurationMs(startedAt - Date.now()) })
   if (status === 'ended' && session.ended_at)
-    return t('units.total', { duration: formatDurationMs(new Date(session.ended_at).getTime() - startedAt) })
+    return t('units.total', {
+      duration: formatDurationMs(new Date(session.ended_at).getTime() - startedAt),
+    })
   return '—'
 }
-import { useCreateLeagueSchedule, useMatches } from '../hooks/useMatches'
-import { useSessionLeaderboard } from '../hooks/useRankings'
-import { useSession, useStartSession, useEndSession, useDeleteSession, useUpdateSessionStartTime, useRenameSession, useUpdateLeagueTotalRounds } from '../hooks/useSessions'
-import MatchesContent from '../components/MatchesContent'
-import { SessionAttendancePanel } from '../components/SessionAttendancePanel'
-import FloatingActionButton from '../components/FloatingActionButton'
+
+import {
+  Activity,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  MoreVertical,
+  Pencil,
+  Play,
+  Plus,
+  Share2,
+  Trash2,
+  Users,
+  Wallet,
+} from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  BwfCategoryBadge,
+  EyebrowBadge,
+  MetaRow,
+  PullToRefresh,
+} from '../../design-system/components'
 import { AppBar } from '../../design-system/components/app-bar'
-import { Dialog } from '../../design-system/components/dialog'
-import { BottomSheet, BottomSheetItem, BottomSheetDivider, BottomSheetCancel } from '../../design-system/components/bottom-sheet'
-import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
-import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, ChevronLeft, MoreVertical, Play, Activity, Trash2, Wallet, Pencil, Share2, Users, Calendar, Clock, ChevronRight } from 'lucide-react'
-import { friendlyDate, friendlyTime } from '../components/match-create/helpers'
-import { useIsAdmin } from '../hooks/useIsAdmin'
-import { useAuth } from '../hooks/useAuth'
-import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats'
-import { generateSessionShareCard } from '../lib/share-card'
+import {
+  BottomSheet,
+  BottomSheetCancel,
+  BottomSheetDivider,
+  BottomSheetItem,
+} from '../../design-system/components/bottom-sheet'
 import { Button } from '../../design-system/components/button'
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { PullToRefresh, BwfCategoryBadge, EyebrowBadge, MetaRow } from '../../design-system/components'
+import { Dialog } from '../../design-system/components/dialog'
+import { SessionStatsPanel } from '../../design-system/components/session-stats-panel'
+import FloatingActionButton from '../components/FloatingActionButton'
+import MatchesContent from '../components/MatchesContent'
+import { friendlyDate, friendlyTime } from '../components/match-create/helpers'
+import { SessionAttendancePanel } from '../components/SessionAttendancePanel'
+import { useAuth } from '../hooks/useAuth'
+import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useCreateLeagueSchedule, useMatches } from '../hooks/useMatches'
+import { usePlayerStats, useSessionDonationStats } from '../hooks/usePlayerStats'
+import { useSessionLeaderboard } from '../hooks/useRankings'
+import {
+  useDeleteSession,
+  useEndSession,
+  useRenameSession,
+  useSession,
+  useStartSession,
+  useUpdateLeagueTotalRounds,
+  useUpdateSessionStartTime,
+} from '../hooks/useSessions'
+import { formatShortPlayerName } from '../lib/player-name'
+import { generateSessionShareCard } from '../lib/share-card'
 
 export default function SessionDetailPage() {
   const { locale, t } = useI18n()
@@ -71,7 +112,12 @@ export default function SessionDetailPage() {
   const { id: sessionId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { data: matches, isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatches(sessionId)
+  const {
+    data: matches,
+    isLoading: matchesLoading,
+    isError: matchesError,
+    refetch: refetchMatches,
+  } = useMatches(sessionId)
   const { data: session } = useSession(sessionId)
   const endSession = useEndSession()
   const startSession = useStartSession()
@@ -94,7 +140,7 @@ export default function SessionDetailPage() {
   const isLeague = session?.type === 'league'
 
   const sharePlayers = useMemo(
-    () => [...stats].filter((p) => p.matchesPlayed > 0).sort((a, b) => b.losses - a.losses),
+    () => [...stats].filter(p => p.matchesPlayed > 0).sort((a, b) => b.losses - a.losses),
     [stats],
   )
 
@@ -115,8 +161,14 @@ export default function SessionDetailPage() {
   useEffect(() => {
     if (!session || !isLeague || !leagueTeams || !matches) return
     if (!session.league_match_type || !session.league_total_rounds) return
-    const expectedMatchCount = (leagueTeams.length * (leagueTeams.length - 1) / 2) * session.league_total_rounds
-    if (matches.length >= expectedMatchCount || leagueTeams.length < 2 || createLeagueSchedule.isPending) return
+    const expectedMatchCount =
+      ((leagueTeams.length * (leagueTeams.length - 1)) / 2) * session.league_total_rounds
+    if (
+      matches.length >= expectedMatchCount ||
+      leagueTeams.length < 2 ||
+      createLeagueSchedule.isPending
+    )
+      return
     if (leagueScheduleEnsuredRef.current === session.id) return
 
     leagueScheduleEnsuredRef.current = session.id
@@ -163,7 +215,10 @@ export default function SessionDetailPage() {
 
   async function handleSaveScheduledTime() {
     if (!editTimeValue) return
-    await updateSessionStartTime.mutateAsync({ id: sid, started_at: new Date(editTimeValue).toISOString() })
+    await updateSessionStartTime.mutateAsync({
+      id: sid,
+      started_at: new Date(editTimeValue).toISOString(),
+    })
     setEditTimeOpen(false)
   }
 
@@ -191,14 +246,16 @@ export default function SessionDetailPage() {
     return 'live'
   })()
 
-  const recordedMatches = matches?.filter((m) => m.status === 'COMPLETED' && m.teams.some((t) => t.is_winner)) ?? []
-  const liveMatchCount = matches?.filter((m) => m.status === 'LIVE').length ?? 0
+  const recordedMatches =
+    matches?.filter(m => m.status === 'COMPLETED' && m.teams.some(t => t.is_winner)) ?? []
+  const liveMatchCount = matches?.filter(m => m.status === 'LIVE').length ?? 0
   const matchCount = matches?.length ?? 0
   const isDeletingCompletedSessionWithMatches = sessionStatus === 'ended' && matchCount > 0
 
-  const uniquePlayerCount = recordedMatches.length > 0
-    ? new Set(recordedMatches.flatMap((m) => m.participants.map((p) => p.player_id))).size
-    : 0
+  const uniquePlayerCount =
+    recordedMatches.length > 0
+      ? new Set(recordedMatches.flatMap(m => m.participants.map(p => p.player_id))).size
+      : 0
 
   const mvpPlayer = leaderboard?.leader
   const mvpName = mvpPlayer ? formatShortPlayerName(mvpPlayer.name) : undefined
@@ -245,12 +302,19 @@ export default function SessionDetailPage() {
   async function handleConfirmAddLeagueRound() {
     if (!session?.league_total_rounds || !leagueTeams || !session.league_match_type) return
     leagueScheduleEnsuredRef.current = null
-    await updateLeagueTotalRounds.mutateAsync({ id: sid, league_total_rounds: session.league_total_rounds + 1 })
+    await updateLeagueTotalRounds.mutateAsync({
+      id: sid,
+      league_total_rounds: session.league_total_rounds + 1,
+    })
     setConfirmAddRoundOpen(false)
   }
 
-  function openMenu() { setMenuOpen(true) }
-  function closeMenu() { setMenuOpen(false) }
+  function openMenu() {
+    setMenuOpen(true)
+  }
+  function closeMenu() {
+    setMenuOpen(false)
+  }
 
   function handleSharePreview() {
     if (!session) return
@@ -275,7 +339,7 @@ export default function SessionDetailPage() {
     const file = new File([blob], 'session-summary.png', { type: 'image/png' })
     const title = session?.label ?? 'Session Summary'
     if (navigator.canShare?.({ files: [file] })) {
-      navigator.share({ files: [file], title }).catch((err) => {
+      navigator.share({ files: [file], title }).catch(err => {
         if (err instanceof Error && err.name !== 'AbortError') console.error('Share failed:', err)
       })
     } else {
@@ -292,502 +356,714 @@ export default function SessionDetailPage() {
 
   return (
     <>
-    <PullToRefresh onRefresh={handleRefresh}>
-    <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
-      <AppBar
-        title=""
-        leftAction={{
-          icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
-          onClick: () => navigate(backTo),
-        }}
-        rightAction={
-          user || (matches?.length ?? 0) > 0 || (sessionStatus === 'ended' && recordedMatches.length > 0)
-            ? { icon: <MoreVertical className="w-5 h-5" />, onClick: openMenu }
-            : undefined
-        }
-      />
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="min-h-[100dvh] flex flex-col bg-[var(--bg)]">
+          <AppBar
+            title=""
+            leftAction={{
+              icon: <ChevronLeft className="w-5 h-5 -ml-1" />,
+              onClick: () => navigate(backTo),
+            }}
+            rightAction={
+              user ||
+              (matches?.length ?? 0) > 0 ||
+              (sessionStatus === 'ended' && recordedMatches.length > 0)
+                ? { icon: <MoreVertical className="w-5 h-5" />, onClick: openMenu }
+                : undefined
+            }
+          />
 
-      {/* Scrollable content */}
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain"
-        style={{ paddingBottom: 'max(120px, calc(env(safe-area-inset-bottom) + 104px))' }}
-      >
-        {/* Hero — eyebrow · title · datetime */}
-        {session && (
-          <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
-            {/* Eyebrow */}
-            <EyebrowBadge
-              tone={sessionStatus === 'live' ? 'live' : sessionStatus === 'scheduled' ? 'scheduled' : 'completed'}
-              pulse={sessionStatus === 'live'}
-              className="mb-[var(--space-3)]"
-            >
-              {sessionStatus === 'live' ? t('sessionDetail.statusLive')
-                : sessionStatus === 'scheduled' ? t('sessionDetail.statusScheduled')
-                : t('sessionDetail.statusCompleted')}
-            </EyebrowBadge>
-
-            {/* Title */}
-            <h1
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-3xl)',
-                fontWeight: 800,
-                lineHeight: 1.02,
-                letterSpacing: '-0.035em',
-                marginBottom: 'var(--space-3)',
-                color: 'var(--fg)',
-              }}
-            >
-              {session.label ?? t('common.untitledSession')}
-            </h1>
-
-            {/* Session type badge */}
-            {isLeague && session.league_match_type && (
-              <div className="mb-[var(--space-3)]">
-                <div
-                  className="inline-flex items-center gap-[var(--space-2)] px-2.5 py-1 rounded-full"
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    background: 'var(--accent-soft)',
-                    color: 'var(--accent)',
-                  }}
+          {/* Scrollable content */}
+          <div
+            className="flex-1 overflow-y-auto overscroll-contain"
+            style={{ paddingBottom: 'max(120px, calc(env(safe-area-inset-bottom) + 104px))' }}
+          >
+            {/* Hero — eyebrow · title · datetime */}
+            {session && (
+              <header style={{ padding: 'var(--space-4) var(--space-5) var(--space-5)' }}>
+                {/* Eyebrow */}
+                <EyebrowBadge
+                  tone={
+                    sessionStatus === 'live'
+                      ? 'live'
+                      : sessionStatus === 'scheduled'
+                        ? 'scheduled'
+                        : 'completed'
+                  }
+                  pulse={sessionStatus === 'live'}
+                  className="mb-[var(--space-3)]"
                 >
-                  <span>{t('createSession.typeLeague')}</span>
-                  <span style={{ opacity: 0.4 }}>·</span>
-                  <span>{matchTypeLabel(session.league_match_type, t)}</span>
-                </div>
-              </div>
-            )}
+                  {sessionStatus === 'live'
+                    ? t('sessionDetail.statusLive')
+                    : sessionStatus === 'scheduled'
+                      ? t('sessionDetail.statusScheduled')
+                      : t('sessionDetail.statusCompleted')}
+                </EyebrowBadge>
 
-            {/* Tournament category */}
-            {session.bwf_tournaments && (
-              <div className="mb-[var(--space-3)]">
-                <BwfCategoryBadge
-                  categoryName={session.bwf_tournaments.category_name}
-                  categorySlug={session.bwf_tournaments.category_slug}
-                />
-              </div>
-            )}
-
-            {/* Datetime + duration */}
-            <MetaRow
-              items={[
-                {
-                  label: (
-                    <>
-                      <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
-                        {formatSessionDate(session.started_at, locale, t)}
-                      </strong>
-                      {' · '}{formatSessionTime(session.started_at, locale)}
-                    </>
-                  ),
-                },
-                ...(sessionStatus ? [{ label: getSessionMeta(session, sessionStatus, t) }] : []),
-              ]}
-            />
-          </header>
-        )}
-
-        <div className="px-[var(--space-5)] space-y-6">
-          {/* Stats panel (regular/tournament) or Standings (league) */}
-          {isLeague ? (
-            <LeagueStandingsTable
-              standings={standings ?? []}
-              isEnded={sessionStatus === 'ended'}
-            />
-          ) : recordedMatches.length > 0 && (
-            <SessionStatsPanel
-              matchCount={recordedMatches.length}
-              playerCount={uniquePlayerCount}
-              mvpName={mvpName}
-              mvpLabel={mvpLabel}
-              mvpAvatarUrl={mvpAvatarUrl}
-              onPress={() => navigate(`/sessions/${sid}/stats`)}
-            />
-          )}
-
-          {/* League schedule */}
-          {isLeague && leagueTeams && leagueTeams.length >= 2 && session.league_total_rounds && (
-            <section className="space-y-[var(--space-4)]">
-              <h2
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'var(--text-xl)',
-                  fontWeight: 800,
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
-                  color: 'var(--fg)',
-                }}
-              >
-                {t('sessionDetail.schedule')}
-              </h2>
-              <LeagueScheduleGrid
-                teams={leagueTeams}
-                totalRounds={session.league_total_rounds}
-                matches={matches}
-                sessionId={sid}
-              />
-            </section>
-          )}
-
-
-          {/* Attendance RSVP (regular + tournament, scheduled only) */}
-          {!isLeague && sessionStatus === 'scheduled' && (
-            <SessionAttendancePanel sessionId={sid} />
-          )}
-
-          {/* Matches */}
-          {sessionStatus !== 'scheduled' && (
-            <section className="space-y-[var(--space-4)]">
-              <div className="flex items-baseline justify-between gap-[var(--space-3)]">
-                <h2
+                {/* Title */}
+                <h1
                   style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: 'var(--text-xl)',
+                    fontSize: 'var(--text-3xl)',
                     fontWeight: 800,
-                    lineHeight: 1.1,
-                    letterSpacing: '-0.02em',
+                    lineHeight: 1.02,
+                    letterSpacing: '-0.035em',
+                    marginBottom: 'var(--space-3)',
                     color: 'var(--fg)',
                   }}
                 >
-                  {t('sessionDetail.matches')}
-                </h2>
-                <span
-                  className="text-[11px] font-bold uppercase tracking-[0.08em]"
-                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
-                >
-                  {matchesLoading ? t('common.loadingEllipsis') : matchesError ? '—' : t('units.matchesPlayed', { count: matches?.length ?? 0 })}
-                </span>
-              </div>
+                  {session.label ?? t('common.untitledSession')}
+                </h1>
 
-              <MatchesContent
-                matches={matches}
-                isLoading={matchesLoading}
-                isError={matchesError}
-                onRetry={refetchMatches}
-              />
-            </section>
+                {/* Session type badge */}
+                {isLeague && session.league_match_type && (
+                  <div className="mb-[var(--space-3)]">
+                    <div
+                      className="inline-flex items-center gap-[var(--space-2)] px-2.5 py-1 rounded-full"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        background: 'var(--accent-soft)',
+                        color: 'var(--accent)',
+                      }}
+                    >
+                      <span>{t('createSession.typeLeague')}</span>
+                      <span style={{ opacity: 0.4 }}>·</span>
+                      <span>{matchTypeLabel(session.league_match_type, t)}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tournament category */}
+                {session.bwf_tournaments && (
+                  <div className="mb-[var(--space-3)]">
+                    <BwfCategoryBadge
+                      categoryName={session.bwf_tournaments.category_name}
+                      categorySlug={session.bwf_tournaments.category_slug}
+                    />
+                  </div>
+                )}
+
+                {/* Datetime + duration */}
+                <MetaRow
+                  items={[
+                    {
+                      label: (
+                        <>
+                          <strong style={{ color: 'var(--fg)', fontWeight: 600 }}>
+                            {formatSessionDate(session.started_at, locale, t)}
+                          </strong>
+                          {' · '}
+                          {formatSessionTime(session.started_at, locale)}
+                        </>
+                      ),
+                    },
+                    ...(sessionStatus
+                      ? [{ label: getSessionMeta(session, sessionStatus, t) }]
+                      : []),
+                  ]}
+                />
+              </header>
+            )}
+
+            <div className="px-[var(--space-5)] space-y-6">
+              {/* Stats panel (regular/tournament) or Standings (league) */}
+              {isLeague ? (
+                <LeagueStandingsTable
+                  standings={standings ?? []}
+                  isEnded={sessionStatus === 'ended'}
+                />
+              ) : (
+                recordedMatches.length > 0 && (
+                  <SessionStatsPanel
+                    matchCount={recordedMatches.length}
+                    playerCount={uniquePlayerCount}
+                    mvpName={mvpName}
+                    mvpLabel={mvpLabel}
+                    mvpAvatarUrl={mvpAvatarUrl}
+                    onPress={() => navigate(`/sessions/${sid}/stats`)}
+                  />
+                )
+              )}
+
+              {/* League schedule */}
+              {isLeague &&
+                leagueTeams &&
+                leagueTeams.length >= 2 &&
+                session.league_total_rounds && (
+                  <section className="space-y-[var(--space-4)]">
+                    <h2
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 'var(--text-xl)',
+                        fontWeight: 800,
+                        lineHeight: 1.1,
+                        letterSpacing: '-0.02em',
+                        color: 'var(--fg)',
+                      }}
+                    >
+                      {t('sessionDetail.schedule')}
+                    </h2>
+                    <LeagueScheduleGrid
+                      teams={leagueTeams}
+                      totalRounds={session.league_total_rounds}
+                      matches={matches}
+                      sessionId={sid}
+                    />
+                  </section>
+                )}
+
+              {/* Attendance RSVP (regular + tournament, scheduled only) */}
+              {!isLeague && sessionStatus === 'scheduled' && (
+                <SessionAttendancePanel sessionId={sid} />
+              )}
+
+              {/* Matches */}
+              {sessionStatus !== 'scheduled' && (
+                <section className="space-y-[var(--space-4)]">
+                  <div className="flex items-baseline justify-between gap-[var(--space-3)]">
+                    <h2
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 'var(--text-xl)',
+                        fontWeight: 800,
+                        lineHeight: 1.1,
+                        letterSpacing: '-0.02em',
+                        color: 'var(--fg)',
+                      }}
+                    >
+                      {t('sessionDetail.matches')}
+                    </h2>
+                    <span
+                      className="text-[11px] font-bold uppercase tracking-[0.08em]"
+                      style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+                    >
+                      {matchesLoading
+                        ? t('common.loadingEllipsis')
+                        : matchesError
+                          ? '—'
+                          : t('units.matchesPlayed', { count: matches?.length ?? 0 })}
+                    </span>
+                  </div>
+
+                  <MatchesContent
+                    matches={matches}
+                    isLoading={matchesLoading}
+                    isError={matchesError}
+                    onRetry={refetchMatches}
+                  />
+                </section>
+              )}
+            </div>
+          </div>
+
+          {/* FAB — Add Match (live only, non-league sessions, authenticated only) */}
+          {user && sessionStatus === 'live' && !isLeague && (
+            <FloatingActionButton
+              onClick={() => navigate(`/sessions/${sid}/matches/new`)}
+              icon={<Plus className="w-6 h-6" />}
+              ariaLabel={t('sessionDetail.addMatch')}
+              bottomOffset="1.5rem"
+            />
           )}
-        </div>
-      </div>
 
-      {/* FAB — Add Match (live only, non-league sessions, authenticated only) */}
-      {user && sessionStatus === 'live' && !isLeague && (
-        <FloatingActionButton
-          onClick={() => navigate(`/sessions/${sid}/matches/new`)}
-          icon={<Plus className="w-6 h-6" />}
-          ariaLabel={t('sessionDetail.addMatch')}
-          bottomOffset="1.5rem"
-        />
-      )}
-
-      {/* Menu sheet */}
-      <BottomSheet open={menuOpen} onClose={closeMenu}>
-        {user && sessionStatus === 'live' && !isLeague && (
-          <BottomSheetItem
-            icon={<Plus className="w-5 h-5" />}
-            label={t('sessionDetail.newMatch')}
-            onClick={() => { closeMenu(); navigate(`/sessions/${sid}/matches/new`) }}
-          />
-        )}
-        {user && sessionStatus === 'live' && !isLeague && (
-          <BottomSheetItem
-            icon={<Users className="w-5 h-5" />}
-            label={t('attendance.title')}
-            onClick={() => { closeMenu(); setAttendanceSheetOpen(true) }}
-          />
-        )}
-        {user && sessionStatus === 'live' && isLeague && (
-          <BottomSheetItem
-            icon={<Plus className="w-5 h-5" />}
-            label={t('sessionDetail.addRound')}
-            onClick={handleAddLeagueRound}
-          />
-        )}
-        {user && sessionStatus === 'scheduled' && (
-          <>
-            {isLeague && (
+          {/* Menu sheet */}
+          <BottomSheet open={menuOpen} onClose={closeMenu}>
+            {user && sessionStatus === 'live' && !isLeague && (
               <BottomSheetItem
-                icon={<Users className="w-5 h-5" />}
-                label={t('sessionDetail.manageTeams')}
-                onClick={() => { closeMenu(); setTeamEditorOpen(true) }}
+                icon={<Plus className="w-5 h-5" />}
+                label={t('sessionDetail.newMatch')}
+                onClick={() => {
+                  closeMenu()
+                  navigate(`/sessions/${sid}/matches/new`)
+                }}
               />
             )}
-            <BottomSheetItem
-              icon={<Play className="w-5 h-5" />}
-              label={t('sessionDetail.startSession')}
-              onClick={() => { closeMenu(); handleStartSession() }}
-            />
-            <BottomSheetItem
-              icon={<Pencil className="w-5 h-5" />}
-              label={t('sessionDetail.editScheduledTime')}
-              onClick={() => { closeMenu(); setEditTimeValue(toDatetimeLocal(session!.started_at)); setEditTimeOpen(true) }}
-            />
-          </>
-        )}
-        {isAdmin && !session?.bwf_tournament_id && (
-          <BottomSheetItem
-            icon={<Pencil className="w-5 h-5" />}
-            label={t('sessionDetail.renameSession')}
-            onClick={() => { closeMenu(); setEditLabelValue(session?.label ?? ''); setEditLabelOpen(true) }}
-          />
-        )}
-        {(matches?.length ?? 0) > 0 && (
-          <BottomSheetItem
-            icon={<Activity className="w-5 h-5" />}
-            label={t('sessionDetail.viewPlayerStats')}
-            onClick={() => { closeMenu(); navigate(`/sessions/${sid}/stats`) }}
-          />
-        )}
-        {(matches?.length ?? 0) > 0 && (
-          <BottomSheetItem
-            icon={<Wallet className="w-5 h-5" />}
-            label={t('sessionDetail.viewDonations')}
-            onClick={() => { closeMenu(); navigate(`/sessions/${sid}/donated`) }}
-          />
-        )}
-        {sessionStatus === 'ended' && recordedMatches.length > 0 && (
-          <BottomSheetItem
-            icon={<Share2 className="w-5 h-5" />}
-            label={t('sessionDetail.shareSession')}
-            onClick={handleSharePreview}
-          />
-        )}
-        {(user && sessionStatus === 'live' || isAdmin) && <BottomSheetDivider />}
-        {user && sessionStatus === 'live' && (
-          <BottomSheetItem
-            icon={
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <rect x="6" y="6" width="12" height="12" rx="1" />
-              </svg>
+            {user && sessionStatus === 'live' && !isLeague && (
+              <BottomSheetItem
+                icon={<Users className="w-5 h-5" />}
+                label={t('attendance.title')}
+                onClick={() => {
+                  closeMenu()
+                  setAttendanceSheetOpen(true)
+                }}
+              />
+            )}
+            {user && sessionStatus === 'live' && isLeague && (
+              <BottomSheetItem
+                icon={<Plus className="w-5 h-5" />}
+                label={t('sessionDetail.addRound')}
+                onClick={handleAddLeagueRound}
+              />
+            )}
+            {user && sessionStatus === 'scheduled' && (
+              <>
+                {isLeague && (
+                  <BottomSheetItem
+                    icon={<Users className="w-5 h-5" />}
+                    label={t('sessionDetail.manageTeams')}
+                    onClick={() => {
+                      closeMenu()
+                      setTeamEditorOpen(true)
+                    }}
+                  />
+                )}
+                <BottomSheetItem
+                  icon={<Play className="w-5 h-5" />}
+                  label={t('sessionDetail.startSession')}
+                  onClick={() => {
+                    closeMenu()
+                    handleStartSession()
+                  }}
+                />
+                <BottomSheetItem
+                  icon={<Pencil className="w-5 h-5" />}
+                  label={t('sessionDetail.editScheduledTime')}
+                  onClick={() => {
+                    closeMenu()
+                    setEditTimeValue(toDatetimeLocal(session!.started_at))
+                    setEditTimeOpen(true)
+                  }}
+                />
+              </>
+            )}
+            {isAdmin && !session?.bwf_tournament_id && (
+              <BottomSheetItem
+                icon={<Pencil className="w-5 h-5" />}
+                label={t('sessionDetail.renameSession')}
+                onClick={() => {
+                  closeMenu()
+                  setEditLabelValue(session?.label ?? '')
+                  setEditLabelOpen(true)
+                }}
+              />
+            )}
+            {(matches?.length ?? 0) > 0 && (
+              <BottomSheetItem
+                icon={<Activity className="w-5 h-5" />}
+                label={t('sessionDetail.viewPlayerStats')}
+                onClick={() => {
+                  closeMenu()
+                  navigate(`/sessions/${sid}/stats`)
+                }}
+              />
+            )}
+            {(matches?.length ?? 0) > 0 && (
+              <BottomSheetItem
+                icon={<Wallet className="w-5 h-5" />}
+                label={t('sessionDetail.viewDonations')}
+                onClick={() => {
+                  closeMenu()
+                  navigate(`/sessions/${sid}/donated`)
+                }}
+              />
+            )}
+            {sessionStatus === 'ended' && recordedMatches.length > 0 && (
+              <BottomSheetItem
+                icon={<Share2 className="w-5 h-5" />}
+                label={t('sessionDetail.shareSession')}
+                onClick={handleSharePreview}
+              />
+            )}
+            {((user && sessionStatus === 'live') || isAdmin) && <BottomSheetDivider />}
+            {user && sessionStatus === 'live' && (
+              <BottomSheetItem
+                icon={
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <rect x="6" y="6" width="12" height="12" rx="1" />
+                  </svg>
+                }
+                label={t('sessionDetail.endSession')}
+                danger
+                onClick={() => {
+                  closeMenu()
+                  setConfirmEndOpen(true)
+                }}
+              />
+            )}
+            {isAdmin && (
+              <BottomSheetItem
+                icon={<Trash2 className="w-5 h-5" />}
+                label={t('sessionDetail.deleteSession')}
+                danger
+                onClick={() => {
+                  closeMenu()
+                  setConfirmDeleteSessionOpen(true)
+                }}
+              />
+            )}
+            <BottomSheetCancel onClick={closeMenu} />
+          </BottomSheet>
+
+          {/* End session confirmation */}
+          <Dialog
+            open={confirmEndOpen}
+            onClose={() => setConfirmEndOpen(false)}
+            title={
+              liveMatchCount > 0 ? t('sessionDetail.endWithLiveTitle') : t('sessionDetail.endTitle')
             }
-            label={t('sessionDetail.endSession')}
-            danger
-            onClick={() => { closeMenu(); setConfirmEndOpen(true) }}
+            description={
+              liveMatchCount > 0
+                ? t('sessionDetail.endWithLiveDescription', { count: liveMatchCount })
+                : t('sessionDetail.endDescription')
+            }
+            kind="warning"
+            actions={[
+              {
+                label: t('common.cancel'),
+                variant: 'secondary',
+                onClick: () => setConfirmEndOpen(false),
+              },
+              {
+                label: endSession.isPending ? t('common.ending') : t('sessionDetail.endSession'),
+                variant: 'primary',
+                onClick: handleEndSession,
+              },
+            ]}
           />
-        )}
-        {isAdmin && (
-          <BottomSheetItem
-            icon={<Trash2 className="w-5 h-5" />}
-            label={t('sessionDetail.deleteSession')}
-            danger
-            onClick={() => { closeMenu(); setConfirmDeleteSessionOpen(true) }}
+
+          {/* Delete session confirmation */}
+          <Dialog
+            open={confirmDeleteSessionOpen}
+            onClose={() => setConfirmDeleteSessionOpen(false)}
+            title={
+              isDeletingCompletedSessionWithMatches
+                ? t('sessionDetail.deleteCompletedWithMatchesTitle')
+                : t('sessionDetail.deleteTitle')
+            }
+            description={
+              isDeletingCompletedSessionWithMatches
+                ? t('sessionDetail.deleteCompletedWithMatchesDescription', { count: matchCount })
+                : t('sessionDetail.deleteDescription')
+            }
+            kind="danger"
+            actions={[
+              {
+                label: t('common.cancel'),
+                variant: 'secondary',
+                onClick: () => setConfirmDeleteSessionOpen(false),
+              },
+              {
+                label: deleteSession.isPending ? t('common.deleting') : t('common.delete'),
+                variant: 'danger',
+                onClick: handleDeleteSession,
+              },
+            ]}
           />
-        )}
-        <BottomSheetCancel onClick={closeMenu} />
-      </BottomSheet>
 
-      {/* End session confirmation */}
-      <Dialog
-        open={confirmEndOpen}
-        onClose={() => setConfirmEndOpen(false)}
-        title={liveMatchCount > 0 ? t('sessionDetail.endWithLiveTitle') : t('sessionDetail.endTitle')}
-        description={liveMatchCount > 0 ? t('sessionDetail.endWithLiveDescription', { count: liveMatchCount }) : t('sessionDetail.endDescription')}
-        kind="warning"
-        actions={[
-          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmEndOpen(false) },
-          { label: endSession.isPending ? t('common.ending') : t('sessionDetail.endSession'), variant: 'primary', onClick: handleEndSession },
-        ]}
-      />
+          <BottomSheet open={editTimeOpen} onClose={() => setEditTimeOpen(false)}>
+            <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-lg)',
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                {t('sessionDetail.editScheduledTime')}
+              </div>
+              <div
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-lg)',
+                  overflow: 'hidden',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                {/* Date row */}
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'var(--space-3)',
+                    padding: 'var(--space-4)',
+                    borderBottom: '1px solid var(--border)',
+                    minHeight: 56,
+                    cursor: 'pointer',
+                    position: 'relative',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-3)',
+                      color: 'var(--fg)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Calendar
+                      style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }}
+                    />
+                    {t('createSession.date')}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 700,
+                      color: 'var(--accent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-2)',
+                    }}
+                  >
+                    {editTimeValue && friendlyDate(new Date(editTimeValue), locale, t)}
+                    <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+                  </span>
+                  <input
+                    type="date"
+                    value={editTimeValue.slice(0, 10)}
+                    onChange={handleEditDateChange}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer',
+                    }}
+                  />
+                </label>
+                {/* Time row */}
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'var(--space-3)',
+                    padding: 'var(--space-4)',
+                    minHeight: 56,
+                    cursor: 'pointer',
+                    position: 'relative',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-3)',
+                      color: 'var(--fg)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 500,
+                    }}
+                  >
+                    <Clock
+                      style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }}
+                    />
+                    {t('createSession.time')}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 700,
+                      color: 'var(--accent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-2)',
+                    }}
+                  >
+                    {editTimeValue && friendlyTime(new Date(editTimeValue), locale)}
+                    <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
+                  </span>
+                  <input
+                    type="time"
+                    value={editTimeValue.slice(11, 16)}
+                    onChange={handleEditTimeChange}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer',
+                    }}
+                  />
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <Button variant="secondary" size="block" onClick={() => setEditTimeOpen(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  variant="accent"
+                  size="block"
+                  onClick={handleSaveScheduledTime}
+                  disabled={!editTimeValue || updateSessionStartTime.isPending}
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('sessionDetail.saveTime')}
+                </Button>
+              </div>
+            </div>
+          </BottomSheet>
 
-      {/* Delete session confirmation */}
-      <Dialog
-        open={confirmDeleteSessionOpen}
-        onClose={() => setConfirmDeleteSessionOpen(false)}
-        title={isDeletingCompletedSessionWithMatches ? t('sessionDetail.deleteCompletedWithMatchesTitle') : t('sessionDetail.deleteTitle')}
-        description={
-          isDeletingCompletedSessionWithMatches
-            ? t('sessionDetail.deleteCompletedWithMatchesDescription', { count: matchCount })
-            : t('sessionDetail.deleteDescription')
-        }
-        kind="danger"
-        actions={[
-          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmDeleteSessionOpen(false) },
-          { label: deleteSession.isPending ? t('common.deleting') : t('common.delete'), variant: 'danger', onClick: handleDeleteSession },
-        ]}
-      />
-
-      <BottomSheet open={editTimeOpen} onClose={() => setEditTimeOpen(false)}>
-        <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 'var(--space-4)' }}>
-            {t('sessionDetail.editScheduledTime')}
-          </div>
-          <div style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)',
-            overflow: 'hidden',
-            marginBottom: 'var(--space-4)',
-          }}>
-            {/* Date row */}
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: 'var(--space-4)', borderBottom: '1px solid var(--border)', minHeight: 56, cursor: 'pointer', position: 'relative' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--fg)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
-                <Calendar style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }} />
-                {t('createSession.date')}
-              </span>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                {editTimeValue && friendlyDate(new Date(editTimeValue), locale, t)}
-                <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
-              </span>
+          <BottomSheet open={editLabelOpen} onClose={() => setEditLabelOpen(false)}>
+            <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-lg)',
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  marginBottom: 'var(--space-4)',
+                }}
+              >
+                {t('sessionDetail.renameSession')}
+              </div>
               <input
-                type="date"
-                value={editTimeValue.slice(0, 10)}
-                onChange={handleEditDateChange}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                type="text"
+                value={editLabelValue}
+                onChange={e => setEditLabelValue(e.target.value)}
+                placeholder={t('sessionDetail.renamePlaceholder')}
+                style={{
+                  width: '100%',
+                  padding: 'var(--space-3) var(--space-4)',
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-lg)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'var(--text-base)',
+                  color: 'var(--fg)',
+                  marginBottom: 'var(--space-4)',
+                  boxSizing: 'border-box',
+                }}
               />
-            </label>
-            {/* Time row */}
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)', padding: 'var(--space-4)', minHeight: 56, cursor: 'pointer', position: 'relative' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', color: 'var(--fg)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
-                <Clock style={{ width: 18, height: 18, color: 'var(--muted)', flexShrink: 0 }} />
-                {t('createSession.time')}
-              </span>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                {editTimeValue && friendlyTime(new Date(editTimeValue), locale)}
-                <ChevronRight style={{ width: 14, height: 14, color: 'var(--muted)' }} />
-              </span>
-              <input
-                type="time"
-                value={editTimeValue.slice(11, 16)}
-                onChange={handleEditTimeChange}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
-              />
-            </label>
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Button variant="secondary" size="block" onClick={() => setEditTimeOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="accent"
-              size="block"
-              onClick={handleSaveScheduledTime}
-              disabled={!editTimeValue || updateSessionStartTime.isPending}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t('sessionDetail.saveTime')}
-            </Button>
-          </div>
-        </div>
-      </BottomSheet>
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <Button variant="secondary" size="block" onClick={() => setEditLabelOpen(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  variant="accent"
+                  size="block"
+                  onClick={handleSaveLabel}
+                  disabled={renameSession.isPending}
+                  className="disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {t('sessionDetail.saveName')}
+                </Button>
+              </div>
+            </div>
+          </BottomSheet>
 
-      <BottomSheet open={editLabelOpen} onClose={() => setEditLabelOpen(false)}>
-        <div style={{ padding: '0 var(--space-4) var(--space-2)' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 'var(--space-4)' }}>
-            {t('sessionDetail.renameSession')}
-          </div>
-          <input
-            type="text"
-            value={editLabelValue}
-            onChange={e => setEditLabelValue(e.target.value)}
-            placeholder={t('sessionDetail.renamePlaceholder')}
-            style={{ width: '100%', padding: 'var(--space-3) var(--space-4)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', color: 'var(--fg)', marginBottom: 'var(--space-4)', boxSizing: 'border-box' }}
+          {/* Attendance sheet (live sessions) */}
+          <BottomSheet open={attendanceSheetOpen} onClose={() => setAttendanceSheetOpen(false)}>
+            <div
+              style={{
+                padding: '0 var(--space-5) var(--space-4)',
+                overflowY: 'auto',
+                maxHeight: '70vh',
+              }}
+            >
+              <SessionAttendancePanel sessionId={sid} />
+            </div>
+          </BottomSheet>
+
+          {/* League Team Editor */}
+          {isLeague &&
+            sessionStatus === 'scheduled' &&
+            leagueTeams &&
+            session?.league_match_type && (
+              <LeagueTeamEditor
+                teams={leagueTeams}
+                matchType={session.league_match_type}
+                sessionId={sid}
+                open={teamEditorOpen}
+                onClose={() => setTeamEditorOpen(false)}
+              />
+            )}
+
+          <Dialog
+            open={confirmAddRoundOpen}
+            onClose={() => setConfirmAddRoundOpen(false)}
+            title={t('sessionDetail.addRoundTitle')}
+            description={t('sessionDetail.addRoundDescription', {
+              round: (session?.league_total_rounds ?? 0) + 1,
+            })}
+            kind="warning"
+            actions={[
+              {
+                label: t('common.cancel'),
+                variant: 'secondary',
+                onClick: () => setConfirmAddRoundOpen(false),
+              },
+              {
+                label: updateLeagueTotalRounds.isPending
+                  ? t('common.creatingEllipsis')
+                  : t('sessionDetail.addRound'),
+                variant: 'primary',
+                onClick: handleConfirmAddLeagueRound,
+              },
+            ]}
           />
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Button variant="secondary" size="block" onClick={() => setEditLabelOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="accent"
-              size="block"
-              onClick={handleSaveLabel}
-              disabled={renameSession.isPending}
-              className="disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t('sessionDetail.saveName')}
-            </Button>
-          </div>
-        </div>
-      </BottomSheet>
 
-      {/* Attendance sheet (live sessions) */}
-      <BottomSheet open={attendanceSheetOpen} onClose={() => setAttendanceSheetOpen(false)}>
+          <Dialog
+            open={actionError !== null}
+            onClose={() => setActionError(null)}
+            title={t('sessionDetail.couldntEnd')}
+            description={actionError ?? t('common.failedTryAgain')}
+            kind="danger"
+          />
+        </div>
+      </PullToRefresh>
+
+      {/* Share preview modal */}
+      {sharePreview && (
         <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-end px-4 pb-8"
           style={{
-            padding: '0 var(--space-5) var(--space-4)',
-            overflowY: 'auto',
-            maxHeight: '70vh',
+            background: 'oklch(0% 0 0 / 0.60)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            touchAction: 'none',
           }}
+          onClick={() => setSharePreview(null)}
         >
-          <SessionAttendancePanel sessionId={sid} />
+          <div
+            className="w-full max-w-sm overflow-hidden"
+            style={{
+              borderRadius: 'var(--radius-xl)',
+              background: 'var(--surface)',
+              boxShadow: '0 8px 32px oklch(0% 0 0 / 0.24)',
+              maxHeight: '85dvh',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ overflowY: 'auto', padding: '16px 16px 8px' }}>
+              <img
+                src={sharePreview.dataUrl}
+                alt="Session summary"
+                style={{ width: '100%', display: 'block', borderRadius: 12 }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 12, padding: '8px 16px 16px' }}>
+              <Button variant="secondary" size="block" onClick={() => setSharePreview(null)}>
+                {t('common.cancel')}
+              </Button>
+              <Button variant="accent" size="block" onClick={handleActualShare}>
+                {t('common.share')}
+              </Button>
+            </div>
+          </div>
         </div>
-      </BottomSheet>
-
-      {/* League Team Editor */}
-      {isLeague && sessionStatus === 'scheduled' && leagueTeams && session?.league_match_type && (
-        <LeagueTeamEditor
-          teams={leagueTeams}
-          matchType={session.league_match_type}
-          sessionId={sid}
-          open={teamEditorOpen}
-          onClose={() => setTeamEditorOpen(false)}
-        />
       )}
-
-      <Dialog
-        open={confirmAddRoundOpen}
-        onClose={() => setConfirmAddRoundOpen(false)}
-        title={t('sessionDetail.addRoundTitle')}
-        description={t('sessionDetail.addRoundDescription', { round: (session?.league_total_rounds ?? 0) + 1 })}
-        kind="warning"
-        actions={[
-          { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmAddRoundOpen(false) },
-          { label: updateLeagueTotalRounds.isPending ? t('common.creatingEllipsis') : t('sessionDetail.addRound'), variant: 'primary', onClick: handleConfirmAddLeagueRound },
-        ]}
-      />
-
-      <Dialog
-        open={actionError !== null}
-        onClose={() => setActionError(null)}
-        title={t('sessionDetail.couldntEnd')}
-        description={actionError ?? t('common.failedTryAgain')}
-        kind="danger"
-      />
-
-    </div>
-    </PullToRefresh>
-
-    {/* Share preview modal */}
-    {sharePreview && (
-      <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-end px-4 pb-8"
-        style={{ background: 'oklch(0% 0 0 / 0.60)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', touchAction: 'none' }}
-        onClick={() => setSharePreview(null)}
-      >
-        <div
-          className="w-full max-w-sm overflow-hidden"
-          style={{
-            borderRadius: 'var(--radius-xl)',
-            background: 'var(--surface)',
-            boxShadow: '0 8px 32px oklch(0% 0 0 / 0.24)',
-            maxHeight: '85dvh',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div style={{ overflowY: 'auto', padding: '16px 16px 8px' }}>
-            <img
-              src={sharePreview.dataUrl}
-              alt="Session summary"
-              style={{ width: '100%', display: 'block', borderRadius: 12 }}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: 12, padding: '8px 16px 16px' }}>
-            <Button variant="secondary" size="block" onClick={() => setSharePreview(null)}>
-              {t('common.cancel')}
-            </Button>
-            <Button variant="accent" size="block" onClick={handleActualShare}>
-              {t('common.share')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    )}
     </>
   )
 }

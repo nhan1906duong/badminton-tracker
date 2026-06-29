@@ -35,14 +35,14 @@ export function AppBar({
 }: AppBarProps) {
   const { t } = useI18n()
   const isLeft = titleAlign === 'left'
-  const resolvedLeftAction: AppBarAction | undefined = leftAction ?? (
-    backLabel || onBack
+  const resolvedLeftAction: AppBarAction | undefined =
+    leftAction ??
+    (backLabel || onBack
       ? {
           label: backLabel ?? t('common.back'),
           onClick: onBack ?? (() => window.history.back()),
         }
-      : undefined
-  )
+      : undefined)
 
   return (
     <nav
@@ -61,7 +61,9 @@ export function AppBar({
           <button
             type="button"
             onClick={resolvedLeftAction.onClick}
-            aria-label={resolvedLeftAction.ariaLabel ?? resolvedLeftAction.label ?? t('common.back')}
+            aria-label={
+              resolvedLeftAction.ariaLabel ?? resolvedLeftAction.label ?? t('common.back')
+            }
             className="inline-flex items-center gap-1.5 min-w-[44px] min-h-[44px] -ml-2 pl-2 pr-3 rounded-xl text-[var(--accent)] font-[family:var(--font-body)] text-[15px] font-medium select-none active:opacity-50 active:scale-[0.96] transition-[opacity,transform] duration-75"
           >
             {resolvedLeftAction.icon ?? null}
@@ -71,7 +73,9 @@ export function AppBar({
       </div>
 
       {/* Title */}
-      <div className={`flex items-center min-h-[44px] min-w-0 pointer-events-none ${isLeft ? 'justify-start' : 'justify-center'}`}>
+      <div
+        className={`flex items-center min-h-[44px] min-w-0 pointer-events-none ${isLeft ? 'justify-start' : 'justify-center'}`}
+      >
         <span
           className={`font-[family:var(--font-display)] font-bold text-[15px] tracking-[-0.01em] text-[var(--fg)] truncate transition-[opacity,transform] duration-200 ${
             isLeft ? 'text-left' : 'text-center max-w-[200px]'

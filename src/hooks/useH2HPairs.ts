@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { useMatches } from './useMatches'
 import type { MatchWithDetails } from '../types/database'
+import { useMatches } from './useMatches'
 
 export interface H2HPairsResult {
   teamAWins: number
@@ -12,7 +12,7 @@ export interface H2HPairsResult {
 function sameSet(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false
   const setA = new Set(a)
-  return b.every((id) => setA.has(id))
+  return b.every(id => setA.has(id))
 }
 
 export function computeH2HPairs(
@@ -30,14 +30,18 @@ export function computeH2HPairs(
 
   for (const match of allMatches) {
     if (match.status !== 'COMPLETED') continue
-    if (!match.teams.some((t) => t.is_winner)) continue
+    if (!match.teams.some(t => t.is_winner)) continue
 
-    const teamA = match.teams.find((t) => t.team_label === 'TEAM_A')
-    const teamB = match.teams.find((t) => t.team_label === 'TEAM_B')
+    const teamA = match.teams.find(t => t.team_label === 'TEAM_A')
+    const teamB = match.teams.find(t => t.team_label === 'TEAM_B')
     if (!teamA || !teamB) continue
 
-    const teamAPlayers = match.participants.filter((p) => p.team_id === teamA.id).map((p) => p.player_id)
-    const teamBPlayers = match.participants.filter((p) => p.team_id === teamB.id).map((p) => p.player_id)
+    const teamAPlayers = match.participants
+      .filter(p => p.team_id === teamA.id)
+      .map(p => p.player_id)
+    const teamBPlayers = match.participants
+      .filter(p => p.team_id === teamB.id)
+      .map(p => p.player_id)
 
     let leftWins = false
     let rightWins = false
@@ -64,7 +68,10 @@ export function computeH2HPairs(
   return { teamAWins, teamBWins, totalMatches: matched.length, matches: matched }
 }
 
-export function useH2HPairs(teamAIds: string[], teamBIds: string[]): H2HPairsResult & { isLoading: boolean } {
+export function useH2HPairs(
+  teamAIds: string[],
+  teamBIds: string[],
+): H2HPairsResult & { isLoading: boolean } {
   const { data: allMatches, isLoading } = useMatches()
 
   const result = useMemo<H2HPairsResult>(

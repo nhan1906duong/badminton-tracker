@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { formatSessionLabel } from './session-label'
 import type { Session } from '../types/database'
+import { formatSessionLabel } from './session-label'
 
 function session(overrides: Partial<Session> = {}): Session {
   return {

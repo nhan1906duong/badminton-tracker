@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { MatchWithDetails, Session } from '../../types/database'
 import SessionDetailPage from '../SessionDetailPage'
-import type { Session, MatchWithDetails } from '../../types/database'
 
 // ─── Router mocks ─────────────────────────────────────────────────────────────
 
@@ -21,7 +21,13 @@ vi.mock('../../i18n', async () => {
 })
 
 const mockNavigate = vi.fn()
-const mockLocation = { state: null as unknown, pathname: '/sessions/sess-1', search: '', hash: '', key: 'default' }
+const mockLocation = {
+  state: null as unknown,
+  pathname: '/sessions/sess-1',
+  search: '',
+  hash: '',
+  key: 'default',
+}
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
@@ -52,7 +58,7 @@ vi.mock('../../hooks/useMatches', () => ({
   useCreateLeagueSchedule: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
-let mockSessionData: Session | undefined = undefined
+let mockSessionData: Session | undefined
 const mockEndSession = { mutateAsync: vi.fn(), isPending: false }
 const mockStartSession = { mutateAsync: vi.fn(), isPending: false }
 const mockDeleteSession = { mutateAsync: vi.fn(), isPending: false }
@@ -89,8 +95,14 @@ vi.mock('../../hooks/useAuth', () => ({
 // ─── Component mocks ──────────────────────────────────────────────────────────
 
 vi.mock('../../components/MatchesContent', () => ({
-  default: ({ isLoading, isError, onRetry }: {
-    isLoading: boolean; isError: boolean; onRetry: () => void
+  default: ({
+    isLoading,
+    isError,
+    onRetry,
+  }: {
+    isLoading: boolean
+    isError: boolean
+    onRetry: () => void
   }) => {
     if (isLoading) return <div>Loading matches…</div>
     if (isError) return <button onClick={onRetry}>Retry</button>
@@ -135,8 +147,10 @@ vi.mock('../../../design-system/components/dialog', () => ({
       <div role="dialog">
         <p>{title}</p>
         <p>{description}</p>
-        {actions.map((a) => (
-          <button key={a.label} onClick={a.onClick}>{a.label}</button>
+        {actions.map(a => (
+          <button key={a.label} onClick={a.onClick}>
+            {a.label}
+          </button>
         ))}
       </div>
     ) : null,
@@ -212,7 +226,7 @@ function renderPage() {
           <Route path="/sessions/:id" element={<SessionDetailPage />} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -709,10 +723,15 @@ describe('SessionDetailPage', () => {
       mockRenameSession.mutateAsync.mockResolvedValue(undefined)
       renderPage()
       openRenameSheet()
-      fireEvent.change(screen.getByDisplayValue('Friday Night Smash'), { target: { value: 'Saturday Morning' } })
+      fireEvent.change(screen.getByDisplayValue('Friday Night Smash'), {
+        target: { value: 'Saturday Morning' },
+      })
       fireEvent.click(screen.getByRole('button', { name: 'Save name' }))
       await waitFor(() => {
-        expect(mockRenameSession.mutateAsync).toHaveBeenCalledWith({ id: 'sess-1', label: 'Saturday Morning' })
+        expect(mockRenameSession.mutateAsync).toHaveBeenCalledWith({
+          id: 'sess-1',
+          label: 'Saturday Morning',
+        })
       })
     })
 

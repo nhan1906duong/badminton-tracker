@@ -6,11 +6,7 @@ export interface BadgeProps {
   className?: string
 }
 
-export function Badge({
-  variant = 'default',
-  children,
-  className = '',
-}: BadgeProps) {
+export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
   const baseStyles =
     'inline-flex items-center px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] leading-none border'
 

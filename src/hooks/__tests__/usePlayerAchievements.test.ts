@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { computeAchievements } from '../usePlayerAchievements'
 import type { Session } from '../../types/database'
+import { computeAchievements } from '../usePlayerAchievements'
 
 function session(id: string, startedAt: string, bwfTournamentId?: string): Session {
   return {
@@ -93,10 +93,7 @@ describe('computeAchievements', () => {
   })
 
   it('sorts achievements by session date descending', () => {
-    const sessions = [
-      session('s1', '2026-01-01'),
-      session('s2', '2026-03-01'),
-    ]
+    const sessions = [session('s1', '2026-01-01'), session('s2', '2026-03-01')]
     // p1 wins both sessions
     const results = [
       result('s1', 'p1', 'm1', 30),

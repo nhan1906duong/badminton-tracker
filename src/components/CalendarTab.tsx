@@ -1,13 +1,13 @@
-import { useMemo, useRef, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Trophy } from 'lucide-react'
-import { useSessions } from '../hooks/useSessions'
-import { useSessionLeaderboard } from '../hooks/useRankings'
-import { useMatches } from '../hooks/useMatches'
-import { BwfCategoryBadge } from '../../design-system/components/bwf-category-badge'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Avatar } from '../../design-system/components/avatar'
-import { getSessionStatus, formatSessionDuration } from '../lib/session-format'
-import { useI18n, LOCALE_TAG } from '../i18n'
+import { BwfCategoryBadge } from '../../design-system/components/bwf-category-badge'
+import { useMatches } from '../hooks/useMatches'
+import { useSessionLeaderboard } from '../hooks/useRankings'
+import { useSessions } from '../hooks/useSessions'
+import { LOCALE_TAG, useI18n } from '../i18n'
+import { formatSessionDuration, getSessionStatus } from '../lib/session-format'
 import type { Session } from '../types/database'
 
 // Must match --tl-col / --tl-avatar in the design
@@ -22,17 +22,34 @@ function getDisplayName(session: Session, localeTag: string): string {
     return session.bwf_tournaments.category_name
   }
   return new Date(session.started_at).toLocaleDateString(localeTag, {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
 }
 
-interface DayGroup { dayKey: string; sessions: Session[] }
-interface MonthGroup { monthKey: string; days: DayGroup[]; sessionCount: number }
+interface DayGroup {
+  dayKey: string
+  sessions: Session[]
+}
+interface MonthGroup {
+  monthKey: string
+  days: DayGroup[]
+  sessionCount: number
+}
 
 const DOT = (
   <span
     aria-hidden="true"
-    style={{ display: 'inline-block', width: 3, height: 3, borderRadius: '50%', background: 'var(--border)', flexShrink: 0 }}
+    style={{
+      display: 'inline-block',
+      width: 3,
+      height: 3,
+      borderRadius: '50%',
+      background: 'var(--border)',
+      flexShrink: 0,
+    }}
   />
 )
 
@@ -65,7 +82,7 @@ function CalendarSessionEntry({
     }
 
     const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         if (entries[0]?.isIntersecting) {
           setIsVisible(true)
           observer.disconnect()
@@ -99,7 +116,7 @@ function CalendarSessionEntry({
       onClick={onNavigate}
       role="link"
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
           onNavigate()
@@ -109,7 +126,15 @@ function CalendarSessionEntry({
       {/* Champion avatar = timeline node */}
       <div style={{ justifySelf: 'center', position: 'relative' }}>
         {champion ? (
-          <div style={{ borderRadius: '50%', boxShadow: '0 0 0 5px var(--bg)', overflow: 'hidden', flexShrink: 0, display: 'inline-flex' }}>
+          <div
+            style={{
+              borderRadius: '50%',
+              boxShadow: '0 0 0 5px var(--bg)',
+              overflow: 'hidden',
+              flexShrink: 0,
+              display: 'inline-flex',
+            }}
+          >
             <Avatar
               src={champion.avatarUrl}
               name={champion.name}
@@ -178,13 +203,15 @@ function SessionCardContent({
       <div className="flex items-start gap-3">
         <h3
           className="flex-1 font-extrabold leading-snug"
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 18,
-            letterSpacing: '-0.02em',
-            color: 'var(--fg)',
-            textWrap: 'balance',
-          } as React.CSSProperties}
+          style={
+            {
+              fontFamily: 'var(--font-display)',
+              fontSize: 18,
+              letterSpacing: '-0.02em',
+              color: 'var(--fg)',
+              textWrap: 'balance',
+            } as React.CSSProperties
+          }
         >
           {name}
         </h3>
@@ -205,11 +232,23 @@ function SessionCardContent({
           style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)' }}
         >
           {matchCount > 0 && (
-            <span><b style={{ color: 'var(--fg)', fontWeight: 600 }}>{matchCount}</b> matches</span>
+            <span>
+              <b style={{ color: 'var(--fg)', fontWeight: 600 }}>{matchCount}</b> matches
+            </span>
           )}
-          {matchCount > 0 && duration && <>{DOT}<span>{duration}</span></>}
+          {matchCount > 0 && duration && (
+            <>
+              {DOT}
+              <span>{duration}</span>
+            </>
+          )}
           {playerCount > 0 && (
-            <>{DOT}<span><b style={{ color: 'var(--fg)', fontWeight: 600 }}>{playerCount}</b> players</span></>
+            <>
+              {DOT}
+              <span>
+                <b style={{ color: 'var(--fg)', fontWeight: 600 }}>{playerCount}</b> players
+              </span>
+            </>
           )}
         </div>
       )}
@@ -223,14 +262,25 @@ function SessionCardContent({
           <div className="flex-1 min-w-0">
             <div
               className="flex items-center gap-1 font-bold uppercase"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent)', letterSpacing: '0.1em' }}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: 'var(--accent)',
+                letterSpacing: '0.1em',
+              }}
             >
               <Trophy style={{ width: 11, height: 11 }} />
               Champion
             </div>
             <div
               className="font-bold truncate"
-              style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--fg)', lineHeight: 1.2, marginTop: 3 }}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 13,
+                color: 'var(--fg)',
+                lineHeight: 1.2,
+                marginTop: 3,
+              }}
             >
               {champion.name}
             </div>
@@ -239,12 +289,23 @@ function SessionCardContent({
             <div className="flex-shrink-0 text-right">
               <div
                 className="font-extrabold leading-none"
-                style={{ fontFamily: 'var(--font-display)', fontSize: 15, color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 15,
+                  color: 'var(--accent)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
               >
                 {winRate}%
               </div>
               <div
-                style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.04em', marginTop: 3 }}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 10,
+                  color: 'var(--muted)',
+                  letterSpacing: '0.04em',
+                  marginTop: 3,
+                }}
               >
                 {champion.wins}W · {champion.losses}L
               </div>
@@ -265,7 +326,7 @@ export function CalendarTab() {
 
   const completed = useMemo(
     () => (sessions ?? []).filter(s => getSessionStatus(s) === 'completed'),
-    [sessions]
+    [sessions],
   )
 
   const matchCountBySession = useMemo(() => {
@@ -280,9 +341,13 @@ export function CalendarTab() {
     const monthMap = new Map<string, Map<string, Session[]>>()
     for (const session of completed) {
       const date = new Date(session.started_at)
-      const monthKey = date.toLocaleDateString(localeTag, { month: 'long', year: 'numeric' }).toUpperCase()
+      const monthKey = date
+        .toLocaleDateString(localeTag, { month: 'long', year: 'numeric' })
+        .toUpperCase()
       const dow = date.toLocaleDateString(localeTag, { weekday: 'short' }).toUpperCase()
-      const dm = date.toLocaleDateString(localeTag, { day: 'numeric', month: 'short' }).toUpperCase()
+      const dm = date
+        .toLocaleDateString(localeTag, { day: 'numeric', month: 'short' })
+        .toUpperCase()
       const dayKey = `${dow} · ${dm}`
       if (!monthMap.has(monthKey)) monthMap.set(monthKey, new Map())
       const dayMap = monthMap.get(monthKey)!
@@ -325,7 +390,6 @@ export function CalendarTab() {
 
       {groups.map((group, gi) => (
         <div key={group.monthKey}>
-
           {/* ── Month header ── */}
           <div
             className="relative flex items-center gap-3"
@@ -336,14 +400,24 @@ export function CalendarTab() {
           >
             <span
               className="text-[13px] font-extrabold uppercase tracking-[0.02em] flex-shrink-0"
-              style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)', background: 'var(--bg)', paddingRight: 'var(--space-3)' }}
+              style={{
+                fontFamily: 'var(--font-display)',
+                color: 'var(--fg)',
+                background: 'var(--bg)',
+                paddingRight: 'var(--space-3)',
+              }}
             >
               {group.monthKey}
             </span>
             <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
             <span
               className="text-[11px] font-bold flex-shrink-0"
-              style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)', background: 'var(--bg)', paddingLeft: 'var(--space-3)' }}
+              style={{
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--muted)',
+                background: 'var(--bg)',
+                paddingLeft: 'var(--space-3)',
+              }}
             >
               {group.sessionCount} sessions
             </span>
@@ -351,7 +425,6 @@ export function CalendarTab() {
 
           {group.days.map(({ dayKey, sessions: daySessions }) => (
             <div key={dayKey}>
-
               {/* ── Day header ── */}
               <div
                 className="relative grid items-center"
@@ -376,19 +449,25 @@ export function CalendarTab() {
                 </div>
                 <span
                   className="text-[11px] font-bold uppercase"
-                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)', letterSpacing: '0.12em' }}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--muted)',
+                    letterSpacing: '0.12em',
+                  }}
                 >
                   {dayKey}
                 </span>
               </div>
 
               {/* ── Session entries ── */}
-              {daySessions.map((session) => (
+              {daySessions.map(session => (
                 <CalendarSessionEntry
                   key={session.id}
                   session={session}
                   matchCount={matchCountBySession.get(session.id) ?? 0}
-                  onNavigate={() => navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })}
+                  onNavigate={() =>
+                    navigate(`/sessions/${session.id}`, { state: { from: '/sessions' } })
+                  }
                 />
               ))}
             </div>
@@ -399,10 +478,30 @@ export function CalendarTab() {
       {/* Timeline end cap */}
       <div
         className="relative grid items-center"
-        style={{ gridTemplateColumns: `${TL_COL}px 1fr`, columnGap: 'var(--space-4)', padding: 'var(--space-4) 0 var(--space-2)', zIndex: 2 }}
+        style={{
+          gridTemplateColumns: `${TL_COL}px 1fr`,
+          columnGap: 'var(--space-4)',
+          padding: 'var(--space-4) 0 var(--space-2)',
+          zIndex: 2,
+        }}
       >
-        <div style={{ justifySelf: 'center', width: 7, height: 7, background: 'var(--border)', borderRadius: '50%' }} />
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', fontStyle: 'italic' }}>
+        <div
+          style={{
+            justifySelf: 'center',
+            width: 7,
+            height: 7,
+            background: 'var(--border)',
+            borderRadius: '50%',
+          }}
+        />
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            color: 'var(--muted)',
+            fontStyle: 'italic',
+          }}
+        >
           Start of recorded history
         </span>
       </div>

@@ -12,7 +12,11 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   return (
     <div
       className="text-center py-12 px-4"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+      }}
     >
       {icon && (
         <div className="mb-3" style={{ color: 'var(--muted)' }}>

@@ -1,5 +1,5 @@
-import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronLeft, TrendingUp } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppBar, Avatar } from '../../design-system/components'
 import { useMatch } from '../hooks/useMatches'
 import { useMatchPlayerResults } from '../hooks/useMatchPlayerResults'
@@ -11,7 +11,6 @@ import type { Player, PlayerMatchResult } from '../types/database'
 function formatSigned(n: number): string {
   return n > 0 ? `+${n}` : String(n)
 }
-
 
 interface PlayerPointRowProps {
   player: Player
@@ -139,7 +138,15 @@ interface MatchContextCardProps {
   results: PlayerMatchResult[]
 }
 
-function MatchContextCard({ teamAPlayers, teamBPlayers, teamAScore, teamBScore, teamAWins, teamBWins, results }: MatchContextCardProps) {
+function MatchContextCard({
+  teamAPlayers,
+  teamBPlayers,
+  teamAScore,
+  teamBScore,
+  teamAWins,
+  teamBWins,
+  results,
+}: MatchContextCardProps) {
   const { t } = useI18n()
 
   const aRating = Math.round(teamAvgRating(teamAPlayers.map(p => p.rating)))
@@ -159,9 +166,16 @@ function MatchContextCard({ teamAPlayers, teamBPlayers, teamAScore, teamBScore, 
   const winnerResult = results.find(r => r.is_winner)
   const loserResult = results.find(r => !r.is_winner)
 
-  const strongerTeam = gap > 100 ? (teamAWins ? t('team.teamB') : t('team.teamA'))
-    : gap < -100 ? (teamAWins ? t('team.teamA') : t('team.teamB'))
-    : null
+  const strongerTeam =
+    gap > 100
+      ? teamAWins
+        ? t('team.teamB')
+        : t('team.teamA')
+      : gap < -100
+        ? teamAWins
+          ? t('team.teamA')
+          : t('team.teamB')
+        : null
 
   const strGapLabel = strongerTeam
     ? t('matchPoints.teamStronger', { team: strongerTeam, gap: Math.abs(gap) })
@@ -206,18 +220,69 @@ function MatchContextCard({ teamAPlayers, teamBPlayers, teamAScore, teamBScore, 
   }
 
   return (
-    <section style={{ marginBottom: 'var(--space-5)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
-
+    <section
+      style={{
+        marginBottom: 'var(--space-5)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--space-4)',
+      }}
+    >
       {/* Team ratings */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
+          alignItems: 'center',
+          gap: 'var(--space-2)',
+          marginBottom: 'var(--space-3)',
+        }}
+      >
         <div>
           <div style={labelStyle}>{t('team.teamA')}</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums', color: teamAWins ? 'var(--accent)' : 'var(--fg)', marginTop: 2 }}>{aRating}</div>
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-2xl)',
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+              fontVariantNumeric: 'tabular-nums',
+              color: teamAWins ? 'var(--accent)' : 'var(--fg)',
+              marginTop: 2,
+            }}
+          >
+            {aRating}
+          </div>
         </div>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', fontWeight: 800, color: 'var(--border)', letterSpacing: '0.12em' }}>VS</div>
+        <div
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-sm)',
+            fontWeight: 800,
+            color: 'var(--border)',
+            letterSpacing: '0.12em',
+          }}
+        >
+          VS
+        </div>
         <div style={{ textAlign: 'right' }}>
           <div style={labelStyle}>{t('team.teamB')}</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', fontWeight: 900, lineHeight: 1, letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums', color: teamBWins ? 'var(--accent)' : 'var(--fg)', marginTop: 2 }}>{bRating}</div>
+          <div
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-2xl)',
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+              fontVariantNumeric: 'tabular-nums',
+              color: teamBWins ? 'var(--accent)' : 'var(--fg)',
+              marginTop: 2,
+            }}
+          >
+            {bRating}
+          </div>
         </div>
       </div>
 
@@ -229,9 +294,20 @@ function MatchContextCard({ teamAPlayers, teamBPlayers, teamAScore, teamBScore, 
             <div style={{ ...infoStyle, marginTop: 2 }}>{strGapLabel}</div>
           </div>
           <div style={bonusStyle}>
-            <div style={{ color: 'var(--accent)' }}>{t('matchPoints.winnerBonus', { bonus: winnerResult.strength_bonus })}</div>
-            <div style={{ color: loserResult.strength_bonus < 0 ? 'var(--danger, #e44)' : 'var(--muted)' }}>
-              {t('matchPoints.loserAdjust', { adjust: loserResult.strength_bonus > 0 ? `+${loserResult.strength_bonus}` : String(loserResult.strength_bonus) })}
+            <div style={{ color: 'var(--accent)' }}>
+              {t('matchPoints.winnerBonus', { bonus: winnerResult.strength_bonus })}
+            </div>
+            <div
+              style={{
+                color: loserResult.strength_bonus < 0 ? 'var(--danger, #e44)' : 'var(--muted)',
+              }}
+            >
+              {t('matchPoints.loserAdjust', {
+                adjust:
+                  loserResult.strength_bonus > 0
+                    ? `+${loserResult.strength_bonus}`
+                    : String(loserResult.strength_bonus),
+              })}
             </div>
           </div>
         </div>
@@ -247,8 +323,13 @@ function MatchContextCard({ teamAPlayers, teamBPlayers, teamAScore, teamBScore, 
             </div>
           </div>
           <div style={bonusStyle}>
-            <div style={{ color: 'var(--accent)' }}>{t('matchPoints.winnerBonus', { bonus: winnerResult.score_bonus })}</div>
-            <div style={{ color: 'var(--muted)' }}>{t('matchPoints.loserAdjust', { adjust: `+${loserResult.score_bonus}` })} ({t('matchPoints.scoreLoss', { score: loserScore })})</div>
+            <div style={{ color: 'var(--accent)' }}>
+              {t('matchPoints.winnerBonus', { bonus: winnerResult.score_bonus })}
+            </div>
+            <div style={{ color: 'var(--muted)' }}>
+              {t('matchPoints.loserAdjust', { adjust: `+${loserResult.score_bonus}` })} (
+              {t('matchPoints.scoreLoss', { score: loserScore })})
+            </div>
           </div>
         </div>
       )}
@@ -265,7 +346,14 @@ interface TeamSectionProps {
   results: PlayerMatchResult[]
 }
 
-function TeamSection({ label, score, opponentScore, isWinner, players, results }: TeamSectionProps) {
+function TeamSection({
+  label,
+  score,
+  opponentScore,
+  isWinner,
+  players,
+  results,
+}: TeamSectionProps) {
   const { t } = useI18n()
   return (
     <section style={{ marginBottom: 'var(--space-5)' }}>
@@ -377,8 +465,19 @@ export default function MatchPointsPage() {
 
   if (matchLoading || resultsLoading) {
     return (
-      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-        <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+      <div
+        style={{
+          minHeight: '100dvh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg)',
+        }}
+      >
+        <div
+          className="w-8 h-8 rounded-full animate-spin"
+          style={{ border: '2px solid var(--accent)', borderTopColor: 'transparent' }}
+        />
       </div>
     )
   }
@@ -386,7 +485,9 @@ export default function MatchPointsPage() {
   if (!match) {
     return (
       <div style={{ minHeight: '100dvh', background: 'var(--bg)', padding: 'var(--space-5)' }}>
-        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>{t('matchDetail.notFound')}</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+          {t('matchDetail.notFound')}
+        </p>
       </div>
     )
   }
@@ -406,19 +507,66 @@ export default function MatchPointsPage() {
   const hasResults = results && results.length > 0
 
   // Show winner team first
-  const sections = (teamAWins ? [
-    { label: t('team.teamA'), score: teamAScore, oppScore: teamBScore, isWinner: true, players: teamAPlayers },
-    { label: t('team.teamB'), score: teamBScore, oppScore: teamAScore, isWinner: false, players: teamBPlayers },
-  ] : teamBWins ? [
-    { label: t('team.teamB'), score: teamBScore, oppScore: teamAScore, isWinner: true, players: teamBPlayers },
-    { label: t('team.teamA'), score: teamAScore, oppScore: teamBScore, isWinner: false, players: teamAPlayers },
-  ] : [
-    { label: t('team.teamA'), score: teamAScore, oppScore: teamBScore, isWinner: false, players: teamAPlayers },
-    { label: t('team.teamB'), score: teamBScore, oppScore: teamAScore, isWinner: false, players: teamBPlayers },
-  ])
+  const sections = teamAWins
+    ? [
+        {
+          label: t('team.teamA'),
+          score: teamAScore,
+          oppScore: teamBScore,
+          isWinner: true,
+          players: teamAPlayers,
+        },
+        {
+          label: t('team.teamB'),
+          score: teamBScore,
+          oppScore: teamAScore,
+          isWinner: false,
+          players: teamBPlayers,
+        },
+      ]
+    : teamBWins
+      ? [
+          {
+            label: t('team.teamB'),
+            score: teamBScore,
+            oppScore: teamAScore,
+            isWinner: true,
+            players: teamBPlayers,
+          },
+          {
+            label: t('team.teamA'),
+            score: teamAScore,
+            oppScore: teamBScore,
+            isWinner: false,
+            players: teamAPlayers,
+          },
+        ]
+      : [
+          {
+            label: t('team.teamA'),
+            score: teamAScore,
+            oppScore: teamBScore,
+            isWinner: false,
+            players: teamAPlayers,
+          },
+          {
+            label: t('team.teamB'),
+            score: teamBScore,
+            oppScore: teamAScore,
+            isWinner: false,
+            players: teamBPlayers,
+          },
+        ]
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'var(--bg)',
+      }}
+    >
       <AppBar
         title=""
         leftAction={{

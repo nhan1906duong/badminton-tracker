@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { PlayerRacket } from '../types/database'
 
@@ -24,7 +24,13 @@ export function usePlayerRackets(playerId: string) {
 export function useCreatePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (racket: { player_id: string; brand: string; real_name: string; nickname?: string; mascot_id?: string | null }) => {
+    mutationFn: async (racket: {
+      player_id: string
+      brand: string
+      real_name: string
+      nickname?: string
+      mascot_id?: string | null
+    }) => {
       const { data, error } = await supabase.rpc('create_player_racket', {
         p_player_id: racket.player_id,
         p_brand: racket.brand,
@@ -35,14 +41,20 @@ export function useCreatePlayerRacket() {
       if (error) throw error
       return data[0] as PlayerRacket
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
+    onSuccess: data => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
   })
 }
 
 export function useUpdatePlayerRacket() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (racket: { id: string; brand: string; real_name: string; nickname?: string; mascot_id?: string | null }) => {
+    mutationFn: async (racket: {
+      id: string
+      brand: string
+      real_name: string
+      nickname?: string
+      mascot_id?: string | null
+    }) => {
       const { data, error } = await supabase.rpc('update_player_racket', {
         p_id: racket.id,
         p_brand: racket.brand,
@@ -53,7 +65,7 @@ export function useUpdatePlayerRacket() {
       if (error) throw error
       return data[0] as PlayerRacket
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
+    onSuccess: data => qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] }),
   })
 }
 
@@ -65,7 +77,7 @@ export function useDeletePlayerRacket() {
       if (error) throw error
       return racket
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       qc.invalidateQueries({ queryKey: [PLAYER_RACKETS_KEY, data.player_id] })
       qc.invalidateQueries({ queryKey: [PLAYERS_KEY, data.player_id] })
     },

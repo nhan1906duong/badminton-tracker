@@ -1,7 +1,7 @@
 import { Badge } from '../../design-system/components'
+import { useI18n } from '../i18n'
 import { getMatchRow } from '../lib/player-match-row'
 import type { MatchWithDetails } from '../types/database'
-import { useI18n } from '../i18n'
 
 interface Props {
   match: MatchWithDetails
@@ -15,13 +15,14 @@ export function PlayerMatchHistoryItem({ match, playerId }: Props) {
 
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
-      <Badge variant={row.isWin ? 'win' : 'loss'}>
-        {row.isWin ? 'W' : 'L'}
-      </Badge>
+      <Badge variant={row.isWin ? 'win' : 'loss'}>{row.isWin ? 'W' : 'L'}</Badge>
       <div className="flex-1 min-w-0">
         <p className="text-[13px] truncate" style={{ color: 'var(--fg)' }}>
           {row.teammates
-            ? t('players.withOpponent', { teammates: row.teammates, opponents: row.opponents || '—' })
+            ? t('players.withOpponent', {
+                teammates: row.teammates,
+                opponents: row.opponents || '—',
+              })
             : t('players.vsOpponent', { opponents: row.opponents || '—' })}
         </p>
         <p

@@ -1,9 +1,9 @@
+import { Pencil, Plus, Quote as QuoteIcon, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, Quote as QuoteIcon } from 'lucide-react'
-import { SectionLabel, Dialog } from '../../design-system/components'
-import { usePlayerQuotes, useDeletePlayerQuote } from '../hooks/usePlayerQuotes'
-import { MAX_QUOTES_PER_PLAYER, type PlayerQuote } from '../types/database'
+import { Dialog, SectionLabel } from '../../design-system/components'
+import { useDeletePlayerQuote, usePlayerQuotes } from '../hooks/usePlayerQuotes'
 import { useI18n } from '../i18n'
+import { MAX_QUOTES_PER_PLAYER, type PlayerQuote } from '../types/database'
 
 interface PlayerQuotesCardProps {
   playerId: string
@@ -27,7 +27,13 @@ export function PlayerQuotesCard({ playerId, canEdit, onAdd, onEdit }: PlayerQuo
       <SectionLabel
         action={
           canEdit ? (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--muted)',
+              }}
+            >
               {t('players.quotesCount', { count: quotes.length, max: MAX_QUOTES_PER_PLAYER })}
             </span>
           ) : undefined
@@ -41,7 +47,7 @@ export function PlayerQuotesCard({ playerId, canEdit, onAdd, onEdit }: PlayerQuo
           {t('players.noQuotes')}
         </p>
       ) : (
-        quotes.map((quote) => (
+        quotes.map(quote => (
           <div
             key={quote.id}
             className="flex items-start gap-3"
@@ -61,7 +67,14 @@ export function PlayerQuotesCard({ playerId, canEdit, onAdd, onEdit }: PlayerQuo
                   onClick={() => onEdit(quote)}
                   aria-label={t('players.editQuote')}
                   className="active:opacity-60"
-                  style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--muted)',
+                  }}
                 >
                   <Pencil size={15} />
                 </button>
@@ -69,7 +82,14 @@ export function PlayerQuotesCard({ playerId, canEdit, onAdd, onEdit }: PlayerQuo
                   onClick={() => setDeletingQuote(quote)}
                   aria-label={t('common.delete')}
                   className="active:opacity-60"
-                  style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--muted)',
+                  }}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -103,7 +123,11 @@ export function PlayerQuotesCard({ playerId, canEdit, onAdd, onEdit }: PlayerQuo
         description={t('players.deleteQuoteDescription')}
         kind="danger"
         actions={[
-          { label: t('common.cancel'), onClick: () => setDeletingQuote(null), variant: 'secondary' },
+          {
+            label: t('common.cancel'),
+            onClick: () => setDeletingQuote(null),
+            variant: 'secondary',
+          },
           {
             label: t('common.delete'),
             variant: 'danger',

@@ -9,7 +9,12 @@ interface RacketAddedCelebrationProps {
   racketName: string
 }
 
-export function RacketAddedCelebration({ open, onClose, playerName, racketName }: RacketAddedCelebrationProps) {
+export function RacketAddedCelebration({
+  open,
+  onClose,
+  playerName,
+  racketName,
+}: RacketAddedCelebrationProps) {
   const { t } = useI18n()
 
   if (!open) return null
@@ -17,7 +22,11 @@ export function RacketAddedCelebration({ open, onClose, playerName, racketName }
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-6"
-      style={{ background: 'oklch(0% 0 0 / 0.45)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }}
+      style={{
+        background: 'oklch(0% 0 0 / 0.45)',
+        backdropFilter: 'blur(2px)',
+        WebkitBackdropFilter: 'blur(2px)',
+      }}
       onClick={onClose}
     >
       <div
@@ -29,14 +38,9 @@ export function RacketAddedCelebration({ open, onClose, playerName, racketName }
           padding: 'var(--space-5)',
           boxShadow: '0 8px 32px oklch(0% 0 0 / 0.24)',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
-        <DotLottieReact
-          src={fireworkAnimation}
-          loop
-          autoplay
-          style={{ width: 160, height: 160 }}
-        />
+        <DotLottieReact src={fireworkAnimation} loop autoplay style={{ width: 160, height: 160 }} />
 
         <p
           style={{

@@ -1,7 +1,7 @@
-import type { Player, MatchType } from '../types/database'
+import { Check } from 'lucide-react'
 import { getRequiredPlayerCount } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Check } from 'lucide-react'
+import type { MatchType, Player } from '../types/database'
 import Avatar from './Avatar'
 
 interface PlayerSelectorProps {
@@ -29,7 +29,11 @@ export default function PlayerSelector({
       <div className="grid grid-cols-2 gap-2.5 [@media(max-width:380px)]:gap-2">
         {players.map(player => {
           const isSelected = selectedIds.includes(player.id)
-          const team = teamAIds.includes(player.id) ? 'A' : teamBIds.includes(player.id) ? 'B' : null
+          const team = teamAIds.includes(player.id)
+            ? 'A'
+            : teamBIds.includes(player.id)
+              ? 'B'
+              : null
           const isDisabled = !isSelected && selectedIds.length >= required
 
           return (
@@ -67,17 +71,19 @@ export default function PlayerSelector({
 
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <p className={`text-[15px] font-semibold truncate ${
-                  isSelected
-                    ? team === 'A' ? 'text-blue-900' : 'text-red-900'
-                    : 'text-gray-700'
-                }`}>
+                <p
+                  className={`text-[15px] font-semibold truncate ${
+                    isSelected ? (team === 'A' ? 'text-blue-900' : 'text-red-900') : 'text-gray-700'
+                  }`}
+                >
                   {formatShortPlayerName(player.name)}
                 </p>
                 {isSelected && (
-                  <p className={`text-xs font-medium ${
-                    team === 'A' ? 'text-blue-500' : 'text-red-500'
-                  }`}>
+                  <p
+                    className={`text-xs font-medium ${
+                      team === 'A' ? 'text-blue-500' : 'text-red-500'
+                    }`}
+                  >
                     Team {team}
                   </p>
                 )}

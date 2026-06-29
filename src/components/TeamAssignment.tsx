@@ -1,9 +1,9 @@
+import { Shuffle } from 'lucide-react'
 import { useMemo } from 'react'
-import type { Player, MatchType } from '../types/database'
+import { useI18n } from '../i18n'
 import { getTeamSize } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
-import { Shuffle } from 'lucide-react'
-import { useI18n } from '../i18n'
+import type { MatchType, Player } from '../types/database'
 
 interface TeamAssignmentProps {
   players: Player[]
@@ -26,9 +26,9 @@ export default function TeamAssignment({
 }: TeamAssignmentProps) {
   const { t } = useI18n()
   const teamSize = getTeamSize(matchType)
-  const selected = useMemo(() =>
-    selectedIds.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[],
-    [selectedIds, players]
+  const selected = useMemo(
+    () => selectedIds.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[],
+    [selectedIds, players],
   )
 
   const unassigned = selected.filter(p => !teamAIds.includes(p.id) && !teamBIds.includes(p.id))
@@ -44,13 +44,15 @@ export default function TeamAssignment({
               : 'bg-gray-50 text-gray-600 border border-gray-200'
         }`}
       >
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-          team === 'A'
-            ? 'bg-blue-200 text-blue-700'
-            : team === 'B'
-              ? 'bg-red-200 text-red-700'
-              : 'bg-gray-200 text-gray-600'
-        }`}>
+        <div
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+            team === 'A'
+              ? 'bg-blue-200 text-blue-700'
+              : team === 'B'
+                ? 'bg-red-200 text-red-700'
+                : 'bg-gray-200 text-gray-600'
+          }`}
+        >
           {player.name.charAt(0).toUpperCase()}
         </div>
         <span className="truncate">{formatShortPlayerName(player.name)}</span>
@@ -61,7 +63,9 @@ export default function TeamAssignment({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">{t('teamAssignment.title')}</label>
+        <label className="block text-sm font-medium text-gray-700">
+          {t('teamAssignment.title')}
+        </label>
         <button
           onClick={onShuffle}
           className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100"
@@ -74,33 +78,47 @@ export default function TeamAssignment({
       {/* Team A */}
       <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">{t('team.teamA')}</span>
-          <span className="text-xs text-blue-400">{teamAIds.length}/{teamSize}</span>
+          <span className="text-xs font-bold text-blue-700 uppercase tracking-wide">
+            {t('team.teamA')}
+          </span>
+          <span className="text-xs text-blue-400">
+            {teamAIds.length}/{teamSize}
+          </span>
         </div>
         <div className="flex flex-wrap gap-1.5 min-h-[40px]">
           {teamAIds.map(id => {
             const p = players.find(pl => pl.id === id)
             return p ? <PlayerChip key={id} player={p} team="A" /> : null
           })}
-          {teamAIds.length === 0 && <span className="text-xs text-blue-300 italic">{t('teamAssignment.empty')}</span>}
+          {teamAIds.length === 0 && (
+            <span className="text-xs text-blue-300 italic">{t('teamAssignment.empty')}</span>
+          )}
         </div>
       </div>
 
       {/* VS */}
-      <div className="text-center text-xs font-bold text-gray-300 uppercase tracking-widest">{t('team.vs')}</div>
+      <div className="text-center text-xs font-bold text-gray-300 uppercase tracking-widest">
+        {t('team.vs')}
+      </div>
 
       {/* Team B */}
       <div className="bg-red-50/50 border border-red-100 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-red-700 uppercase tracking-wide">{t('team.teamB')}</span>
-          <span className="text-xs text-red-400">{teamBIds.length}/{teamSize}</span>
+          <span className="text-xs font-bold text-red-700 uppercase tracking-wide">
+            {t('team.teamB')}
+          </span>
+          <span className="text-xs text-red-400">
+            {teamBIds.length}/{teamSize}
+          </span>
         </div>
         <div className="flex flex-wrap gap-1.5 min-h-[40px]">
           {teamBIds.map(id => {
             const p = players.find(pl => pl.id === id)
             return p ? <PlayerChip key={id} player={p} team="B" /> : null
           })}
-          {teamBIds.length === 0 && <span className="text-xs text-red-300 italic">{t('teamAssignment.empty')}</span>}
+          {teamBIds.length === 0 && (
+            <span className="text-xs text-red-300 italic">{t('teamAssignment.empty')}</span>
+          )}
         </div>
       </div>
 
@@ -116,7 +134,9 @@ export default function TeamAssignment({
                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:border-green-400 hover:text-green-700 transition-colors"
               >
                 {formatShortPlayerName(player.name)}
-                <span className="text-[10px] text-gray-400">→ {teamAIds.length < teamSize ? 'A' : 'B'}</span>
+                <span className="text-[10px] text-gray-400">
+                  → {teamAIds.length < teamSize ? 'A' : 'B'}
+                </span>
               </button>
             ))}
           </div>

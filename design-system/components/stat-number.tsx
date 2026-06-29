@@ -27,12 +27,7 @@ const COLOR_TOKEN: Record<StatNumberColor, string> = {
  * Replaces the `var(--font-display)` 800-weight tabular-nums value seen in
  * ranking rows, the MVP card, and the session-stats panel.
  */
-export function StatNumber({
-  value,
-  size = 'xl',
-  color = 'fg',
-  className = '',
-}: StatNumberProps) {
+export function StatNumber({ value, size = 'xl', color = 'fg', className = '' }: StatNumberProps) {
   return (
     <span
       className={className}

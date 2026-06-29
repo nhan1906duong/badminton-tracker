@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { computeH2HPairs } from '../useH2HPairs'
 import type { MatchWithDetails } from '../../types/database'
+import { computeH2HPairs } from '../useH2HPairs'
 
 function player(id: string) {
-  return { id, name: id, avatar_url: null, rating: 1000, created_at: '', created_by: 'u1', nationality: null }
+  return {
+    id,
+    name: id,
+    avatar_url: null,
+    rating: 1000,
+    created_at: '',
+    created_by: 'u1',
+    nationality: null,
+  }
 }
 
 function makeMatch(
@@ -41,10 +49,7 @@ function makeMatch(
       { id: 'ta', match_id: id, team_label: 'TEAM_A', is_winner: winner === 'A' },
       { id: 'tb', match_id: id, team_label: 'TEAM_B', is_winner: winner === 'B' },
     ],
-    participants: [
-      ...makeParticipants(teamA, 'ta'),
-      ...makeParticipants(teamB, 'tb'),
-    ],
+    participants: [...makeParticipants(teamA, 'ta'), ...makeParticipants(teamB, 'tb')],
     scores: [],
   }
 }
@@ -53,10 +58,16 @@ describe('computeH2HPairs', () => {
   it('returns empty result when no player IDs provided', () => {
     const match = makeMatch('m1', ['p1', 'p2'], ['p3', 'p4'], 'A')
     expect(computeH2HPairs([match], [], ['p3', 'p4'])).toEqual({
-      teamAWins: 0, teamBWins: 0, totalMatches: 0, matches: [],
+      teamAWins: 0,
+      teamBWins: 0,
+      totalMatches: 0,
+      matches: [],
     })
     expect(computeH2HPairs([match], ['p1', 'p2'], [])).toEqual({
-      teamAWins: 0, teamBWins: 0, totalMatches: 0, matches: [],
+      teamAWins: 0,
+      teamBWins: 0,
+      totalMatches: 0,
+      matches: [],
     })
   })
 
@@ -109,8 +120,8 @@ describe('computeH2HPairs', () => {
     ]
     const result = computeH2HPairs(matches, ['p1', 'p2'], ['p3', 'p4'])
     expect(result.totalMatches).toBe(3)
-    expect(result.teamAWins).toBe(1)  // m1
-    expect(result.teamBWins).toBe(2)  // m2 + m3 (reversed: p3+p4 win)
+    expect(result.teamAWins).toBe(1) // m1
+    expect(result.teamBWins).toBe(2) // m2 + m3 (reversed: p3+p4 win)
   })
 
   it('returns matches sorted newest first', () => {

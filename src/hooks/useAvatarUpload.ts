@@ -1,15 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
-import { compressImage } from '../lib/image'
 import { DEFAULT_AVATAR_PREFIX } from '../lib/avatar'
+import { compressImage } from '../lib/image'
+import { supabase } from '../lib/supabase'
 
 type EntityType = 'users' | 'players'
 
-async function cleanupOldAvatar(
-  entity: EntityType,
-  id: string,
-  oldUrl?: string | null,
-) {
+async function cleanupOldAvatar(entity: EntityType, id: string, oldUrl?: string | null) {
   if (!oldUrl || oldUrl.startsWith(DEFAULT_AVATAR_PREFIX)) return
   const path = `${entity}/${id}.jpg`
   const { error } = await supabase.storage.from('avatars').remove([path])
@@ -37,12 +33,10 @@ export function useAvatarUpload() {
       const blob = await compressImage(file, 512)
       const path = `${entity}/${id}.jpg`
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, blob, {
-          contentType: 'image/jpeg',
-          upsert: true,
-        })
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      })
 
       if (uploadError) throw uploadError
 
@@ -112,7 +106,15 @@ export function useAvatarDelete() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ entity, id, oldAvatarUrl }: { entity: EntityType; id: string; oldAvatarUrl?: string | null }) => {
+    mutationFn: async ({
+      entity,
+      id,
+      oldAvatarUrl,
+    }: {
+      entity: EntityType
+      id: string
+      oldAvatarUrl?: string | null
+    }) => {
       await cleanupOldAvatar(entity, id, oldAvatarUrl)
 
       if (entity === 'users') {

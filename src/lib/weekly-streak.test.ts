@@ -25,7 +25,7 @@ function result(
   matchId: string,
   playerId: string,
   points: number,
-  options: Partial<Pick<WeeklyStreakResult, 'is_winner' | 'team_score' | 'opponent_score'>> = {}
+  options: Partial<Pick<WeeklyStreakResult, 'is_winner' | 'team_score' | 'opponent_score'>> = {},
 ): WeeklyStreakResult {
   return {
     session_id: sessionId,
@@ -54,7 +54,7 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
         result('w3', 'm5', 'p1', 20),
         result('w3', 'm6', 'p2', 10),
       ],
-      players
+      players,
     )
 
     expect(streaks.get('p1')).toBe(3)
@@ -68,12 +68,8 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
         session('w2', '2026-05-11T12:00:00'),
         session('w3', '2026-05-18T12:00:00'),
       ],
-      [
-        result('w1', 'm1', 'p1', 20),
-        result('w2', 'm2', 'p2', 20),
-        result('w3', 'm3', 'p1', 20),
-      ],
-      players
+      [result('w1', 'm1', 'p1', 20), result('w2', 'm2', 'p2', 20), result('w3', 'm3', 'p1', 20)],
+      players,
     )
 
     expect(streaks.get('p1')).toBe(1)
@@ -82,16 +78,9 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
 
   it('aggregates multiple sessions in the same week by ranking points', () => {
     const streaks = calculateCurrentTopOneWeekStreaks(
-      [
-        session('s1', '2026-05-04T12:00:00'),
-        session('s2', '2026-05-06T12:00:00'),
-      ],
-      [
-        result('s1', 'm1', 'p1', 10),
-        result('s2', 'm2', 'p1', 10),
-        result('s1', 'm3', 'p2', 15),
-      ],
-      players
+      [session('s1', '2026-05-04T12:00:00'), session('s2', '2026-05-06T12:00:00')],
+      [result('s1', 'm1', 'p1', 10), result('s2', 'm2', 'p1', 10), result('s1', 'm3', 'p2', 15)],
+      players,
     )
 
     expect(streaks.get('p1')).toBe(1)
@@ -105,7 +94,7 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
         result('s1', 'm1', 'p1', 20, { is_winner: false, team_score: 21, opponent_score: 10 }),
         result('s1', 'm2', 'p2', 20, { is_winner: true, team_score: 21, opponent_score: 10 }),
       ],
-      players
+      players,
     )
     expect(winTie.get('p2')).toBe(1)
 
@@ -115,7 +104,7 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
         result('s1', 'm1', 'p1', 20, { is_winner: true, team_score: 21, opponent_score: 15 }),
         result('s1', 'm2', 'p2', 20, { is_winner: true, team_score: 21, opponent_score: 10 }),
       ],
-      players
+      players,
     )
     expect(diffTie.get('p2')).toBe(1)
 
@@ -125,22 +114,16 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
         result('s1', 'm1', 'p1', 20, { is_winner: true, team_score: 21, opponent_score: 10 }),
         result('s1', 'm2', 'p2', 20, { is_winner: true, team_score: 21, opponent_score: 10 }),
       ],
-      players
+      players,
     )
     expect(nameTie.get('p1')).toBe(1)
   })
 
   it('ignores empty calendar weeks', () => {
     const streaks = calculateCurrentTopOneWeekStreaks(
-      [
-        session('w1', '2026-05-04T12:00:00'),
-        session('w3', '2026-05-18T12:00:00'),
-      ],
-      [
-        result('w1', 'm1', 'p1', 20),
-        result('w3', 'm2', 'p1', 20),
-      ],
-      players
+      [session('w1', '2026-05-04T12:00:00'), session('w3', '2026-05-18T12:00:00')],
+      [result('w1', 'm1', 'p1', 20), result('w3', 'm2', 'p1', 20)],
+      players,
     )
 
     expect(streaks.get('p1')).toBe(2)
@@ -150,7 +133,7 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
     const streaks = calculateCurrentTopOneWeekStreaks(
       [session('s1', '2026-05-04T12:00:00', false)],
       [result('s1', 'm1', 'p1', 20)],
-      players
+      players,
     )
 
     expect(streaks.get('p1')).toBe(0)
@@ -161,12 +144,8 @@ describe('calculateCurrentTopOneWeekStreaks', () => {
     const duplicate = result('s1', 'm1', 'p1', 20)
     const streaks = calculateCurrentTopOneWeekStreaks(
       [session('s1', '2026-05-04T12:00:00')],
-      [
-        duplicate,
-        duplicate,
-        result('s1', 'm2', 'p2', 30),
-      ],
-      players
+      [duplicate, duplicate, result('s1', 'm2', 'p2', 30)],
+      players,
     )
 
     expect(streaks.get('p1')).toBe(0)

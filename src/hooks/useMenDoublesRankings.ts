@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
+import { calculateMatchPoints, SCORING_CONFIG, teamAvgRating } from '../lib/rating'
+import type { MatchWithDetails, Player, Session } from '../types/database'
 import { useMatches } from './useMatches'
 import { useSessions } from './useSessions'
-import { calculateMatchPoints, teamAvgRating, SCORING_CONFIG } from '../lib/rating'
-import type { MatchWithDetails, Player, Session } from '../types/database'
 
 export interface PairRankingStats {
   key: string
@@ -20,45 +20,58 @@ export function computeMenDoublesRankings(
   allMatches: MatchWithDetails[],
   allSessions: Session[],
 ): PairRankingStats[] {
-  const endedSessionIds = new Set(
-    allSessions.filter((s) => s.ended_at !== null).map((s) => s.id)
-  )
+  const endedSessionIds = new Set(allSessions.filter(s => s.ended_at !== null).map(s => s.id))
 
   const completed = allMatches.filter(
-    (m) =>
+    m =>
       m.match_type === 'MEN_DOUBLES' &&
       m.status === 'COMPLETED' &&
-      m.teams.some((t) => t.is_winner) &&
-      endedSessionIds.has(m.session_id)
+      m.teams.some(t => t.is_winner) &&
+      endedSessionIds.has(m.session_id),
   )
 
-  const pairMap = new Map<string, {
-    player1: Player
-    player2: Player
-    wins: number
-    losses: number
-    matchesPlayed: number
-    totalPoints: number
-  }>()
+  const pairMap = new Map<
+    string,
+    {
+      player1: Player
+      player2: Player
+      wins: number
+      losses: number
+      matchesPlayed: number
+      totalPoints: number
+    }
+  >()
 
   for (const match of completed) {
     const firstScore = [...match.scores].sort((a, b) => a.set_number - b.set_number)[0]
 
     for (const team of match.teams) {
       const members = match.participants
-        .filter((p) => p.team_id === team.id)
+        .filter(p => p.team_id === team.id)
         .sort((a, b) => a.player_id.localeCompare(b.player_id))
       if (members.length !== 2) continue
 
-      const opponentTeam = match.teams.find((t) => t.id !== team.id)
-      const opponentMembers = match.participants.filter((p) => p.team_id === opponentTeam?.id)
+      const opponentTeam = match.teams.find(t => t.id !== team.id)
+      const opponentMembers = match.participants.filter(p => p.team_id === opponentTeam?.id)
 
       const isTeamA = team.team_label === 'TEAM_A'
-      const teamScore = firstScore ? (isTeamA ? firstScore.team_a_score : firstScore.team_b_score) : 0
-      const opponentScore = firstScore ? (isTeamA ? firstScore.team_b_score : firstScore.team_a_score) : 0
+      const teamScore = firstScore
+        ? isTeamA
+          ? firstScore.team_a_score
+          : firstScore.team_b_score
+        : 0
+      const opponentScore = firstScore
+        ? isTeamA
+          ? firstScore.team_b_score
+          : firstScore.team_a_score
+        : 0
 
-      const teamRating = teamAvgRating(members.map((m) => m.player.rating ?? SCORING_CONFIG.initialRating))
-      const opponentRating = teamAvgRating(opponentMembers.map((m) => m.player.rating ?? SCORING_CONFIG.initialRating))
+      const teamRating = teamAvgRating(
+        members.map(m => m.player.rating ?? SCORING_CONFIG.initialRating),
+      )
+      const opponentRating = teamAvgRating(
+        opponentMembers.map(m => m.player.rating ?? SCORING_CONFIG.initialRating),
+      )
 
       const breakdown = calculateMatchPoints({
         isWinner: team.is_winner,

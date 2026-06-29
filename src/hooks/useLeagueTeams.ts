@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { LeagueTeamWithPlayers, Player } from '../types/database'
 
@@ -23,7 +23,7 @@ export function useLeagueTeams(sessionId: string | undefined) {
         const playersData = team.players as Array<{ player: Player }> | undefined
         return {
           ...(team as Omit<LeagueTeamWithPlayers, 'players'>),
-          players: playersData?.map((p) => p.player).filter(Boolean) ?? [],
+          players: playersData?.map(p => p.player).filter(Boolean) ?? [],
         } as LeagueTeamWithPlayers
       })
     },
@@ -34,11 +34,7 @@ export function useLeagueTeams(sessionId: string | undefined) {
 export function useCreateLeagueTeam() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: {
-      sessionId: string
-      name: string
-      playerIds: string[]
-    }) => {
+    mutationFn: async (input: { sessionId: string; name: string; playerIds: string[] }) => {
       const { data, error } = await supabase.rpc('create_league_team', {
         p_session_id: input.sessionId,
         p_name: input.name,

@@ -11,12 +11,19 @@ export function toTimeInput(d: Date): string {
 }
 
 export function friendlyDate(d: Date, locale: Locale, t: TFunction): string {
-  const today = new Date(); today.setHours(0, 0, 0, 0)
-  const tom = new Date(today); tom.setDate(tom.getDate() + 1)
-  const day0 = new Date(d); day0.setHours(0, 0, 0, 0)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tom = new Date(today)
+  tom.setDate(tom.getDate() + 1)
+  const day0 = new Date(d)
+  day0.setHours(0, 0, 0, 0)
   if (day0.getTime() === today.getTime()) return t('common.today')
   if (day0.getTime() === tom.getTime()) return t('common.tomorrow')
-  return d.toLocaleDateString(LOCALE_TAG[locale], { weekday: 'short', month: 'short', day: 'numeric' })
+  return d.toLocaleDateString(LOCALE_TAG[locale], {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 export function friendlyTime(d: Date, locale: Locale): string {

@@ -58,9 +58,18 @@ export function enumerateSplits(players: ShufflePlayer[]): CandidateSplit[] {
           const resting = players.filter((_, idx) => !playing.has(idx))
 
           for (const [t1, t2] of [
-            [[a, b], [c, d]],
-            [[a, c], [b, d]],
-            [[a, d], [b, c]],
+            [
+              [a, b],
+              [c, d],
+            ],
+            [
+              [a, c],
+              [b, d],
+            ],
+            [
+              [a, d],
+              [b, c],
+            ],
           ] as [[ShufflePlayer, ShufflePlayer], [ShufflePlayer, ShufflePlayer]][]) {
             result.push({
               key: makeSplitKey([t1[0].id, t1[1].id], [t2[0].id, t2[1].id]),
@@ -110,10 +119,13 @@ export function generateNextMatch(input: GenerateMatchInput): ShuffleMatch {
   })
 
   scored.sort((a, b) =>
-    a.winImbalance !== b.winImbalance ? a.winImbalance - b.winImbalance :
-    a.strengthImbalance !== b.strengthImbalance ? a.strengthImbalance - b.strengthImbalance :
-    b.totalRestingPlayed !== a.totalRestingPlayed ? b.totalRestingPlayed - a.totalRestingPlayed :
-    a.rand - b.rand
+    a.winImbalance !== b.winImbalance
+      ? a.winImbalance - b.winImbalance
+      : a.strengthImbalance !== b.strengthImbalance
+        ? a.strengthImbalance - b.strengthImbalance
+        : b.totalRestingPlayed !== a.totalRestingPlayed
+          ? b.totalRestingPlayed - a.totalRestingPlayed
+          : a.rand - b.rand,
   )
 
   const { team1, team2, resting } = scored[0]
@@ -172,9 +184,23 @@ export function generateMatchSchedule(
   const matches: ShuffleMatch[] = []
 
   for (let i = 0; i < totalMatches; i++) {
-    const match = generateNextMatch({ selectedPlayers, splitRecord, cycleUsedSplits, playerWins, playerPlayed })
+    const match = generateNextMatch({
+      selectedPlayers,
+      splitRecord,
+      cycleUsedSplits,
+      playerWins,
+      playerPlayed,
+    })
     matches.push(match)
-    applyMatchResult(match, null, splitRecord, cycleUsedSplits, totalPossibleSplits, playerWins, playerPlayed)
+    applyMatchResult(
+      match,
+      null,
+      splitRecord,
+      cycleUsedSplits,
+      totalPossibleSplits,
+      playerWins,
+      playerPlayed,
+    )
   }
 
   return matches

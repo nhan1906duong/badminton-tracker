@@ -1,6 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, Player } from '../types/database'
+import type {
+  Match,
+  MatchParticipant,
+  MatchScore,
+  MatchTeam,
+  MatchWithDetails,
+  Player,
+} from '../types/database'
 
 export function usePlayerMatchesBySession(playerId: string, sessionId: string | null) {
   return useQuery({
@@ -22,7 +29,7 @@ export function usePlayerMatchesBySession(playerId: string, sessionId: string | 
 
       if (error) throw error
 
-      return (data ?? []).map((m) => ({
+      return (data ?? []).map(m => ({
         ...(m as Match),
         teams: (m.teams ?? []) as MatchTeam[],
         participants: (m.participants ?? []) as (MatchParticipant & { player: Player })[],

@@ -146,7 +146,7 @@ export function FireworkEffect() {
       }
 
       // Stop when done spawning and all particles cleared
-      if (!stillSpawning && rockets.every((r) => r.dead) && particles.length === 0) {
+      if (!stillSpawning && rockets.every(r => r.dead) && particles.length === 0) {
         running = false
         return
       }
