@@ -225,6 +225,9 @@ lib/
 ├── rating.ts          # Elo rating algorithm + SCORING_CONFIG constants
 ├── session-format.ts  # formatSessionDuration utility
 ├── utils.ts           # Shared className merge helper
+schemas/
+├── rpc-schemas.ts     # Zod schemas for Supabase RPC responses (LeaderboardRow, PlayerRankingSummary, BadgeLeader)
+├── form-schemas.ts    # Zod schemas for all forms (Login, ChangePassword, PlayerForm, Quote, Racket)
 ```
 
 ## Player Name Display

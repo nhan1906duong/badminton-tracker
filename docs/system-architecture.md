@@ -32,8 +32,11 @@
 | Routing | React Router v7 | Page navigation |
 | Styling | Tailwind CSS v4 | Utility-first CSS |
 | State | TanStack Query v5 | Server state caching |
+| Forms | react-hook-form + Zod | Typed form state + validation |
+| Validation | Zod | Runtime schema validation for RPC responses |
 | Backend | Supabase | Auth + Database + API |
 | Build | Vite | Dev server + bundler |
+| Lint/Format | Biome | Unified lint + format (replaces ESLint) |
 | PWA | vite-plugin-pwa | Installable app |
 
 ## Routes
