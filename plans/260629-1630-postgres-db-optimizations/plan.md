@@ -204,8 +204,51 @@ Re-audit of all 13 phases + function bodies after fifth-audit migration landed. 
 |---------|-----|
 | `_compute_match_pmr_rows` callable by `anon` | Helper is internal-only but PUBLIC/anon has EXECUTE by default. Add `REVOKE EXECUTE ON FUNCTION _compute_match_pmr_rows(...) FROM PUBLIC, anon;` in the next migration. Low risk since it only reads publicly-visible data. |
 
+## Seventh Audit Findings (2026-06-29)
+
+Full re-audit of all 48 migrations after all 14 phases shipped. New issues across security, schema design, and correctness categories.
+
+### CRITICAL
+
+| Finding | File / Function | Fix |
+|---------|----------------|-----|
+| `upsert_attendance` casts to nonexistent type `public.attendance_status` | `20260625000007_simple-crud-rpcs.sql` — `p_status::public.attendance_status` | No `CREATE TYPE attendance_status` exists; column uses `TEXT CHECK (...)`. Remove the cast, pass `p_status` directly. Runtime error on every attendance upsert. |
+
+### HIGH
+
+| Finding | File / Function | Fix |
+|---------|----------------|-----|
+| `update_player` SECURITY DEFINER bypasses player ownership RLS | `20260701000002_fix-secdef-search-path.sql` — `update_player` | Only checks `auth.uid() IS NULL`. Any authenticated user can modify any player's `name`, `email`, `avatar_url`, `active_racket_id`. Phase 7 fixed racket/quote RPCs but missed this one. Add `profiles.player_id = p_id OR is_admin()` check. |
+| `match_teams` / `match_participants` / `match_scores` allow any-auth DELETE via PostgREST | `012_authenticated_match_edits.sql` | DELETE policies use `USING (true)` for any authenticated user, allowing direct child-row deletion that bypasses the admin-only `delete_match` RPC. Change to `USING ((select is_admin()))`. |
+| FK `created_by → auth.users` with no `ON DELETE` clause blocks account deletion | `001_initial_schema.sql`, `002_sessions.sql`, `017_session_attendances.sql` | `players.created_by`, `matches.created_by`, `sessions.created_by`, `session_attendances.created_by` all use default `NO ACTION`. Add `ON DELETE SET NULL` (relax `matches.created_by NOT NULL`). |
+| `upsert_attendance` / `delete_attendance` bypass RLS — any auth user can write/delete attendance for any player | `20260625000007_simple-crud-rpcs.sql` | Only null-uid guard. Add `player_id IN (SELECT player_id FROM public.profiles WHERE id = (select auth.uid())) OR (select is_admin())` check. |
+
+> **Note on session mutation RPCs** (`rename_session`, `start_session`, `update_session_start_time`, `update_league_total_rounds`): these are SECURITY DEFINER with only a null-uid guard, but `011_authenticated_update_sessions.sql` explicitly states "allow any authenticated user to start/end sessions." Intentional design — downgraded to accepted risk, no fix needed.
+
+### MEDIUM
+
+| Finding | File | Fix |
+|---------|------|-----|
+| `sessions.type` has no CHECK constraint — any string accepted | `015_session_types.sql` | Add `CHECK (type IN ('regular', 'tournament', 'league'))`. |
+| `sessions.league_match_type` has no CHECK constraint | `015_session_types.sql` | Add `CHECK (league_match_type IN ('MEN_SINGLES', 'WOMEN_SINGLES', 'MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES'))`. |
+| Four scoring helper functions not revoked from `public`/`anon` | `20260625000010_complex-match-state-rpcs.sql` | Phase 14 revoked `_compute_match_pmr_rows` but missed `_score_diff_bonus`, `_close_game_bonus`, `_winner_strength_bonus`, `_loser_strength_adj`. Add `REVOKE EXECUTE … FROM public, anon`. |
+| Same four functions missing `SET search_path = ''` | `20260625000010_complex-match-state-rpcs.sql` | Pure arithmetic — no practical risk, but inconsistent with rest of codebase. Add for consistency. |
+| `profiles.avatar_url` column referenced in `clear_all_data` but no migration defines it | `20260625000011_session-rating-rpcs.sql` | Column appears to have been added via Supabase dashboard. Add a migration to make it reproducible. |
+| `players.active_racket_id` FK has no supporting index | `020_racket_mascot_active.sql` | Add `CREATE INDEX idx_players_active_racket ON public.players(active_racket_id) WHERE active_racket_id IS NOT NULL`. |
+| `session_attendances.created_by` FK has no supporting index | `017_session_attendances.sql` | Add `CREATE INDEX idx_session_attendances_created_by ON public.session_attendances(created_by)`. |
+
+### LOW
+
+| Finding | Fix |
+|---------|-----|
+| `player_match_results` point columns have no `CHECK (column >= 0)` | Low risk (writes are RPC-only) — add non-negativity constraints for defensive correctness. |
+| `bwf_tournaments` has no INSERT/UPDATE/DELETE RLS deny policies | Add explicit `USING (false)` deny policies to document "service-role only" intent. |
+
 ## Unresolved Questions
 
 - Phase 3 assumes all-time stats are ONLY needed for ended sessions. Confirm no UI currently shows all-time stats for players mid-session (leaderboard reads `player_all_time_stats` which by definition only has ended-session data — confirmed safe).
 - Phase 9: confirm `player_all_time_stats` schema matches the `PlayerRankingStats` TypeScript type expected by `useLeaderboard` before removing the `get_leaderboard_page` RPC call.
 - ~~Sixth audit HIGH: should `recalculate_all_ratings` be refactored in a Phase 14 migration, or bundled with the PMR policy fix?~~ Resolved — all three sixth-audit items bundled into `20260703000001_sixth-audit-fixes.sql`.
+- Does `public.attendance_status` enum exist in the actual Supabase DB outside these migrations? If yes, `upsert_attendance` is fine; if no, it is broken in production right now.
+- Does `profiles.avatar_url` column exist in production? A migration defining it is absent from this directory.
+- Are the `update_player` SECURITY DEFINER bypass and the child-table DELETE policies intentional? If the app relies on any-auth player edits, downgrade to accepted risk.
