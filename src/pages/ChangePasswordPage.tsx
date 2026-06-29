@@ -1,10 +1,13 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { Button, Input } from '../../design-system/components'
 import { AppBar } from '../../design-system/components/app-bar'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n'
+import { ChangePasswordSchema, type ChangePasswordValues } from '../lib/schemas/form-schemas'
 import { supabase } from '../lib/supabase'
 
 export default function ChangePasswordPage() {
@@ -12,50 +15,43 @@ export default function ChangePasswordPage() {
   const { user } = useAuth()
   const { t } = useI18n()
 
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isPending, setIsPending] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ChangePasswordValues>({
+    resolver: zodResolver(ChangePasswordSchema),
+  })
 
-    if (newPassword !== confirmPassword) {
-      setError(t('account.changePassword.mismatch'))
-      return
-    }
-    if (newPassword.length < 6) {
-      setError(t('account.changePassword.tooShort'))
-      return
-    }
-
+  async function onSubmit(data: ChangePasswordValues) {
+    setSubmitError('')
     setIsPending(true)
     try {
       // Re-authenticate with current password first
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user!.email!,
-        password: currentPassword,
+        password: data.currentPassword,
       })
       if (signInError) {
-        setError(t('account.changePassword.wrongCurrent'))
+        setSubmitError(t('account.changePassword.wrongCurrent'))
         return
       }
 
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+      const { error: updateError } = await supabase.auth.updateUser({ password: data.newPassword })
       if (updateError) throw updateError
 
       setSuccess(true)
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
+      reset()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.failedTryAgain'))
+      setSubmitError(err instanceof Error ? err.message : t('common.failedTryAgain'))
     } finally {
       setIsPending(false)
     }
@@ -82,15 +78,13 @@ export default function ChangePasswordPage() {
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-[var(--space-4)]">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[var(--space-4)]">
             <Input
               label={t('account.changePassword.current')}
               type={showCurrent ? 'text' : 'password'}
-              value={currentPassword}
-              onChange={e => setCurrentPassword(e.target.value)}
               placeholder="••••••••"
-              required
               autoComplete="current-password"
+              error={errors.currentPassword?.message}
               rightAction={
                 <button
                   type="button"
@@ -102,15 +96,14 @@ export default function ChangePasswordPage() {
                   {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               }
+              {...register('currentPassword')}
             />
             <Input
               label={t('account.changePassword.new')}
               type={showNew ? 'text' : 'password'}
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
               placeholder="••••••••"
-              required
               autoComplete="new-password"
+              error={errors.newPassword?.message}
               rightAction={
                 <button
                   type="button"
@@ -122,15 +115,14 @@ export default function ChangePasswordPage() {
                   {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               }
+              {...register('newPassword')}
             />
             <Input
               label={t('account.changePassword.confirm')}
               type={showConfirm ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              required
               autoComplete="new-password"
+              error={errors.confirmPassword?.message}
               rightAction={
                 <button
                   type="button"
@@ -142,10 +134,11 @@ export default function ChangePasswordPage() {
                   {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               }
+              {...register('confirmPassword')}
             />
 
-            {error && (
-              <p className="text-[13px] text-[var(--danger)] -mt-[var(--space-1)]">{error}</p>
+            {submitError && (
+              <p className="text-[13px] text-[var(--danger)] -mt-[var(--space-1)]">{submitError}</p>
             )}
 
             <Button type="submit" variant="accent" size="block" disabled={isPending}>

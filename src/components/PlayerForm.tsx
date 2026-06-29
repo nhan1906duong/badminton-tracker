@@ -1,7 +1,10 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { UserPlus, X } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { useCreatePlayer } from '../hooks/usePlayers'
 import { useI18n } from '../i18n'
+import { PlayerFormSchema, type PlayerFormValues } from '../lib/schemas/form-schemas'
 
 interface PlayerFormProps {
   onClose: () => void
@@ -10,26 +13,27 @@ interface PlayerFormProps {
 export default function PlayerForm({ onClose }: PlayerFormProps) {
   const { t } = useI18n()
   const createPlayer = useCreatePlayer()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    if (!name.trim()) {
-      setError(t('playerForm.nameRequired'))
-      return
-    }
-    if (name.trim().length > 100) {
-      setError(t('playerForm.nameTooLong'))
-      return
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PlayerFormValues>({ resolver: zodResolver(PlayerFormSchema) })
+
+  const nameField = register('name')
+  const emailField = register('email')
+
+  async function onSubmit(data: PlayerFormValues) {
+    setSubmitError('')
     try {
-      await createPlayer.mutateAsync({ name: name.trim(), email: email.trim() || undefined })
+      await createPlayer.mutateAsync({
+        name: data.name.trim(),
+        email: data.email?.trim() || undefined,
+      })
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('playerForm.failedCreate'))
+      setSubmitError(err instanceof Error ? err.message : t('playerForm.failedCreate'))
     }
   }
 
@@ -97,7 +101,7 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
         >
           {/* Name field */}
@@ -118,8 +122,6 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
             <input
               id="player-name"
               type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
               placeholder={t('playerForm.namePlaceholder')}
               autoFocus
               style={{
@@ -129,7 +131,7 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
                 fontSize: 'var(--text-base)',
                 fontFamily: 'var(--font-body)',
                 background: 'var(--surface)',
-                border: `1px solid ${error ? 'var(--danger)' : 'var(--border)'}`,
+                border: `1px solid ${errors.name ? 'var(--danger)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-sm)',
                 color: 'var(--fg)',
                 outline: 'none',
@@ -138,10 +140,17 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
               onFocus={e => {
                 e.currentTarget.style.border = '2px solid var(--fg)'
               }}
+              {...nameField}
               onBlur={e => {
-                e.currentTarget.style.border = `1px solid ${error ? 'var(--danger)' : 'var(--border)'}`
+                e.currentTarget.style.border = `1px solid ${errors.name ? 'var(--danger)' : 'var(--border)'}`
+                nameField.onBlur(e)
               }}
             />
+            {errors.name && (
+              <p style={{ fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--font-body)' }}>
+                {errors.name.message}
+              </p>
+            )}
           </div>
 
           {/* Email field */}
@@ -162,8 +171,6 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
             <input
               id="player-email"
               type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
               placeholder="john@example.com"
               style={{
                 width: '100%',
@@ -181,15 +188,17 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
               onFocus={e => {
                 e.currentTarget.style.border = '2px solid var(--fg)'
               }}
+              {...emailField}
               onBlur={e => {
                 e.currentTarget.style.border = '1px solid var(--border)'
+                emailField.onBlur(e)
               }}
             />
           </div>
 
-          {error && (
+          {submitError && (
             <p style={{ fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--font-body)' }}>
-              {error}
+              {submitError}
             </p>
           )}
 

@@ -1,29 +1,35 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Input } from '../../design-system/components'
 import { useAuth } from '../hooks/useAuth'
 import { useI18n } from '../i18n'
+import { LoginSchema, type LoginValues } from '../lib/schemas/form-schemas'
 
 export default function LoginPage() {
   const { signInWithPassword, isSigningIn } = useAuth()
   const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginValues>({ resolver: zodResolver(LoginSchema) })
+
+  async function onSubmit(data: LoginValues) {
+    setSubmitError('')
     try {
-      await signInWithPassword(email, password)
+      await signInWithPassword(data.email, data.password)
       const from = location.state?.from as { pathname?: string } | undefined
       navigate(from?.pathname || '/sessions', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.invalidCredentials'))
+      setSubmitError(err instanceof Error ? err.message : t('auth.invalidCredentials'))
     }
   }
 
@@ -56,24 +62,21 @@ export default function LoginPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-[var(--space-4)]">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[var(--space-4)]">
           <Input
             label={t('auth.email')}
             type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
-            required
             autoComplete="email"
+            error={errors.email?.message}
+            {...register('email')}
           />
           <Input
             label={t('auth.password')}
             type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"
-            required
             autoComplete="current-password"
+            error={errors.password?.message}
             rightAction={
               <button
                 type="button"
@@ -85,10 +88,11 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             }
+            {...register('password')}
           />
 
-          {error && (
-            <p className="text-[11px] text-[var(--danger)] -mt-[var(--space-1)]">{error}</p>
+          {submitError && (
+            <p className="text-[11px] text-[var(--danger)] -mt-[var(--space-1)]">{submitError}</p>
           )}
 
           <Button type="submit" variant="accent" size="block" disabled={isSigningIn}>
