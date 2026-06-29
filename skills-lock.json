@@ -7,6 +7,12 @@
       "skillPath": "skills/pwa-development/SKILL.md",
       "computedHash": "356d9a26a8435778bb3bb906f5198814c48872ae87485ae97f4da3c10a0cfcc5"
     },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "0d2c4857a7d6fdcd3fbc46e458fa4c497f029cab89a01548b3defce203003932"
+    },
     "ux-designer": {
       "source": "Shubhamsaboo/awesome-llm-apps",
       "sourceType": "github",
