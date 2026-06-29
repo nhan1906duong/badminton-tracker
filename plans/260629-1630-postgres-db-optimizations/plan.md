@@ -44,6 +44,7 @@ Four phases of targeted DB fixes identified by a Supabase Postgres best-practice
 | 11 | Fix `set search_path = public` on `get_badge_leaders` + old scalability RPCs + indexes | 0.5h | completed | `supabase/migrations/20260701000004_fix-badge-leaders-rpc-search-path-and-indexes.sql` |
 | 12 | Fix remaining bare `is_admin()` / `auth.uid()` in missed tables + missing PSS indexes + `handle_new_user` search_path | 0.5h | completed | `supabase/migrations/20260702000001_fix-remaining-rls-and-pss-indexes.sql` |
 | 13 | Fifth audit fixes: shared scoring helper, cascade simplification, batch league schedule, single JOIN for team IDs, redirect dead RPCs to materialized table | 1h | completed | `supabase/migrations/20260702000002_fifth-audit-fixes.sql` |
+| 14 | Sixth audit fixes: drop permissive PMR write policies, revoke `_compute_match_pmr_rows` from anon, extend helper to `recalculate_all_ratings` | 0.5h | completed | `supabase/migrations/20260703000001_sixth-audit-fixes.sql` |
 
 ## Dependencies
 
@@ -181,7 +182,30 @@ Full re-audit of all RPC function bodies — scoring logic, cascade patterns, bu
 | Three correlated scalar subqueries in one SELECT | `update_match_players` | Fetches `team_a_id`, `team_b_id`, `winner_team` as three separate correlated subqueries over `match_teams` in a single row SELECT. Replace with one JOIN + `max(id) FILTER (WHERE team_label = 'TEAM_A')` style conditional aggregation. |
 | Old scalability RPCs are dead code with full aggregation | `get_leaderboard_page`, `get_player_ranking_summary` | Phase 9 confirmed that TypeScript hooks read `player_all_time_stats` directly — these RPCs are no longer called by the app. However they still live on the DB and each does a full multi-CTE aggregation over `player_match_results` if invoked directly (e.g. from Supabase Dashboard or a future hook). Either drop them or add a `RAISE NOTICE` deprecation warning and redirect to the stats tables. |
 
+## Sixth Audit Findings (2026-06-29)
+
+Re-audit of all 13 phases + function bodies after fifth-audit migration landed. One HIGH code-quality issue, one MEDIUM security finding (previously deferred), one LOW hardening gap.
+
+### HIGH
+
+| Finding | Functions | Fix |
+|---------|-----------|-----|
+| `recalculate_all_ratings` missed by fifth audit — still duplicates scoring formula | `recalculate_all_ratings` (in `20260701000002`) | Fifth audit introduced `_compute_match_pmr_rows` and applied it to `record_result` + `update_match_players` but skipped `recalculate_all_ratings`. The function still has ~70 lines of identical CASE-heavy scoring expressions. A formula change will silently diverge from the other two functions. Refactor inner loop to call `_compute_match_pmr_rows` + bulk-insert from its result. |
+
+### MEDIUM
+
+| Finding | Tables / Functions | Fix |
+|---------|--------------------|-----|
+| `pmr_insert`/`pmr_update`/`pmr_delete` allow unauthenticated REST writes | `player_match_results` (006_ranking_system.sql) | Any authenticated user can `POST /rest/v1/player_match_results` with fabricated `is_winner=true` and arbitrary `total_weekly_points`, bypassing all RPC scoring logic. Previously documented as accepted risk in Phase 6. Proper fix: drop the three permissive write policies — SECURITY DEFINER functions bypass RLS so they continue to work; direct PostgREST writes are blocked by policy absence. |
+
+### LOW
+
+| Finding | Fix |
+|---------|-----|
+| `_compute_match_pmr_rows` callable by `anon` | Helper is internal-only but PUBLIC/anon has EXECUTE by default. Add `REVOKE EXECUTE ON FUNCTION _compute_match_pmr_rows(...) FROM PUBLIC, anon;` in the next migration. Low risk since it only reads publicly-visible data. |
+
 ## Unresolved Questions
 
 - Phase 3 assumes all-time stats are ONLY needed for ended sessions. Confirm no UI currently shows all-time stats for players mid-session (leaderboard reads `player_all_time_stats` which by definition only has ended-session data — confirmed safe).
 - Phase 9: confirm `player_all_time_stats` schema matches the `PlayerRankingStats` TypeScript type expected by `useLeaderboard` before removing the `get_leaderboard_page` RPC call.
+- ~~Sixth audit HIGH: should `recalculate_all_ratings` be refactored in a Phase 14 migration, or bundled with the PMR policy fix?~~ Resolved — all three sixth-audit items bundled into `20260703000001_sixth-audit-fixes.sql`.
