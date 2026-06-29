@@ -43,6 +43,7 @@ Four phases of targeted DB fixes identified by a Supabase Postgres best-practice
 | 10 | Add partial index on `sessions` for ended sessions + fix EXISTS→JOIN in session stats | 0.5h | completed | `supabase/migrations/20260701000003_sessions-ended-index.sql` (JOIN fix in Phase 8) |
 | 11 | Fix `set search_path = public` on `get_badge_leaders` + old scalability RPCs + indexes | 0.5h | completed | `supabase/migrations/20260701000004_fix-badge-leaders-rpc-search-path-and-indexes.sql` |
 | 12 | Fix remaining bare `is_admin()` / `auth.uid()` in missed tables + missing PSS indexes + `handle_new_user` search_path | 0.5h | completed | `supabase/migrations/20260702000001_fix-remaining-rls-and-pss-indexes.sql` |
+| 13 | Fifth audit fixes: shared scoring helper, cascade simplification, batch league schedule, single JOIN for team IDs, redirect dead RPCs to materialized table | 1h | completed | `supabase/migrations/20260702000002_fifth-audit-fixes.sql` |
 
 ## Dependencies
 
@@ -155,6 +156,30 @@ Full re-audit of all migrations including 003–017, 020–022, and backfills. T
 |---------|-----|
 | `handle_new_user()` trigger uses `SET search_path = public` | Change to `SET search_path = ''` + qualify `public.profiles` — Phase 12 |
 | `restrict_bwf_session_label()` trigger has no fixed search_path | Not SECURITY DEFINER so risk is low; add `SET search_path = ''` + qualify `public.is_admin()` for consistency — Phase 12 |
+
+## Fifth Audit Findings (2026-06-29)
+
+Full re-audit of all RPC function bodies — scoring logic, cascade patterns, bulk-insert loops. No new security or RLS issues. All findings are code-quality / performance in SECURITY DEFINER RPCs.
+
+### HIGH
+
+| Finding | Functions | Fix |
+|---------|-----------|-----|
+| Duplicate point-calculation logic | `record_result`, `update_match_players` | Both functions contain an identical ~90-line `INSERT INTO player_match_results` block with the same CASE-heavy `base_points`/`score_bonus`/`strength_bonus`/`total_weekly_points` expressions. A formula change in one won't propagate to the other — latent scoring bug. Extract into an `immutable` SQL helper function `_build_player_match_rows(...)` shared by both. |
+
+### MEDIUM
+
+| Finding | Functions | Fix |
+|---------|-----------|-----|
+| Redundant manual cascade deletes | `delete_session`, `delete_match` | Both functions manually `DELETE FROM match_scores / match_participants / match_teams / player_match_results` before deleting the match/session. All four tables have `ON DELETE CASCADE` from `matches`, and `matches` cascades from `sessions`. The manual deletes are dead code that will break silently if cascade constraints are changed. Remove them — just `DELETE FROM matches WHERE ...` (or `DELETE FROM sessions WHERE ...`) and let the DB cascade. Only the final `perform refresh_player_all_time_stats()` call needs to stay. |
+| `create_league_schedule` per-row insert loop | `create_league_schedule` | Each fixture in the JSONB array triggers 3+ serial INSERTs (match → TEAM_A → TEAM_B → participants) inside a PL/pgSQL `FOR` loop. With 10+ fixtures this is 30+ sequential round-trips. Refactor to: one batch INSERT into `matches` using `jsonb_array_elements`; one batch INSERT into `match_teams`; one batch INSERT into `match_participants` — all as single statements. |
+
+### LOW
+
+| Finding | Functions | Fix |
+|---------|-----------|-----|
+| Three correlated scalar subqueries in one SELECT | `update_match_players` | Fetches `team_a_id`, `team_b_id`, `winner_team` as three separate correlated subqueries over `match_teams` in a single row SELECT. Replace with one JOIN + `max(id) FILTER (WHERE team_label = 'TEAM_A')` style conditional aggregation. |
+| Old scalability RPCs are dead code with full aggregation | `get_leaderboard_page`, `get_player_ranking_summary` | Phase 9 confirmed that TypeScript hooks read `player_all_time_stats` directly — these RPCs are no longer called by the app. However they still live on the DB and each does a full multi-CTE aggregation over `player_match_results` if invoked directly (e.g. from Supabase Dashboard or a future hook). Either drop them or add a `RAISE NOTICE` deprecation warning and redirect to the stats tables. |
 
 ## Unresolved Questions
 
