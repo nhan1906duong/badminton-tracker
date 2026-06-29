@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { BadgeLeaderRowSchema, parseRpcResult } from '../lib/schemas/rpc-schemas'
 import { supabase } from '../lib/supabase'
 import type { MatchWithDetails } from '../types/database'
 import { usePlayerMatches } from './usePlayerMatches'
@@ -19,11 +20,7 @@ export interface PlayerBadge {
   count: number
 }
 
-interface BadgeLeaderRow {
-  badge_type: string
-  leader_id: string
-  leader_count: number
-}
+import type { BadgeLeaderRow } from '../lib/schemas/rpc-schemas'
 
 /**
  * Compute player-local badge inputs from the player's own scoped match list.
@@ -74,7 +71,7 @@ export function usePlayerBadges(playerId: string) {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_badge_leaders')
       if (error) throw error
-      return (data ?? []) as BadgeLeaderRow[]
+      return parseRpcResult(BadgeLeaderRowSchema.array(), data ?? [], 'usePlayerBadges')
     },
   })
 

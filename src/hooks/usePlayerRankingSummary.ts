@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { AllTimeStatsRowSchema, parseRpcResult } from '../lib/schemas/rpc-schemas'
 import { supabase } from '../lib/supabase'
 import type { PlayerRankingStats } from './useRankings'
 
@@ -37,23 +38,7 @@ export function usePlayerRankingSummary(playerId: string) {
       if (error) throw error
       if (!data) return null
 
-      const row = data as unknown as {
-        all_time_rank: number
-        matches_played: number
-        wins: number
-        losses: number
-        win_rate: number
-        total_weekly_points: number
-        avg_weekly_points: number
-        points_for: number
-        points_against: number
-        point_difference: number
-        total_rating_delta: number
-        last_session_delta: number
-        rank_change: number
-        top_one_week_streak: number
-        player: { id: string; name: string; avatar_url: string | null; rating: number }
-      }
+      const row = parseRpcResult(AllTimeStatsRowSchema, data as unknown, 'usePlayerRankingSummary')
 
       return {
         playerId: row.player.id,

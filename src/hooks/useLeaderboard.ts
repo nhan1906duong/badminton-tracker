@@ -1,31 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
+import { AllTimeStatsRowSchema, parseRpcResult } from '../lib/schemas/rpc-schemas'
 import { supabase } from '../lib/supabase'
 import type { PlayerRankingStats } from './useRankings'
 
 export const LEADERBOARD_KEY = 'leaderboard'
 
-interface AllTimeStatsRow {
-  all_time_rank: number
-  matches_played: number
-  wins: number
-  losses: number
-  win_rate: number
-  total_weekly_points: number
-  avg_weekly_points: number
-  points_for: number
-  points_against: number
-  point_difference: number
-  total_rating_delta: number
-  last_session_delta: number
-  rank_change: number
-  top_one_week_streak: number
-  player: {
-    id: string
-    name: string
-    avatar_url: string | null
-    rating: number
-  }
-}
+type AllTimeStatsRow = import('../lib/schemas/rpc-schemas').AllTimeStatsRow
 
 function toPlayerRankingStats(row: AllTimeStatsRow): PlayerRankingStats {
   return {
@@ -82,7 +62,12 @@ export function useLeaderboard() {
 
       if (error) throw error
 
-      return ((data ?? []) as unknown as AllTimeStatsRow[])
+      const rows = parseRpcResult(
+        AllTimeStatsRowSchema.array(),
+        (data ?? []) as unknown,
+        'useLeaderboard',
+      )
+      return rows
         .filter(row => row.player != null)
         .map(toPlayerRankingStats)
     },
