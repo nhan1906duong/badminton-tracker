@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, waitFor } from '@testing-library/react'
 import { createElement } from 'react'
-import { useCreateSession, DuplicateTournamentError } from '../useSessions'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { DuplicateTournamentError, useCreateSession } from '../useSessions'
 
 // ─── Supabase mock ────────────────────────────────────────────────────────────
 
@@ -21,7 +21,9 @@ vi.mock('../../lib/supabase', () => ({
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function makeWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return {
     wrapper: ({ children }: { children: React.ReactNode }) =>
       createElement(QueryClientProvider, { client: qc }, children),
@@ -97,11 +99,17 @@ describe('useCreateSession', () => {
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })
 
-    result.current.mutate({ type: 'tournament', label: 'Some Tournament', bwf_tournament_id: 'tournament-1' })
+    result.current.mutate({
+      type: 'tournament',
+      label: 'Some Tournament',
+      bwf_tournament_id: 'tournament-1',
+    })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.error).toBeInstanceOf(DuplicateTournamentError)
-    expect((result.current.error as Error).message).toBe('A session for this tournament already exists.')
+    expect((result.current.error as Error).message).toBe(
+      'A session for this tournament already exists.',
+    )
   })
 
   it('throws error when RPC returns authentication error', async () => {
@@ -124,7 +132,10 @@ describe('useCreateSession', () => {
   it('throws error when RPC fails', async () => {
     mockAuthenticatedUser()
 
-    mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'DB error', code: '23505' } } as any)
+    mockRpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'DB error', code: '23505' },
+    } as any)
 
     const { wrapper } = makeWrapper()
     const { result } = renderHook(() => useCreateSession(), { wrapper })

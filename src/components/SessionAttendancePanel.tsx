@@ -1,10 +1,14 @@
 import { Check, X } from 'lucide-react'
 import { Avatar } from '../../design-system/components/avatar'
 import { useAuth } from '../hooks/useAuth'
-import { useProfile } from '../hooks/useProfile'
 import { useIsAdmin } from '../hooks/useIsAdmin'
 import { usePlayers } from '../hooks/usePlayers'
-import { useSessionAttendances, useUpsertAttendance, useDeleteAttendance } from '../hooks/useSessionAttendances'
+import { useProfile } from '../hooks/useProfile'
+import {
+  useDeleteAttendance,
+  useSessionAttendances,
+  useUpsertAttendance,
+} from '../hooks/useSessionAttendances'
 import { useI18n } from '../i18n'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { AttendanceStatus, Player } from '../types/database'
@@ -24,10 +28,10 @@ export function SessionAttendancePanel({ sessionId }: Props) {
   const upsert = useUpsertAttendance()
   const remove = useDeleteAttendance()
 
-  const attendanceMap = new Map(attendances.map((a) => [a.player_id, a.status]))
+  const attendanceMap = new Map(attendances.map(a => [a.player_id, a.status]))
 
-  const confirmed = attendances.filter((a) => a.status === 'confirmed').length
-  const declined = attendances.filter((a) => a.status === 'declined').length
+  const confirmed = attendances.filter(a => a.status === 'confirmed').length
+  const declined = attendances.filter(a => a.status === 'declined').length
   const pending = players.length - confirmed - declined
   const isMutating = upsert.isPending || remove.isPending
 

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { PlayerQuote } from '../types/database'
 
@@ -31,7 +31,7 @@ export function useCreatePlayerQuote() {
       if (error) throw error
       return data[0] as PlayerQuote
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
+    onSuccess: data => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
   })
 }
 
@@ -46,7 +46,7 @@ export function useUpdatePlayerQuote() {
       if (error) throw error
       return data[0] as PlayerQuote
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
+    onSuccess: data => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
   })
 }
 
@@ -58,6 +58,6 @@ export function useDeletePlayerQuote() {
       if (error) throw error
       return quote
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
+    onSuccess: data => qc.invalidateQueries({ queryKey: [PLAYER_QUOTES_KEY, data.player_id] }),
   })
 }

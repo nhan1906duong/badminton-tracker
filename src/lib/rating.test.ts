@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  calculateScoreDifferenceBonus,
   calculateCloseGameBonus,
-  calculateMatchPoints,
   calculateExpectedWinRate,
+  calculateMatchPoints,
   calculateRatingDelta,
+  calculateScoreDifferenceBonus,
   teamAvgRating,
 } from './rating'
 
@@ -22,12 +22,12 @@ describe('calculateScoreDifferenceBonus', () => {
 
   it('returns +3 for margins 11–16', () => {
     expect(calculateScoreDifferenceBonus(21, 10)).toBe(3) // diff 11
-    expect(calculateScoreDifferenceBonus(21, 5)).toBe(3)  // diff 16
+    expect(calculateScoreDifferenceBonus(21, 5)).toBe(3) // diff 16
   })
 
   it('returns +4 for margins 17+', () => {
-    expect(calculateScoreDifferenceBonus(21, 4)).toBe(4)  // diff 17
-    expect(calculateScoreDifferenceBonus(21, 0)).toBe(4)  // diff 21
+    expect(calculateScoreDifferenceBonus(21, 4)).toBe(4) // diff 17
+    expect(calculateScoreDifferenceBonus(21, 0)).toBe(4) // diff 21
   })
 })
 
@@ -67,7 +67,7 @@ describe('calculateMatchPoints — winner', () => {
     })
     expect(result.basePoints).toBe(10)
     expect(result.attendancePoints).toBe(1)
-    expect(result.scoreBonus).toBe(1)   // diff 1 → tier ≤4
+    expect(result.scoreBonus).toBe(1) // diff 1 → tier ≤4
     expect(result.strengthBonus).toBe(0)
     expect(result.total).toBe(12)
   })
@@ -80,7 +80,7 @@ describe('calculateMatchPoints — winner', () => {
       teamRating: 800,
       opponentTeamRating: 1300, // gap = 500 → +6
     })
-    expect(result.scoreBonus).toBe(4)   // diff 21 → tier 17+
+    expect(result.scoreBonus).toBe(4) // diff 21 → tier 17+
     expect(result.strengthBonus).toBe(6)
     expect(result.total).toBe(21)
   })
@@ -89,7 +89,7 @@ describe('calculateMatchPoints — winner', () => {
     const result = calculateMatchPoints({
       isWinner: true,
       teamScore: 21,
-      opponentScore: 14,  // diff 7 → tier 5–10 → +2
+      opponentScore: 14, // diff 7 → tier 5–10 → +2
       teamRating: 1000,
       opponentTeamRating: 1050, // gap 50 → +1
     })
@@ -110,7 +110,7 @@ describe('calculateMatchPoints — loser', () => {
     })
     expect(result.basePoints).toBe(3)
     expect(result.attendancePoints).toBe(1)
-    expect(result.scoreBonus).toBe(3)   // score 20 → tier 19+
+    expect(result.scoreBonus).toBe(3) // score 20 → tier 19+
     expect(result.strengthBonus).toBe(0)
     expect(result.total).toBe(7)
   })
@@ -124,7 +124,7 @@ describe('calculateMatchPoints — loser', () => {
       opponentTeamRating: 1000, // loser gap = 200 > 100 → -2
     })
     expect(result.strengthBonus).toBe(-2)
-    expect(result.total).toBe(2)  // 3+1+0-2 = 2
+    expect(result.total).toBe(2) // 3+1+0-2 = 2
   })
 
   it('strong team loses to much weaker team (gap 251+) — penalty -3', () => {
@@ -136,7 +136,7 @@ describe('calculateMatchPoints — loser', () => {
       opponentTeamRating: 950, // loser gap = 350 > 250 → -3
     })
     expect(result.strengthBonus).toBe(-3)
-    expect(result.total).toBe(1)  // 3+1+0-3 = 1 (at minimum floor)
+    expect(result.total).toBe(1) // 3+1+0-3 = 1 (at minimum floor)
   })
 
   it('loser with no penalty and mid score', () => {
@@ -147,7 +147,7 @@ describe('calculateMatchPoints — loser', () => {
       teamRating: 1000,
       opponentTeamRating: 1100, // gap = -100, lost to stronger → no penalty
     })
-    expect(result.scoreBonus).toBe(2)   // score 17 → tier 16–18
+    expect(result.scoreBonus).toBe(2) // score 17 → tier 16–18
     expect(result.strengthBonus).toBe(0)
     expect(result.total).toBe(6)
   })
@@ -200,8 +200,10 @@ describe('calculateRatingDelta', () => {
   })
 
   it('upset win gives larger delta than expected win', () => {
-    const expectedWeak = calculateExpectedWinRate(800, 1200)  // underdog
+    const expectedWeak = calculateExpectedWinRate(800, 1200) // underdog
     const expectedStrong = calculateExpectedWinRate(1200, 800) // favourite
-    expect(calculateRatingDelta(expectedWeak, 1)).toBeGreaterThan(calculateRatingDelta(expectedStrong, 1))
+    expect(calculateRatingDelta(expectedWeak, 1)).toBeGreaterThan(
+      calculateRatingDelta(expectedStrong, 1),
+    )
   })
 })

@@ -32,26 +32,26 @@ export function calculateCloseGameBonus(loserScore: number): number {
 // Positive gap = winner beat a stronger team (upset bonus)
 function winnerStrengthBonus(winnerTeamRating: number, opponentTeamRating: number): number {
   const gap = opponentTeamRating - winnerTeamRating
-  if (gap < -100) return 0  // beat much weaker
-  if (gap <= 100) return 1  // beat similar
-  if (gap <= 250) return 2  // beat stronger
-  if (gap <= 400) return 4  // beat much stronger
-  return 6                  // beat extremely stronger
+  if (gap < -100) return 0 // beat much weaker
+  if (gap <= 100) return 1 // beat similar
+  if (gap <= 250) return 2 // beat stronger
+  if (gap <= 400) return 4 // beat much stronger
+  return 6 // beat extremely stronger
 }
 
 // Positive gap = loser was stronger than winner = lost to a weaker team = penalty
 function loserStrengthAdjustment(loserTeamRating: number, winnerTeamRating: number): number {
   const gap = loserTeamRating - winnerTeamRating
-  if (gap > 250) return -3  // lost to much weaker
-  if (gap > 100) return -2  // lost to weaker
-  return 0                  // lost to similar or stronger (no penalty)
+  if (gap > 250) return -3 // lost to much weaker
+  if (gap > 100) return -2 // lost to weaker
+  return 0 // lost to similar or stronger (no penalty)
 }
 
 export interface MatchPointsInput {
   isWinner: boolean
-  teamScore: number        // this player's team's final score
-  opponentScore: number    // opposing team's final score
-  teamRating: number       // this player's team avg rating
+  teamScore: number // this player's team's final score
+  opponentScore: number // opposing team's final score
+  teamRating: number // this player's team avg rating
   opponentTeamRating: number
 }
 
@@ -79,7 +79,7 @@ export function calculateMatchPoints(input: MatchPointsInput): MatchPointsBreakd
 
   const total = Math.max(
     SCORING_CONFIG.minMatchPoints,
-    basePoints + attendancePoints + scoreBonus + strengthBonus
+    basePoints + attendancePoints + scoreBonus + strengthBonus,
   )
 
   return { basePoints, attendancePoints, scoreBonus, strengthBonus, total }
@@ -87,14 +87,14 @@ export function calculateMatchPoints(input: MatchPointsInput): MatchPointsBreakd
 
 // Elo expected win probability for a team
 export function calculateExpectedWinRate(teamRating: number, opponentTeamRating: number): number {
-  return 1 / (1 + Math.pow(10, (opponentTeamRating - teamRating) / 400))
+  return 1 / (1 + 10 ** ((opponentTeamRating - teamRating) / 400))
 }
 
 // Elo rating change for one player
 export function calculateRatingDelta(
   expected: number,
   actual: 0 | 1,
-  k = SCORING_CONFIG.kFactor
+  k = SCORING_CONFIG.kFactor,
 ): number {
   return Math.round(k * (actual - expected))
 }

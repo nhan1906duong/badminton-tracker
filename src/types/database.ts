@@ -1,13 +1,7 @@
 // Generated Supabase types placeholder
 // Run: npx supabase gen types typescript --project-id <ref> --schema public > src/types/database.ts
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Profile {
   id: string
@@ -214,6 +208,9 @@ export function getSessionName(session: Session, locale: string = 'en'): string 
   }
   const LOCALE_TAG: Record<string, string> = { en: 'en-US', vi: 'vi-VN' }
   return new Date(session.started_at).toLocaleDateString(LOCALE_TAG[locale] ?? 'en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   })
 }

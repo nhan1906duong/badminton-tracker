@@ -44,7 +44,13 @@ export const MASCOTS: Mascot[] = [
     lottiePath: ['/mascots/pigeon/pigeon01.lottie', '/mascots/pigeon/pigeon02.lottie'],
   },
   { id: 'peacock', name: 'Peacock', emoji: '🦚', lottiePath: '/mascots/peacock.lottie' },
-  { id: 'sea-star', name: 'Sea-star', emoji: '⭐', lottiePath: '/mascots/sea-star.lottie', scale: 1.38 },
+  {
+    id: 'sea-star',
+    name: 'Sea-star',
+    emoji: '⭐',
+    lottiePath: '/mascots/sea-star.lottie',
+    scale: 1.38,
+  },
   {
     id: 'jellyfish',
     name: 'Jellyfish',
@@ -55,7 +61,13 @@ export const MASCOTS: Mascot[] = [
       '/mascots/jellyfish/jellyfish03.lottie',
     ],
   },
-  { id: 'black-cat', name: 'Black Cat', emoji: '🐈‍⬛', lottiePath: '/mascots/black-cat.lottie', scale: 1.4 },
+  {
+    id: 'black-cat',
+    name: 'Black Cat',
+    emoji: '🐈‍⬛',
+    lottiePath: '/mascots/black-cat.lottie',
+    scale: 1.4,
+  },
   { id: 'chameleon', name: 'Chameleon', emoji: '🦎', lottiePath: '/mascots/chameleon.lottie' },
   { id: 'dino', name: 'Dino', emoji: '🦖', lottiePath: '/mascots/dino.lottie', scale: 1.19 },
   { id: 'sloth', name: 'Sloth', emoji: '🦥', lottiePath: '/mascots/sloth.lottie', scale: 1.3 },
@@ -157,7 +169,7 @@ export const MASCOTS: Mascot[] = [
 
 export function getMascot(mascotId?: string | null): Mascot | null {
   if (!mascotId) return null
-  return MASCOTS.find((m) => m.id === mascotId) ?? null
+  return MASCOTS.find(m => m.id === mascotId) ?? null
 }
 
 /** A stable animation to represent the mascot, e.g. in the picker grid. */

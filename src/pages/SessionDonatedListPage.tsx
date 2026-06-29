@@ -1,12 +1,12 @@
+import { ChevronLeft, Wallet } from 'lucide-react'
 import { useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, Wallet } from 'lucide-react'
 import { AppBar, Avatar, EmptyState, PullToRefresh } from '../../design-system/components'
 import { ShuttleLoading } from '../components/ShuttleLoading'
 import { useSessionDonationStats } from '../hooks/usePlayerStats'
 import { useSession } from '../hooks/useSessions'
-import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 import { useI18n } from '../i18n'
+import { formatCurrency, LOSS_PENALTY_VND } from '../lib/currency'
 
 interface DonorRowProps {
   rank: number
@@ -99,7 +99,7 @@ export default function SessionDonatedListPage() {
   const navigate = useNavigate()
   const { data: session } = useSession(sessionId)
   const { donors, totalDonatedVnd, totalLosses, isLoading } = useSessionDonationStats(
-    sessionId ?? ''
+    sessionId ?? '',
   )
 
   const handleRefresh = useCallback(async () => {
@@ -109,7 +109,9 @@ export default function SessionDonatedListPage() {
   if (!sessionId) {
     return (
       <div className="min-h-[100dvh] bg-[var(--bg)] px-[var(--space-5)] py-[var(--space-5)]">
-        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>{t('sessionDetail.notFound')}</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+          {t('sessionDetail.notFound')}
+        </p>
       </div>
     )
   }
@@ -165,7 +167,10 @@ export default function SessionDonatedListPage() {
                 color: 'var(--muted)',
               }}
             >
-              {t('donations.lossSummary', { losses: totalLosses, amount: formatCurrency(LOSS_PENALTY_VND) })}
+              {t('donations.lossSummary', {
+                losses: totalLosses,
+                amount: formatCurrency(LOSS_PENALTY_VND),
+              })}
             </p>
           </header>
 

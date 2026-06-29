@@ -1,6 +1,6 @@
 import { usePlayerMatchesBySession } from '../hooks/usePlayerMatchesBySession'
-import { PlayerMatchHistoryItem } from './PlayerMatchHistoryItem'
 import { useI18n } from '../i18n'
+import { PlayerMatchHistoryItem } from './PlayerMatchHistoryItem'
 
 interface Props {
   playerId: string
@@ -14,7 +14,7 @@ export function SessionMatchList({ playerId, sessionId }: Props) {
   if (isLoading) {
     return (
       <div className="px-4 py-3 space-y-2">
-        {[0, 1, 2].map((i) => (
+        {[0, 1, 2].map(i => (
           <div
             key={i}
             className="h-10 rounded animate-pulse opacity-40"
@@ -25,7 +25,7 @@ export function SessionMatchList({ playerId, sessionId }: Props) {
     )
   }
 
-  const withWinner = (matches ?? []).filter((m) => m.teams.some((t) => t.is_winner))
+  const withWinner = (matches ?? []).filter(m => m.teams.some(t => t.is_winner))
 
   if (withWinner.length === 0) {
     return (
@@ -39,7 +39,7 @@ export function SessionMatchList({ playerId, sessionId }: Props) {
 
   return (
     <div className="divide-y divide-[var(--border)] fade-in">
-      {withWinner.map((match) => (
+      {withWinner.map(match => (
         <PlayerMatchHistoryItem key={match.id} match={match} playerId={playerId} />
       ))}
     </div>

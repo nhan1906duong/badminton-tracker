@@ -7,14 +7,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   rightAction?: ReactNode
 }
 
-export function Input({
-  label,
-  hint,
-  error,
-  rightAction,
-  className = '',
-  ...props
-}: InputProps) {
+export function Input({ label, hint, error, rightAction, className = '', ...props }: InputProps) {
   return (
     <div className="w-full">
       {label && (
@@ -37,9 +30,7 @@ export function Input({
           {...props}
         />
         {rightAction && (
-          <div className="absolute right-0 top-0 h-full flex items-center pr-3">
-            {rightAction}
-          </div>
+          <div className="absolute right-0 top-0 h-full flex items-center pr-3">{rightAction}</div>
         )}
       </div>
       {hint && !error && (

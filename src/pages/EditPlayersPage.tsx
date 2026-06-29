@@ -1,13 +1,13 @@
+import { Check, ChevronLeft, ChevronRight, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Check, ChevronLeft, ChevronRight, Loader2, Plus, X } from 'lucide-react'
 import { AppBar, Avatar, BottomSheet, LoadingState } from '../../design-system/components'
 import { useMatch, useUpdateMatchPlayers } from '../hooks/useMatches'
 import { usePlayers } from '../hooks/usePlayers'
+import { matchTypeLabel, type TFunction, useI18n } from '../i18n'
 import { getTeamSize } from '../lib/match-helpers'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { MatchWithDetails, Player } from '../types/database'
-import { matchTypeLabel, useI18n, type TFunction } from '../i18n'
 
 type TeamKey = 'A' | 'B'
 type PlayerSlots = (string | null)[]
@@ -16,9 +16,7 @@ type PickerTarget = { team: TeamKey; index: number }
 function getTeamPlayerIds(match: MatchWithDetails, teamLabel: 'TEAM_A' | 'TEAM_B') {
   const team = match.teams.find(t => t.team_label === teamLabel)
   if (!team) return []
-  return match.participants
-    .filter(p => p.team_id === team.id)
-    .map(p => p.player_id)
+  return match.participants.filter(p => p.team_id === team.id).map(p => p.player_id)
 }
 
 function normalizeSlots(ids: string[], size: number): PlayerSlots {
@@ -60,7 +58,9 @@ function PlayerSlot({
         <p className="font-[family:var(--font-mono)] text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
           {role}
         </p>
-        <p className={`mt-0.5 truncate font-[family:var(--font-display)] text-[16px] font-bold ${player ? 'text-[var(--fg)]' : 'text-[var(--muted)]'}`}>
+        <p
+          className={`mt-0.5 truncate font-[family:var(--font-display)] text-[16px] font-bold ${player ? 'text-[var(--fg)]' : 'text-[var(--muted)]'}`}
+        >
           {player ? formatShortPlayerName(player.name) : t('team.tapToChoose')}
         </p>
       </div>
@@ -69,7 +69,7 @@ function PlayerSlot({
         <span
           role="button"
           aria-label={t('team.removePlayer', { name: player.name })}
-          onClick={(event) => {
+          onClick={event => {
             event.stopPropagation()
             onClear()
           }}
@@ -150,13 +150,14 @@ export default function EditPlayersPage() {
   const playerMap = useMemo(() => {
     const map = new Map<string, Player>()
     for (const player of players) map.set(player.id, player)
-    for (const participant of match?.participants ?? []) map.set(participant.player.id, participant.player)
+    for (const participant of match?.participants ?? [])
+      map.set(participant.player.id, participant.player)
     return map
   }, [match?.participants, players])
 
   const selectedIds = useMemo(
     () => [...teamAIds, ...teamBIds].filter((id): id is string => Boolean(id)),
-    [teamAIds, teamBIds]
+    [teamAIds, teamBIds],
   )
 
   const pickerPlayers = players
@@ -262,16 +263,16 @@ export default function EditPlayersPage() {
             label={t('team.teamA')}
             slots={teamAIds}
             playerMap={playerMap}
-            onPick={(index) => setPickerTarget({ team: 'A', index })}
-            onClear={(index) => updateSlot('A', index, null)}
+            onPick={index => setPickerTarget({ team: 'A', index })}
+            onClear={index => updateSlot('A', index, null)}
           />
 
           <TeamPanel
             label={t('team.teamB')}
             slots={teamBIds}
             playerMap={playerMap}
-            onPick={(index) => setPickerTarget({ team: 'B', index })}
-            onClear={(index) => updateSlot('B', index, null)}
+            onPick={index => setPickerTarget({ team: 'B', index })}
+            onClear={index => updateSlot('B', index, null)}
           />
 
           {error && (
@@ -304,12 +305,14 @@ export default function EditPlayersPage() {
             {t('editPlayers.choosePlayer')}
           </p>
           <p className="mt-1 font-[family:var(--font-mono)] text-[12px] text-[var(--muted)]">
-            {pickerTarget?.team === 'A' ? t('team.teamA') : t('team.teamB')} · {pickerTarget ? slotRole(teamSize, pickerTarget.index, t) : ''}
+            {pickerTarget?.team === 'A' ? t('team.teamA') : t('team.teamB')} ·{' '}
+            {pickerTarget ? slotRole(teamSize, pickerTarget.index, t) : ''}
           </p>
         </div>
         <div className="max-h-[56dvh] overflow-y-auto overscroll-contain px-[var(--space-1)]">
           {pickerPlayers.map(player => {
-            const isSelectedElsewhere = selectedIds.includes(player.id) && player.id !== targetCurrentId
+            const isSelectedElsewhere =
+              selectedIds.includes(player.id) && player.id !== targetCurrentId
             const isCurrent = player.id === targetCurrentId
 
             return (

@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import type { MatchWithDetails, PlayerMatchResult, Session } from '../types/database'
 
@@ -56,7 +56,7 @@ export function usePlayerPointsHistory(playerId: string) {
       if (!session) continue
 
       // Only include matches with a declared winner (ranked matches)
-      if (!match.teams.some((t) => t.is_winner)) continue
+      if (!match.teams.some(t => t.is_winner)) continue
 
       const entry = sessionMap.get(session.id) ?? { session, matches: [] }
       entry.matches.push({ match, points: result })
@@ -67,20 +67,14 @@ export function usePlayerPointsHistory(playerId: string) {
       .map(({ session, matches }) => ({
         session,
         matches: matches.sort(
-          (a, b) =>
-            new Date(a.match.played_at).getTime() -
-            new Date(b.match.played_at).getTime(),
+          (a, b) => new Date(a.match.played_at).getTime() - new Date(b.match.played_at).getTime(),
         ),
         totalPoints: matches.reduce((sum, m) => sum + m.points.total_weekly_points, 0),
-        totalRatingDelta: matches.reduce(
-          (sum, m) => sum + (m.points.rating_delta ?? 0),
-          0,
-        ),
+        totalRatingDelta: matches.reduce((sum, m) => sum + (m.points.rating_delta ?? 0), 0),
       }))
       .sort(
         (a, b) =>
-          new Date(b.session.started_at).getTime() -
-          new Date(a.session.started_at).getTime(),
+          new Date(b.session.started_at).getTime() - new Date(a.session.started_at).getTime(),
       )
   }, [rawResults, playerId])
 

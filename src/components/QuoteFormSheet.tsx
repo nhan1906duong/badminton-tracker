@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { BottomSheet } from '../../design-system/components'
-import { Button } from '../../design-system/components'
+import { BottomSheet, Button } from '../../design-system/components'
 import { useCreatePlayerQuote, useUpdatePlayerQuote } from '../hooks/usePlayerQuotes'
-import { QUOTE_MAX_LENGTH, type PlayerQuote } from '../types/database'
 import { useI18n } from '../i18n'
+import { type PlayerQuote, QUOTE_MAX_LENGTH } from '../types/database'
 
 interface QuoteFormSheetProps {
   open: boolean
@@ -52,7 +51,15 @@ export function QuoteFormSheet({ open, onClose, playerId, quote }: QuoteFormShee
 
   return (
     <BottomSheet open={open} onClose={handleClose}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: '0 var(--space-2)' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-4)',
+          padding: '0 var(--space-2)',
+        }}
+      >
         <h3
           style={{
             fontFamily: 'var(--font-display)',
@@ -80,7 +87,7 @@ export function QuoteFormSheet({ open, onClose, playerId, quote }: QuoteFormShee
           </label>
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={e => setText(e.target.value)}
             placeholder={t('quoteForm.textPlaceholder')}
             autoFocus
             rows={3}
@@ -90,11 +97,16 @@ export function QuoteFormSheet({ open, onClose, playerId, quote }: QuoteFormShee
           />
           <div className="flex items-center justify-between">
             {error ? (
-              <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>
+              <p className="text-[11px]" style={{ color: 'var(--danger)' }}>
+                {error}
+              </p>
             ) : (
               <span />
             )}
-            <p className="text-[11px]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}>
+            <p
+              className="text-[11px]"
+              style={{ fontFamily: 'var(--font-mono)', color: 'var(--muted)' }}
+            >
               {text.trim().length}/{QUOTE_MAX_LENGTH}
             </p>
           </div>

@@ -1,9 +1,9 @@
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
-import { useI18n } from '../i18n'
 import { Button, Input } from '../../design-system/components'
+import { useAuth } from '../hooks/useAuth'
+import { useI18n } from '../i18n'
 
 export default function LoginPage() {
   const { signInWithPassword, isSigningIn } = useAuth()
@@ -32,9 +32,7 @@ export default function LoginPage() {
       className="min-h-svh flex items-center justify-center p-[var(--space-5)]"
       style={{ background: 'var(--bg)' }}
     >
-      <div
-        className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-5)]"
-      >
+      <div className="w-full max-w-sm bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-[var(--space-5)]">
         {/* Logo stamp */}
         <div className="flex flex-col items-center mb-[var(--space-6)]">
           <div
@@ -79,7 +77,7 @@ export default function LoginPage() {
             rightAction={
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword(v => !v)}
                 className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
                 tabIndex={-1}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -90,17 +88,10 @@ export default function LoginPage() {
           />
 
           {error && (
-            <p className="text-[11px] text-[var(--danger)] -mt-[var(--space-1)]">
-              {error}
-            </p>
+            <p className="text-[11px] text-[var(--danger)] -mt-[var(--space-1)]">{error}</p>
           )}
 
-          <Button
-            type="submit"
-            variant="accent"
-            size="block"
-            disabled={isSigningIn}
-          >
+          <Button type="submit" variant="accent" size="block" disabled={isSigningIn}>
             {isSigningIn && <Loader2 className="w-4 h-4 animate-spin" />}
             {isSigningIn ? t('auth.signingIn') : t('auth.signIn')}
           </Button>

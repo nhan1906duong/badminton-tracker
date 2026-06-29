@@ -1,5 +1,5 @@
-import Avatar from './Avatar'
 import { formatShortPlayerName } from '../lib/player-name'
+import Avatar from './Avatar'
 
 /**
  * PodiumChart — modern sports podium for top-5 rankings.
@@ -35,7 +35,16 @@ function CrownIcon({ size = 28 }: { size?: number }) {
         strokeWidth="1"
         strokeLinejoin="round"
       />
-      <rect x="2" y="18" width="20" height="3" rx="1" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
+      <rect
+        x="2"
+        y="18"
+        width="20"
+        height="3"
+        rx="1"
+        fill="#f59e0b"
+        stroke="#d97706"
+        strokeWidth="1"
+      />
     </svg>
   )
 }
@@ -106,7 +115,7 @@ function buildBlocks(): BlockConfig[] {
   // Order left-to-right: 4, 2, 1, 3, 5
   const order = [4, 2, 1, 3, 5]
   let x = 0
-  return order.map((rank) => {
+  return order.map(rank => {
     const cfg = { rank, x, bodyHeight: heights[rank] }
     x += COL_WIDTH + GAP
     return cfg
@@ -140,11 +149,11 @@ function PodiumBlock({
       className={onClick ? 'cursor-pointer' : undefined}
       onClick={onClick}
       style={{ transition: 'opacity 0.15s' }}
-      onMouseEnter={(e) => {
+      onMouseEnter={e => {
         const el = e.currentTarget as SVGGElement
         el.style.opacity = '0.9'
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={e => {
         const el = e.currentTarget as SVGGElement
         el.style.opacity = '1'
       }}
@@ -207,23 +216,11 @@ function PodiumBlock({
       )}
 
       {/* Main body */}
-      <rect
-        x={x}
-        y={bodyY}
-        width={COL_WIDTH}
-        height={bodyHeight}
-        rx={3}
-        fill={theme.body}
-      />
+      <rect x={x} y={bodyY} width={COL_WIDTH} height={bodyHeight} rx={3} fill={theme.body} />
 
       {/* Content: Avatar + Name + Value */}
       {player && (
-        <foreignObject
-          x={x + 2}
-          y={bodyY + 4}
-          width={COL_WIDTH - 4}
-          height={bodyHeight - 8}
-        >
+        <foreignObject x={x + 2} y={bodyY + 4} width={COL_WIDTH - 4} height={bodyHeight - 8}>
           <div
             className="flex flex-col items-center justify-center h-full text-center"
             style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
@@ -282,7 +279,7 @@ export default function PodiumChart({ players, onPlayerClick }: PodiumChartProps
         style={{ maxHeight: 220 }}
         xmlns="http://www.w3.org/2000/svg"
       >
-        {BLOCKS.map((block) => (
+        {BLOCKS.map(block => (
           <PodiumBlock
             key={block.rank}
             config={block}

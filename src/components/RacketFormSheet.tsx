@@ -1,11 +1,10 @@
-import { Suspense, lazy, useState } from 'react'
-import { BottomSheet, SegmentedControl } from '../../design-system/components'
-import { Input, Button } from '../../design-system/components'
+import { lazy, Suspense, useState } from 'react'
+import { BottomSheet, Button, Input, SegmentedControl } from '../../design-system/components'
 import { useCreatePlayerRacket, useUpdatePlayerRacket } from '../hooks/usePlayerRackets'
-import { RACKET_BRANDS, type PlayerRacket, type RacketBrand } from '../types/database'
-import { getMascot, getMascotPreviewPath } from '../lib/mascots'
-import MascotPicker from './MascotPicker'
 import { useI18n } from '../i18n'
+import { getMascot, getMascotPreviewPath } from '../lib/mascots'
+import { type PlayerRacket, RACKET_BRANDS, type RacketBrand } from '../types/database'
+import MascotPicker from './MascotPicker'
 
 const LottieMascot = lazy(() => import('./LottieMascot'))
 
@@ -22,10 +21,20 @@ interface RacketFormSheetProps {
   onCreated?: (racketName: string) => void
 }
 
-export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: RacketFormSheetProps) {
+export function RacketFormSheet({
+  open,
+  onClose,
+  playerId,
+  racket,
+  onCreated,
+}: RacketFormSheetProps) {
   const { t } = useI18n()
-  const [brandChoice, setBrandChoice] = useState<RacketBrand>(() => initialBrandChoice(racket?.brand))
-  const [customBrand, setCustomBrand] = useState(() => (initialBrandChoice(racket?.brand) === 'Other' ? racket?.brand ?? '' : ''))
+  const [brandChoice, setBrandChoice] = useState<RacketBrand>(() =>
+    initialBrandChoice(racket?.brand),
+  )
+  const [customBrand, setCustomBrand] = useState(() =>
+    initialBrandChoice(racket?.brand) === 'Other' ? (racket?.brand ?? '') : '',
+  )
   const [realName, setRealName] = useState(racket?.real_name ?? '')
   const [nickname, setNickname] = useState(racket?.nickname ?? '')
   const [mascotId, setMascotId] = useState<string | null>(racket?.mascot_id ?? null)
@@ -38,7 +47,7 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
 
   function handleClose() {
     setBrandChoice(initialBrandChoice(racket?.brand))
-    setCustomBrand(initialBrandChoice(racket?.brand) === 'Other' ? racket?.brand ?? '' : '')
+    setCustomBrand(initialBrandChoice(racket?.brand) === 'Other' ? (racket?.brand ?? '') : '')
     setRealName(racket?.real_name ?? '')
     setNickname(racket?.nickname ?? '')
     setMascotId(racket?.mascot_id ?? null)
@@ -65,9 +74,21 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
     }
     try {
       if (racket) {
-        await updateRacket.mutateAsync({ id: racket.id, brand, real_name: trimmedName, nickname: nickname.trim(), mascot_id: mascotId })
+        await updateRacket.mutateAsync({
+          id: racket.id,
+          brand,
+          real_name: trimmedName,
+          nickname: nickname.trim(),
+          mascot_id: mascotId,
+        })
       } else {
-        await createRacket.mutateAsync({ player_id: playerId, brand, real_name: trimmedName, nickname: nickname.trim(), mascot_id: mascotId })
+        await createRacket.mutateAsync({
+          player_id: playerId,
+          brand,
+          real_name: trimmedName,
+          nickname: nickname.trim(),
+          mascot_id: mascotId,
+        })
         onCreated?.(`${brand} ${trimmedName}`)
       }
       handleClose()
@@ -78,7 +99,15 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
 
   return (
     <BottomSheet open={open} onClose={handleClose}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: '0 var(--space-2)' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-4)',
+          padding: '0 var(--space-2)',
+        }}
+      >
         <h3
           style={{
             fontFamily: 'var(--font-display)',
@@ -105,7 +134,7 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
             {t('racketForm.brand')}
           </label>
           <SegmentedControl
-            tabs={RACKET_BRANDS.map((b) => ({ id: b, label: b }))}
+            tabs={RACKET_BRANDS.map(b => ({ id: b, label: b }))}
             value={brandChoice}
             onChange={setBrandChoice}
           />
@@ -115,7 +144,7 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
           <Input
             label={t('racketForm.customBrand')}
             value={customBrand}
-            onChange={(e) => setCustomBrand(e.target.value)}
+            onChange={e => setCustomBrand(e.target.value)}
             placeholder={t('racketForm.customBrandPlaceholder')}
           />
         )}
@@ -123,7 +152,7 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
         <Input
           label={t('racketForm.realName')}
           value={realName}
-          onChange={(e) => setRealName(e.target.value)}
+          onChange={e => setRealName(e.target.value)}
           placeholder={t('racketForm.realNamePlaceholder')}
           autoFocus
           error={error}
@@ -132,7 +161,7 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
         <Input
           label={t('racketForm.nickname')}
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={e => setNickname(e.target.value)}
           placeholder={t('racketForm.nicknamePlaceholder')}
         />
 
@@ -167,7 +196,9 @@ export function RacketFormSheet({ open, onClose, playerId, racket, onCreated }: 
                 <LottieMascot src={getMascotPreviewPath(mascot)} size={32} scale={mascot.scale} />
               </Suspense>
             ) : (
-              <span style={{ fontSize: 24, lineHeight: 1, width: 32, textAlign: 'center' }}>🚫</span>
+              <span style={{ fontSize: 24, lineHeight: 1, width: 32, textAlign: 'center' }}>
+                🚫
+              </span>
             )}
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--fg)' }}>
               {mascot ? mascot.name : t('mascotPicker.none')}

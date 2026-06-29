@@ -1,22 +1,16 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
-import { X, Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useH2HPairs } from '../hooks/useH2HPairs'
 import { usePlayers } from '../hooks/usePlayers'
-import Avatar from './Avatar'
-import { PlayerMatchHistoryItem } from './PlayerMatchHistoryItem'
 import { useI18n } from '../i18n'
 import { formatShortPlayerName } from '../lib/player-name'
 import type { Player } from '../types/database'
+import Avatar from './Avatar'
+import { PlayerMatchHistoryItem } from './PlayerMatchHistoryItem'
 
 // ── Win Gauge (half-circle SVG) ───────────────────────────────────────────────
 
-function WinGauge({
-  winRate,
-  hasData,
-}: {
-  winRate: number | null
-  hasData: boolean
-}) {
+function WinGauge({ winRate, hasData }: { winRate: number | null; hasData: boolean }) {
   const { t } = useI18n()
   const R = 40
   const cx = 52
@@ -28,9 +22,19 @@ function WinGauge({
   const pathD = `M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R} ${cy}`
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 4 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%',
+        gap: 4,
+      }}
+    >
       {/* Gauge — fills the column */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
+      >
         <svg width="100%" viewBox="0 0 104 56" style={{ overflow: 'visible' }}>
           <path
             d={pathD}
@@ -54,7 +58,12 @@ function WinGauge({
             x={cx}
             y={cy - 10}
             textAnchor="middle"
-            style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 900, fill: hasData ? 'var(--accent)' : 'var(--muted)' }}
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              fontWeight: 900,
+              fill: hasData ? 'var(--accent)' : 'var(--muted)',
+            }}
           >
             {hasData && winRate !== null ? `${Math.round(winRate * 100)}%` : '—'}
           </text>
@@ -62,7 +71,13 @@ function WinGauge({
             x={cx}
             y={cy + 4}
             textAnchor="middle"
-            style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, fill: 'var(--muted)', letterSpacing: 1 }}
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              fontWeight: 700,
+              fill: 'var(--muted)',
+              letterSpacing: 1,
+            }}
           >
             {t('ranking.h2hWins')}
           </text>
@@ -109,7 +124,10 @@ function PlayerSlot({
           <Avatar src={player.avatar_url} name={player.name} size={44} />
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onRemove() }}
+            onClick={e => {
+              e.stopPropagation()
+              onRemove()
+            }}
             style={{
               position: 'absolute',
               top: -3,
@@ -245,7 +263,8 @@ function PlayerPicker({
           zIndex: 101,
           background: 'var(--surface)',
           borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-          padding: 'var(--space-3) var(--space-3) max(var(--space-5), calc(env(safe-area-inset-bottom) + var(--space-4)))',
+          padding:
+            'var(--space-3) var(--space-3) max(var(--space-5), calc(env(safe-area-inset-bottom) + var(--space-4)))',
           boxShadow: '0 -4px 32px oklch(0% 0 0 / 0.12)',
           transform: open ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(110%)',
           transition: 'transform 0.3s cubic-bezier(0.32, 0, 0.15, 1)',
@@ -278,14 +297,17 @@ function PlayerPicker({
           {t('ranking.h2hSelectTeam')}
         </p>
         <div style={{ overflowY: 'auto', flex: 1 }}>
-          {players.map((player) => {
+          {players.map(player => {
             const isDisabled = disabledIds.includes(player.id)
             return (
               <button
                 key={player.id}
                 type="button"
                 disabled={isDisabled}
-                onClick={() => { onSelect(player); onClose() }}
+                onClick={() => {
+                  onSelect(player)
+                  onClose()
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -339,15 +361,15 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
   const didInitRef = useRef(false)
   useEffect(() => {
     if (didInitRef.current || !initialPlayerId || allPlayers.length === 0) return
-    const player = allPlayers.find((p) => p.id === initialPlayerId)
+    const player = allPlayers.find(p => p.id === initialPlayerId)
     if (!player) return
     didInitRef.current = true
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from async-loaded player list
     setTeamA([player, null])
   }, [initialPlayerId, allPlayers])
 
-  const teamAIds = useMemo(() => teamA.filter(Boolean).map((p) => p!.id), [teamA])
-  const teamBIds = useMemo(() => teamB.filter(Boolean).map((p) => p!.id), [teamB])
+  const teamAIds = useMemo(() => teamA.filter(Boolean).map(p => p!.id), [teamA])
+  const teamBIds = useMemo(() => teamB.filter(Boolean).map(p => p!.id), [teamB])
 
   const { teamAWins, teamBWins, totalMatches, matches, isLoading } = useH2HPairs(teamAIds, teamBIds)
 
@@ -359,13 +381,13 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
   function handlePick(player: Player) {
     if (!picker) return
     if (picker.side === 'A') {
-      setTeamA((prev) => {
+      setTeamA(prev => {
         const next = [...prev]
         next[picker.slot] = player
         return next
       })
     } else {
-      setTeamB((prev) => {
+      setTeamB(prev => {
         const next = [...prev]
         next[picker.slot] = player
         return next
@@ -374,8 +396,18 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
   }
 
   function removePlayer(side: 'A' | 'B', slot: 0 | 1) {
-    if (side === 'A') setTeamA((prev) => { const next = [...prev]; next[slot] = null; return next })
-    else setTeamB((prev) => { const next = [...prev]; next[slot] = null; return next })
+    if (side === 'A')
+      setTeamA(prev => {
+        const next = [...prev]
+        next[slot] = null
+        return next
+      })
+    else
+      setTeamB(prev => {
+        const next = [...prev]
+        next[slot] = null
+        return next
+      })
   }
 
   return (
@@ -393,7 +425,7 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
       >
         {/* Team A slots */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {([0, 1] as const).map((slot) => (
+          {([0, 1] as const).map(slot => (
             <PlayerSlot
               key={slot}
               player={teamA[slot]}
@@ -404,7 +436,15 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
           ))}
           {hasEnoughPlayers && totalMatches > 0 && (
             <div style={{ paddingTop: 6, textAlign: 'left' }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 24,
+                  fontWeight: 900,
+                  color: 'var(--accent)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
                 {teamAWins}
               </span>
             </div>
@@ -413,15 +453,12 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
 
         {/* Center: gauge */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <WinGauge
-            winRate={teamAWinRate}
-            hasData={hasEnoughPlayers && totalMatches > 0}
-          />
+          <WinGauge winRate={teamAWinRate} hasData={hasEnoughPlayers && totalMatches > 0} />
         </div>
 
         {/* Team B slots */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {([0, 1] as const).map((slot) => (
+          {([0, 1] as const).map(slot => (
             <PlayerSlot
               key={slot}
               player={teamB[slot]}
@@ -432,7 +469,15 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
           ))}
           {hasEnoughPlayers && totalMatches > 0 && (
             <div style={{ paddingTop: 6, textAlign: 'right' }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: 'var(--fg)', fontVariantNumeric: 'tabular-nums' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 24,
+                  fontWeight: 900,
+                  color: 'var(--fg)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
                 {teamBWins}
               </span>
             </div>
@@ -441,13 +486,27 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
       </div>
 
       {/* Stats + history */}
-      {hasEnoughPlayers && (
-        isLoading ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+      {hasEnoughPlayers &&
+        (isLoading ? (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '32px 0',
+              fontSize: 'var(--text-sm)',
+              color: 'var(--muted)',
+            }}
+          >
             {t('common.loadingEllipsis')}
           </div>
         ) : totalMatches === 0 ? (
-          <p style={{ textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '32px 0' }}>
+          <p
+            style={{
+              textAlign: 'center',
+              fontSize: 'var(--text-sm)',
+              color: 'var(--muted)',
+              padding: '32px 0',
+            }}
+          >
             {t('ranking.h2hNoData')}
           </p>
         ) : (
@@ -487,17 +546,12 @@ export default function HeadToHeadTab({ initialPlayerId }: Props) {
               className="bg-[var(--surface)] border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden"
               style={{ borderRadius: 'var(--radius-lg)' }}
             >
-              {matches.map((match) => (
-                <PlayerMatchHistoryItem
-                  key={match.id}
-                  match={match}
-                  playerId={teamAIds[0]}
-                />
+              {matches.map(match => (
+                <PlayerMatchHistoryItem key={match.id} match={match} playerId={teamAIds[0]} />
               ))}
             </div>
           </>
-        )
-      )}
+        ))}
 
       <PlayerPicker
         open={picker !== null}

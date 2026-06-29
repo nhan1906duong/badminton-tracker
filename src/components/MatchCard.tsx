@@ -1,10 +1,14 @@
 import { useNavigate } from 'react-router-dom'
-import type { MatchWithDetails } from '../types/database'
+import { LOCALE_TAG, type Locale, matchTypeLabel, useI18n } from '../i18n'
 import { formatShortPlayerName } from '../lib/player-name'
-import { LOCALE_TAG, matchTypeLabel, useI18n, type Locale } from '../i18n'
+import type { MatchWithDetails } from '../types/database'
 import { ShuttleLoading } from './ShuttleLoading'
 
-function formatDuration(playedAt: string, endedAt: string | null | undefined, isEnded: boolean): string {
+function formatDuration(
+  playedAt: string,
+  endedAt: string | null | undefined,
+  isEnded: boolean,
+): string {
   const start = new Date(playedAt).getTime()
   const end = endedAt ? new Date(endedAt).getTime() : isEnded ? start : Date.now()
   const totalMin = Math.floor((end - start) / 60000)
@@ -14,7 +18,11 @@ function formatDuration(playedAt: string, endedAt: string | null | undefined, is
 }
 
 function formatStartTime(iso: string, locale: Locale): string {
-  return new Date(iso).toLocaleTimeString(LOCALE_TAG[locale], { hour: '2-digit', minute: '2-digit', hour12: false })
+  return new Date(iso).toLocaleTimeString(LOCALE_TAG[locale], {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
 }
 
 interface MatchCardProps {
@@ -34,12 +42,12 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
   }
 
   const teamA = match.participants.filter(
-    (p) => match.teams.find((t) => t.id === p.team_id)?.team_label === 'TEAM_A'
+    p => match.teams.find(t => t.id === p.team_id)?.team_label === 'TEAM_A',
   )
   const teamB = match.participants.filter(
-    (p) => match.teams.find((t) => t.id === p.team_id)?.team_label === 'TEAM_B'
+    p => match.teams.find(t => t.id === p.team_id)?.team_label === 'TEAM_B',
   )
-  const winnerTeam = match.teams.find((t) => t.is_winner)
+  const winnerTeam = match.teams.find(t => t.is_winner)
   const winnerLabel = winnerTeam?.team_label
   const teamAWon = winnerLabel === 'TEAM_A'
   const teamBWon = winnerLabel === 'TEAM_B'
@@ -61,7 +69,11 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
       <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-4)' }}>
         <span
           className="uppercase tracking-[0.06em]"
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+          }}
         >
           {dateLabel ?? `M${matchNumber} · ${formatStartTime(match.played_at, locale)}`}
         </span>
@@ -79,7 +91,13 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
           >
             <span
               className="rounded-full animate-pulse"
-              style={{ width: 8, height: 8, background: 'var(--accent)', display: 'inline-block', flexShrink: 0 }}
+              style={{
+                width: 8,
+                height: 8,
+                background: 'var(--accent)',
+                display: 'inline-block',
+                flexShrink: 0,
+              }}
             />
             {t('common.live')}
           </div>
@@ -108,7 +126,7 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
       <div className="flex items-center" style={{ gap: 'var(--space-3)' }}>
         {/* Team A — left */}
         <div className="flex-1 min-w-0 text-left flex flex-col" style={{ gap: 2 }}>
-          {teamA.map((p) => (
+          {teamA.map(p => (
             <span
               key={p.player.id}
               style={{
@@ -136,7 +154,10 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
         </div>
 
         {/* Score center */}
-        <div className="flex flex-col items-center justify-center shrink-0" style={{ minWidth: 80 }}>
+        <div
+          className="flex flex-col items-center justify-center shrink-0"
+          style={{ minWidth: 80 }}
+        >
           {match.status === 'LIVE' ? (
             <div style={{ transform: 'translateY(-18px)' }}>
               <ShuttleLoading small />
@@ -149,7 +170,13 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
                   fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
                   fontWeight: hasScores ? 800 : 400,
                   letterSpacing: '-0.03em',
-                  color: teamAWon ? 'var(--accent)' : teamBWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
+                  color: teamAWon
+                    ? 'var(--accent)'
+                    : teamBWon
+                      ? 'var(--muted)'
+                      : hasScores
+                        ? 'var(--fg)'
+                        : 'var(--muted)',
                 }}
               >
                 {hasScores ? match.scores[0].team_a_score : '—'}
@@ -163,7 +190,13 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
                   fontSize: hasScores ? 'var(--text-2xl)' : 'var(--text-lg)',
                   fontWeight: hasScores ? 800 : 400,
                   letterSpacing: '-0.03em',
-                  color: teamBWon ? 'var(--accent)' : teamAWon ? 'var(--muted)' : hasScores ? 'var(--fg)' : 'var(--muted)',
+                  color: teamBWon
+                    ? 'var(--accent)'
+                    : teamAWon
+                      ? 'var(--muted)'
+                      : hasScores
+                        ? 'var(--fg)'
+                        : 'var(--muted)',
                 }}
               >
                 {hasScores ? match.scores[0].team_b_score : '—'}
@@ -190,7 +223,7 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
 
         {/* Team B — right */}
         <div className="flex-1 min-w-0 text-right flex flex-col" style={{ gap: 2 }}>
-          {teamB.map((p) => (
+          {teamB.map(p => (
             <span
               key={p.player.id}
               style={{
@@ -227,16 +260,26 @@ export default function MatchCard({ match, matchNumber, dateLabel, readonly }: M
           borderTop: '1px solid var(--border)',
         }}
       >
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+          }}
+        >
           {match.scores.length > 1
-            ? match.scores.map((s) => `${s.team_a_score}–${s.team_b_score}`).join(' · ')
+            ? match.scores.map(s => `${s.team_a_score}–${s.team_b_score}`).join(' · ')
             : match.status === 'SCHEDULED'
-            ? t('matches.notStarted')
-            : formatDuration(match.played_at, match.ended_at, isEnded)}
+              ? t('matches.notStarted')
+              : formatDuration(match.played_at, match.ended_at, isEnded)}
         </span>
         <span
           className="uppercase tracking-[0.06em]"
-          style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+          }}
         >
           {matchTypeLabel(match.match_type, t)}
         </span>

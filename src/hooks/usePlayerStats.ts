@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
+import { LOSS_PENALTY_VND } from '../lib/currency'
 import { useMatches } from './useMatches'
 import { usePlayers } from './usePlayers'
-import { LOSS_PENALTY_VND } from '../lib/currency'
 
 export interface PlayerStats {
   playerId: string
@@ -31,7 +31,7 @@ export function usePlayerStats(sessionId?: string) {
     }
 
     for (const match of matches) {
-      const winnerTeam = match.teams.find((t) => t.is_winner)
+      const winnerTeam = match.teams.find(t => t.is_winner)
       const winnerLabel = winnerTeam?.team_label
       if (!winnerLabel) continue
 
@@ -41,7 +41,7 @@ export function usePlayerStats(sessionId?: string) {
         if (!s) continue
 
         s.matchesPlayed += 1
-        const playerTeam = match.teams.find((t) => t.id === participant.team_id)?.team_label
+        const playerTeam = match.teams.find(t => t.id === participant.team_id)?.team_label
         if (playerTeam === winnerLabel) {
           s.wins += 1
         } else {
@@ -55,18 +55,12 @@ export function usePlayerStats(sessionId?: string) {
 
   const sortedByMatches = useMemo(
     () => [...stats].sort((a, b) => b.matchesPlayed - a.matchesPlayed),
-    [stats]
+    [stats],
   )
 
-  const sortedByWins = useMemo(
-    () => [...stats].sort((a, b) => b.wins - a.wins),
-    [stats]
-  )
+  const sortedByWins = useMemo(() => [...stats].sort((a, b) => b.wins - a.wins), [stats])
 
-  const totalLost = useMemo(
-    () => stats.reduce((sum, s) => sum + s.losses, 0),
-    [stats]
-  )
+  const totalLost = useMemo(() => stats.reduce((sum, s) => sum + s.losses, 0), [stats])
 
   return {
     stats,
@@ -89,17 +83,17 @@ export function useSessionDonationStats(sessionId: string) {
 
   const avatarMap = useMemo(() => {
     const m = new Map<string, string | null>()
-    players?.forEach((p) => m.set(p.id, p.avatar_url ?? null))
+    players?.forEach(p => m.set(p.id, p.avatar_url ?? null))
     return m
   }, [players])
 
   const donors = useMemo<Donor[]>(
     () =>
       stats
-        .filter((s) => s.losses > 0)
+        .filter(s => s.losses > 0)
         .sort((a, b) => b.losses - a.losses)
-        .map((s) => ({ ...s, avatarUrl: avatarMap.get(s.playerId) ?? null })),
-    [stats, avatarMap]
+        .map(s => ({ ...s, avatarUrl: avatarMap.get(s.playerId) ?? null })),
+    [stats, avatarMap],
   )
 
   return {

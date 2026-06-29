@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { Session, SessionType, MatchType } from '../types/database'
+import type { MatchType, Session, SessionType } from '../types/database'
 
 const SESSIONS_KEY = 'sessions'
 
@@ -10,7 +10,9 @@ export function useSessions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds')
+        .select(
+          '*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds',
+        )
         .order('started_at', { ascending: false })
       if (error) throw error
       return data as Session[]
@@ -22,12 +24,16 @@ export function useOpenSession() {
   return useQuery({
     queryKey: [SESSIONS_KEY, 'open'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
       const { data, error } = await supabase
         .from('sessions')
-        .select('*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds')
+        .select(
+          '*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds',
+        )
         .is('ended_at', null)
         .eq('created_by', user.id)
         .order('started_at', { ascending: false })
@@ -90,7 +96,9 @@ export function useSession(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('sessions')
-        .select('*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds')
+        .select(
+          '*, bwf_tournaments(category_name, category_slug), type, league_match_type, league_total_rounds',
+        )
         .eq('id', id!)
         .single()
       if (error) throw error
@@ -152,13 +160,13 @@ export function useEndSession() {
       if (error) throw error
       return data[0] as Session
     },
-    onSuccess: (session) => {
+    onSuccess: session => {
       qc.setQueryData([SESSIONS_KEY, session.id], session)
-      qc.setQueryData<Session[] | undefined>([SESSIONS_KEY], (sessions) =>
-        sessions?.map((s) => (s.id === session.id ? session : s))
+      qc.setQueryData<Session[] | undefined>([SESSIONS_KEY], sessions =>
+        sessions?.map(s => (s.id === session.id ? session : s)),
       )
-      qc.setQueryData<Session | null | undefined>([SESSIONS_KEY, 'open'], (openSession) =>
-        openSession?.id === session.id ? null : openSession
+      qc.setQueryData<Session | null | undefined>([SESSIONS_KEY, 'open'], openSession =>
+        openSession?.id === session.id ? null : openSession,
       )
       qc.invalidateQueries({ queryKey: [SESSIONS_KEY] })
       qc.invalidateQueries({ queryKey: ['players'] })
@@ -251,7 +259,13 @@ export function useRecalculateAllRatings() {
 export function useUpdateLeagueTotalRounds() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, league_total_rounds }: { id: string; league_total_rounds: number }) => {
+    mutationFn: async ({
+      id,
+      league_total_rounds,
+    }: {
+      id: string
+      league_total_rounds: number
+    }) => {
       const { error } = await supabase.rpc('update_league_total_rounds', {
         p_id: id,
         p_rounds: league_total_rounds,

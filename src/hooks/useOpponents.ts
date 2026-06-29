@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { usePlayerMatches } from './usePlayerMatches'
 import type { MatchWithDetails, Player } from '../types/database'
+import { usePlayerMatches } from './usePlayerMatches'
 
 export interface OpponentEntry {
   opponent: Player
@@ -12,7 +12,7 @@ export interface OpponentEntry {
 
 export function useOpponents(playerId: string) {
   const { data, isLoading } = usePlayerMatches(playerId)
-  const allMatches = data?.pages.flatMap((p) => p.matches) ?? []
+  const allMatches = data?.pages.flatMap(p => p.matches) ?? []
 
   const entries = useMemo<OpponentEntry[]>(() => {
     if (!playerId || allMatches.length === 0) return []
@@ -24,14 +24,14 @@ export function useOpponents(playerId: string) {
 
     for (const match of allMatches) {
       if (match.status !== 'COMPLETED') continue
-      const pp = match.participants.find((p) => p.player_id === playerId)
+      const pp = match.participants.find(p => p.player_id === playerId)
       if (!pp) continue
-      const playerTeam = match.teams.find((t) => t.id === pp.team_id)
+      const playerTeam = match.teams.find(t => t.id === pp.team_id)
       if (!playerTeam) continue
-      if (!match.teams.some((t) => t.is_winner)) continue
+      if (!match.teams.some(t => t.is_winner)) continue
       const isWin = playerTeam.is_winner
 
-      for (const opp of match.participants.filter((p) => p.team_id !== pp.team_id)) {
+      for (const opp of match.participants.filter(p => p.team_id !== pp.team_id)) {
         const entry = map.get(opp.player_id)
         if (entry) {
           if (isWin) entry.wins++
@@ -49,7 +49,7 @@ export function useOpponents(playerId: string) {
     }
 
     return Array.from(map.values())
-      .map((s) => ({
+      .map(s => ({
         opponent: s.player,
         wins: s.wins,
         losses: s.losses,

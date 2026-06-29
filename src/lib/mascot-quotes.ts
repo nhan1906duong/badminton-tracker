@@ -35,12 +35,7 @@ const QUOTES: Record<Locale, Record<MascotMood, string[]>> = {
       'Di chuyển nhanh lên!',
       'Khởi động kỹ vào!',
     ],
-    win: [
-      'Quá đỉnh!',
-      'Thắng rồi, ngon!',
-      'Cứ thế phát huy nha!',
-      'Đỉnh của chóp!',
-    ],
+    win: ['Quá đỉnh!', 'Thắng rồi, ngon!', 'Cứ thế phát huy nha!', 'Đỉnh của chóp!'],
     lose: [
       'Ván sau gỡ lại nè!',
       'Không sao, cố lên!',
@@ -54,7 +49,11 @@ const QUOTES: Record<Locale, Record<MascotMood, string[]>> = {
  * Picks a random encouragement/reaction quote for the given mood and locale.
  * For `idle`, `extraQuotes` (e.g. a player's own custom quotes) are mixed into the pool.
  */
-export function pickMascotQuote(mood: MascotMood, locale: Locale, extraQuotes: string[] = []): string {
+export function pickMascotQuote(
+  mood: MascotMood,
+  locale: Locale,
+  extraQuotes: string[] = [],
+): string {
   const pool = mood === 'idle' ? [...QUOTES[locale].idle, ...extraQuotes] : QUOTES[locale][mood]
   return pool[Math.floor(Math.random() * pool.length)]
 }

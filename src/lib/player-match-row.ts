@@ -10,20 +10,20 @@ const MATCH_TYPE_SHORT: Record<string, string> = {
 }
 
 export function getMatchRow(match: MatchWithDetails, playerId: string) {
-  const pp = match.participants.find((p) => p.player_id === playerId)
+  const pp = match.participants.find(p => p.player_id === playerId)
   if (!pp) return null
-  const playerTeam = match.teams.find((t) => t.id === pp.team_id)
+  const playerTeam = match.teams.find(t => t.id === pp.team_id)
   if (!playerTeam) return null
-  if (!match.teams.some((t) => t.is_winner)) return null
+  if (!match.teams.some(t => t.is_winner)) return null
   const isTeamA = playerTeam.team_label === 'TEAM_A'
   const teammates = match.participants
-    .filter((p) => p.team_id === pp.team_id && p.player_id !== playerId)
-    .map((p) => formatShortPlayerName(p.player.name))
+    .filter(p => p.team_id === pp.team_id && p.player_id !== playerId)
+    .map(p => formatShortPlayerName(p.player.name))
   const opponents = match.participants
-    .filter((p) => p.team_id !== pp.team_id)
-    .map((p) => formatShortPlayerName(p.player.name))
+    .filter(p => p.team_id !== pp.team_id)
+    .map(p => formatShortPlayerName(p.player.name))
   const scoreStr = match.scores
-    .map((s) => {
+    .map(s => {
       const my = isTeamA ? s.team_a_score : s.team_b_score
       const opp = isTeamA ? s.team_b_score : s.team_a_score
       return `${my}–${opp}`

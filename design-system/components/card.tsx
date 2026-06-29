@@ -1,4 +1,4 @@
-import type { ReactNode, CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
 export interface CardProps {
   interactive?: boolean
@@ -8,13 +8,7 @@ export interface CardProps {
   onClick?: () => void
 }
 
-export function Card({
-  interactive = false,
-  children,
-  className = '',
-  style,
-  onClick,
-}: CardProps) {
+export function Card({ interactive = false, children, className = '', style, onClick }: CardProps) {
   return (
     <div
       className={`bg-[var(--surface)] border border-[var(--border)] p-4 ${interactive ? 'cursor-pointer active:bg-[var(--bg)]' : ''} ${className}`}

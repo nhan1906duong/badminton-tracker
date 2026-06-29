@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react'
+import { Plus, X } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { BottomSheet } from '../../design-system/components'
+import { useUpdateLeagueTeam } from '../hooks/useLeagueTeams'
+import { usePlayers } from '../hooks/usePlayers'
+import { useI18n } from '../i18n'
+import { formatShortPlayerName } from '../lib/player-name'
 import type { LeagueTeamWithPlayers, MatchType } from '../types/database'
 import { getRequiredPlayersPerTeam } from '../types/database'
-import { usePlayers } from '../hooks/usePlayers'
-import { useUpdateLeagueTeam } from '../hooks/useLeagueTeams'
-import { useI18n } from '../i18n'
-import { BottomSheet } from '../../design-system/components'
-import { formatShortPlayerName } from '../lib/player-name'
-import { Plus, X } from 'lucide-react'
 
 interface LeagueTeamEditorProps {
   teams: LeagueTeamWithPlayers[]
@@ -16,7 +16,13 @@ interface LeagueTeamEditorProps {
   onClose: () => void
 }
 
-export default function LeagueTeamEditor({ teams, matchType, sessionId, open, onClose }: LeagueTeamEditorProps) {
+export default function LeagueTeamEditor({
+  teams,
+  matchType,
+  sessionId,
+  open,
+  onClose,
+}: LeagueTeamEditorProps) {
   const { t } = useI18n()
   const { data: allPlayers } = usePlayers()
   const updateTeam = useUpdateLeagueTeam()
@@ -34,15 +40,18 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
     setEditName(team.name)
   }, [])
 
-  const saveName = useCallback(async (teamId: string) => {
-    if (!editName.trim()) return
-    await updateTeam.mutateAsync({
-      teamId,
-      sessionId,
-      name: editName.trim(),
-    })
-    setEditingTeamId(null)
-  }, [editName, sessionId, updateTeam])
+  const saveName = useCallback(
+    async (teamId: string) => {
+      if (!editName.trim()) return
+      await updateTeam.mutateAsync({
+        teamId,
+        sessionId,
+        name: editName.trim(),
+      })
+      setEditingTeamId(null)
+    },
+    [editName, sessionId, updateTeam],
+  )
 
   const openPlayerPicker = useCallback((teamId: string) => {
     setPickerTeamId(teamId)
@@ -50,41 +59,48 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
     setPickerOpen(true)
   }, [])
 
-  const addPlayer = useCallback(async (playerId: string) => {
-    if (!pickerTeamId) return
-    const team = teams.find((t) => t.id === pickerTeamId)
-    if (!team) return
-    if (team.players.some((p) => p.id === playerId)) {
+  const addPlayer = useCallback(
+    async (playerId: string) => {
+      if (!pickerTeamId) return
+      const team = teams.find(t => t.id === pickerTeamId)
+      if (!team) return
+      if (team.players.some(p => p.id === playerId)) {
+        setPickerOpen(false)
+        setPickerTeamId(null)
+        return
+      }
+      if (team.players.length >= requiredPerTeam) return
+      await updateTeam.mutateAsync({
+        teamId: pickerTeamId,
+        sessionId,
+        playerIds: [...team.players.map(p => p.id), playerId],
+      })
       setPickerOpen(false)
       setPickerTeamId(null)
-      return
-    }
-    if (team.players.length >= requiredPerTeam) return
-    await updateTeam.mutateAsync({
-      teamId: pickerTeamId,
-      sessionId,
-      playerIds: [...team.players.map((p) => p.id), playerId],
-    })
-    setPickerOpen(false)
-    setPickerTeamId(null)
-  }, [pickerTeamId, requiredPerTeam, teams, sessionId, updateTeam])
+    },
+    [pickerTeamId, requiredPerTeam, teams, sessionId, updateTeam],
+  )
 
-  const removePlayer = useCallback(async (teamId: string, playerId: string) => {
-    const team = teams.find((t) => t.id === teamId)
-    if (!team) return
-    await updateTeam.mutateAsync({
-      teamId,
-      sessionId,
-      playerIds: team.players.filter((p) => p.id !== playerId).map((p) => p.id),
-    })
-  }, [teams, sessionId, updateTeam])
+  const removePlayer = useCallback(
+    async (teamId: string, playerId: string) => {
+      const team = teams.find(t => t.id === teamId)
+      if (!team) return
+      await updateTeam.mutateAsync({
+        teamId,
+        sessionId,
+        playerIds: team.players.filter(p => p.id !== playerId).map(p => p.id),
+      })
+    },
+    [teams, sessionId, updateTeam],
+  )
 
-  const usedPlayerIds = new Set(teams.flatMap((t) => t.players.map((p) => p.id)))
+  const usedPlayerIds = new Set(teams.flatMap(t => t.players.map(p => p.id)))
 
-  const filteredPlayers = allPlayers?.filter((p) => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  }) ?? []
+  const filteredPlayers =
+    allPlayers?.filter(p => {
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    }) ?? []
 
   return (
     <>
@@ -104,7 +120,7 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
           </div>
 
           <div className="flex flex-col gap-3">
-            {teams.map((team) => (
+            {teams.map(team => (
               <div
                 key={team.id}
                 className="bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-lg)] overflow-hidden"
@@ -115,9 +131,9 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
                     <input
                       type="text"
                       value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
+                      onChange={e => setEditName(e.target.value)}
                       onBlur={() => saveName(team.id)}
-                      onKeyDown={(e) => {
+                      onKeyDown={e => {
                         if (e.key === 'Enter') saveName(team.id)
                         if (e.key === 'Escape') setEditingTeamId(null)
                       }}
@@ -139,12 +155,15 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
 
                 {/* Players */}
                 <div className="px-3 pb-3 flex flex-wrap gap-1.5">
-                  {team.players.map((player) => (
+                  {team.players.map(player => (
                     <div
                       key={player.id}
                       className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--accent-soft)] rounded-full"
                     >
-                      <span className="font-[family:var(--font-display)] font-bold text-[var(--accent)]" style={{ fontSize: 12 }}>
+                      <span
+                        className="font-[family:var(--font-display)] font-bold text-[var(--accent)]"
+                        style={{ fontSize: 12 }}
+                      >
                         {formatShortPlayerName(player.name)}
                       </span>
                       <button
@@ -170,7 +189,10 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
 
                 {/* Validation hint */}
                 {team.players.length !== requiredPerTeam && (
-                  <div className="px-3 pb-2 font-[family:var(--font-mono)] text-[var(--danger)]" style={{ fontSize: 11 }}>
+                  <div
+                    className="px-3 pb-2 font-[family:var(--font-mono)] text-[var(--danger)]"
+                    style={{ fontSize: 11 }}
+                  >
                     {t('createSession.needsPlayers', { count: requiredPerTeam })}
                   </div>
                 )}
@@ -200,7 +222,7 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
             type="text"
             placeholder={t('createMatch.searchPlayers')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             autoComplete="off"
             style={{
               width: '100%',
@@ -236,9 +258,9 @@ export default function LeagueTeamEditor({ teams, matchType, sessionId, open, on
               {t('createMatch.noPlayerMatches')}
             </div>
           ) : (
-            filteredPlayers.map((p) => {
+            filteredPlayers.map(p => {
               const isUsed = usedPlayerIds.has(p.id)
-              const selectedTeam = teams.find((team) => team.id === pickerTeamId)
+              const selectedTeam = teams.find(team => team.id === pickerTeamId)
               const isTeamFull = (selectedTeam?.players.length ?? 0) >= requiredPerTeam
               return (
                 <button

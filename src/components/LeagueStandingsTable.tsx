@@ -1,6 +1,6 @@
-import type { TeamStanding } from '../types/database'
-import { useI18n } from '../i18n'
 import { Crown } from 'lucide-react'
+import { useI18n } from '../i18n'
+import type { TeamStanding } from '../types/database'
 
 interface LeagueStandingsTableProps {
   standings: TeamStanding[]
@@ -29,12 +29,42 @@ export default function LeagueStandingsTable({ standings, isEnded }: LeagueStand
         <table className="w-full" style={{ fontSize: 14 }}>
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="px-3 py-2 text-left font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]" style={{ fontSize: 10, width: 32 }}>#</th>
-              <th className="px-3 py-2 text-left font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]" style={{ fontSize: 10 }}>{t('sessionDetail.team')}</th>
-              <th className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]" style={{ fontSize: 10, width: 40 }}>{t('sessionDetail.played')}</th>
-              <th className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]" style={{ fontSize: 10, width: 32 }}>{t('sessionDetail.w')}</th>
-              <th className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]" style={{ fontSize: 10, width: 32 }}>{t('sessionDetail.l')}</th>
-              <th className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]" style={{ fontSize: 10, width: 40 }}>{t('sessionDetail.pts')}</th>
+              <th
+                className="px-3 py-2 text-left font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]"
+                style={{ fontSize: 10, width: 32 }}
+              >
+                #
+              </th>
+              <th
+                className="px-3 py-2 text-left font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]"
+                style={{ fontSize: 10 }}
+              >
+                {t('sessionDetail.team')}
+              </th>
+              <th
+                className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]"
+                style={{ fontSize: 10, width: 40 }}
+              >
+                {t('sessionDetail.played')}
+              </th>
+              <th
+                className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]"
+                style={{ fontSize: 10, width: 32 }}
+              >
+                {t('sessionDetail.w')}
+              </th>
+              <th
+                className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]"
+                style={{ fontSize: 10, width: 32 }}
+              >
+                {t('sessionDetail.l')}
+              </th>
+              <th
+                className="px-3 py-2 text-center font-[family:var(--font-mono)] text-[var(--muted)] font-bold uppercase tracking-[0.08em]"
+                style={{ fontSize: 10, width: 40 }}
+              >
+                {t('sessionDetail.pts')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -46,13 +76,19 @@ export default function LeagueStandingsTable({ standings, isEnded }: LeagueStand
                   className={`border-b border-[var(--border)] last:border-b-0 ${isChampion ? 'bg-[var(--accent-soft)]' : ''}`}
                 >
                   <td className="px-3 py-3">
-                    <span className="font-[family:var(--font-display)] font-bold text-[var(--fg)]" style={{ fontSize: 15 }}>
+                    <span
+                      className="font-[family:var(--font-display)] font-bold text-[var(--fg)]"
+                      style={{ fontSize: 15 }}
+                    >
                       {i + 1}
                     </span>
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-[family:var(--font-display)] font-bold text-[var(--fg)] truncate" style={{ fontSize: 15 }}>
+                      <span
+                        className="font-[family:var(--font-display)] font-bold text-[var(--fg)] truncate"
+                        style={{ fontSize: 15 }}
+                      >
                         {s.teamName}
                       </span>
                       {isChampion && (
@@ -60,16 +96,28 @@ export default function LeagueStandingsTable({ standings, isEnded }: LeagueStand
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-center font-[family:var(--font-mono)] text-[var(--fg)]" style={{ fontSize: 14 }}>
+                  <td
+                    className="px-3 py-3 text-center font-[family:var(--font-mono)] text-[var(--fg)]"
+                    style={{ fontSize: 14 }}
+                  >
                     {s.played}
                   </td>
-                  <td className="px-3 py-3 text-center font-[family:var(--font-mono)] text-[var(--accent)] font-bold" style={{ fontSize: 14 }}>
+                  <td
+                    className="px-3 py-3 text-center font-[family:var(--font-mono)] text-[var(--accent)] font-bold"
+                    style={{ fontSize: 14 }}
+                  >
                     {s.wins}
                   </td>
-                  <td className="px-3 py-3 text-center font-[family:var(--font-mono)] text-[var(--danger)]" style={{ fontSize: 14 }}>
+                  <td
+                    className="px-3 py-3 text-center font-[family:var(--font-mono)] text-[var(--danger)]"
+                    style={{ fontSize: 14 }}
+                  >
                     {s.losses}
                   </td>
-                  <td className="px-3 py-3 text-center font-[family:var(--font-display)] font-black text-[var(--accent)]" style={{ fontSize: 16 }}>
+                  <td
+                    className="px-3 py-3 text-center font-[family:var(--font-display)] font-black text-[var(--accent)]"
+                    style={{ fontSize: 16 }}
+                  >
                     {s.points}
                   </td>
                 </tr>

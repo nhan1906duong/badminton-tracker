@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import type { DotLottie } from '@lottiefiles/dotlottie-web'
+import { useState } from 'react'
 
 interface LottieMascotProps {
   src: string
@@ -16,7 +16,14 @@ export default function LottieMascot({ src, size, scale = 1, className = '' }: L
 
   return (
     <div style={{ width: size, height: size, overflow: 'hidden' }} className={className}>
-      <div style={{ width: '100%', height: '100%', transform: `scale(${scale})`, transformOrigin: 'center' }}>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          transform: `scale(${scale})`,
+          transformOrigin: 'center',
+        }}
+      >
         <DotLottieReact
           src={src}
           loop

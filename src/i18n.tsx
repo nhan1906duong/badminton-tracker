@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { MatchType } from './types/database'
 
 export type Locale = 'en' | 'vi'
@@ -155,7 +155,8 @@ const en = {
   'settings.unlinkPlayer': 'Unlink',
   'settings.selectPlayer': 'Select your player',
   'settings.unlinkConfirmTitle': 'Unlink player?',
-  'settings.unlinkConfirmDescription': 'Your account will no longer be connected to this player profile.',
+  'settings.unlinkConfirmDescription':
+    'Your account will no longer be connected to this player profile.',
   'settings.linkFailedTitle': 'Could not link player',
   'settings.linkFailedDescription': 'Player has been linked to another account.',
 
@@ -165,7 +166,8 @@ const en = {
   'players.deletePlayer': 'Delete Player?',
   'players.deleteDescription': 'This will remove the player permanently.',
   'players.failedDelete': 'Failed to delete player. Please try again.',
-  'players.statLine': '{matches} {matches, plural, one {match} other {matches}} · {wins} {wins, plural, one {win} other {wins}}',
+  'players.statLine':
+    '{matches} {matches, plural, one {match} other {matches}} · {wins} {wins, plural, one {win} other {wins}}',
   'players.notFound': 'Player not found',
   'players.changeAvatar': 'Change avatar',
   'players.ratingPts': '{rating} pts',
@@ -305,13 +307,17 @@ const en = {
   'sessionDetail.endSession': 'End session',
   'sessionDetail.deleteSession': 'Delete session',
   'sessionDetail.endTitle': 'End this session?',
-  'sessionDetail.endDescription': 'Match scores will be locked and rankings will be finalised. You can still view matches after ending.',
+  'sessionDetail.endDescription':
+    'Match scores will be locked and rankings will be finalised. You can still view matches after ending.',
   'sessionDetail.endWithLiveTitle': 'End session with live matches?',
-  'sessionDetail.endWithLiveDescription': '{count} live {count, plural, one {match is} other {matches are}} still in progress. Ending the session will lock the session now; finish or record those match results first if they should count.',
+  'sessionDetail.endWithLiveDescription':
+    '{count} live {count, plural, one {match is} other {matches are}} still in progress. Ending the session will lock the session now; finish or record those match results first if they should count.',
   'sessionDetail.deleteTitle': 'Delete session?',
-  'sessionDetail.deleteDescription': "This session and all its matches will be permanently deleted. This can't be undone.",
+  'sessionDetail.deleteDescription':
+    "This session and all its matches will be permanently deleted. This can't be undone.",
   'sessionDetail.deleteCompletedWithMatchesTitle': 'Delete completed session?',
-  'sessionDetail.deleteCompletedWithMatchesDescription': 'This completed session has {count} {count, plural, one {match} other {matches}}. Deleting it permanently removes the session, match history, scores, and ranking results.',
+  'sessionDetail.deleteCompletedWithMatchesDescription':
+    'This completed session has {count} {count, plural, one {match} other {matches}}. Deleting it permanently removes the session, match history, scores, and ranking results.',
   'sessionDetail.couldntEnd': "Couldn't end session",
   'sessionDetail.editScheduledTime': 'Edit scheduled time',
   'sessionDetail.saveTime': 'Save time',
@@ -322,7 +328,8 @@ const en = {
   'sessionDetail.manageTeams': 'Manage teams',
   'sessionDetail.addRound': 'Add round',
   'sessionDetail.addRoundTitle': 'Add another round?',
-  'sessionDetail.addRoundDescription': 'This will generate all Round {round} fixtures between teams. Existing matches are not affected.',
+  'sessionDetail.addRoundDescription':
+    'This will generate all Round {round} fixtures between teams. Existing matches are not affected.',
   'sessionDetail.standings': 'Standings',
   'sessionDetail.schedule': 'Schedule',
   'sessionDetail.round': 'Round {round}',
@@ -385,7 +392,8 @@ const en = {
   'createSession.pickTime': 'Pick a time to continue',
   'createSession.failedCreate': 'Failed to create session',
   'createSession.duplicateTitle': 'Tournament already tracked',
-  'createSession.duplicateDescription': 'A session for this tournament already exists. Choose a different tournament.',
+  'createSession.duplicateDescription':
+    'A session for this tournament already exists. Choose a different tournament.',
 
   'createSession.sessionType': 'Session type',
   'createSession.typeRegular': 'Regular',
@@ -523,11 +531,14 @@ const en = {
   'matchDetail.awardTitle': 'Record team win',
   'matchDetail.awardDescription': 'Pick the winning team. Current score is locked in as the final.',
   'matchDetail.endNoWinnerTitle': 'End match without a winner?',
-  'matchDetail.endNoWinnerDescription': 'The current score ({score}) will be saved and the match marked as ended. To declare a winner instead, tap Record team win.',
+  'matchDetail.endNoWinnerDescription':
+    'The current score ({score}) will be saved and the match marked as ended. To declare a winner instead, tap Record team win.',
   'matchDetail.deleteTitle': 'Delete this match?',
-  'matchDetail.deleteDescription': "Match {number} ({teamA} vs {teamB}) will be permanently removed. This can't be undone.",
+  'matchDetail.deleteDescription':
+    "Match {number} ({teamA} vs {teamB}) will be permanently removed. This can't be undone.",
   'matchDetail.deleteRecordedTitle': 'Delete recorded match?',
-  'matchDetail.deleteRecordedDescription': "Match {number} ({teamA} vs {teamB}) is live or completed. Deleting it permanently removes the match, scores, and any win/loss records.",
+  'matchDetail.deleteRecordedDescription':
+    'Match {number} ({teamA} vs {teamB}) is live or completed. Deleting it permanently removes the match, scores, and any win/loss records.',
   'matchDetail.deleteMatch': 'Delete match',
   'matchDetail.startMatchMenu': 'Start match',
   'matchDetail.reopenMatch': 'Re-open match',
@@ -537,7 +548,8 @@ const en = {
   'matchPoints.eyebrow': 'Match breakdown',
   'matchPoints.title': 'Match Points',
   'matchPoints.formulaHint': 'Base + Attendance + Score Bonus + Strength Bonus',
-  'matchPoints.noData': 'No point data. Points are only recorded for completed matches with a winner.',
+  'matchPoints.noData':
+    'No point data. Points are only recorded for completed matches with a winner.',
   'matchPoints.winner': 'Winner',
   'matchPoints.pts': 'pts',
   'matchPoints.breakdown': '{base} base · {att} att · {score} score · {str} str',
@@ -598,12 +610,14 @@ const en = {
 
   'points.eyebrow': 'Ranking system',
   'points.title': 'How points work',
-  'points.subtitle': 'Weekly points rank a session. Skill rating measures long-term strength and updates when a session ends.',
+  'points.subtitle':
+    'Weekly points rank a session. Skill rating measures long-term strength and updates when a session ends.',
   'points.weeklyPoints': 'Weekly points',
   'points.matchScore': 'Match score',
   'points.matchPoints': 'Match points',
   'points.formula': 'Base + Attendance + Score Bonus + Strength Bonus',
-  'points.formulaDescription': 'Every player who appears in a completed match receives at least 1 point for that match.',
+  'points.formulaDescription':
+    'Every player who appears in a completed match receives at least 1 point for that match.',
   'points.base': 'Base',
   'points.startingPoints': 'Starting points',
   'points.win': 'Win',
@@ -636,7 +650,8 @@ const en = {
   'points.skillRating': 'Skill rating',
   'points.longTermStrength': 'Long-term strength',
   'points.eloRating': 'Elo-style rating',
-  'points.eloDescription': 'New players start at 1000. Team rating is the average rating of both players.',
+  'points.eloDescription':
+    'New players start at 1000. Team rating is the average rating of both players.',
   'points.initialRating': 'Initial rating',
   'points.kFactor': 'K factor',
   'points.ratingUpdateTiming': 'Rating update timing',
@@ -796,7 +811,8 @@ const vi: Record<TranslationKey, string> = {
   'settings.unlinkPlayer': 'Hủy liên kết',
   'settings.selectPlayer': 'Chọn người chơi của bạn',
   'settings.unlinkConfirmTitle': 'Hủy liên kết người chơi?',
-  'settings.unlinkConfirmDescription': 'Tài khoản của bạn sẽ không còn liên kết với hồ sơ người chơi này.',
+  'settings.unlinkConfirmDescription':
+    'Tài khoản của bạn sẽ không còn liên kết với hồ sơ người chơi này.',
   'settings.linkFailedTitle': 'Không thể liên kết người chơi',
   'settings.linkFailedDescription': 'Người chơi này đã được liên kết với tài khoản khác.',
 
@@ -946,13 +962,17 @@ const vi: Record<TranslationKey, string> = {
   'sessionDetail.endSession': 'Kết thúc giải đấu',
   'sessionDetail.deleteSession': 'Xóa giải đấu',
   'sessionDetail.endTitle': 'Kết thúc giải đấu này?',
-  'sessionDetail.endDescription': 'Điểm trận sẽ được khóa và bảng xếp hạng sẽ được chốt. Bạn vẫn có thể xem trận sau khi kết thúc.',
+  'sessionDetail.endDescription':
+    'Điểm trận sẽ được khóa và bảng xếp hạng sẽ được chốt. Bạn vẫn có thể xem trận sau khi kết thúc.',
   'sessionDetail.endWithLiveTitle': 'Kết thúc khi còn trận đang diễn ra?',
-  'sessionDetail.endWithLiveDescription': 'Còn {count} trận đang diễn ra. Kết thúc giải đấu sẽ khóa giải ngay bây giờ; hãy hoàn tất hoặc ghi kết quả các trận đó trước nếu muốn tính vào thống kê.',
+  'sessionDetail.endWithLiveDescription':
+    'Còn {count} trận đang diễn ra. Kết thúc giải đấu sẽ khóa giải ngay bây giờ; hãy hoàn tất hoặc ghi kết quả các trận đó trước nếu muốn tính vào thống kê.',
   'sessionDetail.deleteTitle': 'Xóa giải đấu?',
-  'sessionDetail.deleteDescription': 'Giải đấu và tất cả trận đấu sẽ bị xóa vĩnh viễn. Không thể hoàn tác.',
+  'sessionDetail.deleteDescription':
+    'Giải đấu và tất cả trận đấu sẽ bị xóa vĩnh viễn. Không thể hoàn tác.',
   'sessionDetail.deleteCompletedWithMatchesTitle': 'Xóa giải đấu đã hoàn tất?',
-  'sessionDetail.deleteCompletedWithMatchesDescription': 'Giải đấu đã hoàn tất này có {count} trận. Xóa sẽ xóa vĩnh viễn giải đấu, lịch sử trận, điểm số và kết quả xếp hạng.',
+  'sessionDetail.deleteCompletedWithMatchesDescription':
+    'Giải đấu đã hoàn tất này có {count} trận. Xóa sẽ xóa vĩnh viễn giải đấu, lịch sử trận, điểm số và kết quả xếp hạng.',
   'sessionDetail.couldntEnd': 'Không thể kết thúc giải đấu',
   'sessionDetail.editScheduledTime': 'Sửa giờ đã đặt',
   'sessionDetail.saveTime': 'Lưu giờ',
@@ -963,7 +983,8 @@ const vi: Record<TranslationKey, string> = {
   'sessionDetail.manageTeams': 'Quản lý đội',
   'sessionDetail.addRound': 'Thêm lượt',
   'sessionDetail.addRoundTitle': 'Thêm lượt mới?',
-  'sessionDetail.addRoundDescription': 'Sẽ tạo tất cả trận đấu Lượt {round} giữa các đội. Các trận hiện có không bị ảnh hưởng.',
+  'sessionDetail.addRoundDescription':
+    'Sẽ tạo tất cả trận đấu Lượt {round} giữa các đội. Các trận hiện có không bị ảnh hưởng.',
   'sessionDetail.standings': 'Bảng xếp hạng',
   'sessionDetail.schedule': 'Lịch thi đấu',
   'sessionDetail.round': 'Lượt {round}',
@@ -1163,11 +1184,14 @@ const vi: Record<TranslationKey, string> = {
   'matchDetail.awardTitle': 'Ghi nhận đội thắng',
   'matchDetail.awardDescription': 'Chọn đội thắng. Điểm hiện tại sẽ được lưu làm kết quả.',
   'matchDetail.endNoWinnerTitle': 'Kết thúc trận không chọn đội thắng?',
-  'matchDetail.endNoWinnerDescription': 'Điểm hiện tại ({score}) sẽ được lưu và trận sẽ được đánh dấu là đã kết thúc. Để chọn đội thắng, chạm vào "Ghi nhận đội thắng".',
+  'matchDetail.endNoWinnerDescription':
+    'Điểm hiện tại ({score}) sẽ được lưu và trận sẽ được đánh dấu là đã kết thúc. Để chọn đội thắng, chạm vào "Ghi nhận đội thắng".',
   'matchDetail.deleteTitle': 'Xóa trận này?',
-  'matchDetail.deleteDescription': 'Trận {number} ({teamA} vs {teamB}) sẽ bị xóa vĩnh viễn. Không thể hoàn tác.',
+  'matchDetail.deleteDescription':
+    'Trận {number} ({teamA} vs {teamB}) sẽ bị xóa vĩnh viễn. Không thể hoàn tác.',
   'matchDetail.deleteRecordedTitle': 'Xóa trận đã ghi nhận?',
-  'matchDetail.deleteRecordedDescription': 'Trận {number} ({teamA} vs {teamB}) đang diễn ra hoặc đã hoàn tất. Xóa sẽ xóa vĩnh viễn trận, điểm số và mọi ghi nhận thắng/thua.',
+  'matchDetail.deleteRecordedDescription':
+    'Trận {number} ({teamA} vs {teamB}) đang diễn ra hoặc đã hoàn tất. Xóa sẽ xóa vĩnh viễn trận, điểm số và mọi ghi nhận thắng/thua.',
   'matchDetail.deleteMatch': 'Xóa trận',
   'matchDetail.startMatchMenu': 'Bắt đầu trận',
   'matchDetail.reopenMatch': 'Mở lại trận',
@@ -1238,12 +1262,14 @@ const vi: Record<TranslationKey, string> = {
 
   'points.eyebrow': 'Hệ thống xếp hạng',
   'points.title': 'Cách tính điểm',
-  'points.subtitle': 'Điểm trong buổi đấu để xếp hạng buổi chơi. Rating kỹ năng do sức mạnh dài hạn và cập nhật khi buổi chơi kết thúc.',
+  'points.subtitle':
+    'Điểm trong buổi đấu để xếp hạng buổi chơi. Rating kỹ năng do sức mạnh dài hạn và cập nhật khi buổi chơi kết thúc.',
   'points.weeklyPoints': 'Điểm trong buổi',
   'points.matchScore': 'Điểm trận',
   'points.matchPoints': 'Điểm trận',
   'points.formula': 'Cơ bản + Tham gia + Thưởng tỉ số + Thưởng sức mạnh',
-  'points.formulaDescription': 'Mỗi người chơi xuất hiện trong trận đã hoàn tất nhận ít nhất 1 điểm cho trận đó.',
+  'points.formulaDescription':
+    'Mỗi người chơi xuất hiện trong trận đã hoàn tất nhận ít nhất 1 điểm cho trận đó.',
   'points.base': 'Cơ bản',
   'points.startingPoints': 'Điểm khởi đầu',
   'points.win': 'Thắng',
@@ -1276,7 +1302,8 @@ const vi: Record<TranslationKey, string> = {
   'points.skillRating': 'Rating kỹ năng',
   'points.longTermStrength': 'Sức mạnh dài hạn',
   'points.eloRating': 'Rating kiểu Elo',
-  'points.eloDescription': 'Người mới bắt đầu ở 1000. Rating đối là trung bình rating của hai người chơi.',
+  'points.eloDescription':
+    'Người mới bắt đầu ở 1000. Rating đối là trung bình rating của hai người chơi.',
   'points.initialRating': 'Rating ban đầu',
   'points.kFactor': 'Hệ số K',
   'points.ratingUpdateTiming': 'Thời điểm cập nhật rating',
@@ -1329,13 +1356,16 @@ function detectInitialLocale(): Locale {
 function interpolate(template: string, values?: TranslationValues): string {
   if (!values) return template
 
-  return template.replace(/\{(\w+)(?:,\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\})?\}/g, (_, key: string, one: string | undefined, other: string | undefined) => {
-    const value = values[key]
-    if (one !== undefined && other !== undefined) {
-      return Number(value) === 1 ? one : other
-    }
-    return value === null || value === undefined ? '' : String(value)
-  })
+  return template.replace(
+    /\{(\w+)(?:,\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\})?\}/g,
+    (_, key: string, one: string | undefined, other: string | undefined) => {
+      const value = values[key]
+      if (one !== undefined && other !== undefined) {
+        return Number(value) === 1 ? one : other
+      }
+      return value === null || value === undefined ? '' : String(value)
+    },
+  )
 }
 
 export function translate(locale: Locale, key: TranslationKey, values?: TranslationValues): string {
@@ -1362,17 +1392,16 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale
   }, [locale])
 
-  const value = useMemo<LocaleContextValue>(() => ({
-    locale,
-    setLocale: setLocaleState,
-    t: (key, values) => translate(locale, key, values),
-  }), [locale])
-
-  return (
-    <LocaleContext.Provider value={value}>
-      {children}
-    </LocaleContext.Provider>
+  const value = useMemo<LocaleContextValue>(
+    () => ({
+      locale,
+      setLocale: setLocaleState,
+      t: (key, values) => translate(locale, key, values),
+    }),
+    [locale],
   )
+
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
 }
 
 export function useI18n(): LocaleContextValue {

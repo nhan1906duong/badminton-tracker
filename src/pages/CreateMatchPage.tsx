@@ -1,22 +1,25 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { Loader2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { usePlayers } from '../hooks/usePlayers'
-import { useMatches, useCreateMatch } from '../hooks/useMatches'
-import { useSession } from '../hooks/useSessions'
-import { useLeagueTeams } from '../hooks/useLeagueTeams'
-import { useSessionAttendances } from '../hooks/useSessionAttendances'
-import { useNewMatchStore } from '../stores/new-match-store'
 import { AppBar, SectionLabel } from '../../design-system/components'
 import { MatchTypeChips } from '../../design-system/components/match-type-chips'
-import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
-import { Loader2 } from 'lucide-react'
-import { useI18n } from '../i18n'
-import { PlayerSlotsCard } from '../components/match-create/PlayerSlotsCard'
-import { WhenPanel } from '../components/match-create/WhenPanel'
-import { LeagueTeamSelectors } from '../components/match-create/LeagueTeamSelectors'
-import { ShufflePickerSheet, type ShuffleResult } from '../components/match-create/ShufflePickerSheet'
-import { PlayerPickerSheet } from '../components/match-create/PlayerPickerSheet'
 import { friendlyDate, friendlyTime } from '../components/match-create/helpers'
+import { LeagueTeamSelectors } from '../components/match-create/LeagueTeamSelectors'
+import { PlayerPickerSheet } from '../components/match-create/PlayerPickerSheet'
+import { PlayerSlotsCard } from '../components/match-create/PlayerSlotsCard'
+import {
+  ShufflePickerSheet,
+  type ShuffleResult,
+} from '../components/match-create/ShufflePickerSheet'
+import { WhenPanel } from '../components/match-create/WhenPanel'
+import { useLeagueTeams } from '../hooks/useLeagueTeams'
+import { useCreateMatch, useMatches } from '../hooks/useMatches'
+import { usePlayers } from '../hooks/usePlayers'
+import { useSessionAttendances } from '../hooks/useSessionAttendances'
+import { useSession } from '../hooks/useSessions'
+import { useI18n } from '../i18n'
+import { getTeamSize, MATCH_TYPE_SHORT } from '../lib/match-helpers'
+import { useNewMatchStore } from '../stores/new-match-store'
 
 export default function CreateMatchPage() {
   const { locale, t } = useI18n()
@@ -31,16 +34,16 @@ export default function CreateMatchPage() {
   const { data: attendances } = useSessionAttendances(sessionId)
   const createMatch = useCreateMatch()
 
-  const matchType   = useNewMatchStore(s => s.matchType)
-  const teamA       = useNewMatchStore(s => s.teamA)
-  const teamB       = useNewMatchStore(s => s.teamB)
-  const mode        = useNewMatchStore(s => s.mode)
+  const matchType = useNewMatchStore(s => s.matchType)
+  const teamA = useNewMatchStore(s => s.teamA)
+  const teamB = useNewMatchStore(s => s.teamB)
+  const mode = useNewMatchStore(s => s.mode)
   const scheduledAt = useNewMatchStore(s => s.scheduledAt)
-  const setMatchType   = useNewMatchStore(s => s.setMatchType)
-  const setSlot        = useNewMatchStore(s => s.setSlot)
-  const setMode        = useNewMatchStore(s => s.setMode)
+  const setMatchType = useNewMatchStore(s => s.setMatchType)
+  const setSlot = useNewMatchStore(s => s.setSlot)
+  const setMode = useNewMatchStore(s => s.setMode)
   const setScheduledAt = useNewMatchStore(s => s.setScheduledAt)
-  const reset          = useNewMatchStore(s => s.reset)
+  const reset = useNewMatchStore(s => s.reset)
 
   const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerTarget, setPickerTarget] = useState<{ team: 'A' | 'B'; index: number } | null>(null)
@@ -86,14 +89,14 @@ export default function CreateMatchPage() {
     if (!isLeague || !leagueTeams) return
     const teamSize = getTeamSize(matchType)
 
-    if (leagueTeamA && teamA.every((id) => id === null)) {
-      const lt = leagueTeams.find((team) => team.id === leagueTeamA)
+    if (leagueTeamA && teamA.every(id => id === null)) {
+      const lt = leagueTeams.find(team => team.id === leagueTeamA)
       if (lt && lt.players.length === teamSize) {
         lt.players.forEach((p, i) => setSlot('A', i, p.id))
       }
     }
-    if (leagueTeamB && teamB.every((id) => id === null)) {
-      const lt = leagueTeams.find((team) => team.id === leagueTeamB)
+    if (leagueTeamB && teamB.every(id => id === null)) {
+      const lt = leagueTeams.find(team => team.id === leagueTeamB)
       if (lt && lt.players.length === teamSize) {
         lt.players.forEach((p, i) => setSlot('B', i, p.id))
       }
@@ -115,13 +118,16 @@ export default function CreateMatchPage() {
   const nextQueuePos = scheduledMatches.length + 1
   const matchNumber = (matches?.length ?? 0) + 1
 
-  const allFilled = teamA.slice(0, teamSize).every(Boolean) && teamB.slice(0, teamSize).every(Boolean)
-  const filledCount = teamA.slice(0, teamSize).filter(Boolean).length + teamB.slice(0, teamSize).filter(Boolean).length
+  const allFilled =
+    teamA.slice(0, teamSize).every(Boolean) && teamB.slice(0, teamSize).every(Boolean)
+  const filledCount =
+    teamA.slice(0, teamSize).filter(Boolean).length +
+    teamB.slice(0, teamSize).filter(Boolean).length
   const totalSlots = teamSize * 2
 
   const usedIds = new Set([
-    ...teamA.filter(Boolean) as string[],
-    ...teamB.filter(Boolean) as string[],
+    ...(teamA.filter(Boolean) as string[]),
+    ...(teamB.filter(Boolean) as string[]),
   ])
 
   function slotRole(index: number): string {
@@ -145,24 +151,27 @@ export default function CreateMatchPage() {
     setPickerTarget(null)
   }
 
-  const filteredPlayers = availablePlayers?.filter(p => {
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
+  const filteredPlayers =
+    availablePlayers?.filter(p => {
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
 
-    // League: filter to team roster
-    if (isLeague && pickerTarget) {
-      const selectedTeamId = pickerTarget.team === 'A' ? leagueTeamA : leagueTeamB
-      if (!selectedTeamId) return false
-      const lt = leagueTeams?.find(team => team.id === selectedTeamId)
-      if (!lt?.players.some(lp => lp.id === p.id)) return false
-    }
+      // League: filter to team roster
+      if (isLeague && pickerTarget) {
+        const selectedTeamId = pickerTarget.team === 'A' ? leagueTeamA : leagueTeamB
+        if (!selectedTeamId) return false
+        const lt = leagueTeams?.find(team => team.id === selectedTeamId)
+        if (!lt?.players.some(lp => lp.id === p.id)) return false
+      }
 
-    // Exclude already-used players except the current slot's player
-    const currentSlotId = pickerTarget
-      ? (pickerTarget.team === 'A' ? teamA[pickerTarget.index] : teamB[pickerTarget.index])
-      : null
-    if (usedIds.has(p.id) && p.id !== currentSlotId) return false
-    return true
-  }) ?? []
+      // Exclude already-used players except the current slot's player
+      const currentSlotId = pickerTarget
+        ? pickerTarget.team === 'A'
+          ? teamA[pickerTarget.index]
+          : teamB[pickerTarget.index]
+        : null
+      if (usedIds.has(p.id) && p.id !== currentSlotId) return false
+      return true
+    }) ?? []
 
   // ── League team selection ──────────────────────────────────────────────────
 
@@ -197,7 +206,8 @@ export default function CreateMatchPage() {
       await createMatch.mutateAsync({
         session_id: sid,
         match_type: matchType,
-        played_at: mode === 'schedule' && scheduledAt ? scheduledAt.toISOString() : new Date().toISOString(),
+        played_at:
+          mode === 'schedule' && scheduledAt ? scheduledAt.toISOString() : new Date().toISOString(),
         status: mode === 'now' ? 'LIVE' : 'SCHEDULED',
         queue_position: mode === 'queue' ? nextQueuePos : undefined,
         team_a_player_ids: teamAIds,
@@ -215,9 +225,10 @@ export default function CreateMatchPage() {
     if (!allFilled) {
       const remaining = totalSlots - filledCount
       return {
-        primary: remaining > 0
-          ? t('createMatch.pickMorePlayers', { count: remaining })
-          : t('createMatch.pickPlayers'),
+        primary:
+          remaining > 0
+            ? t('createMatch.pickMorePlayers', { count: remaining })
+            : t('createMatch.pickPlayers'),
       }
     }
     if (mode === 'now') return { primary: t('createMatch.startNow') }
@@ -231,12 +242,19 @@ export default function CreateMatchPage() {
     return { primary: t('createMatch.ctaQueue'), secondary: `M${matchNumber}` }
   }
 
-  const ctaEnabled = allFilled && (mode === 'now' || mode === 'queue' || (mode === 'schedule' && !!scheduledAt))
+  const ctaEnabled =
+    allFilled && (mode === 'now' || mode === 'queue' || (mode === 'schedule' && !!scheduledAt))
   const cta = ctaContent()
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
-
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'var(--bg)',
+      }}
+    >
       {/* ── Top nav ──────────────────────────────────────────────────────── */}
       <AppBar
         title=""
@@ -259,23 +277,28 @@ export default function CreateMatchPage() {
       >
         {/* Large title */}
         <header style={{ padding: 'var(--space-3) var(--space-5) var(--space-6)' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'var(--text-3xl)',
-            fontWeight: 800,
-            lineHeight: 1.02,
-            letterSpacing: '-0.035em',
-            marginBottom: 'var(--space-2)',
-            color: 'var(--fg)',
-          }}>
+          <h1
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 800,
+              lineHeight: 1.02,
+              letterSpacing: '-0.035em',
+              marginBottom: 'var(--space-2)',
+              color: 'var(--fg)',
+            }}
+          >
             {t('createMatch.title')}
           </h1>
-          <p style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--text-sm)',
-            color: 'var(--muted)',
-          }}>
-            {t('common.session')} · <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-sm)',
+              color: 'var(--muted)',
+            }}
+          >
+            {t('common.session')} ·{' '}
+            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>
               {session?.label ?? t('common.loadingEllipsis')}
             </span>
           </p>
@@ -287,50 +310,60 @@ export default function CreateMatchPage() {
             <SectionLabel
               className="mb-[var(--space-4)]"
               action={
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'var(--text-xs)',
+                    color: 'var(--muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}
+                >
                   {MATCH_TYPE_SHORT[matchType]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
                 </span>
               }
             >
               {t('createMatch.matchType')}
             </SectionLabel>
-            <MatchTypeChips value={matchType} onChange={(type) => setMatchType(type)} />
+            <MatchTypeChips value={matchType} onChange={type => setMatchType(type)} />
           </section>
         )}
 
         {/* League match type indicator */}
         {isLeague && session?.league_match_type && (
           <section style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-7)' }}>
-            <SectionLabel className="mb-[var(--space-3)]">{t('createMatch.matchType')}</SectionLabel>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-2)',
-              padding: 'var(--space-3) var(--space-4)',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)',
-            }}>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-base)',
-                fontWeight: 700,
-                color: 'var(--fg)',
-              }}>
+            <SectionLabel className="mb-[var(--space-3)]">
+              {t('createMatch.matchType')}
+            </SectionLabel>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-2)',
+                padding: 'var(--space-3) var(--space-4)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 700,
+                  color: 'var(--fg)',
+                }}
+              >
                 {MATCH_TYPE_SHORT[session.league_match_type]} · {teamSize === 1 ? '1 v 1' : '2 v 2'}
               </span>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                color: 'var(--muted)',
-                marginLeft: 'auto',
-              }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--muted)',
+                  marginLeft: 'auto',
+                }}
+              >
                 {t('createMatch.leagueMatch')}
               </span>
             </div>
@@ -343,8 +376,8 @@ export default function CreateMatchPage() {
             leagueTeams={leagueTeams}
             leagueTeamA={leagueTeamA}
             leagueTeamB={leagueTeamB}
-            onSelectTeamA={(id) => selectLeagueTeam('A', id)}
-            onSelectTeamB={(id) => selectLeagueTeam('B', id)}
+            onSelectTeamA={id => selectLeagueTeam('A', id)}
+            onSelectTeamB={id => selectLeagueTeam('B', id)}
           />
         )}
 
@@ -380,16 +413,18 @@ export default function CreateMatchPage() {
         {/* Error */}
         {error && (
           <div style={{ padding: '0 var(--space-5)', marginBottom: 'var(--space-5)' }}>
-            <div style={{
-              background: 'color-mix(in oklch, var(--danger) 10%, var(--surface))',
-              border: '1px solid color-mix(in oklch, var(--danger) 30%, var(--border))',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'var(--space-3) var(--space-4)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              color: 'var(--danger)',
-              fontWeight: 600,
-            }}>
+            <div
+              style={{
+                background: 'color-mix(in oklch, var(--danger) 10%, var(--surface))',
+                border: '1px solid color-mix(in oklch, var(--danger) 30%, var(--border))',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-3) var(--space-4)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--danger)',
+                fontWeight: 600,
+              }}
+            >
               {error}
             </div>
           </div>
@@ -397,16 +432,18 @@ export default function CreateMatchPage() {
       </div>
 
       {/* ── Bottom CTA ───────────────────────────────────────────────────── */}
-      <div style={{
-        position: 'sticky',
-        bottom: 0,
-        padding: `var(--space-3) var(--space-5) max(var(--space-4), calc(env(safe-area-inset-bottom) + var(--space-3)))`,
-        background: 'color-mix(in oklch, var(--bg) 92%, transparent)',
-        backdropFilter: 'saturate(180%) blur(12px)',
-        WebkitBackdropFilter: 'saturate(180%) blur(12px)',
-        borderTop: '1px solid var(--border)',
-        zIndex: 15,
-      }}>
+      <div
+        style={{
+          position: 'sticky',
+          bottom: 0,
+          padding: `var(--space-3) var(--space-5) max(var(--space-4), calc(env(safe-area-inset-bottom) + var(--space-3)))`,
+          background: 'color-mix(in oklch, var(--bg) 92%, transparent)',
+          backdropFilter: 'saturate(180%) blur(12px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(12px)',
+          borderTop: '1px solid var(--border)',
+          zIndex: 15,
+        }}
+      >
         <button
           type="button"
           onClick={handleCreate}
@@ -435,7 +472,14 @@ export default function CreateMatchPage() {
           }}
         >
           {createMatch.isPending ? (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-base)' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--space-2)',
+                fontSize: 'var(--text-base)',
+              }}
+            >
               <Loader2 style={{ width: 18, height: 18 }} className="animate-spin" />
               {t('common.creatingEllipsis')}
             </span>
@@ -443,13 +487,15 @@ export default function CreateMatchPage() {
             <>
               <span style={{ fontSize: 'var(--text-base)', lineHeight: 1.1 }}>{cta.primary}</span>
               {cta.secondary && (
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 600,
-                  opacity: 0.85,
-                  letterSpacing: '0.02em',
-                }}>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'var(--text-xs)',
+                    fontWeight: 600,
+                    opacity: 0.85,
+                    letterSpacing: '0.02em',
+                  }}
+                >
                   {cta.secondary}
                 </span>
               )}
@@ -472,9 +518,14 @@ export default function CreateMatchPage() {
       <PlayerPickerSheet
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
-        title={pickerTarget
-          ? t('createMatch.pickSlot', { role: slotRole(pickerTarget.index).toLowerCase(), team: pickerTarget.team })
-          : t('createMatch.selectPlayer')}
+        title={
+          pickerTarget
+            ? t('createMatch.pickSlot', {
+                role: slotRole(pickerTarget.index).toLowerCase(),
+                team: pickerTarget.team,
+              })
+            : t('createMatch.selectPlayer')
+        }
         players={filteredPlayers}
         search={search}
         onSearchChange={setSearch}

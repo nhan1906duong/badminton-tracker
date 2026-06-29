@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { usePlayerMatches } from './usePlayerMatches'
 import type { MatchWithDetails, Player } from '../types/database'
+import { usePlayerMatches } from './usePlayerMatches'
 
 const DOUBLES_TYPES = ['MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES']
 
@@ -14,16 +14,16 @@ export interface PartnerEntry {
 
 export function useBestPartner(playerId: string) {
   const { data, isLoading } = usePlayerMatches(playerId)
-  const allMatches = data?.pages.flatMap((p) => p.matches) ?? []
+  const allMatches = data?.pages.flatMap(p => p.matches) ?? []
 
   const allPartners = useMemo<PartnerEntry[]>(() => {
     if (!playerId || allMatches.length === 0) return []
 
-    const playerMatches = allMatches.filter((m) => {
+    const playerMatches = allMatches.filter(m => {
       if (m.status !== 'COMPLETED') return false
-      if (!m.teams.some((t) => t.is_winner)) return false
+      if (!m.teams.some(t => t.is_winner)) return false
       if (!DOUBLES_TYPES.includes(m.match_type)) return false
-      return m.participants.some((p) => p.player_id === playerId)
+      return m.participants.some(p => p.player_id === playerId)
     })
 
     if (playerMatches.length === 0) return []
@@ -34,14 +34,14 @@ export function useBestPartner(playerId: string) {
     >()
 
     for (const match of playerMatches) {
-      const playerParticipant = match.participants.find((p) => p.player_id === playerId)
+      const playerParticipant = match.participants.find(p => p.player_id === playerId)
       if (!playerParticipant) continue
 
       const playerTeamId = playerParticipant.team_id
-      const isWinner = match.teams.find((t) => t.id === playerTeamId)?.is_winner ?? false
+      const isWinner = match.teams.find(t => t.id === playerTeamId)?.is_winner ?? false
 
       const teammates = match.participants.filter(
-        (p) => p.team_id === playerTeamId && p.player_id !== playerId,
+        p => p.team_id === playerTeamId && p.player_id !== playerId,
       )
 
       for (const teammate of teammates) {
@@ -69,7 +69,7 @@ export function useBestPartner(playerId: string) {
         if (b.wins !== a.wins) return b.wins - a.wins
         return b.total - a.total
       })
-      .map((s) => ({
+      .map(s => ({
         partner: s.player,
         winRate: s.total > 0 ? s.wins / s.total : 0,
         totalMatches: s.total,

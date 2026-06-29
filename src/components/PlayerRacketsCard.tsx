@@ -1,11 +1,11 @@
-import { Suspense, lazy, useState } from 'react'
 import { Pencil, Star, Trash2 } from 'lucide-react'
-import { SectionLabel, Dialog } from '../../design-system/components'
-import { usePlayerRackets, useDeletePlayerRacket } from '../hooks/usePlayerRackets'
+import { lazy, Suspense, useState } from 'react'
+import { Dialog, SectionLabel } from '../../design-system/components'
+import { useDeletePlayerRacket, usePlayerRackets } from '../hooks/usePlayerRackets'
 import { useUpdatePlayer } from '../hooks/usePlayers'
+import { useI18n } from '../i18n'
 import { getMascot, getMascotPreviewPath } from '../lib/mascots'
 import { MAX_RACKETS_PER_PLAYER, type PlayerRacket } from '../types/database'
-import { useI18n } from '../i18n'
 
 const LottieMascot = lazy(() => import('./LottieMascot'))
 
@@ -16,7 +16,12 @@ interface PlayerRacketsCardProps {
   onEdit: (racket: PlayerRacket) => void
 }
 
-export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }: PlayerRacketsCardProps) {
+export function PlayerRacketsCard({
+  playerId,
+  canEdit,
+  activeRacketId,
+  onEdit,
+}: PlayerRacketsCardProps) {
   const { t } = useI18n()
   const { data: rackets = [], isLoading } = usePlayerRackets(playerId)
   const deleteRacket = useDeletePlayerRacket()
@@ -31,7 +36,13 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
       <SectionLabel
         action={
           canEdit ? (
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: 'var(--muted)',
+              }}
+            >
               {t('players.racketsCount', { count: rackets.length, max: MAX_RACKETS_PER_PLAYER })}
             </span>
           ) : undefined
@@ -45,7 +56,7 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
           {t('players.noRackets')}
         </p>
       ) : (
-        rackets.map((racket) => {
+        rackets.map(racket => {
           const isActive = activeRacketId === racket.id
           const mascot = getMascot(racket.mascot_id)
           return (
@@ -60,8 +71,15 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
               }}
             >
               {mascot && (
-                <Suspense fallback={<span style={{ width: 32, height: 32 }} className="shrink-0" />}>
-                  <LottieMascot src={getMascotPreviewPath(mascot)} size={32} scale={mascot.scale} className="shrink-0" />
+                <Suspense
+                  fallback={<span style={{ width: 32, height: 32 }} className="shrink-0" />}
+                >
+                  <LottieMascot
+                    src={getMascotPreviewPath(mascot)}
+                    size={32}
+                    scale={mascot.scale}
+                    className="shrink-0"
+                  />
                 </Suspense>
               )}
               <div className="flex-1 min-w-0">
@@ -77,7 +95,10 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
                   </p>
                 )}
                 {isActive && (
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: 'var(--accent)', marginTop: 2 }}>
+                  <p
+                    className="text-[11px] font-semibold uppercase tracking-[0.06em]"
+                    style={{ color: 'var(--accent)', marginTop: 2 }}
+                  >
                     {t('players.activeRacket')}
                   </p>
                 )}
@@ -85,10 +106,22 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
               {canEdit && (
                 <div className="flex items-center gap-1 shrink-0">
                   <button
-                    onClick={() => updatePlayer.mutate({ id: playerId, active_racket_id: isActive ? null : racket.id })}
+                    onClick={() =>
+                      updatePlayer.mutate({
+                        id: playerId,
+                        active_racket_id: isActive ? null : racket.id,
+                      })
+                    }
                     aria-label={t('players.setActiveRacket')}
                     className="active:opacity-60"
-                    style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? 'var(--accent)' : 'var(--muted)' }}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: isActive ? 'var(--accent)' : 'var(--muted)',
+                    }}
                   >
                     <Star size={15} fill={isActive ? 'currentColor' : 'none'} />
                   </button>
@@ -96,7 +129,14 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
                     onClick={() => onEdit(racket)}
                     aria-label={t('players.editRacket')}
                     className="active:opacity-60"
-                    style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--muted)',
+                    }}
                   >
                     <Pencil size={15} />
                   </button>
@@ -104,7 +144,14 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
                     onClick={() => setDeletingRacket(racket)}
                     aria-label={t('common.delete')}
                     className="active:opacity-60"
-                    style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}
+                    style={{
+                      width: 32,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--muted)',
+                    }}
                   >
                     <Trash2 size={15} />
                   </button>
@@ -122,7 +169,11 @@ export function PlayerRacketsCard({ playerId, canEdit, activeRacketId, onEdit }:
         description={t('players.deleteRacketDescription')}
         kind="danger"
         actions={[
-          { label: t('common.cancel'), onClick: () => setDeletingRacket(null), variant: 'secondary' },
+          {
+            label: t('common.cancel'),
+            onClick: () => setDeletingRacket(null),
+            variant: 'secondary',
+          },
           {
             label: t('common.delete'),
             variant: 'danger',

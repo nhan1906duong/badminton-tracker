@@ -1,32 +1,49 @@
-import { useState, useCallback, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
 import { useWindowVirtualizer } from '@tanstack/react-virtual'
-import { useParams, useNavigate } from 'react-router-dom'
-import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
-import { usePlayerRackets } from '../hooks/usePlayerRackets'
-import { usePlayerSessionStats } from '../hooks/usePlayerSessionStats'
-import { usePlayerPointsHistory } from '../hooks/usePlayerPointsHistory'
-import { type RatingChartPoint } from '../components/RatingChart'
-import { usePlayerRankingSummary } from '../hooks/usePlayerRankingSummary'
+import {
+  ArrowLeftRight,
+  Camera,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Pencil,
+  Swords,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  AppBar,
+  BottomSheet,
+  BottomSheetCancel,
+  BottomSheetItem,
+  PullToRefresh,
+} from '../../design-system/components'
+import AvatarPicker from '../components/AvatarPicker'
+import { PlayerCardImage } from '../components/PlayerCardImage'
+import { PlayerMascot } from '../components/PlayerMascot'
+import { PlayerOpponentsContent } from '../components/PlayerOpponentsContent'
+import { PlayerOverviewCard } from '../components/PlayerOverviewCard'
+import { PlayerPartnersContent } from '../components/PlayerPartnersContent'
+import { PlayerRacketHeaderCard } from '../components/PlayerRacketHeaderCard'
+import { PlayerRankingChartContent } from '../components/PlayerRankingChartContent'
+import PlayerRecordLine from '../components/PlayerRecordLine'
+import type { RatingChartPoint } from '../components/RatingChart'
+import { SessionMatchList } from '../components/session-match-list'
+import { useAuth } from '../hooks/useAuth'
+import { useAvatarDelete, useAvatarUpload, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
+import { useIsAdmin } from '../hooks/useIsAdmin'
 import { usePlayerAchievements } from '../hooks/usePlayerAchievements'
 import { usePlayerBadges } from '../hooks/usePlayerBadges'
-import { useAvatarUpload, useAvatarDelete, useSetDefaultAvatar } from '../hooks/useAvatarUpload'
-import { useAuth } from '../hooks/useAuth'
+import { usePlayerPointsHistory } from '../hooks/usePlayerPointsHistory'
+import { usePlayerRackets } from '../hooks/usePlayerRackets'
+import { usePlayerRankingSummary } from '../hooks/usePlayerRankingSummary'
+import { usePlayerSessionStats } from '../hooks/usePlayerSessionStats'
+import { usePlayer, useUpdatePlayer } from '../hooks/usePlayers'
 import { useProfile } from '../hooks/useProfile'
-import { useIsAdmin } from '../hooks/useIsAdmin'
-import AvatarPicker from '../components/AvatarPicker'
-import { PlayerMascot } from '../components/PlayerMascot'
-import { PlayerCardImage } from '../components/PlayerCardImage'
-import { SessionMatchList } from '../components/session-match-list'
-import PlayerRecordLine from '../components/PlayerRecordLine'
-import { PlayerRacketHeaderCard } from '../components/PlayerRacketHeaderCard'
-import { AppBar, BottomSheet, BottomSheetItem, BottomSheetCancel, PullToRefresh } from '../../design-system/components'
-import { formatSessionLabel } from '../lib/session-label'
-import { PlayerOverviewCard } from '../components/PlayerOverviewCard'
-import { PlayerRankingChartContent } from '../components/PlayerRankingChartContent'
-import { PlayerOpponentsContent } from '../components/PlayerOpponentsContent'
-import { PlayerPartnersContent } from '../components/PlayerPartnersContent'
-import { Camera, ChevronLeft, ChevronDown, ChevronRight, Pencil, Swords, Users, MoreVertical, TrendingUp, ArrowLeftRight } from 'lucide-react'
 import { useI18n } from '../i18n'
+import { formatSessionLabel } from '../lib/session-label'
 
 const OVERVIEW_IMAGES = ['overview-1.jpg', 'overview-2.jpg', 'overview-3.jpg', 'overview-4.jpg']
 
@@ -46,27 +63,23 @@ export default function PlayerDetailPage() {
   const { badges, isLoading: badgesLoading } = usePlayerBadges(id)
 
   const chartData = useMemo<RatingChartPoint[]>(() => {
-    const winSessionIds = new Set(
-      achievements.filter((a) => a.type === 'win').map((a) => a.session.id),
-    )
-    return [...pointsHistory]
-      .reverse()
-      .flatMap(({ session, matches }) => {
-        const lastMatch = matches[matches.length - 1]
-        const rating = lastMatch?.points.rating_after
-        if (rating == null) return []
-        return [{ rating, date: session.started_at, isWin: winSessionIds.has(session.id) }]
-      })
+    const winSessionIds = new Set(achievements.filter(a => a.type === 'win').map(a => a.session.id))
+    return [...pointsHistory].reverse().flatMap(({ session, matches }) => {
+      const lastMatch = matches[matches.length - 1]
+      const rating = lastMatch?.points.rating_after
+      if (rating == null) return []
+      return [{ rating, date: session.started_at, isWin: winSessionIds.has(session.id) }]
+    })
   }, [pointsHistory, achievements])
   // rankData is now a direct RankingSummary from usePlayerRankingSummary
 
-  const activeRacket = rackets.find((r) => r.id === player?.active_racket_id) ?? rackets[0]
+  const activeRacket = rackets.find(r => r.id === player?.active_racket_id) ?? rackets[0]
   const displayMascotId = activeRacket?.mascot_id
 
   const hasOverview =
     !achievementsLoading &&
     !badgesLoading &&
-    (achievements.some((a) => a.type === 'win' || a.type === 'runner_up') || badges.length > 0)
+    (achievements.some(a => a.type === 'win' || a.type === 'runner_up') || badges.length > 0)
 
   const [sheet, setSheet] = useState<'menu' | 'ranking' | 'h2h' | 'partners' | null>(null)
   const [isEditingName, setIsEditingName] = useState(false)
@@ -76,7 +89,9 @@ export default function PlayerDetailPage() {
   const [isStuck, setIsStuck] = useState(false)
   const historyListRef = useRef<HTMLDivElement>(null)
   const [historyScrollMargin, setHistoryScrollMargin] = useState(0)
-  const [bgImage] = useState(() => OVERVIEW_IMAGES[Math.floor(Math.random() * OVERVIEW_IMAGES.length)])
+  const [bgImage] = useState(
+    () => OVERVIEW_IMAGES[Math.floor(Math.random() * OVERVIEW_IMAGES.length)],
+  )
 
   const { user } = useAuth()
   const { data: myProfile } = useProfile(user?.id)
@@ -131,7 +146,7 @@ export default function PlayerDetailPage() {
       if (e.key === 'Enter') handleSaveName()
       if (e.key === 'Escape') setIsEditingName(false)
     },
-    [handleSaveName]
+    [handleSaveName],
   )
 
   const handleRefresh = useCallback(async () => {
@@ -139,7 +154,7 @@ export default function PlayerDetailPage() {
   }, [refetchPlayer])
 
   function toggleSession(sessionId: string) {
-    setExpandedSessions((prev) => {
+    setExpandedSessions(prev => {
       const next = new Set(prev)
       if (next.has(sessionId)) next.delete(sessionId)
       else next.add(sessionId)
@@ -153,8 +168,8 @@ export default function PlayerDetailPage() {
     if (historyLoading || !pendingJump.current) return
     const sessionId = pendingJump.current
     pendingJump.current = null
-    const idx = sessionStats.findIndex((s) => s.session.id === sessionId)
-    setExpandedSessions((prev) => new Set(prev).add(sessionId))
+    const idx = sessionStats.findIndex(s => s.session.id === sessionId)
+    setExpandedSessions(prev => new Set(prev).add(sessionId))
     if (idx !== -1) historyVirtualizer.scrollToIndex(idx, { behavior: 'smooth' })
   }, [historyLoading, sessionStats, historyVirtualizer])
 
@@ -163,8 +178,8 @@ export default function PlayerDetailPage() {
       pendingJump.current = sessionId
       return
     }
-    const idx = sessionStats.findIndex((s) => s.session.id === sessionId)
-    setExpandedSessions((prev) => new Set(prev).add(sessionId))
+    const idx = sessionStats.findIndex(s => s.session.id === sessionId)
+    setExpandedSessions(prev => new Set(prev).add(sessionId))
     if (idx !== -1) historyVirtualizer.scrollToIndex(idx, { behavior: 'smooth' })
   }
 
@@ -179,7 +194,9 @@ export default function PlayerDetailPage() {
   if (!player) {
     return (
       <div className="min-h-svh bg-[var(--bg)] flex items-center justify-center">
-        <span className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.notFound')}</span>
+        <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
+          {t('players.notFound')}
+        </span>
       </div>
     )
   }
@@ -187,11 +204,22 @@ export default function PlayerDetailPage() {
   return (
     <>
       {/* Fixed page background — random overview image, centered and width-fit, doesn't scroll with content */}
-      <div aria-hidden className="fixed inset-0 flex justify-center overflow-hidden pointer-events-none" style={{ zIndex: 0, background: 'var(--bg)' }}>
+      <div
+        aria-hidden
+        className="fixed inset-0 flex justify-center overflow-hidden pointer-events-none"
+        style={{ zIndex: 0, background: 'var(--bg)' }}
+      >
         <img
           src={`/overview/${bgImage}`}
           alt=""
-          style={{ width: '100%', height: 'auto', objectFit: 'contain', mixBlendMode: 'multiply', position: 'absolute', top: '30%' }}
+          style={{
+            width: '100%',
+            height: 'auto',
+            objectFit: 'contain',
+            mixBlendMode: 'multiply',
+            position: 'absolute',
+            top: '30%',
+          }}
         />
         <div
           className="absolute inset-0"
@@ -199,348 +227,428 @@ export default function PlayerDetailPage() {
         />
       </div>
 
-    <PullToRefresh onRefresh={handleRefresh}>
-    <div className="min-h-svh relative" style={{ zIndex: 1 }}>
-      {/* Hero: AppBar + header share a background avatar watermark, bleeding up behind the status bar */}
-      <div style={{ position: 'relative', overflow: 'hidden', zIndex: 61, marginTop: 'calc(-1 * env(safe-area-inset-top))', minHeight: 'min(48vw, 246px)' }}>
-        {/* Background avatar watermark — tap to edit */}
-        {canEdit ? (
-          <button
-            onClick={() => setShowAvatarPicker(true)}
-            aria-label={t('players.changeAvatar')}
-            className="absolute inset-0 w-full h-full active:opacity-90 transition-opacity"
-            style={{ zIndex: 0 }}
-          >
-            <PlayerCardImage avatarUrl={player.avatar_url} name={player.name} />
-          </button>
-        ) : (
-          <div aria-hidden className="absolute inset-0" style={{ zIndex: 0, pointerEvents: 'none' }}>
-            <PlayerCardImage avatarUrl={player.avatar_url} name={player.name} />
-          </div>
-        )}
-        <div
-          aria-hidden
-          style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 45%, var(--bg) 100%)', pointerEvents: 'none', zIndex: 0 }}
-        />
-
-        <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <AppBar
-          title=''
-          leftAction={{
-            icon: <ChevronLeft className="w-5 h-5" />,
-            onClick: () => navigate(-1),
-          }}
-          rightAction={{
-            ariaLabel: t('common.moreOptions'),
-            icon: <MoreVertical className="w-5 h-5" />,
-            onClick: () => setSheet('menu'),
-          }}
-          stuck={isStuck}
-          style={{
-            background: 'transparent',
-            backdropFilter: 'none',
-            WebkitBackdropFilter: 'none',
-            borderColor: 'transparent',
-          }}
-        />
-
-        {/* Edit avatar icon */}
-        {canEdit && (
-          <button
-            onClick={() => setShowAvatarPicker(true)}
-            aria-label={t('players.changeAvatar')}
-            className="absolute active:opacity-70 transition-opacity flex items-center justify-center"
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="min-h-svh relative" style={{ zIndex: 1 }}>
+          {/* Hero: AppBar + header share a background avatar watermark, bleeding up behind the status bar */}
+          <div
             style={{
-              bottom: 'var(--space-3)',
-              right: 'var(--space-5)',
-              width: 32,
-              height: 32,
-              zIndex: 1,
-              pointerEvents: 'auto',
+              position: 'relative',
+              overflow: 'hidden',
+              zIndex: 61,
+              marginTop: 'calc(-1 * env(safe-area-inset-top))',
+              minHeight: 'min(48vw, 246px)',
             }}
           >
-            <Camera className="w-5 h-5" style={{ color: 'var(--muted)', opacity: 0.5 }} />
-          </button>
-        )}
-
-        {/* Header */}
-        <header style={{ padding: 'var(--space-3) var(--space-5) var(--space-2)', position: 'relative', pointerEvents: 'none' }}>
-          <div style={{ position: 'relative' }}>
-            <div className="min-w-0" style={{ width: '66.6667%', pointerEvents: 'auto' }}>
-              {isEditingName ? (
-                <input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onBlur={handleSaveName}
-                  onKeyDown={handleKeyDown}
-                  autoFocus
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 'var(--text-xl)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.04em',
-                    lineHeight: 1.3,
-                    color: 'var(--fg)',
-                    background: 'transparent',
-                    border: 'none',
-                    borderBottom: '2px solid var(--accent)',
-                    outline: 'none',
-                    width: '100%',
-                    padding: 0,
-                    display: 'block',
-                  }}
-                />
-              ) : canEdit ? (
-                <button
-                  onClick={handleStartEditName}
-                  className="active:opacity-70 text-left w-full"
-                >
-                  <h1
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: 'var(--text-xl)',
-                      fontWeight: 800,
-                      lineHeight: 1.3,
-                      letterSpacing: '-0.04em',
-                      color: 'var(--fg)',
-                      overflowWrap: 'break-word',
-                    }}
-                  >
-                    {player.name}
-                    <Pencil className="inline-block w-4 h-4 ml-1.5 align-middle" style={{ color: 'var(--muted)', opacity: 0.5 }} />
-                  </h1>
-                </button>
-              ) : (
-                <h1
-                  style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 'var(--text-xl)',
-                    fontWeight: 800,
-                    lineHeight: 1.3,
-                    letterSpacing: '-0.04em',
-                    color: 'var(--fg)',
-                    overflowWrap: 'break-word',
-                  }}
-                >
-                  {player.name}
-                </h1>
-              )}
-            </div>
-
-            {/* Rank · Rating · You */}
+            {/* Background avatar watermark — tap to edit */}
+            {canEdit ? (
+              <button
+                onClick={() => setShowAvatarPicker(true)}
+                aria-label={t('players.changeAvatar')}
+                className="absolute inset-0 w-full h-full active:opacity-90 transition-opacity"
+                style={{ zIndex: 0 }}
+              >
+                <PlayerCardImage avatarUrl={player.avatar_url} name={player.name} />
+              </button>
+            ) : (
+              <div
+                aria-hidden
+                className="absolute inset-0"
+                style={{ zIndex: 0, pointerEvents: 'none' }}
+              >
+                <PlayerCardImage avatarUrl={player.avatar_url} name={player.name} />
+              </div>
+            )}
             <div
-              className="flex items-center flex-wrap"
-              style={{ gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}
-            >
-              {rankData && (
-                <span
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(180deg, transparent 45%, var(--bg) 100%)',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
+
+            <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+              <AppBar
+                title=""
+                leftAction={{
+                  icon: <ChevronLeft className="w-5 h-5" />,
+                  onClick: () => navigate(-1),
+                }}
+                rightAction={{
+                  ariaLabel: t('common.moreOptions'),
+                  icon: <MoreVertical className="w-5 h-5" />,
+                  onClick: () => setSheet('menu'),
+                }}
+                stuck={isStuck}
+                style={{
+                  background: 'transparent',
+                  backdropFilter: 'none',
+                  WebkitBackdropFilter: 'none',
+                  borderColor: 'transparent',
+                }}
+              />
+
+              {/* Edit avatar icon */}
+              {canEdit && (
+                <button
+                  onClick={() => setShowAvatarPicker(true)}
+                  aria-label={t('players.changeAvatar')}
+                  className="absolute active:opacity-70 transition-opacity flex items-center justify-center"
                   style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 'var(--text-xs)',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    color: 'var(--accent)',
+                    bottom: 'var(--space-3)',
+                    right: 'var(--space-5)',
+                    width: 32,
+                    height: 32,
+                    zIndex: 1,
+                    pointerEvents: 'auto',
                   }}
                 >
-                  {t('common.rank', { rank: rankData.rank })}
-                </span>
+                  <Camera className="w-5 h-5" style={{ color: 'var(--muted)', opacity: 0.5 }} />
+                </button>
               )}
-              <span
+
+              {/* Header */}
+              <header
                 style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 600,
-                  color: 'var(--muted)',
-                  letterSpacing: '0.02em',
+                  padding: 'var(--space-3) var(--space-5) var(--space-2)',
+                  position: 'relative',
+                  pointerEvents: 'none',
                 }}
               >
-                {t('players.ratingPts', { rating: player.rating })}
-              </span>
-              {isMe && (
-                <span
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    color: 'var(--accent)',
-                    background: 'var(--accent-soft)',
-                    borderRadius: 'var(--radius-sm)',
-                    padding: '2px 6px',
-                  }}
-                >
-                  {t('common.you')}
-                </span>
-              )}
-            </div>
-
-            {/* Total matches · W-L · Rate */}
-            <PlayerRecordLine
-              matchesPlayed={total}
-              wins={wins}
-              losses={losses}
-              winRate={winRatePercent}
-              fontSize={12}
-              marginTop="var(--space-2)"
-            />
-          </div>
-        </header>
-        </div>
-
-        {/* Overview — champion/runner-up sessions + award badges; shares the hero background */}
-        <div className="px-4">
-          <PlayerOverviewCard achievements={achievements} badges={badges} locale={locale} isLoading={achievementsLoading || badgesLoading} onSessionClick={jumpToSession} />
-        </div>
-      </div>
-
-      <div className="px-4 pb-24 space-y-4">
-        {/* Rackets — header card with the active racket, tap to view all */}
-        <div style={{ marginTop: hasOverview ? 0 : 'var(--space-2)' }}>
-          <PlayerRacketHeaderCard playerId={id} canEdit={canEdit} isMe={isMe} activeRacketId={player.active_racket_id} />
-        </div>
-
-        {/* ── History ── */}
-        <div className="space-y-2">
-            {historyLoading ? (
-              <div className="p-4">
-                <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--border)' }} />
-              </div>
-            ) : sessionStats.length === 0 ? (
-              <div
-                className="bg-[var(--surface)] border border-[var(--border)] p-4"
-                style={{ borderRadius: 'var(--radius-lg)' }}
-              >
-                <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noSessionsYet')}</p>
-              </div>
-            ) : (
-              <>
-                <div
-                  className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
-                  style={{ color: 'var(--muted)' }}
-                >
-                  {t('players.sessionsCount', { count: sessionStats.length })}
-                </div>
-
-                <div
-                  ref={historyListRef}
-                  style={{ position: 'relative', height: historyVirtualizer.getTotalSize() }}
-                >
-                  {historyVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const { session, matchCount, wins: sWins, losses: sLosses } = sessionStats[virtualRow.index]
-                    const isExpanded = expandedSessions.has(session.id)
-                    const sessionWinRate = matchCount > 0 ? Math.round((sWins / matchCount) * 100) : 0
-                    return (
-                      <div
-                        key={virtualRow.key}
-                        data-index={virtualRow.index}
-                        ref={historyVirtualizer.measureElement}
+                <div style={{ position: 'relative' }}>
+                  <div className="min-w-0" style={{ width: '66.6667%', pointerEvents: 'auto' }}>
+                    {isEditingName ? (
+                      <input
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        onBlur={handleSaveName}
+                        onKeyDown={handleKeyDown}
+                        autoFocus
                         style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-xl)',
+                          fontWeight: 800,
+                          letterSpacing: '-0.04em',
+                          lineHeight: 1.3,
+                          color: 'var(--fg)',
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: '2px solid var(--accent)',
+                          outline: 'none',
                           width: '100%',
-                          transform: `translateY(${virtualRow.start - historyVirtualizer.options.scrollMargin}px)`,
-                          paddingBottom: virtualRow.index < sessionStats.length - 1 ? 8 : 0,
+                          padding: 0,
+                          display: 'block',
+                        }}
+                      />
+                    ) : canEdit ? (
+                      <button
+                        onClick={handleStartEditName}
+                        className="active:opacity-70 text-left w-full"
+                      >
+                        <h1
+                          style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 'var(--text-xl)',
+                            fontWeight: 800,
+                            lineHeight: 1.3,
+                            letterSpacing: '-0.04em',
+                            color: 'var(--fg)',
+                            overflowWrap: 'break-word',
+                          }}
+                        >
+                          {player.name}
+                          <Pencil
+                            className="inline-block w-4 h-4 ml-1.5 align-middle"
+                            style={{ color: 'var(--muted)', opacity: 0.5 }}
+                          />
+                        </h1>
+                      </button>
+                    ) : (
+                      <h1
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-xl)',
+                          fontWeight: 800,
+                          lineHeight: 1.3,
+                          letterSpacing: '-0.04em',
+                          color: 'var(--fg)',
+                          overflowWrap: 'break-word',
                         }}
                       >
-                        <div className="bg-[var(--surface)] overflow-hidden">
-                          <button
-                            onClick={() => toggleSession(session.id)}
-                            className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
-                          >
-                            <div className="flex-1 min-w-0 text-left">
-                              <p
-                                className="text-[15px] font-semibold truncate"
-                                style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
-                              >
-                                {formatSessionLabel(session, locale)}
-                              </p>
-                              <PlayerRecordLine
-                                matchesPlayed={matchCount}
-                                wins={sWins}
-                                losses={sLosses}
-                                winRate={sessionWinRate}
-                                marginTop={2}
-                              />
-                            </div>
-                            {isExpanded
-                              ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                              : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: 'var(--muted)' }} />
-                            }
-                          </button>
+                        {player.name}
+                      </h1>
+                    )}
+                  </div>
 
-                          {isExpanded && (
-                            <div style={{ borderTop: '1px solid var(--border)' }}>
-                              <SessionMatchList playerId={id} sessionId={session.id} />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                  {/* Rank · Rating · You */}
+                  <div
+                    className="flex items-center flex-wrap"
+                    style={{ gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}
+                  >
+                    {rankData && (
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 'var(--text-xs)',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          color: 'var(--accent)',
+                        }}
+                      >
+                        {t('common.rank', { rank: rankData.rank })}
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 'var(--text-xs)',
+                        fontWeight: 600,
+                        color: 'var(--muted)',
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      {t('players.ratingPts', { rating: player.rating })}
+                    </span>
+                    {isMe && (
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          color: 'var(--accent)',
+                          background: 'var(--accent-soft)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '2px 6px',
+                        }}
+                      >
+                        {t('common.you')}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Total matches · W-L · Rate */}
+                  <PlayerRecordLine
+                    matchesPlayed={total}
+                    wins={wins}
+                    losses={losses}
+                    winRate={winRatePercent}
+                    fontSize={12}
+                    marginTop="var(--space-2)"
+                  />
                 </div>
-              </>
-            )}
-          </div>
+              </header>
+            </div>
 
-      </div>
-
-      {displayMascotId && (
-        <div
-          className="fixed left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none"
-          style={{ bottom: `calc(4.5rem + env(safe-area-inset-bottom))` }}
-        >
-          <div className="flex justify-end">
-            <div className="pointer-events-auto">
-              <PlayerMascot mascotId={displayMascotId} size={112} speak playerId={id} />
+            {/* Overview — champion/runner-up sessions + award badges; shares the hero background */}
+            <div className="px-4">
+              <PlayerOverviewCard
+                achievements={achievements}
+                badges={badges}
+                locale={locale}
+                isLoading={achievementsLoading || badgesLoading}
+                onSessionClick={jumpToSession}
+              />
             </div>
           </div>
+
+          <div className="px-4 pb-24 space-y-4">
+            {/* Rackets — header card with the active racket, tap to view all */}
+            <div style={{ marginTop: hasOverview ? 0 : 'var(--space-2)' }}>
+              <PlayerRacketHeaderCard
+                playerId={id}
+                canEdit={canEdit}
+                isMe={isMe}
+                activeRacketId={player.active_racket_id}
+              />
+            </div>
+
+            {/* ── History ── */}
+            <div className="space-y-2">
+              {historyLoading ? (
+                <div className="p-4">
+                  <div
+                    className="h-4 w-32 rounded animate-pulse"
+                    style={{ background: 'var(--border)' }}
+                  />
+                </div>
+              ) : sessionStats.length === 0 ? (
+                <div
+                  className="bg-[var(--surface)] border border-[var(--border)] p-4"
+                  style={{ borderRadius: 'var(--radius-lg)' }}
+                >
+                  <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
+                    {t('players.noSessionsYet')}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="text-[11px] font-bold uppercase tracking-[0.1em] px-1"
+                    style={{ color: 'var(--muted)' }}
+                  >
+                    {t('players.sessionsCount', { count: sessionStats.length })}
+                  </div>
+
+                  <div
+                    ref={historyListRef}
+                    style={{ position: 'relative', height: historyVirtualizer.getTotalSize() }}
+                  >
+                    {historyVirtualizer.getVirtualItems().map(virtualRow => {
+                      const {
+                        session,
+                        matchCount,
+                        wins: sWins,
+                        losses: sLosses,
+                      } = sessionStats[virtualRow.index]
+                      const isExpanded = expandedSessions.has(session.id)
+                      const sessionWinRate =
+                        matchCount > 0 ? Math.round((sWins / matchCount) * 100) : 0
+                      return (
+                        <div
+                          key={virtualRow.key}
+                          data-index={virtualRow.index}
+                          ref={historyVirtualizer.measureElement}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            transform: `translateY(${virtualRow.start - historyVirtualizer.options.scrollMargin}px)`,
+                            paddingBottom: virtualRow.index < sessionStats.length - 1 ? 8 : 0,
+                          }}
+                        >
+                          <div className="bg-[var(--surface)] overflow-hidden">
+                            <button
+                              onClick={() => toggleSession(session.id)}
+                              className="w-full flex items-center gap-3 px-4 py-3 active:bg-[var(--bg)]"
+                            >
+                              <div className="flex-1 min-w-0 text-left">
+                                <p
+                                  className="text-[15px] font-semibold truncate"
+                                  style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+                                >
+                                  {formatSessionLabel(session, locale)}
+                                </p>
+                                <PlayerRecordLine
+                                  matchesPlayed={matchCount}
+                                  wins={sWins}
+                                  losses={sLosses}
+                                  winRate={sessionWinRate}
+                                  marginTop={2}
+                                />
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown
+                                  className="w-4 h-4 shrink-0"
+                                  style={{ color: 'var(--muted)' }}
+                                />
+                              ) : (
+                                <ChevronRight
+                                  className="w-4 h-4 shrink-0"
+                                  style={{ color: 'var(--muted)' }}
+                                />
+                              )}
+                            </button>
+
+                            {isExpanded && (
+                              <div style={{ borderTop: '1px solid var(--border)' }}>
+                                <SessionMatchList playerId={id} sessionId={session.id} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {displayMascotId && (
+            <div
+              className="fixed left-0 right-0 max-w-lg mx-auto px-4 z-30 pointer-events-none"
+              style={{ bottom: `calc(4.5rem + env(safe-area-inset-bottom))` }}
+            >
+              <div className="flex justify-end">
+                <div className="pointer-events-auto">
+                  <PlayerMascot mascotId={displayMascotId} size={112} speak playerId={id} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <AvatarPicker
+            open={showAvatarPicker}
+            currentAvatarUrl={player.avatar_url}
+            onSelect={file => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}
+            onSelectDefault={url =>
+              setDefaultAvatar.mutate({
+                url,
+                entity: 'players',
+                id: player.id,
+                oldAvatarUrl: player.avatar_url,
+              })
+            }
+            onRemove={() =>
+              removeAvatar.mutate({
+                entity: 'players',
+                id: player.id,
+                oldAvatarUrl: player.avatar_url,
+              })
+            }
+            onClose={() => setShowAvatarPicker(false)}
+          />
+
+          <BottomSheet open={sheet !== null} onClose={() => setSheet(null)}>
+            {sheet === 'menu' && (
+              <>
+                <BottomSheetItem
+                  icon={<TrendingUp size={20} />}
+                  label={t('players.rankingChart')}
+                  onClick={() => setSheet('ranking')}
+                />
+                <BottomSheetItem
+                  icon={<Swords size={20} />}
+                  label={t('players.tabOpponents')}
+                  onClick={() => setSheet('h2h')}
+                />
+                <BottomSheetItem
+                  icon={<Users size={20} />}
+                  label={t('players.tabPartners')}
+                  onClick={() => setSheet('partners')}
+                />
+                <BottomSheetItem
+                  icon={<ArrowLeftRight size={20} />}
+                  label={t('players.compareTeams')}
+                  onClick={() => navigate(`/players/${id}/head-to-head`)}
+                />
+                <BottomSheetCancel onClick={() => setSheet(null)} />
+              </>
+            )}
+            {sheet === 'ranking' && (
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
+                <PlayerRankingChartContent data={chartData} />
+              </div>
+            )}
+            {sheet === 'h2h' && (
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
+                <PlayerOpponentsContent playerId={id} />
+              </div>
+            )}
+            {sheet === 'partners' && (
+              <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
+                <PlayerPartnersContent playerId={id} />
+              </div>
+            )}
+          </BottomSheet>
         </div>
-      )}
-
-      <AvatarPicker
-        open={showAvatarPicker}
-        currentAvatarUrl={player.avatar_url}
-        onSelect={(file) => uploadAvatar.mutate({ file, entity: 'players', id: player.id })}
-        onSelectDefault={(url) =>
-          setDefaultAvatar.mutate({ url, entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
-        }
-        onRemove={() =>
-          removeAvatar.mutate({ entity: 'players', id: player.id, oldAvatarUrl: player.avatar_url })
-        }
-        onClose={() => setShowAvatarPicker(false)}
-      />
-
-      <BottomSheet open={sheet !== null} onClose={() => setSheet(null)}>
-        {sheet === 'menu' && (
-          <>
-            <BottomSheetItem icon={<TrendingUp size={20} />} label={t('players.rankingChart')} onClick={() => setSheet('ranking')} />
-            <BottomSheetItem icon={<Swords size={20} />} label={t('players.tabOpponents')} onClick={() => setSheet('h2h')} />
-            <BottomSheetItem icon={<Users size={20} />} label={t('players.tabPartners')} onClick={() => setSheet('partners')} />
-            <BottomSheetItem icon={<ArrowLeftRight size={20} />} label={t('players.compareTeams')} onClick={() => navigate(`/players/${id}/head-to-head`)} />
-            <BottomSheetCancel onClick={() => setSheet(null)} />
-          </>
-        )}
-        {sheet === 'ranking' && (
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
-            <PlayerRankingChartContent data={chartData} />
-          </div>
-        )}
-        {sheet === 'h2h' && (
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
-            <PlayerOpponentsContent playerId={id} />
-          </div>
-        )}
-        {sheet === 'partners' && (
-          <div className="space-y-2 max-h-[70vh] overflow-y-auto overscroll-contain">
-            <PlayerPartnersContent playerId={id} />
-          </div>
-        )}
-      </BottomSheet>
-    </div>
-    </PullToRefresh>
+      </PullToRefresh>
     </>
   )
 }

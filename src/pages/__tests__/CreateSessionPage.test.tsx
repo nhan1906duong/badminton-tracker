@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import CreateSessionPage from '../CreateSessionPage'
-import { DuplicateTournamentError } from '../../hooks/useSessions'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BwfTournament } from '../../hooks/useBwfTournaments'
+import { DuplicateTournamentError } from '../../hooks/useSessions'
+import CreateSessionPage from '../CreateSessionPage'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +33,8 @@ const mockCreateSession = {
   isPending: false,
 }
 vi.mock('../../hooks/useSessions', async () => {
-  const actual = await vi.importActual<typeof import('../../hooks/useSessions')>('../../hooks/useSessions')
+  const actual =
+    await vi.importActual<typeof import('../../hooks/useSessions')>('../../hooks/useSessions')
   return {
     ...actual,
     useCreateSession: () => mockCreateSession,
@@ -53,18 +54,22 @@ vi.mock('../../hooks/usePlayers', () => ({
 }))
 
 const mockRefetch = vi.fn()
-const mockUseNearbyBwfTournaments = vi.fn((dayRange?: number): {
-  tournaments: BwfTournament[]
-  isLoading: boolean
-  refetch: typeof mockRefetch
-} => {
-  void dayRange
-  return {
-    tournaments: [],
-    isLoading: false,
-    refetch: mockRefetch,
-  }
-})
+const mockUseNearbyBwfTournaments = vi.fn(
+  (
+    dayRange?: number,
+  ): {
+    tournaments: BwfTournament[]
+    isLoading: boolean
+    refetch: typeof mockRefetch
+  } => {
+    void dayRange
+    return {
+      tournaments: [],
+      isLoading: false,
+      refetch: mockRefetch,
+    }
+  },
+)
 vi.mock('../../hooks/useBwfTournaments', () => ({
   useNearbyBwfTournaments: (dayRange?: number) => mockUseNearbyBwfTournaments(dayRange),
 }))
@@ -82,7 +87,8 @@ vi.mock('../../../design-system/components', () => ({
     backLabel?: string
     onBack?: () => void
   }) => {
-    const action = leftAction ?? (onBack ? { label: backLabel ?? 'Back', onClick: onBack } : undefined)
+    const action =
+      leftAction ?? (onBack ? { label: backLabel ?? 'Back', onClick: onBack } : undefined)
 
     return (
       <header>
@@ -111,11 +117,18 @@ vi.mock('../../../design-system/components', () => ({
     ) : null,
   MatchTypeChips: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <div role="radiogroup" aria-label="Match type">
-      {['MEN_SINGLES', 'WOMEN_SINGLES', 'MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES'].map((type) => (
-        <button key={type} role="radio" aria-checked={value === type} onClick={() => onChange(type)}>
-          {type}
-        </button>
-      ))}
+      {['MEN_SINGLES', 'WOMEN_SINGLES', 'MEN_DOUBLES', 'WOMEN_DOUBLES', 'MIXED_DOUBLES'].map(
+        type => (
+          <button
+            key={type}
+            role="radio"
+            aria-checked={value === type}
+            onClick={() => onChange(type)}
+          >
+            {type}
+          </button>
+        ),
+      )}
     </div>
   ),
 }))
@@ -140,12 +153,14 @@ function renderPage() {
       <MemoryRouter initialEntries={['/sessions/new']}>
         <CreateSessionPage />
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
 /** No-op: config is now inline on the same page as the type selector */
-function advanceToConfig() { /* single-page form — no step to advance */ }
+function advanceToConfig() {
+  /* single-page form — no step to advance */
+}
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
@@ -169,7 +184,10 @@ describe('CreateSessionPage', () => {
     it('shows session type picker with Regular selected by default', () => {
       renderPage()
       expect(screen.getByRole('tab', { name: /regular/i })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByRole('tab', { name: /tournament/i })).toHaveAttribute('aria-selected', 'false')
+      expect(screen.getByRole('tab', { name: /tournament/i })).toHaveAttribute(
+        'aria-selected',
+        'false',
+      )
       expect(screen.getByRole('tab', { name: /league/i })).toHaveAttribute('aria-selected', 'false')
     })
 
@@ -262,11 +280,11 @@ describe('CreateSessionPage', () => {
 
       await waitFor(() => {
         expect(mockMutateAsync).toHaveBeenCalledWith(
-          expect.objectContaining({ label: 'Weekly Badminton', type: 'regular' })
+          expect.objectContaining({ label: 'Weekly Badminton', type: 'regular' }),
         )
         // In "now" mode, started_at should be undefined (uses server default)
         expect(mockMutateAsync).toHaveBeenCalledWith(
-          expect.objectContaining({ started_at: undefined })
+          expect.objectContaining({ started_at: undefined }),
         )
       })
     })
@@ -350,16 +368,28 @@ describe('CreateSessionPage', () => {
     it('defaults to "Start now" mode', () => {
       renderPage()
       advanceToConfig()
-      expect(screen.getByRole('tab', { name: /start now/i })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute('aria-selected', 'false')
+      expect(screen.getByRole('tab', { name: /start now/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute(
+        'aria-selected',
+        'false',
+      )
     })
 
     it('switches to schedule mode when Schedule tab is clicked', () => {
       renderPage()
       advanceToConfig()
       fireEvent.click(screen.getByRole('tab', { name: /schedule/i }))
-      expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute('aria-selected', 'true')
-      expect(screen.getByRole('tab', { name: /start now/i })).toHaveAttribute('aria-selected', 'false')
+      expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      expect(screen.getByRole('tab', { name: /start now/i })).toHaveAttribute(
+        'aria-selected',
+        'false',
+      )
     })
 
     it('CTA is enabled in schedule mode after time is auto-picked', () => {
@@ -391,7 +421,7 @@ describe('CreateSessionPage', () => {
           expect.objectContaining({
             label: 'Scheduled Session',
             started_at: expect.any(String),
-          })
+          }),
         )
       })
     })

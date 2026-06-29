@@ -1,6 +1,6 @@
+import { UserPlus, X } from 'lucide-react'
 import { useState } from 'react'
 import { useCreatePlayer } from '../hooks/usePlayers'
-import { X, UserPlus } from 'lucide-react'
 import { useI18n } from '../i18n'
 
 interface PlayerFormProps {
@@ -37,7 +37,9 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ background: 'oklch(0% 0 0 / 0.5)', touchAction: 'none' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       <div
         className="w-full max-w-sm"
@@ -50,7 +52,14 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-5)' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 'var(--space-5)',
+          }}
+        >
           <h3
             style={{
               fontFamily: 'var(--font-display)',
@@ -87,7 +96,10 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
+        >
           {/* Name field */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
             <label
@@ -123,8 +135,12 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              onFocus={e => { e.currentTarget.style.border = '2px solid var(--fg)' }}
-              onBlur={e => { e.currentTarget.style.border = `1px solid ${error ? 'var(--danger)' : 'var(--border)'}` }}
+              onFocus={e => {
+                e.currentTarget.style.border = '2px solid var(--fg)'
+              }}
+              onBlur={e => {
+                e.currentTarget.style.border = `1px solid ${error ? 'var(--danger)' : 'var(--border)'}`
+              }}
             />
           </div>
 
@@ -162,13 +178,19 @@ export default function PlayerForm({ onClose }: PlayerFormProps) {
                 outline: 'none',
                 boxSizing: 'border-box',
               }}
-              onFocus={e => { e.currentTarget.style.border = '2px solid var(--fg)' }}
-              onBlur={e => { e.currentTarget.style.border = '1px solid var(--border)' }}
+              onFocus={e => {
+                e.currentTarget.style.border = '2px solid var(--fg)'
+              }}
+              onBlur={e => {
+                e.currentTarget.style.border = '1px solid var(--border)'
+              }}
             />
           </div>
 
           {error && (
-            <p style={{ fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--font-body)' }}>{error}</p>
+            <p style={{ fontSize: 11, color: 'var(--danger)', fontFamily: 'var(--font-body)' }}>
+              {error}
+            </p>
           )}
 
           <button

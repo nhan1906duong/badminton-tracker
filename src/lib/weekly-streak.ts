@@ -40,8 +40,12 @@ function localWeekKey(iso: string): string {
   return `${year}-${month}-${dayOfMonth}`
 }
 
-function uniquePlayerMatchResults<T extends { player_id: string; match_id: string }>(results: T[]): T[] {
-  return Array.from(new Map(results.map(result => [`${result.player_id}:${result.match_id}`, result])).values())
+function uniquePlayerMatchResults<T extends { player_id: string; match_id: string }>(
+  results: T[],
+): T[] {
+  return Array.from(
+    new Map(results.map(result => [`${result.player_id}:${result.match_id}`, result])).values(),
+  )
 }
 
 function compareWeeklyStats(a: WeeklyPlayerStats, b: WeeklyPlayerStats): number {
@@ -54,14 +58,14 @@ function compareWeeklyStats(a: WeeklyPlayerStats, b: WeeklyPlayerStats): number 
 export function calculateCurrentTopOneWeekStreaks(
   sessions: WeeklyStreakSession[] | null | undefined,
   results: WeeklyStreakResult[] | null | undefined,
-  players: WeeklyStreakPlayer[] | null | undefined
+  players: WeeklyStreakPlayer[] | null | undefined,
 ): Map<string, number> {
   const streaks = new Map((players ?? []).map(player => [player.id, 0]))
   const playerMap = new Map((players ?? []).map(player => [player.id, player]))
   const endedSessionMap = new Map(
     (sessions ?? [])
       .filter(session => session.ended_at != null)
-      .map(session => [session.id, session])
+      .map(session => [session.id, session]),
   )
 
   if (endedSessionMap.size === 0) return streaks

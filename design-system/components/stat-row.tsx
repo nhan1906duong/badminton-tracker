@@ -9,10 +9,7 @@ export function StatRow({ label, value }: StatRowProps) {
       className="flex justify-between items-center py-3"
       style={{ borderBottom: '1px solid var(--border)' }}
     >
-      <span
-        className="text-[13px]"
-        style={{ color: 'var(--muted)' }}
-      >
+      <span className="text-[13px]" style={{ color: 'var(--muted)' }}>
         {label}
       </span>
       <span

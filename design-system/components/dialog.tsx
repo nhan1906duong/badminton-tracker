@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { Button } from './button'
-import type { ButtonProps } from './button'
 import { useI18n } from '../../src/i18n'
+import type { ButtonProps } from './button'
+import { Button } from './button'
 
 export interface DialogAction {
   label: string
@@ -26,7 +26,16 @@ export interface DialogProps {
 
 function InfoIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -36,7 +45,16 @@ function InfoIcon() {
 
 function WarningIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -46,7 +64,16 @@ function WarningIcon() {
 
 function DangerIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="12" cy="12" r="10" />
       <line x1="15" y1="9" x2="9" y2="15" />
       <line x1="9" y1="9" x2="15" y2="15" />
@@ -88,12 +115,18 @@ export function Dialog({
 
   const { color, tint, defaultIcon } = KIND_CONFIG[kind]
   const resolvedIcon = icon ?? defaultIcon
-  const resolvedActions: DialogAction[] = actions ?? [{ label: t('common.gotIt'), onClick: onClose, variant: 'primary' }]
+  const resolvedActions: DialogAction[] = actions ?? [
+    { label: t('common.gotIt'), onClick: onClose, variant: 'primary' },
+  ]
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8"
-      style={{ background: 'oklch(0% 0 0 / 0.40)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+      style={{
+        background: 'oklch(0% 0 0 / 0.40)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+      }}
       onClick={onClose}
     >
       <div
@@ -106,7 +139,7 @@ export function Dialog({
           borderRadius: 'var(--radius-xl)',
           boxShadow: '0 8px 32px oklch(0% 0 0 / 0.24)',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {/* Icon + text */}
         <div className="px-5 pt-5 pb-4 flex items-start gap-3">
@@ -125,15 +158,21 @@ export function Dialog({
             >
               {title}
             </p>
-            <p id="app-dialog-description" className="text-[var(--muted)] mt-1 leading-snug" style={{ fontSize: 14 }}>
+            <p
+              id="app-dialog-description"
+              className="text-[var(--muted)] mt-1 leading-snug"
+              style={{ fontSize: 14 }}
+            >
               {description}
             </p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className={`px-5 pb-5 flex gap-3 ${resolvedActions.length > 1 ? 'flex-row' : 'flex-col'}`}>
-          {resolvedActions.map((action) => (
+        <div
+          className={`px-5 pb-5 flex gap-3 ${resolvedActions.length > 1 ? 'flex-row' : 'flex-col'}`}
+        >
+          {resolvedActions.map(action => (
             <Button
               key={action.label}
               variant={action.variant ?? 'primary'}

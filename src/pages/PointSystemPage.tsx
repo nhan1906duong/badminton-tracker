@@ -1,6 +1,6 @@
+import { Activity, Calculator, ChevronLeft, Medal, Trophy } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, Calculator, ChevronLeft, Medal, Trophy } from 'lucide-react'
 import { AppBar, StatRow } from '../../design-system/components'
 import { useI18n } from '../i18n'
 
@@ -168,7 +168,11 @@ export default function PointSystemPage() {
                 </div>
               </div>
               <div className="border-t border-[var(--border)]">
-                <RuleRow label={t('points.abWinners')} value={t('points.ptsEach', { points: 16 })} tone="good" />
+                <RuleRow
+                  label={t('points.abWinners')}
+                  value={t('points.ptsEach', { points: 16 })}
+                  tone="good"
+                />
                 <RuleRow label={t('points.cdLosers')} value={t('points.ptsEach', { points: 3 })} />
               </div>
             </div>
@@ -200,7 +204,10 @@ export default function PointSystemPage() {
           <Section eyebrow={t('points.sorting')} title={t('points.leaderboardOrder')}>
             <RulesCard>
               <RuleRow label={t('points.thisSession')} value={t('points.pointsWinsDiff')} />
-              <RuleRow label={t('points.overallRankings')} value={t('points.ratingAvgWinRateDiff')} />
+              <RuleRow
+                label={t('points.overallRankings')}
+                value={t('points.ratingAvgWinRateDiff')}
+              />
             </RulesCard>
           </Section>
         </main>

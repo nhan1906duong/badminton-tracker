@@ -1,11 +1,11 @@
+import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button, Input } from '../../design-system/components'
 import { AppBar } from '../../design-system/components/app-bar'
 import { useAuth } from '../hooks/useAuth'
-import { supabase } from '../lib/supabase'
 import { useI18n } from '../i18n'
+import { supabase } from '../lib/supabase'
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate()
@@ -87,14 +87,14 @@ export default function ChangePasswordPage() {
               label={t('account.changePassword.current')}
               type={showCurrent ? 'text' : 'password'}
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              onChange={e => setCurrentPassword(e.target.value)}
               placeholder="••••••••"
               required
               autoComplete="current-password"
               rightAction={
                 <button
                   type="button"
-                  onClick={() => setShowCurrent((v) => !v)}
+                  onClick={() => setShowCurrent(v => !v)}
                   className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
                   tabIndex={-1}
                   aria-label={showCurrent ? 'Hide password' : 'Show password'}
@@ -107,14 +107,14 @@ export default function ChangePasswordPage() {
               label={t('account.changePassword.new')}
               type={showNew ? 'text' : 'password'}
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={e => setNewPassword(e.target.value)}
               placeholder="••••••••"
               required
               autoComplete="new-password"
               rightAction={
                 <button
                   type="button"
-                  onClick={() => setShowNew((v) => !v)}
+                  onClick={() => setShowNew(v => !v)}
                   className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
                   tabIndex={-1}
                   aria-label={showNew ? 'Hide password' : 'Show password'}
@@ -127,14 +127,14 @@ export default function ChangePasswordPage() {
               label={t('account.changePassword.confirm')}
               type={showConfirm ? 'text' : 'password'}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={e => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
               autoComplete="new-password"
               rightAction={
                 <button
                   type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
+                  onClick={() => setShowConfirm(v => !v)}
                   className="flex items-center justify-center w-8 h-8 text-[var(--muted)] active:text-[var(--fg)]"
                   tabIndex={-1}
                   aria-label={showConfirm ? 'Hide password' : 'Show password'}

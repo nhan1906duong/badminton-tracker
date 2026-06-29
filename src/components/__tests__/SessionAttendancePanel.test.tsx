@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { SessionAttendancePanel } from '../SessionAttendancePanel'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Player, SessionAttendance } from '../../types/database'
+import { SessionAttendancePanel } from '../SessionAttendancePanel'
 
 // ─── i18n ─────────────────────────────────────────────────────────────────────
 
@@ -19,9 +19,27 @@ vi.mock('../../i18n', async () => {
 })
 
 const PLAYERS: Player[] = [
-  { id: 'p1', name: 'Alice Smith', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p2', name: 'Bob Jones', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p3', name: 'Carol Davis', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
+  {
+    id: 'p1',
+    name: 'Alice Smith',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'p2',
+    name: 'Bob Jones',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'p3',
+    name: 'Carol Davis',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
 ]
 
 let mockAttendances: SessionAttendance[] = []

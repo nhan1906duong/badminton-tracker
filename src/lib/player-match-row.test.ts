@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getMatchRow } from './player-match-row'
 import type { MatchWithDetails, Player } from '../types/database'
+import { getMatchRow } from './player-match-row'
 
 function player(id: string, name: string): Player {
   return { id, name, rating: 1500, created_at: '2026-01-01', created_by: 'u1' }
@@ -21,10 +21,22 @@ function doublesMatch(overrides: Partial<MatchWithDetails> = {}): MatchWithDetai
       { id: 'tB', match_id: 'm1', team_label: 'TEAM_B', is_winner: false },
     ],
     participants: [
-      { id: 'p1', match_id: 'm1', team_id: 'tA', player_id: 'p1', player: player('p1', 'Danh Nguyen') },
+      {
+        id: 'p1',
+        match_id: 'm1',
+        team_id: 'tA',
+        player_id: 'p1',
+        player: player('p1', 'Danh Nguyen'),
+      },
       { id: 'p2', match_id: 'm1', team_id: 'tA', player_id: 'p2', player: player('p2', 'An Tran') },
       { id: 'p3', match_id: 'm1', team_id: 'tB', player_id: 'p3', player: player('p3', 'Binh Le') },
-      { id: 'p4', match_id: 'm1', team_id: 'tB', player_id: 'p4', player: player('p4', 'Cuong Pham') },
+      {
+        id: 'p4',
+        match_id: 'm1',
+        team_id: 'tB',
+        player_id: 'p4',
+        player: player('p4', 'Cuong Pham'),
+      },
     ],
     scores: [{ id: 'sc1', match_id: 'm1', set_number: 1, team_a_score: 21, team_b_score: 15 }],
     ...overrides,

@@ -14,12 +14,16 @@ export function RatingChart({ data }: Props) {
   const { locale } = useI18n()
   if (data.length === 0) return null
 
-  const W = 360, H = 160
-  const padL = 44, padR = 12, padT = 22, padB = 36
+  const W = 360,
+    H = 160
+  const padL = 44,
+    padR = 12,
+    padT = 22,
+    padB = 36
   const cW = W - padL - padR
   const cH = H - padT - padB
 
-  const ratings = data.map((d) => d.rating)
+  const ratings = data.map(d => d.rating)
   const minR = Math.min(...ratings)
   const maxR = Math.max(...ratings)
   const pad = Math.max((maxR - minR) * 0.25, 50)
@@ -27,8 +31,7 @@ export function RatingChart({ data }: Props) {
   const yMax = Math.ceil((maxR + pad) / 10) * 10
   const yRange = yMax - yMin || 1
 
-  const toX = (i: number) =>
-    padL + (data.length === 1 ? cW / 2 : (i / (data.length - 1)) * cW)
+  const toX = (i: number) => padL + (data.length === 1 ? cW / 2 : (i / (data.length - 1)) * cW)
   const toY = (r: number) => padT + cH - ((r - yMin) / yRange) * cH
 
   const tickStep = Math.ceil(yRange / 4 / 10) * 10 || 10
@@ -63,7 +66,7 @@ export function RatingChart({ data }: Props) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block' }} aria-hidden>
-      {ticks.map((t) => (
+      {ticks.map(t => (
         <g key={t}>
           <line
             x1={padL}
@@ -87,9 +90,7 @@ export function RatingChart({ data }: Props) {
         </g>
       ))}
 
-      {areaPoints && (
-        <polygon points={areaPoints} fill="var(--accent)" opacity={0.08} />
-      )}
+      {areaPoints && <polygon points={areaPoints} fill="var(--accent)" opacity={0.08} />}
 
       {linePoints && (
         <polyline

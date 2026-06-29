@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
-import type { MatchType } from '../types/database'
-import { ChevronDown, Check } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { matchTypeLabel, useI18n } from '../i18n'
+import type { MatchType } from '../types/database'
 
 interface MatchTypeSelectorProps {
   value: MatchType
@@ -34,9 +34,7 @@ export default function MatchTypeSelector({ value, onChange }: MatchTypeSelector
   return (
     <div ref={ref} className="relative inline-block">
       <div className="flex items-center gap-1">
-        <span className="text-[15px] font-medium text-gray-900">
-          {matchTypeLabel(value, t)}
-        </span>
+        <span className="text-[15px] font-medium text-gray-900">{matchTypeLabel(value, t)}</span>
         <button
           onClick={() => setOpen(v => !v)}
           className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"

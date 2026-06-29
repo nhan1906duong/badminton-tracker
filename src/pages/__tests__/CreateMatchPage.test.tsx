@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import CreateMatchPage from '../CreateMatchPage'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useNewMatchStore } from '../../stores/new-match-store'
 import type { MatchWithDetails, Player, SessionAttendance } from '../../types/database'
+import CreateMatchPage from '../CreateMatchPage'
 
 // ─── Router mocks ─────────────────────────────────────────────────────────────
 
@@ -34,10 +34,34 @@ vi.mock('react-router-dom', async () => {
 // ─── Test data ────────────────────────────────────────────────────────────────
 
 const PLAYERS: Player[] = [
-  { id: 'p1', name: 'Alice Smith', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p2', name: 'Bob Jones', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p3', name: 'Carol Davis', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'p4', name: 'Dan Wilson', rating: 1000, created_by: 'user-1', created_at: '2026-01-01T00:00:00Z' },
+  {
+    id: 'p1',
+    name: 'Alice Smith',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'p2',
+    name: 'Bob Jones',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'p3',
+    name: 'Carol Davis',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'p4',
+    name: 'Dan Wilson',
+    rating: 1000,
+    created_by: 'user-1',
+    created_at: '2026-01-01T00:00:00Z',
+  },
 ]
 
 // ─── Hook mocks ───────────────────────────────────────────────────────────────
@@ -81,14 +105,25 @@ vi.mock('../../hooks/useIsAdmin', () => ({
 
 vi.mock('../../../design-system/components', () => ({
   AppBar: ({ onBack, backLabel }: { onBack?: () => void; backLabel?: string }) => (
-    <header>
-      {onBack && <button onClick={onBack}>{backLabel ?? 'Back'}</button>}
-    </header>
+    <header>{onBack && <button onClick={onBack}>{backLabel ?? 'Back'}</button>}</header>
   ),
-  SegmentedControl: ({ value, tabs, onChange }: { value: string; tabs: Array<{ id: string; label: string }>; onChange: (v: string) => void }) => (
+  SegmentedControl: ({
+    value,
+    tabs,
+    onChange,
+  }: {
+    value: string
+    tabs: Array<{ id: string; label: string }>
+    onChange: (v: string) => void
+  }) => (
     <div role="tablist">
       {tabs.map(tab => (
-        <button key={tab.id} role="tab" aria-selected={value === tab.id} onClick={() => onChange(tab.id)}>
+        <button
+          key={tab.id}
+          role="tab"
+          aria-selected={value === tab.id}
+          onClick={() => onChange(tab.id)}
+        >
           {tab.label}
         </button>
       ))}
@@ -123,7 +158,11 @@ vi.mock('../../../design-system/components/match-type-chips', () => ({
 
 vi.mock('../../../design-system/components/bottom-sheet', () => ({
   BottomSheet: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
-    open ? <div role="dialog" aria-label="Player picker">{children}</div> : null,
+    open ? (
+      <div role="dialog" aria-label="Player picker">
+        {children}
+      </div>
+    ) : null,
 }))
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -136,7 +175,7 @@ function renderPage() {
       <MemoryRouter initialEntries={['/sessions/sess-1/matches/new']}>
         <CreateMatchPage />
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -275,7 +314,10 @@ describe('CreateMatchPage', () => {
     it('switches to Schedule mode when Schedule tab is clicked', () => {
       renderPage()
       fireEvent.click(screen.getByRole('tab', { name: /schedule/i }))
-      expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByRole('tab', { name: /schedule/i })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
     })
 
     it('shows date/time pickers in Schedule mode', () => {
@@ -313,7 +355,7 @@ describe('CreateMatchPage', () => {
             status: 'LIVE',
             team_a_player_ids: ['p1'],
             team_b_player_ids: ['p2'],
-          })
+          }),
         )
       })
     })
@@ -336,7 +378,7 @@ describe('CreateMatchPage', () => {
             status: 'SCHEDULED',
             team_a_player_ids: ['p1'],
             team_b_player_ids: ['p2'],
-          })
+          }),
         )
       })
     })

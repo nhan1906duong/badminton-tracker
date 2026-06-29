@@ -39,13 +39,13 @@ export function usePlayerSessionStats(playerId: string) {
       if (error) throw error
 
       return (data ?? [])
-        .filter((row) => row.session != null)
+        .filter(row => row.session != null)
         .sort(
           (a, b) =>
             new Date((b.session as unknown as Session).started_at).getTime() -
             new Date((a.session as unknown as Session).started_at).getTime(),
         )
-        .map((row) => {
+        .map(row => {
           const session = row.session as unknown as Session
           const r = row as unknown as typeof row & {
             total_weekly_points: number

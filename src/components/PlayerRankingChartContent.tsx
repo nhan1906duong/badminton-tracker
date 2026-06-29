@@ -1,5 +1,5 @@
-import { RatingChart, type RatingChartPoint } from './RatingChart'
 import { useI18n } from '../i18n'
+import { RatingChart, type RatingChartPoint } from './RatingChart'
 
 interface Props {
   data: RatingChartPoint[]
@@ -21,7 +21,9 @@ export function PlayerRankingChartContent({ data }: Props) {
           className="bg-[var(--bg)] border border-[var(--border)] p-4"
           style={{ borderRadius: 'var(--radius-lg)' }}
         >
-          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>{t('players.noPointsYet')}</p>
+          <p className="text-[13px]" style={{ color: 'var(--muted)' }}>
+            {t('players.noPointsYet')}
+          </p>
         </div>
       ) : (
         <RatingChart data={data} />

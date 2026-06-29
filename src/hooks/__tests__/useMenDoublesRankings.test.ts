@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { computeMenDoublesRankings } from '../useMenDoublesRankings'
 import type { MatchWithDetails, Session } from '../../types/database'
+import { computeMenDoublesRankings } from '../useMenDoublesRankings'
 
 function session(id: string, ended = true): Session {
   return {
@@ -50,11 +50,8 @@ function mdMatch(
       { id: 'ta', match_id: id, team_label: 'TEAM_A', is_winner: winner === 'A' },
       { id: 'tb', match_id: id, team_label: 'TEAM_B', is_winner: winner === 'B' },
     ],
-    participants: [
-      ...makeParticipants(teamA, 'ta'),
-      ...makeParticipants(teamB, 'tb'),
-    ],
-    scores: scores.map((s) => ({ id: `sc-${id}-${s.set_number}`, match_id: id, ...s })),
+    participants: [...makeParticipants(teamA, 'ta'), ...makeParticipants(teamB, 'tb')],
+    scores: scores.map(s => ({ id: `sc-${id}-${s.set_number}`, match_id: id, ...s })),
   }
 }
 
@@ -67,8 +64,8 @@ describe('computeMenDoublesRankings', () => {
       mdMatch('m3', 's1', ['p1', 'p2'], ['p3', 'p4'], 'A'),
     ]
     const rankings = computeMenDoublesRankings(matches, sessions)
-    const pair12 = rankings.find((r) => r.key === 'p1:p2')
-    const pair34 = rankings.find((r) => r.key === 'p3:p4')
+    const pair12 = rankings.find(r => r.key === 'p1:p2')
+    const pair34 = rankings.find(r => r.key === 'p3:p4')
     expect(pair12?.wins).toBe(2)
     expect(pair12?.losses).toBe(1)
     expect(pair12?.matchesPlayed).toBe(3)
@@ -101,8 +98,8 @@ describe('computeMenDoublesRankings', () => {
       mdMatch('m6', 's1', ['p3', 'p4'], ['p7', 'p8'], 'B'),
     ]
     const rankings = computeMenDoublesRankings(matches, sessions)
-    const pos12 = rankings.findIndex((r) => r.key === 'p1:p2')
-    const pos34 = rankings.findIndex((r) => r.key === 'p3:p4')
+    const pos12 = rankings.findIndex(r => r.key === 'p1:p2')
+    const pos34 = rankings.findIndex(r => r.key === 'p3:p4')
     expect(pos34).toBeLessThan(pos12)
   })
 
@@ -111,12 +108,15 @@ describe('computeMenDoublesRankings', () => {
     // p1/p2 (avg 1000) beats p3/p4 (avg 1400) — big upset
     // p5/p6 (avg 1000) beats p7/p8 (avg 1000) — even match
     const matches = [
-      mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], 'A', 'MEN_DOUBLES', [], { p3: 1400, p4: 1400 }),
+      mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], 'A', 'MEN_DOUBLES', [], {
+        p3: 1400,
+        p4: 1400,
+      }),
       mdMatch('m2', 's1', ['p5', 'p6'], ['p7', 'p8'], 'A'),
     ]
     const rankings = computeMenDoublesRankings(matches, sessions)
-    const upset = rankings.find((r) => r.key === 'p1:p2')
-    const even = rankings.find((r) => r.key === 'p5:p6')
+    const upset = rankings.find(r => r.key === 'p1:p2')
+    const even = rankings.find(r => r.key === 'p5:p6')
     expect(upset!.totalPoints).toBeGreaterThan(even!.totalPoints)
     expect(rankings[0].key).toBe('p1:p2')
   })
@@ -126,12 +126,16 @@ describe('computeMenDoublesRankings', () => {
     // p1/p2 wins 21-5 (diff=16, bonus=3)
     // p3/p4 wins 21-19 (diff=2, bonus=1)
     const matches = [
-      mdMatch('m1', 's1', ['p1', 'p2'], ['p5', 'p6'], 'A', 'MEN_DOUBLES', [{ set_number: 1, team_a_score: 21, team_b_score: 5 }]),
-      mdMatch('m2', 's1', ['p3', 'p4'], ['p7', 'p8'], 'A', 'MEN_DOUBLES', [{ set_number: 1, team_a_score: 21, team_b_score: 19 }]),
+      mdMatch('m1', 's1', ['p1', 'p2'], ['p5', 'p6'], 'A', 'MEN_DOUBLES', [
+        { set_number: 1, team_a_score: 21, team_b_score: 5 },
+      ]),
+      mdMatch('m2', 's1', ['p3', 'p4'], ['p7', 'p8'], 'A', 'MEN_DOUBLES', [
+        { set_number: 1, team_a_score: 21, team_b_score: 19 },
+      ]),
     ]
     const rankings = computeMenDoublesRankings(matches, sessions)
-    const dominant = rankings.find((r) => r.key === 'p1:p2')
-    const close = rankings.find((r) => r.key === 'p3:p4')
+    const dominant = rankings.find(r => r.key === 'p1:p2')
+    const close = rankings.find(r => r.key === 'p3:p4')
     expect(dominant!.totalPoints).toBeGreaterThan(close!.totalPoints)
     expect(rankings[0].key).toBe('p1:p2')
   })
@@ -143,24 +147,20 @@ describe('computeMenDoublesRankings', () => {
       mdMatch('m2', 's2', ['p1', 'p2'], ['p3', 'p4'], 'A'), // live session — excluded
     ]
     const rankings = computeMenDoublesRankings(matches, sessions)
-    const pair = rankings.find((r) => r.key === 'p1:p2')
+    const pair = rankings.find(r => r.key === 'p1:p2')
     expect(pair?.matchesPlayed).toBe(1)
   })
 
   it('excludes non-MEN_DOUBLES matches', () => {
     const sessions = [session('s1')]
-    const matches = [
-      mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], 'A', 'MIXED_DOUBLES'),
-    ]
+    const matches = [mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], 'A', 'MIXED_DOUBLES')]
     const rankings = computeMenDoublesRankings(matches, sessions)
     expect(rankings).toHaveLength(0)
   })
 
   it('excludes completed matches with no winner', () => {
     const sessions = [session('s1')]
-    const matches = [
-      mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], null),
-    ]
+    const matches = [mdMatch('m1', 's1', ['p1', 'p2'], ['p3', 'p4'], null)]
     const rankings = computeMenDoublesRankings(matches, sessions)
     expect(rankings).toHaveLength(0)
   })

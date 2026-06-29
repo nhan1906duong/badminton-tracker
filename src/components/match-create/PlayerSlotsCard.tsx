@@ -1,7 +1,7 @@
-import { Plus, X, ChevronRight, Shuffle } from 'lucide-react'
+import { ChevronRight, Plus, Shuffle, X } from 'lucide-react'
 import { Avatar, SectionLabel } from '../../../design-system/components'
-import { formatShortPlayerName } from '../../lib/player-name'
 import { useI18n } from '../../i18n'
+import { formatShortPlayerName } from '../../lib/player-name'
 import type { MatchType, Player } from '../../types/database'
 
 // ── Single slot row ──────────────────────────────────────────────────────────
@@ -22,7 +22,12 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
       role="button"
       tabIndex={0}
       onClick={onTap}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap() } }}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onTap()
+        }
+      }}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -64,24 +69,28 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
 
       {/* Body */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 10,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'var(--muted)',
-          marginBottom: 2,
-        }}>
+        <div
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 10,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            color: 'var(--muted)',
+            marginBottom: 2,
+          }}
+        >
           {role}
         </div>
-        <div style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 'var(--text-base)',
-          fontWeight: 700,
-          letterSpacing: '-0.01em',
-          color: player ? 'var(--fg)' : 'var(--muted)',
-        }}>
+        <div
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-base)',
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+            color: player ? 'var(--fg)' : 'var(--muted)',
+          }}
+        >
           {player ? formatShortPlayerName(player.name) : t('team.tapToAdd')}
         </div>
       </div>
@@ -91,7 +100,10 @@ function PlayerSlot({ role, player, isFirst, onTap, onClear }: PlayerSlotProps) 
         <button
           type="button"
           aria-label={t('team.removePlayer', { name: player.name })}
-          onClick={(e) => { e.stopPropagation(); onClear() }}
+          onClick={e => {
+            e.stopPropagation()
+            onClear()
+          }}
           style={{
             width: 28,
             height: 28,
@@ -140,7 +152,9 @@ export function PlayerSlotsCard({
 }: PlayerSlotsCardProps) {
   const { t } = useI18n()
 
-  const filledCount = teamA.slice(0, teamSize).filter(Boolean).length + teamB.slice(0, teamSize).filter(Boolean).length
+  const filledCount =
+    teamA.slice(0, teamSize).filter(Boolean).length +
+    teamB.slice(0, teamSize).filter(Boolean).length
   const totalSlots = teamSize * 2
 
   function slotRole(index: number): string {
@@ -150,7 +164,8 @@ export function PlayerSlotsCard({
   }
 
   function teamName(arr: (string | null)[]): string {
-    const names = arr.slice(0, teamSize)
+    const names = arr
+      .slice(0, teamSize)
       .filter(Boolean)
       .map(id => formatShortPlayerName(allPlayers?.find(p => p.id === id)?.name ?? ''))
     if (!names.length) return t('team.pickPlayerCount', { count: teamSize })
@@ -163,14 +178,16 @@ export function PlayerSlotsCard({
         className="mb-[var(--space-4)]"
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--text-xs)',
-              color: filledCount === totalSlots ? 'var(--accent)' : 'var(--muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              fontWeight: filledCount === totalSlots ? 700 : 400,
-            }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--text-xs)',
+                color: filledCount === totalSlots ? 'var(--accent)' : 'var(--muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                fontWeight: filledCount === totalSlots ? 700 : 400,
+              }}
+            >
               {t('createMatch.selectedCount', { filled: filledCount, total: totalSlots })}
             </span>
             {teamSize === 2 && onShuffle && (
@@ -204,23 +221,35 @@ export function PlayerSlotsCard({
         {t('createMatch.players')}
       </SectionLabel>
 
-      <div style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        overflow: 'hidden',
-      }}>
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+        }}
+      >
         {/* Team A header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: 'var(--space-3) var(--space-4)',
-          background: 'var(--bg)',
-          borderBottom: '1px solid var(--border)',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 'var(--space-3) var(--space-4)',
+            background: 'var(--bg)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
           <SectionLabel>{t('team.teamA')}</SectionLabel>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-base)',
+              fontWeight: 800,
+              letterSpacing: '-0.01em',
+              color: 'var(--fg)',
+            }}
+          >
             {teamName(teamA)}
           </span>
         </div>
@@ -238,33 +267,53 @@ export function PlayerSlotsCard({
         ))}
 
         {/* VS divider */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-3)',
-          padding: 'var(--space-2) var(--space-4)',
-          background: 'var(--bg)',
-          borderTop: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-3)',
+            padding: 'var(--space-2) var(--space-4)',
+            background: 'var(--bg)',
+            borderTop: '1px solid var(--border)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
           <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)', fontWeight: 800, letterSpacing: '0.12em', color: 'var(--muted)' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 800,
+              letterSpacing: '0.12em',
+              color: 'var(--muted)',
+            }}
+          >
             {t('team.VS')}
           </span>
           <span style={{ flex: 1, height: 1, background: 'var(--border)' }} />
         </div>
 
         {/* Team B header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: 'var(--space-3) var(--space-4)',
-          background: 'var(--bg)',
-          borderBottom: '1px solid var(--border)',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 'var(--space-3) var(--space-4)',
+            background: 'var(--bg)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
           <SectionLabel>{t('team.teamB')}</SectionLabel>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--fg)' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-base)',
+              fontWeight: 800,
+              letterSpacing: '-0.01em',
+              color: 'var(--fg)',
+            }}
+          >
             {teamName(teamB)}
           </span>
         </div>

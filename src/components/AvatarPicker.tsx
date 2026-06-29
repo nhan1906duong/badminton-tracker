@@ -1,8 +1,13 @@
-import { useRef } from 'react'
 import { Camera, ImageIcon, Trash2 } from 'lucide-react'
-import { getMultiavatarSvgUrl } from '../lib/avatar'
+import { useRef } from 'react'
+import {
+  BottomSheet,
+  BottomSheetCancel,
+  BottomSheetDivider,
+  BottomSheetItem,
+} from '../../design-system/components'
 import { useI18n } from '../i18n'
-import { BottomSheet, BottomSheetItem, BottomSheetCancel, BottomSheetDivider } from '../../design-system/components'
+import { getMultiavatarSvgUrl } from '../lib/avatar'
 
 interface AvatarPickerProps {
   open: boolean
@@ -13,10 +18,7 @@ interface AvatarPickerProps {
   onClose: () => void
 }
 
-const DEFAULT_AVATARS = Array.from(
-  { length: 10 },
-  (_, i) => `https://multiavatar.com/${i + 1}`,
-)
+const DEFAULT_AVATARS = Array.from({ length: 10 }, (_, i) => `https://multiavatar.com/${i + 1}`)
 
 export default function AvatarPicker({
   open,
@@ -49,12 +51,17 @@ export default function AvatarPicker({
     <BottomSheet open={open} onClose={onClose}>
       <p
         className="px-1"
-        style={{ fontSize: 'var(--text-xs)', fontWeight: 500, color: 'var(--muted)', marginBottom: 'var(--space-3)' }}
+        style={{
+          fontSize: 'var(--text-xs)',
+          fontWeight: 500,
+          color: 'var(--muted)',
+          marginBottom: 'var(--space-3)',
+        }}
       >
         {t('avatar.chooseDefault')}
       </p>
       <div className="grid grid-cols-5 gap-3 pb-2">
-        {DEFAULT_AVATARS.map((url) => {
+        {DEFAULT_AVATARS.map(url => {
           const isSelected = currentAvatarUrl === url
           const id = url.split('/').pop() ?? '1'
           return (
@@ -92,7 +99,10 @@ export default function AvatarPicker({
         <BottomSheetItem
           icon={<Trash2 size={20} />}
           label={t('avatar.removePhoto')}
-          onClick={() => { onRemove(); onClose() }}
+          onClick={() => {
+            onRemove()
+            onClose()
+          }}
           danger
         />
       )}

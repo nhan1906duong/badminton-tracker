@@ -1,5 +1,5 @@
-import type { MatchType } from '../../src/types/database'
 import { matchTypeTag, useI18n } from '../../src/i18n'
+import type { MatchType } from '../../src/types/database'
 
 export interface MatchTypeChipsProps {
   value: MatchType
@@ -20,7 +20,7 @@ export function MatchTypeChips({ value, onChange }: MatchTypeChipsProps) {
   return (
     <div
       role="radiogroup"
-            aria-label={t('createMatch.matchType')}
+      aria-label={t('createMatch.matchType')}
       style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--space-2)' }}
     >
       {CHIPS.map(({ type, code }) => {

@@ -1,6 +1,14 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { Match, MatchTeam, MatchParticipant, MatchScore, MatchWithDetails, Player, Session } from '../types/database'
+import type {
+  Match,
+  MatchParticipant,
+  MatchScore,
+  MatchTeam,
+  MatchWithDetails,
+  Player,
+  Session,
+} from '../types/database'
 
 const PAGE_SIZE = 20
 
@@ -43,7 +51,7 @@ export function usePlayerMatches(playerId: string) {
       const { data, error } = await query
       if (error) throw error
 
-      const matches = (data ?? []).map((m) => ({
+      const matches = (data ?? []).map(m => ({
         ...(m as Match),
         session: m.session as Session | null,
         teams: (m.teams ?? []) as MatchTeam[],
@@ -53,14 +61,12 @@ export function usePlayerMatches(playerId: string) {
 
       const last = matches[matches.length - 1]
       const nextCursor: PlayerMatchCursor | null =
-        matches.length === PAGE_SIZE && last
-          ? { played_at: last.played_at, id: last.id }
-          : null
+        matches.length === PAGE_SIZE && last ? { played_at: last.played_at, id: last.id } : null
 
       return { matches, nextCursor }
     },
     initialPageParam: null as PlayerMatchCursor | null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: lastPage => lastPage.nextCursor,
     enabled: !!playerId,
     staleTime: 5 * 60_000,
   })

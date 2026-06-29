@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  generateNextMatch,
-  generateMatchSchedule,
   applyMatchResult,
-  makeSplitKey,
   enumerateSplits,
-  type ShufflePlayer,
+  generateMatchSchedule,
+  generateNextMatch,
+  makeSplitKey,
   type ShuffleMatch,
+  type ShufflePlayer,
 } from './fair-shuffle'
 
 function makePlayers(count: number): ShufflePlayer[] {
@@ -95,15 +95,13 @@ describe('enumerateSplits', () => {
 
 describe('generateNextMatch — validation', () => {
   it('throws with fewer than 4 players', () => {
-    expect(() =>
-      generateNextMatch({ selectedPlayers: makePlayers(3), ...emptyState() })
-    ).toThrow("Please select at least 4 players to generate a men's doubles match.")
+    expect(() => generateNextMatch({ selectedPlayers: makePlayers(3), ...emptyState() })).toThrow(
+      "Please select at least 4 players to generate a men's doubles match.",
+    )
   })
 
   it('throws with 0 players', () => {
-    expect(() =>
-      generateNextMatch({ selectedPlayers: [], ...emptyState() })
-    ).toThrow()
+    expect(() => generateNextMatch({ selectedPlayers: [], ...emptyState() })).toThrow()
   })
 })
 
@@ -174,7 +172,15 @@ describe('cycle behavior', () => {
       const key = makeSplitKey([m.team1[0].id, m.team1[1].id], [m.team2[0].id, m.team2[1].id])
       expect(seen.has(key)).toBe(false)
       seen.add(key)
-      applyMatchResult(m, null, state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+      applyMatchResult(
+        m,
+        null,
+        state.splitRecord,
+        state.cycleUsedSplits,
+        total,
+        state.playerWins,
+        state.playerPlayed,
+      )
     }
 
     expect(seen.size).toBe(3)
@@ -187,7 +193,15 @@ describe('cycle behavior', () => {
 
     for (let i = 0; i < total; i++) {
       const m = generateNextMatch({ selectedPlayers: players, ...state })
-      applyMatchResult(m, null, state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+      applyMatchResult(
+        m,
+        null,
+        state.splitRecord,
+        state.cycleUsedSplits,
+        total,
+        state.playerWins,
+        state.playerPlayed,
+      )
     }
 
     // cycle should have reset
@@ -209,7 +223,15 @@ describe('cycle behavior', () => {
       const key = makeSplitKey([m.team1[0].id, m.team1[1].id], [m.team2[0].id, m.team2[1].id])
       expect(seen.has(key)).toBe(false)
       seen.add(key)
-      applyMatchResult(m, null, state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+      applyMatchResult(
+        m,
+        null,
+        state.splitRecord,
+        state.cycleUsedSplits,
+        total,
+        state.playerWins,
+        state.playerPlayed,
+      )
     }
 
     expect(seen.size).toBe(15)
@@ -228,7 +250,15 @@ describe('applyMatchResult', () => {
       team2: [players[2], players[3]],
       resting: [],
     }
-    applyMatchResult(match, null, state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+    applyMatchResult(
+      match,
+      null,
+      state.splitRecord,
+      state.cycleUsedSplits,
+      total,
+      state.playerWins,
+      state.playerPlayed,
+    )
     expect(state.cycleUsedSplits.size).toBe(1)
   })
 
@@ -262,7 +292,15 @@ describe('applyMatchResult', () => {
       team2: [players[2], players[3]],
       resting: [],
     }
-    applyMatchResult(match, 'team1', state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+    applyMatchResult(
+      match,
+      'team1',
+      state.splitRecord,
+      state.cycleUsedSplits,
+      total,
+      state.playerWins,
+      state.playerPlayed,
+    )
     expect(state.playerWins.get(players[0].id)).toBe(1)
     expect(state.playerWins.get(players[1].id)).toBe(1)
     expect(state.playerWins.get(players[2].id)).toBeUndefined()
@@ -278,7 +316,15 @@ describe('applyMatchResult', () => {
       team2: [players[2], players[3]],
       resting: [],
     }
-    applyMatchResult(match, 'team1', state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+    applyMatchResult(
+      match,
+      'team1',
+      state.splitRecord,
+      state.cycleUsedSplits,
+      total,
+      state.playerWins,
+      state.playerPlayed,
+    )
     const key = makeSplitKey([players[0].id, players[1].id], [players[2].id, players[3].id])
     const rec = state.splitRecord.get(key)!
     expect(rec.team1Wins + rec.team2Wins).toBe(1)
@@ -293,7 +339,15 @@ describe('applyMatchResult', () => {
       team2: [players[2], players[3]],
       resting: [players[4], players[5]],
     }
-    applyMatchResult(match, null, state.splitRecord, state.cycleUsedSplits, total, state.playerWins, state.playerPlayed)
+    applyMatchResult(
+      match,
+      null,
+      state.splitRecord,
+      state.cycleUsedSplits,
+      total,
+      state.playerWins,
+      state.playerPlayed,
+    )
     expect(state.playerPlayed.get(players[0].id)).toBe(1)
     expect(state.playerPlayed.get(players[1].id)).toBe(1)
     expect(state.playerPlayed.get(players[4].id)).toBeUndefined()
@@ -377,7 +431,9 @@ describe('generateMatchSchedule', () => {
   it('no split repeats within the same cycle (4 players)', () => {
     const players = makePlayers(4)
     const matches = generateMatchSchedule(players, 3)
-    const keys = matches.map(m => makeSplitKey([m.team1[0].id, m.team1[1].id], [m.team2[0].id, m.team2[1].id]))
+    const keys = matches.map(m =>
+      makeSplitKey([m.team1[0].id, m.team1[1].id], [m.team2[0].id, m.team2[1].id]),
+    )
     expect(new Set(keys).size).toBe(3)
   })
 
@@ -395,7 +451,8 @@ describe('generateMatchSchedule', () => {
         const p2 = [m.team2[0].id, m.team2[1].id].sort().join('+')
         counts.set(p1, (counts.get(p1) ?? 0) + 1)
         counts.set(p2, (counts.get(p2) ?? 0) + 1)
-        void k1; void k2
+        void k1
+        void k2
       }
       totalMax += Math.max(...counts.values())
     }

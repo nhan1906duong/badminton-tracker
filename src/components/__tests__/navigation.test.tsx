@@ -1,16 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import {
-  MemoryRouter,
-  Routes,
-  Route,
-  useLocation,
-  Navigate,
-} from 'react-router-dom'
+import type { User } from '@supabase/supabase-js'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { useContext } from 'react'
+import { MemoryRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthContext, type AuthContextValue } from '../../contexts/AuthContext'
-import { type User } from '@supabase/supabase-js'
 
 // ------------------------------------------------------------------
 // Test helpers
@@ -38,14 +32,14 @@ function renderWithProviders(
   {
     initialEntries = ['/'],
     authValue = createAuthValue(),
-  }: { initialEntries?: string[]; authValue?: AuthContextValue } = {}
+  }: { initialEntries?: string[]; authValue?: AuthContextValue } = {},
 ) {
   return render(
     <QueryClientProvider client={testQueryClient}>
       <AuthContext.Provider value={authValue}>
         <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>
       </AuthContext.Provider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -86,7 +80,7 @@ describe('Auth Guard', () => {
           }
         />
       </Routes>,
-      { authValue: createAuthValue({ user: null }) }
+      { authValue: createAuthValue({ user: null }) },
     )
 
     expect(screen.getByTestId('login-page')).toBeInTheDocument()
@@ -106,7 +100,7 @@ describe('Auth Guard', () => {
           }
         />
       </Routes>,
-      { authValue: createAuthValue({ user: mockUser }) }
+      { authValue: createAuthValue({ user: mockUser }) },
     )
 
     expect(screen.getByTestId('home-page')).toBeInTheDocument()
@@ -125,7 +119,7 @@ describe('Auth Guard', () => {
           }
         />
       </Routes>,
-      { authValue: createAuthValue({ isLoading: true, user: null }) }
+      { authValue: createAuthValue({ isLoading: true, user: null }) },
     )
 
     expect(screen.getByTestId('auth-loading')).toBeInTheDocument()
@@ -144,7 +138,7 @@ describe('Auth Guard', () => {
           }
         />
       </Routes>,
-      { initialEntries: ['/sessions/new'], authValue: createAuthValue({ user: null }) }
+      { initialEntries: ['/sessions/new'], authValue: createAuthValue({ user: null }) },
     )
 
     expect(screen.getByTestId('location-path')).toHaveTextContent('/login')
@@ -210,7 +204,8 @@ describe('AppBar Visibility', () => {
     function getPageTitle(path: string): string {
       if (PAGE_TITLES[path]) return PAGE_TITLES[path]
       if (path.startsWith('/sessions/') && path.endsWith('/matches/new')) return 'Select Players'
-      if (path.startsWith('/sessions/') && path.endsWith('/matches/new/result')) return 'Final Result'
+      if (path.startsWith('/sessions/') && path.endsWith('/matches/new/result'))
+        return 'Final Result'
       if (path.includes('/matches/') && path.endsWith('/players/edit')) return 'Edit Players'
       if (path.startsWith('/sessions/') && path.endsWith('/donated')) return 'Donated'
       if (path.startsWith('/sessions/')) return 'Session Detail'
@@ -264,7 +259,7 @@ describe('Back Navigation', () => {
     path: string,
     fromState: string | undefined,
     navType: string,
-    navigate: (to: string | number, opts?: object) => void
+    navigate: (to: string | number, opts?: object) => void,
   ) {
     const TAB_ROUTES = ['/', '/players', '/sessions', '/settings']
 
@@ -306,72 +301,37 @@ describe('Back Navigation', () => {
   })
 
   it('from result page goes back to select players', () => {
-    handleBack(
-      '/sessions/abc-123/matches/new/result',
-      undefined,
-      'PUSH',
-      mockNavigate
-    )
+    handleBack('/sessions/abc-123/matches/new/result', undefined, 'PUSH', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith('/sessions/abc-123/matches/new', { replace: true })
   })
 
   it('from select players goes back to session detail', () => {
-    handleBack(
-      '/sessions/abc-123/matches/new',
-      undefined,
-      'PUSH',
-      mockNavigate
-    )
+    handleBack('/sessions/abc-123/matches/new', undefined, 'PUSH', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith('/sessions/abc-123', { replace: true })
   })
 
   it('from session detail goes back to tab origin when state.from exists', () => {
-    handleBack(
-      '/sessions/abc-123',
-      '/sessions',
-      'PUSH',
-      mockNavigate
-    )
+    handleBack('/sessions/abc-123', '/sessions', 'PUSH', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith('/sessions', { replace: true })
   })
 
   it('from session detail goes back to home when state.from is home', () => {
-    handleBack(
-      '/sessions/abc-123',
-      '/',
-      'PUSH',
-      mockNavigate
-    )
+    handleBack('/sessions/abc-123', '/', 'PUSH', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
   })
 
   it('from session detail after creation falls back to browser back', () => {
-    handleBack(
-      '/sessions/abc-123',
-      undefined,
-      'REPLACE',
-      mockNavigate
-    )
+    handleBack('/sessions/abc-123', undefined, 'REPLACE', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 
   it('defaults to browser back for other routes', () => {
-    handleBack(
-      '/sessions/new',
-      undefined,
-      'PUSH',
-      mockNavigate
-    )
+    handleBack('/sessions/new', undefined, 'PUSH', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 
   it('falls back to / for POP navigation on unknown routes', () => {
-    handleBack(
-      '/some-route',
-      undefined,
-      'POP',
-      mockNavigate
-    )
+    handleBack('/some-route', undefined, 'POP', mockNavigate)
     expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 })
@@ -387,8 +347,14 @@ describe('Route Matching', () => {
     { path: '/sessions/:id', element: <div data-testid="page">Session Detail</div> },
     { path: '/sessions/:id/donated', element: <div data-testid="page">Donated</div> },
     { path: '/sessions/:id/matches/new', element: <div data-testid="page">Select Players</div> },
-    { path: '/sessions/:id/matches/new/result', element: <div data-testid="page">Final Result</div> },
-    { path: '/sessions/:id/matches/:matchId/players/edit', element: <div data-testid="page">Edit Players</div> },
+    {
+      path: '/sessions/:id/matches/new/result',
+      element: <div data-testid="page">Final Result</div>,
+    },
+    {
+      path: '/sessions/:id/matches/:matchId/players/edit',
+      element: <div data-testid="page">Edit Players</div>,
+    },
     { path: '/players/:playerId', element: <div data-testid="page">Player Detail</div> },
     { path: '*', element: <Navigate to="/" replace /> },
   ]
@@ -412,11 +378,11 @@ describe('Route Matching', () => {
     for (const { path, text } of cases) {
       const { unmount } = renderWithProviders(
         <Routes>
-          {routes.map((r) => (
+          {routes.map(r => (
             <Route key={r.path} path={r.path} element={r.element} />
           ))}
         </Routes>,
-        { initialEntries: [path], authValue: createAuthValue({ user: mockUser }) }
+        { initialEntries: [path], authValue: createAuthValue({ user: mockUser }) },
       )
 
       expect(screen.getByTestId('page')).toHaveTextContent(text)
@@ -427,11 +393,11 @@ describe('Route Matching', () => {
   it('redirects unknown routes to home', () => {
     renderWithProviders(
       <Routes>
-        {routes.map((r) => (
+        {routes.map(r => (
           <Route key={r.path} path={r.path} element={r.element} />
         ))}
       </Routes>,
-      { initialEntries: ['/unknown-route'], authValue: createAuthValue({ user: mockUser }) }
+      { initialEntries: ['/unknown-route'], authValue: createAuthValue({ user: mockUser }) },
     )
 
     expect(screen.getByTestId('page')).toHaveTextContent('Home')
@@ -445,7 +411,7 @@ describe('Tab Navigation', () => {
 
     return (
       <nav data-testid="tab-nav">
-        {TAB_ROUTES.map((path) => (
+        {TAB_ROUTES.map(path => (
           <a
             key={path}
             href={path}
@@ -495,7 +461,11 @@ describe('NavButton re-tap behavior', () => {
           navigate('/ranking')
         }
       }
-      return <button data-testid="btn" onClick={handleClick}>ranking</button>
+      return (
+        <button data-testid="btn" onClick={handleClick}>
+          ranking
+        </button>
+      )
     }
 
     render(<InactiveTabButton />)
@@ -520,7 +490,11 @@ describe('NavButton re-tap behavior', () => {
           navigate('/sessions')
         }
       }
-      return <button data-testid="btn" onClick={handleClick}>sessions</button>
+      return (
+        <button data-testid="btn" onClick={handleClick}>
+          sessions
+        </button>
+      )
     }
 
     render(<ActiveTabButton />)
@@ -545,7 +519,11 @@ describe('NavButton re-tap behavior', () => {
           navigate('/settings')
         }
       }
-      return <button data-testid="btn" onClick={handleClick}>settings</button>
+      return (
+        <button data-testid="btn" onClick={handleClick}>
+          settings
+        </button>
+      )
     }
 
     render(<ActiveTabButton />)

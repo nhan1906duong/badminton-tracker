@@ -83,7 +83,7 @@ export function useLeaderboard() {
       if (error) throw error
 
       return ((data ?? []) as unknown as AllTimeStatsRow[])
-        .filter((row) => row.player != null)
+        .filter(row => row.player != null)
         .map(toPlayerRankingStats)
     },
     staleTime: 60_000,

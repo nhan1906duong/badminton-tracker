@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { Check, ChevronDown, ChevronRight } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { LeagueTeamWithPlayers, MatchWithDetails } from '../types/database'
-import { generateRoundRobin } from '../lib/round-robin'
 import { useI18n } from '../i18n'
-import { ChevronDown, ChevronRight, Check } from 'lucide-react'
+import { generateRoundRobin } from '../lib/round-robin'
+import type { LeagueTeamWithPlayers, MatchWithDetails } from '../types/database'
 
 interface LeagueScheduleGridProps {
   teams: LeagueTeamWithPlayers[]
@@ -12,7 +12,12 @@ interface LeagueScheduleGridProps {
   sessionId: string
 }
 
-export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessionId }: LeagueScheduleGridProps) {
+export default function LeagueScheduleGrid({
+  teams,
+  totalRounds,
+  matches,
+  sessionId,
+}: LeagueScheduleGridProps) {
   const { t } = useI18n()
   const navigate = useNavigate()
 
@@ -38,22 +43,26 @@ export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessio
     const map = new Map<string, MatchWithDetails | null>()
     const sessionMatches = matches ?? []
 
-    const fixtureMatchesTeam = (m: MatchWithDetails, teamAPlayerIds: Set<string>, teamBPlayerIds: Set<string>) => {
-      const teamAMatch = m.teams.find((t) => t.team_label === 'TEAM_A')
-      const teamBMatch = m.teams.find((t) => t.team_label === 'TEAM_B')
+    const fixtureMatchesTeam = (
+      m: MatchWithDetails,
+      teamAPlayerIds: Set<string>,
+      teamBPlayerIds: Set<string>,
+    ) => {
+      const teamAMatch = m.teams.find(t => t.team_label === 'TEAM_A')
+      const teamBMatch = m.teams.find(t => t.team_label === 'TEAM_B')
       if (!teamAMatch || !teamBMatch) return false
 
-      const aPlayers = m.participants
-        .filter((p) => p.team_id === teamAMatch.id)
-        .map((p) => p.player_id)
-      const bPlayers = m.participants
-        .filter((p) => p.team_id === teamBMatch.id)
-        .map((p) => p.player_id)
+      const aPlayers = m.participants.filter(p => p.team_id === teamAMatch.id).map(p => p.player_id)
+      const bPlayers = m.participants.filter(p => p.team_id === teamBMatch.id).map(p => p.player_id)
 
-      const aIsTeamA = aPlayers.every((id) => teamAPlayerIds.has(id)) && aPlayers.length === teamAPlayerIds.size
-      const aIsTeamB = aPlayers.every((id) => teamBPlayerIds.has(id)) && aPlayers.length === teamBPlayerIds.size
-      const bIsTeamA = bPlayers.every((id) => teamAPlayerIds.has(id)) && bPlayers.length === teamAPlayerIds.size
-      const bIsTeamB = bPlayers.every((id) => teamBPlayerIds.has(id)) && bPlayers.length === teamBPlayerIds.size
+      const aIsTeamA =
+        aPlayers.every(id => teamAPlayerIds.has(id)) && aPlayers.length === teamAPlayerIds.size
+      const aIsTeamB =
+        aPlayers.every(id => teamBPlayerIds.has(id)) && aPlayers.length === teamBPlayerIds.size
+      const bIsTeamA =
+        bPlayers.every(id => teamAPlayerIds.has(id)) && bPlayers.length === teamAPlayerIds.size
+      const bIsTeamB =
+        bPlayers.every(id => teamBPlayerIds.has(id)) && bPlayers.length === teamBPlayerIds.size
 
       return (aIsTeamA && bIsTeamB) || (aIsTeamB && bIsTeamA)
     }
@@ -63,14 +72,19 @@ export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessio
       const teamB = teams[f.teamBIndex]
       if (!teamA || !teamB) continue
 
-      const teamAPlayerIds = new Set(teamA.players.map((p) => p.id))
-      const teamBPlayerIds = new Set(teamB.players.map((p) => p.id))
+      const teamAPlayerIds = new Set(teamA.players.map(p => p.id))
+      const teamBPlayerIds = new Set(teamB.players.map(p => p.id))
 
-      const match = sessionMatches.find((m) =>
-        m.league_round === f.round && fixtureMatchesTeam(m, teamAPlayerIds, teamBPlayerIds)
-      ) ?? sessionMatches.find((m) =>
-        m.league_round == null && m.status === 'COMPLETED' && fixtureMatchesTeam(m, teamAPlayerIds, teamBPlayerIds)
-      )
+      const match =
+        sessionMatches.find(
+          m => m.league_round === f.round && fixtureMatchesTeam(m, teamAPlayerIds, teamBPlayerIds),
+        ) ??
+        sessionMatches.find(
+          m =>
+            m.league_round == null &&
+            m.status === 'COMPLETED' &&
+            fixtureMatchesTeam(m, teamAPlayerIds, teamBPlayerIds),
+        )
 
       const key = `${f.round}-${f.teamAIndex}-${f.teamBIndex}`
       map.set(key, match ?? null)
@@ -80,7 +94,7 @@ export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessio
   }, [fixtures, teams, matches])
 
   const toggleRound = (round: number) => {
-    setExpandedRounds((prev) => {
+    setExpandedRounds(prev => {
       const next = new Set(prev)
       if (next.has(round)) next.delete(round)
       else next.add(round)
@@ -134,7 +148,7 @@ export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessio
               {/* Fixtures */}
               {isExpanded && (
                 <div className="border-t border-[var(--border)]">
-                  {roundFixtures.map((f) => {
+                  {roundFixtures.map(f => {
                     const teamA = teams[f.teamAIndex]
                     const teamB = teams[f.teamBIndex]
                     if (!teamA || !teamB) return null
@@ -144,12 +158,20 @@ export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessio
                     const isCompleted = match?.status === 'COMPLETED'
                     const isScheduled = match?.status === 'SCHEDULED'
                     const isLive = match?.status === 'LIVE'
-                    const winner = match?.teams.find((t) => t.is_winner)
+                    const winner = match?.teams.find(t => t.is_winner)
                     const winnerIsTeamA = winner
-                      ? match?.participants.some((p) => p.team_id === winner.id && teamA.players.some((tp) => tp.id === p.player_id))
+                      ? match?.participants.some(
+                          p =>
+                            p.team_id === winner.id &&
+                            teamA.players.some(tp => tp.id === p.player_id),
+                        )
                       : false
                     const winnerIsTeamB = winner
-                      ? match?.participants.some((p) => p.team_id === winner.id && teamB.players.some((tp) => tp.id === p.player_id))
+                      ? match?.participants.some(
+                          p =>
+                            p.team_id === winner.id &&
+                            teamB.players.some(tp => tp.id === p.player_id),
+                        )
                       : false
 
                     return (
@@ -161,18 +183,25 @@ export default function LeagueScheduleGrid({ teams, totalRounds, matches, sessio
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-[family:var(--font-display)] font-bold truncate ${
-                                isCompleted && winnerIsTeamA ? 'text-[var(--accent)]' : 'text-[var(--fg)]'
+                                isCompleted && winnerIsTeamA
+                                  ? 'text-[var(--accent)]'
+                                  : 'text-[var(--fg)]'
                               }`}
                               style={{ fontSize: 14 }}
                             >
                               {teamA.name}
                             </span>
-                            <span className="font-[family:var(--font-mono)] text-[var(--muted)]" style={{ fontSize: 11 }}>
+                            <span
+                              className="font-[family:var(--font-mono)] text-[var(--muted)]"
+                              style={{ fontSize: 11 }}
+                            >
                               {t('sessionDetail.vs')}
                             </span>
                             <span
                               className={`font-[family:var(--font-display)] font-bold truncate ${
-                                isCompleted && winnerIsTeamB ? 'text-[var(--accent)]' : 'text-[var(--fg)]'
+                                isCompleted && winnerIsTeamB
+                                  ? 'text-[var(--accent)]'
+                                  : 'text-[var(--fg)]'
                               }`}
                               style={{ fontSize: 14 }}
                             >

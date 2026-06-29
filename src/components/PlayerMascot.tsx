@@ -1,9 +1,9 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
-import { getMascot, getMascotDisplayPath } from '../lib/mascots'
-import { pickMascotQuote } from '../lib/mascot-quotes'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { usePlayerQuotes } from '../hooks/usePlayerQuotes'
-import { MascotSpeechBubble } from './MascotSpeechBubble'
 import { useI18n } from '../i18n'
+import { pickMascotQuote } from '../lib/mascot-quotes'
+import { getMascot, getMascotDisplayPath } from '../lib/mascots'
+import { MascotSpeechBubble } from './MascotSpeechBubble'
 
 const LottieMascot = lazy(() => import('./LottieMascot'))
 
@@ -24,12 +24,19 @@ interface PlayerMascotProps {
  * Renders a player's chosen mascot. Lazy-loads the Lottie runtime and
  * renders nothing while loading or if the .lottie asset fails to load.
  */
-export function PlayerMascot({ mascotId, size = 48, reaction, speak = false, playerId, className = '' }: PlayerMascotProps) {
+export function PlayerMascot({
+  mascotId,
+  size = 48,
+  reaction,
+  speak = false,
+  playerId,
+  className = '',
+}: PlayerMascotProps) {
   const { locale } = useI18n()
   const mascot = getMascot(mascotId)
   const [quote, setQuote] = useState<string | null>(null)
   const [src, setSrc] = useState<string | null>(null)
-  const { data: customQuotes = [] } = usePlayerQuotes(speak && !reaction ? playerId ?? '' : '')
+  const { data: customQuotes = [] } = usePlayerQuotes(speak && !reaction ? (playerId ?? '') : '')
 
   useEffect(() => {
     setSrc(mascot ? getMascotDisplayPath(mascot) : null)
@@ -44,7 +51,7 @@ export function PlayerMascot({ mascotId, size = 48, reaction, speak = false, pla
       setQuote(pickMascotQuote(reaction, locale))
       return
     }
-    const extraQuotes = customQuotes.map((q) => q.text)
+    const extraQuotes = customQuotes.map(q => q.text)
     setQuote(pickMascotQuote('idle', locale, extraQuotes))
     const interval = setInterval(() => {
       setQuote(pickMascotQuote('idle', locale, extraQuotes))
@@ -58,7 +65,7 @@ export function PlayerMascot({ mascotId, size = 48, reaction, speak = false, pla
 
   const handleTap = () => {
     if (!isCollection) return
-    setSrc((current) => {
+    setSrc(current => {
       let next = getMascotDisplayPath(mascot)
       while (next === current) next = getMascotDisplayPath(mascot)
       return next

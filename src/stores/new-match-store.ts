@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { MatchType } from '../types/database'
 import { getTeamSize } from '../lib/match-helpers'
+import type { MatchType } from '../types/database'
 
 export type CreateMatchMode = 'now' | 'schedule' | 'queue'
 
@@ -33,7 +33,7 @@ const initialState = {
 export const useNewMatchStore = create<NewMatchState>((set, get) => ({
   ...initialState,
 
-  setMatchType: (type) => {
+  setMatchType: type => {
     set({
       matchType: type,
       teamA: emptyTeam(type),
@@ -54,8 +54,8 @@ export const useNewMatchStore = create<NewMatchState>((set, get) => ({
     }
   },
 
-  setMode: (mode) => set({ mode }),
-  setScheduledAt: (date) => set({ scheduledAt: date }),
+  setMode: mode => set({ mode }),
+  setScheduledAt: date => set({ scheduledAt: date }),
 
   reset: () => set(initialState),
 }))

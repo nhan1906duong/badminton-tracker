@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
+import type { Player } from '../types/database'
 import { usePlayerStats } from './usePlayerStats'
 import { usePlayers } from './usePlayers'
-import type { Player } from '../types/database'
 
 /**
  * Returns the top-N players by historical match participation.
@@ -13,17 +13,15 @@ export function useTopJoinedPlayers(limit: number) {
 
   const players = useMemo<Player[]>(() => {
     if (!allPlayers) return []
-    const byId = new Map(allPlayers.map((p) => [p.id, p]))
+    const byId = new Map(allPlayers.map(p => [p.id, p]))
     const sorted = [...stats].sort((a, b) => {
       if (b.matchesPlayed !== a.matchesPlayed) {
         return b.matchesPlayed - a.matchesPlayed
       }
       return a.name.toLowerCase().localeCompare(b.name.toLowerCase())
     })
-    const ids = sorted.slice(0, limit).map((s) => s.playerId)
-    return ids
-      .map((id) => byId.get(id))
-      .filter((p): p is Player => !!p)
+    const ids = sorted.slice(0, limit).map(s => s.playerId)
+    return ids.map(id => byId.get(id)).filter((p): p is Player => !!p)
   }, [stats, allPlayers, limit])
 
   return { players, isLoading: statsLoading || playersLoading }

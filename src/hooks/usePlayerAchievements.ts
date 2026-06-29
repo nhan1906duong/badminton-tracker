@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { buildSessionWeeklyRankings, type SessionWeeklyStats } from './useRankings'
 import { supabase } from '../lib/supabase'
 import type { Session } from '../types/database'
+import { buildSessionWeeklyRankings, type SessionWeeklyStats } from './useRankings'
 
 export type AchievementType = 'win' | 'runner_up'
 
@@ -49,11 +49,11 @@ export function computeAchievements(
   const result: PlayerAchievement[] = []
 
   for (const [sessionId, results] of sessionResultsMap) {
-    const session = sessions.find((s) => s.id === sessionId)
+    const session = sessions.find(s => s.id === sessionId)
     if (!session || !session.ended_at) continue
 
     const rankings = buildSessionWeeklyRankings(null, results)
-    const playerRank = rankings.findIndex((r) => r.playerId === playerId)
+    const playerRank = rankings.findIndex(r => r.playerId === playerId)
     if (playerRank === -1) continue
 
     const rank = playerRank + 1
@@ -71,9 +71,7 @@ export function computeAchievements(
   }
 
   return result.sort(
-    (a, b) =>
-      new Date(b.session.started_at).getTime() -
-      new Date(a.session.started_at).getTime()
+    (a, b) => new Date(b.session.started_at).getTime() - new Date(a.session.started_at).getTime(),
   )
 }
 
@@ -99,7 +97,9 @@ export function usePlayerAchievements(playerId: string) {
         .lte('session_rank', 2)
       if (myError) throw myError
 
-      const topRows = (myStats ?? []).filter(r => (r.session as unknown as Session)?.ended_at != null)
+      const topRows = (myStats ?? []).filter(
+        r => (r.session as unknown as Session)?.ended_at != null,
+      )
       if (!topRows.length) return []
 
       // Step 2: for sessions where rank = 1, check for genuine ties (another player sharing rank 1)
@@ -133,8 +133,9 @@ export function usePlayerAchievements(playerId: string) {
           } satisfies PlayerAchievement
         })
         .filter((a): a is PlayerAchievement => a !== null)
-        .sort((a, b) =>
-          new Date(b.session.started_at).getTime() - new Date(a.session.started_at).getTime()
+        .sort(
+          (a, b) =>
+            new Date(b.session.started_at).getTime() - new Date(a.session.started_at).getTime(),
         )
     },
   })

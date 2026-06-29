@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 const THRESHOLD = 80
 const MAX_H = 56
-const SPRING_H = MAX_H + 12   // overshoot height — bounces back to MAX_H
+const SPRING_H = MAX_H + 12 // overshoot height — bounces back to MAX_H
 const DAMPING = MAX_H / THRESHOLD
 
 const NUM_TICKS = 12
 // Opacity for each tick by distance-behind-head (0 = head, 11 = tail)
-const TICK_OPACITIES = [1, 0.92, 0.83, 0.74, 0.65, 0.56, 0.47, 0.38, 0.28, 0.20, 0.13, 0.07]
+const TICK_OPACITIES = [1, 0.92, 0.83, 0.74, 0.65, 0.56, 0.47, 0.38, 0.28, 0.2, 0.13, 0.07]
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>
@@ -44,7 +44,11 @@ function CupertinoSpinner({ progress, spinning }: { progress: number; spinning: 
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        style={{ opacity: spinning ? 1 : Math.min(progress * 2, 1), color: 'var(--muted)', flexShrink: 0 }}
+        style={{
+          opacity: spinning ? 1 : Math.min(progress * 2, 1),
+          color: 'var(--muted)',
+          flexShrink: 0,
+        }}
         aria-hidden="true"
       >
         <g
@@ -57,8 +61,16 @@ function CupertinoSpinner({ progress, spinning }: { progress: number; spinning: 
           }}
         >
           {ticks.map(({ x1, y1, x2, y2, opacity }, i) => (
-            <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity={opacity}
+            <line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity={opacity}
             />
           ))}
         </g>

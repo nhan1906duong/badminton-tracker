@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Trophy, Flame, Zap, Crown, Coins } from 'lucide-react'
+import { Coins, Crown, Flame, Trophy, Zap } from 'lucide-react'
 import type { BadgeCategory } from '../hooks/usePlayerBadges'
 
 export const CATEGORY_ICON: Record<BadgeCategory, LucideIcon> = {

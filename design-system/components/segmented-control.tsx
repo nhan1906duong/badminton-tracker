@@ -35,7 +35,7 @@ export function SegmentedControl<T extends string = string>({
         msOverflowStyle: 'none',
       }}
     >
-      {tabs.map((tab) => {
+      {tabs.map(tab => {
         const active = tab.id === value
         return (
           <button

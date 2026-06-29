@@ -1,7 +1,7 @@
-import type { MatchWithDetails } from '../types/database'
-import MatchCard from './MatchCard'
 import { RotateCcw } from 'lucide-react'
 import { useI18n } from '../i18n'
+import type { MatchWithDetails } from '../types/database'
+import MatchCard from './MatchCard'
 
 const STATUS_ORDER: Record<string, number> = { LIVE: 0, SCHEDULED: 1, COMPLETED: 2 }
 
@@ -50,20 +50,37 @@ function SkeletonCard() {
       </div>
       <div className="flex items-center gap-3">
         <div className="flex-1 space-y-1.5">
-          <div className="h-[12px] w-[70%] rounded ml-auto" style={{ background: 'var(--border)' }} />
-          <div className="h-[8px] w-[45%] rounded ml-auto opacity-60" style={{ background: 'var(--border)' }} />
+          <div
+            className="h-[12px] w-[70%] rounded ml-auto"
+            style={{ background: 'var(--border)' }}
+          />
+          <div
+            className="h-[8px] w-[45%] rounded ml-auto opacity-60"
+            style={{ background: 'var(--border)' }}
+          />
         </div>
-        <div className="h-[22px] w-[60px] rounded shrink-0" style={{ background: 'var(--border)' }} />
+        <div
+          className="h-[22px] w-[60px] rounded shrink-0"
+          style={{ background: 'var(--border)' }}
+        />
         <div className="flex-1 space-y-1.5">
           <div className="h-[12px] w-[70%] rounded" style={{ background: 'var(--border)' }} />
-          <div className="h-[8px] w-[45%] rounded opacity-60" style={{ background: 'var(--border)' }} />
+          <div
+            className="h-[8px] w-[45%] rounded opacity-60"
+            style={{ background: 'var(--border)' }}
+          />
         </div>
       </div>
     </div>
   )
 }
 
-export default function MatchesContent({ matches, isLoading, isError, onRetry }: MatchesContentProps) {
+export default function MatchesContent({
+  matches,
+  isLoading,
+  isError,
+  onRetry,
+}: MatchesContentProps) {
   const { t } = useI18n()
 
   if (isLoading) {
@@ -96,14 +113,26 @@ export default function MatchesContent({ matches, isLoading, isError, onRetry }:
             color: 'var(--danger)',
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-6 h-6"
+            aria-hidden="true"
+          >
             <path d="M4 19h16a1 1 0 0 0 .87-1.5l-8-14a1 1 0 0 0-1.74 0l-8 14A1 1 0 0 0 4 19z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none" />
           </svg>
         </div>
         <div>
-          <p className="text-[18px] font-extrabold tracking-[-0.02em] mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}>
+          <p
+            className="text-[18px] font-extrabold tracking-[-0.02em] mb-1"
+            style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+          >
             {t('matches.loadTitle')}
           </p>
           <p className="text-[13px] max-w-[260px] mx-auto" style={{ color: 'var(--muted)' }}>
@@ -132,7 +161,7 @@ export default function MatchesContent({ matches, isLoading, isError, onRetry }:
   }
 
   const sortedByCreated = [...matches].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   )
   const numberMap = new Map<string, number>()
   sortedByCreated.forEach((m, i) => numberMap.set(m.id, i + 1))
@@ -141,12 +170,8 @@ export default function MatchesContent({ matches, isLoading, isError, onRetry }:
 
   return (
     <div className="space-y-[var(--space-3)]">
-      {sorted.map((match) => (
-        <MatchCard
-          key={match.id}
-          match={match}
-          matchNumber={numberMap.get(match.id) ?? 0}
-        />
+      {sorted.map(match => (
+        <MatchCard key={match.id} match={match} matchNumber={numberMap.get(match.id) ?? 0} />
       ))}
     </div>
   )

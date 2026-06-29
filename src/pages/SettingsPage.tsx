@@ -1,15 +1,24 @@
+import {
+  AlertTriangle,
+  ChevronRight,
+  Download,
+  Info,
+  Palette,
+  RefreshCw,
+  Trash2,
+  User,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BottomSheet, Dialog } from '../../design-system/components'
+import Avatar from '../components/Avatar'
 import { useAuth } from '../hooks/useAuth'
-import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
-import { Trash2, AlertTriangle, Palette, ChevronRight, RefreshCw, Info, User, Download } from 'lucide-react'
 import { useBackupData } from '../hooks/useBackup'
 import { useIsAdmin } from '../hooks/useIsAdmin'
-import Avatar from '../components/Avatar'
-import { useProfile, useUpdatePlayerLink } from '../hooks/useProfile'
 import { usePlayers } from '../hooks/usePlayers'
-import { useI18n, type Locale } from '../i18n'
-import { BottomSheet, Dialog } from '../../design-system/components'
+import { useProfile, useUpdatePlayerLink } from '../hooks/useProfile'
+import { useClearAllData, useRecalculateAllRatings } from '../hooks/useSessions'
+import { type Locale, useI18n } from '../i18n'
 
 const IS_DEV = import.meta.env.DEV
 
@@ -30,7 +39,7 @@ export default function SettingsPage() {
   const [confirmUnlinkOpen, setConfirmUnlinkOpen] = useState(false)
   const [linkErrorOpen, setLinkErrorOpen] = useState(false)
 
-  const linkedPlayer = profile?.player_id ? players.find((p) => p.id === profile.player_id) : null
+  const linkedPlayer = profile?.player_id ? players.find(p => p.id === profile.player_id) : null
   const nextLocale: Locale = locale === 'en' ? 'vi' : 'en'
   const localeFlag = locale === 'en' ? '🇬🇧' : '🇻🇳'
   const localeLabel = locale.toUpperCase()
@@ -93,9 +102,7 @@ export default function SettingsPage() {
             aria-label={t('settings.language')}
             className="inline-flex h-7 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
           >
-            <span className="text-[12px] leading-none">
-              {localeFlag}
-            </span>
+            <span className="text-[12px] leading-none">{localeFlag}</span>
             <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
               {localeLabel}
             </span>
@@ -156,7 +163,9 @@ export default function SettingsPage() {
             className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
           >
             <User className="w-5 h-5 shrink-0" />
-            <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.account')}</span>
+            <span className="flex-1 text-left text-[15px] font-semibold">
+              {t('settings.account')}
+            </span>
             <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
           </button>
 
@@ -173,7 +182,9 @@ export default function SettingsPage() {
               className="w-full flex items-center gap-3 px-[var(--space-4)] py-3 text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
             >
               <Info className="w-5 h-5 shrink-0" />
-              <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.howPointsWork')}</span>
+              <span className="flex-1 text-left text-[15px] font-semibold">
+                {t('settings.howPointsWork')}
+              </span>
               <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
             </button>
 
@@ -192,7 +203,9 @@ export default function SettingsPage() {
                   {confirmRecalc ? (
                     <AlertTriangle className="w-5 h-5 shrink-0" />
                   ) : (
-                    <RefreshCw className={`w-5 h-5 shrink-0 ${recalculate.isPending ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`w-5 h-5 shrink-0 ${recalculate.isPending ? 'animate-spin' : ''}`}
+                    />
                   )}
                   <span className="flex-1 text-left text-[15px] font-semibold">
                     {recalculate.isPending
@@ -205,7 +218,6 @@ export default function SettingsPage() {
               </>
             )}
           </section>
-
         </section>
 
         {/* Admin-only: Backup */}
@@ -250,7 +262,9 @@ export default function SettingsPage() {
               className="w-full flex items-center gap-3 px-[var(--space-4)] py-[var(--space-4)] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] text-[var(--fg)] active:bg-[var(--bg)] transition-colors"
             >
               <Palette className="w-5 h-5 shrink-0" />
-              <span className="flex-1 text-left text-[15px] font-semibold">{t('settings.designSystem')}</span>
+              <span className="flex-1 text-left text-[15px] font-semibold">
+                {t('settings.designSystem')}
+              </span>
               <ChevronRight className="w-5 h-5 text-[var(--muted)] shrink-0" />
             </button>
             <button
@@ -285,7 +299,7 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="max-h-[50vh] overflow-y-auto pb-[var(--space-2)]">
-            {players.map((player) => (
+            {players.map(player => (
               <button
                 key={player.id}
                 type="button"
@@ -309,8 +323,16 @@ export default function SettingsPage() {
           description={t('settings.unlinkConfirmDescription')}
           kind="warning"
           actions={[
-            { label: t('common.cancel'), variant: 'secondary', onClick: () => setConfirmUnlinkOpen(false) },
-            { label: updatePlayerLink.isPending ? t('common.saving') : t('settings.unlinkPlayer'), variant: 'danger', onClick: handleUnlinkPlayer },
+            {
+              label: t('common.cancel'),
+              variant: 'secondary',
+              onClick: () => setConfirmUnlinkOpen(false),
+            },
+            {
+              label: updatePlayerLink.isPending ? t('common.saving') : t('settings.unlinkPlayer'),
+              variant: 'danger',
+              onClick: handleUnlinkPlayer,
+            },
           ]}
         />
 

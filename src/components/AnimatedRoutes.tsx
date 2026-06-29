@@ -1,28 +1,35 @@
-import { useReducer, useEffect, useRef } from 'react'
-import { Routes, Route, Navigate, useLocation, useNavigationType, useParams } from 'react-router-dom'
+import { useEffect, useReducer, useRef } from 'react'
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+  useParams,
+} from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { ShuttleLoading } from './ShuttleLoading'
-import LoginPage from '../pages/LoginPage'
-import SessionsListPage from '../pages/SessionsListPage'
-import CreateSessionPage from '../pages/CreateSessionPage'
-import SessionDetailPage from '../pages/SessionDetailPage'
-import SessionStatsPage from '../pages/SessionStatsPage'
+import { useOpenSession } from '../hooks/useSessions'
+import AccountSettingPage from '../pages/AccountSettingPage'
+import ChangePasswordPage from '../pages/ChangePasswordPage'
 import CreateMatchPage from '../pages/CreateMatchPage'
+import CreateSessionPage from '../pages/CreateSessionPage'
+import DesignSystemPage from '../pages/DesignSystemPage'
 import EditPlayersPage from '../pages/EditPlayersPage'
+import HeadToHeadPage from '../pages/HeadToHeadPage'
+import LoginPage from '../pages/LoginPage'
 import MatchDetailPage from '../pages/MatchDetailPage'
 import MatchPointsPage from '../pages/MatchPointsPage'
-import SettingsPage from '../pages/SettingsPage'
-import PointSystemPage from '../pages/PointSystemPage'
-import ChangePasswordPage from '../pages/ChangePasswordPage'
-import AccountSettingPage from '../pages/AccountSettingPage'
-import DesignSystemPage from '../pages/DesignSystemPage'
-import SessionDonatedListPage from '../pages/SessionDonatedListPage'
 import PlayerDetailPage from '../pages/PlayerDetailPage'
 import PlayerRacketsPage from '../pages/PlayerRacketsPage'
-import HeadToHeadPage from '../pages/HeadToHeadPage'
+import PointSystemPage from '../pages/PointSystemPage'
 import RankingPage from '../pages/RankingPage'
-import { useOpenSession } from '../hooks/useSessions'
-import { useNavigate } from 'react-router-dom'
+import SessionDetailPage from '../pages/SessionDetailPage'
+import SessionDonatedListPage from '../pages/SessionDonatedListPage'
+import SessionStatsPage from '../pages/SessionStatsPage'
+import SessionsListPage from '../pages/SessionsListPage'
+import SettingsPage from '../pages/SettingsPage'
+import { ShuttleLoading } from './ShuttleLoading'
 
 const IS_DEV = import.meta.env.DEV
 const TAB_ROUTES = ['/sessions', '/ranking', '/settings']
@@ -117,25 +124,25 @@ const routes = [
   { path: '/settings/account', element: <AccountSettingPage />, auth: true },
   { path: '/settings/account/change-password', element: <ChangePasswordPage />, auth: true },
   { path: '/settings/points', element: <PointSystemPage />, auth: false },
-  { path: '/settings/change-password', element: <Navigate to="/settings/account/change-password" replace />, auth: true },
-  ...(IS_DEV ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }] : []),
+  {
+    path: '/settings/change-password',
+    element: <Navigate to="/settings/account/change-password" replace />,
+    auth: true,
+  },
+  ...(IS_DEV
+    ? [{ path: '/settings/design-system', element: <DesignSystemPage />, auth: true }]
+    : []),
   { path: '*', element: <Navigate to="/" replace />, auth: false },
 ]
 
 function RouteList() {
   return (
     <Routes>
-      {routes.map((r) => (
+      {routes.map(r => (
         <Route
           key={r.path}
           path={r.path}
-          element={
-            r.auth ? (
-              <RequireAuth>{r.element}</RequireAuth>
-            ) : (
-              r.element
-            )
-          }
+          element={r.auth ? <RequireAuth>{r.element}</RequireAuth> : r.element}
         />
       ))}
     </Routes>

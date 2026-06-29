@@ -1,7 +1,7 @@
-import { Badge } from './badge'
-import { Avatar } from './avatar'
-import { BwfCategoryBadge } from './bwf-category-badge'
 import { useI18n } from '../../src/i18n'
+import { Avatar } from './avatar'
+import { Badge } from './badge'
+import { BwfCategoryBadge } from './bwf-category-badge'
 
 interface SessionCardProps {
   status: 'active' | 'scheduled' | 'completed'
@@ -78,11 +78,16 @@ export function SessionCard({
             <Badge variant="accent">{t('common.live')}</Badge>
           </div>
         ) : isScheduled ? (
-          <Badge variant="default" className="shrink-0 whitespace-nowrap bg-transparent border-[var(--fg)] text-[var(--fg)]">
+          <Badge
+            variant="default"
+            className="shrink-0 whitespace-nowrap bg-transparent border-[var(--fg)] text-[var(--fg)]"
+          >
             {t('common.scheduled')}
           </Badge>
         ) : (
-          <Badge variant="neutral" className="shrink-0 whitespace-nowrap">{t('common.completed')}</Badge>
+          <Badge variant="neutral" className="shrink-0 whitespace-nowrap">
+            {t('common.completed')}
+          </Badge>
         )}
       </div>
 
@@ -106,9 +111,7 @@ export function SessionCard({
           </>
         )}
         <span className="w-1 h-1 rounded-full" style={{ background: 'var(--border)' }} />
-        <span>
-          {t('units.match', { count: matchCount })}
-        </span>
+        <span>{t('units.match', { count: matchCount })}</span>
       </div>
 
       {/* Top Player / MVP */}
@@ -120,7 +123,11 @@ export function SessionCard({
           className="text-[11px] font-bold font-mono uppercase tracking-[0.08em] mb-2"
           style={{ color: 'var(--accent)' }}
         >
-          {isActive ? t('sessions.leading') : isScheduled ? t('sessions.players') : t('sessions.topPlayer')}
+          {isActive
+            ? t('sessions.leading')
+            : isScheduled
+              ? t('sessions.players')
+              : t('sessions.topPlayer')}
         </div>
         {topPlayer ? (
           <div className="flex items-center gap-3">
